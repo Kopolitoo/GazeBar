@@ -17,22 +17,14 @@ namespace GazeBar
     /// </summary>
     internal sealed class GazeMouse
     {
-        // ───────────────────────── Réglages (à ajuster à votre goût) ─────────────────────────
-
-        /// <summary>
-        /// Lissage, entre 0 et 1. Proche de 1 : le curseur colle au regard (réactif mais
-        /// tremblant). Proche de 0 : très stable mais lent à suivre.
-        /// </summary>
-        public const double Smoothing = 0.30;
-
-        /// <summary>Distance en pixels sous laquelle le curseur ne bouge pas (anti-tremblement).</summary>
-        public const double DeadZonePixels = 8.0;
+        // ───────────────────────── Réglages ─────────────────────────
+        //
+        // Le lissage, la zone morte et l'âge maximal d'une mesure ne sont plus des constantes
+        // écrites ici : ils viennent de Parametres.Courants (Lissage, ZoneMorteCurseur,
+        // AgeMaxMesure), donc du fichier parametres.json.
 
         /// <summary>Fréquence de mise à jour du curseur, en millisecondes entre deux étapes.</summary>
         public const int UpdateIntervalMs = 10;
-
-        /// <summary>Si la dernière mesure du regard est plus vieille que cela (ms), on met en pause.</summary>
-        public const double MaxSampleAgeMs = 300.0;
 
         // ───────────────────────── Fonctionnement ─────────────────────────
 
@@ -86,7 +78,7 @@ namespace GazeBar
         private void OnTick(object sender, EventArgs e)
         {
             // Pas de regard disponible, ou mesure trop ancienne : pause.
-            if (!_gaze.IsRunning || !_gaze.HasData || _gaze.MsSinceLastSample > MaxSampleAgeMs)
+            if (!_gaze.IsRunning || !_gaze.HasData || _gaze.MsSinceLastSample > Parametres.Courants.AgeMaxMesure)
             {
                 _synced = false;
                 return;
@@ -120,14 +112,15 @@ namespace GazeBar
             double dx = gx - _x;
             double dy = gy - _y;
             double distance = Math.Sqrt(dx * dx + dy * dy);
-            if (distance < DeadZonePixels)
+            if (distance < Parametres.Courants.ZoneMorteCurseur)
             {
                 return;
             }
 
-            // Le curseur parcourt une fraction (Smoothing) de la distance qui le sépare du regard.
-            _x += dx * Smoothing;
-            _y += dy * Smoothing;
+            // Le curseur parcourt une fraction (Lissage) de la distance qui le sépare du regard.
+            double lissage = Parametres.Courants.Lissage;
+            _x += dx * lissage;
+            _y += dy * lissage;
 
             NativeMethods.SetCursorPos((int)Math.Round(_x), (int)Math.Round(_y));
         }

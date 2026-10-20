@@ -36,6 +36,10 @@
          - Nullable : sinon le compilateur signalerait beaucoup d'avertissements sur les valeurs « null ». -->
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
+
+    <!-- Le « manifeste » : un petit fichier XML lu par Windows au lancement du programme.
+         Il déclare GazeBar « sensible au DPI » : voir app.manifest. -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>

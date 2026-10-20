@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  app.manifest : informations lues par Windows au lancement de GazeBar.exe.
+
+  Rôle principal ici : déclarer GazeBar « sensible au DPI » (DPI = points par pouce).
+
+  Le problème : avec une mise à l'échelle de Windows à 125 % ou 150 %, un programme qui ne
+  se déclare pas sensible au DPI reçoit des coordonnées « fausses » (réduites), et Windows
+  agrandit son affichage en le rendant flou. Le regard Tobii, la position du curseur et les
+  fenêtres WPF ne parleraient alors plus les mêmes unités : le cercle serait décalé.
+
+  Avec cette déclaration, GazeBar travaille en pixels RÉELS de l'écran (comme le regard Tobii
+  et le curseur). Seul le calque (OverlayWindow) convertit ces pixels en unités WPF.
+
+    PerMonitorV2  la meilleure prise en charge (Windows 10 version 1703 et plus) ;
+    PerMonitor    solution de repli pour les Windows plus anciens.
+  L'ancienne balise dpiAware est lue par les Windows qui ne connaissent pas dpiAwareness.
+-->
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="GazeBar.app" />
+
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- Lancé avec les droits de l'utilisateur, sans demander les droits administrateur. -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 et Windows 11 (même identifiant). Nécessaire pour le DPI par écran de WPF. -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
+    </windowsSettings>
+  </application>
+</assembly>

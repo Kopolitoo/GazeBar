@@ -49,14 +49,34 @@ La barre ne prend jamais le focus, pour ne pas perturber la fenêtre où l'on ag
 4. **Glisser (clic droit)** : par exemple dans l'Explorateur sur un fichier, le menu de
    déplacement apparaît au relâchement. **Glisser (gauche)** : par exemple dans Paint.
 5. **Souris regard** (bouton à bascule) : le curseur suit directement le regard, lissé. Regarder hors de
-   l'écran met en pause. Réglages en haut de `GazeMouse.cs` (lissage, zone morte). Avec ce mode, les
+   l'écran met en pause. Réglages `Lissage` et `ZoneMorteCurseur` dans `parametres.json`. Avec ce mode, les
    glisser-déposer suivent le vrai regard.
 6. **Annuler** relâche tout immédiatement. **Quitter** ferme le programme.
 
 ## Réglages
 
-Constantes en haut de `HoldSession.cs` : durée du compte à rebours, durée de l'appui long,
-rayon et durée de fixation pour déposer, distance minimale de glissement, durée maximale.
+Tous les réglages sont dans la classe `Parametres` (fichier `Parametres.cs`) et enregistrés dans
+`%APPDATA%\GazeBar\parametres.json`, créé au premier lancement avec les valeurs par défaut du
+cahier des charges. On peut l'ouvrir avec le Bloc-notes (nombres décimaux avec un point : `0.3`),
+puis relancer GazeBar. Un fichier illisible est mis de côté (`parametres.json.illisible`) et
+remplacé par les valeurs par défaut. Seul le compte à rebours de 3 s reste une constante en haut
+de `HoldSession.cs` (il disparaîtra à l'étape 5).
+
+## Architecture des modes (étape 1 : socle-modes)
+
+- `OverlayWindow` : le « calque », une fenêtre transparente qui couvre tout l'écran, toujours au
+  premier plan, que les clics traversent et qui ne prend jamais le focus.
+- `Modes/ModeManager` : connaît le mode courant et fait passer d'un mode à l'autre ; environ
+  60 fois par seconde, il donne la position du regard (`EtatRegard`) au mode courant.
+- `Modes/Mode` : modèle commun à tous les modes (`Entrer`, `Actualiser`, `Quitter`).
+- `Modes/ModeTest` : provisoire, un cercle centré sur le regard brut (ou au centre de l'écran si
+  le regard est indisponible). Le bouton **Cercle test** de la barre l'affiche ou le cache.
+- `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
+  dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
+
+Test de l'étape 1 : le cercle s'affiche au-dessus de toutes les fenêtres, suit le regard, et les
+clics passent à travers (on peut cliquer sur une icône du bureau située sous le cercle).
+Le journal indique la taille de l'écran et l'échelle détectée (ligne « Calque : … »).
 
 ## Limites connues
 

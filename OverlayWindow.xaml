@@ -1,0 +1,45 @@
+<!--
+  OverlayWindow.xaml : le « calque », une fenêtre transparente qui couvre tout l'écran.
+
+  C'est sur elle que GazeBar dessine ce qui doit apparaître par-dessus les autres
+  applications (le cercle qui suit le regard, l'anneau de progression, l'icône d'options…).
+  Elle ne doit JAMAIS gêner l'application visée :
+    - elle est invisible, sauf ce qu'on y dessine ;
+    - les clics la traversent (réglé dans le code, OverlayWindow.xaml.cs) ;
+    - elle ne prend jamais le focus.
+
+  Réglages de la fenêtre :
+    WindowStyle="None" + AllowsTransparency="True" + Background="Transparent"
+                                  fenêtre sans bord, dont le fond est réellement transparent
+    Topmost="True"                toujours au-dessus des autres fenêtres
+    ShowInTaskbar="False"         absente de la barre des tâches
+    ShowActivated="False"         ne prend pas le focus à son ouverture
+    IsHitTestVisible="False"      WPF ne cherche même pas à savoir si la souris la touche
+  Sa position et sa taille (tout l'écran) sont calculées dans le code, en tenant compte
+  de la mise à l'échelle de Windows (125 %, 150 %…).
+
+  Le cercle est dessiné deux fois, l'un sur l'autre : un trait noir épais dessous et un trait
+  blanc plus fin dessus. Ainsi il reste visible sur un fond clair comme sur un fond sombre.
+-->
+<Window
+    x:Class="GazeBar.OverlayWindow"
+    x:ClassModifier="internal"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="GazeBar (calque)"
+    WindowStyle="None"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="NoResize"
+    Topmost="True"
+    ShowInTaskbar="False"
+    ShowActivated="False"
+    Focusable="False"
+    IsHitTestVisible="False">
+
+    <!-- Canvas : une surface où l'on place les éléments par coordonnées (Canvas.Left / Canvas.Top). -->
+    <Canvas x:Name="Surface">
+        <Ellipse x:Name="CercleFond" Stroke="#B0000000" StrokeThickness="7" Visibility="Collapsed" />
+        <Ellipse x:Name="Cercle" Stroke="White" StrokeThickness="3" Visibility="Collapsed" />
+    </Canvas>
+</Window>

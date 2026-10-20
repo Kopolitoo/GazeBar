@@ -30,13 +30,14 @@ namespace GazeBar
     ///
     /// Comment le bouton est-il relâché ?
     ///  - Appui long : après une durée fixe.
-    ///  - Glisser : quand le regard s'est déplacé d'au moins MinDragDistancePixels,
-    ///    puis reste IMMOBILE (dans un rayon de FixationRadiusPixels) pendant
-    ///    DropFixationSeconds. C'est la « fixation » : on dépose là où l'on regarde.
-    ///  - Dans tous les cas : après MaxHoldSeconds (sécurité), ou par le bouton Annuler.
+    ///  - Glisser : quand le regard s'est déplacé d'au moins DistanceMinGlisser,
+    ///    puis reste IMMOBILE (dans un rayon de RayonFixation) pendant
+    ///    DelaiDepot. C'est la « fixation » : on dépose là où l'on regarde.
+    ///  - Dans tous les cas : après DureeMaxAppui (sécurité), ou par le bouton Annuler.
     ///
-    /// Tous les réglages sont ci-dessous. Les bonnes valeurs dépendent de la précision
-    /// de votre regard : on les ajustera d'après les enregistrements de diagnostic.
+    /// Les réglages sont dans Parametres (fichier parametres.json). Les bonnes valeurs
+    /// dépendent de la précision de votre regard : on les ajustera d'après les
+    /// enregistrements de diagnostic.
     /// </summary>
     internal sealed class HoldSession
     {
@@ -45,20 +46,12 @@ namespace GazeBar
         /// <summary>Délai entre le clic sur la barre d'outils et l'appui du bouton de la souris.</summary>
         public const double CountdownSeconds = 3.0;
 
-        /// <summary>Durée de l'appui long.</summary>
-        public const double LongPressSeconds = 1.5;
-
-        /// <summary>Durée d'immobilité du regard qui déclenche le dépôt, pour un glisser.</summary>
-        public const double DropFixationSeconds = 1.2;
-
-        /// <summary>Rayon (en pixels) dans lequel le regard est considéré comme immobile. Le regard tremble toujours un peu.</summary>
-        public const double FixationRadiusPixels = 30.0;
-
-        /// <summary>Distance minimale parcourue avant que le dépôt par fixation soit possible (évite de déposer tout de suite).</summary>
-        public const double MinDragDistancePixels = 60.0;
-
-        /// <summary>Sécurité : le bouton est relâché au plus tard après cette durée, quoi qu'il arrive.</summary>
-        public const double MaxHoldSeconds = 20.0;
+        // Les autres réglages viennent de Parametres.Courants (fichier parametres.json) :
+        //   DureeAppuiLong      durée de l'appui long ;
+        //   DelaiDepot          durée d'immobilité du regard qui déclenche le dépôt ;
+        //   RayonFixation       rayon (pixels) dans lequel le regard est considéré comme immobile ;
+        //   DistanceMinGlisser  distance minimale parcourue avant qu'un dépôt soit possible ;
+        //   DureeMaxAppui       sécurité : le bouton est relâché au plus tard après cette durée.
 
         // ───────────────────────── État interne ─────────────────────────
 
@@ -187,8 +180,8 @@ namespace GazeBar
         {
             double held = Now - _phaseStartSeconds;
 
-            // Sécurité absolue : jamais plus de MaxHoldSeconds.
-            if (held >= MaxHoldSeconds)
+            // Sécurité absolue : jamais plus de DureeMaxAppui.
+            if (held >= Parametres.Courants.DureeMaxAppui)
             {
                 Finish("Durée maximale atteinte : bouton relâché.");
                 return;
@@ -196,7 +189,7 @@ namespace GazeBar
 
             if (_kind == HoldKind.LongPressLeft)
             {
-                double remaining = LongPressSeconds - held;
+                double remaining = Parametres.Courants.DureeAppuiLong - held;
                 if (remaining <= 0)
                 {
                     Finish("Appui long terminé.");
@@ -213,13 +206,13 @@ namespace GazeBar
             int y;
             ReadCursor(out x, out y);
 
-            if (Distance(x, y, _originX, _originY) >= MinDragDistancePixels)
+            if (Distance(x, y, _originX, _originY) >= Parametres.Courants.DistanceMinGlisser)
             {
                 _hasMoved = true;
             }
 
             // Si le regard s'est éloigné de la dernière position stable, on repart de cette nouvelle position.
-            if (Distance(x, y, _anchorX, _anchorY) > FixationRadiusPixels)
+            if (Distance(x, y, _anchorX, _anchorY) > Parametres.Courants.RayonFixation)
             {
                 _anchorX = x;
                 _anchorY = y;
@@ -227,18 +220,19 @@ namespace GazeBar
             }
 
             double stillFor = Now - _anchorSeconds;
+            double dropDelay = Parametres.Courants.DelaiDepot;
 
             if (!_hasMoved)
             {
                 Report("Bouton enfoncé : déplacez le regard vers la destination");
             }
-            else if (stillFor >= DropFixationSeconds)
+            else if (stillFor >= dropDelay)
             {
                 Finish("Déposé.");
             }
             else
             {
-                Report("Fixez la destination : dépôt dans " + (DropFixationSeconds - stillFor).ToString("F1") + " s");
+                Report("Fixez la destination : dépôt dans " + (dropDelay - stillFor).ToString("F1") + " s");
             }
         }
 

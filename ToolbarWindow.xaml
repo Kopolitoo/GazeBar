@@ -14,7 +14,7 @@
   Structure :
     StackPanel (pile verticale)
       StackPanel horizontal : les quatre boutons d'action
-      StackPanel horizontal : les boutons Diagnostic et Quitter
+      StackPanel horizontal : Souris regard, Cercle test, Diagnostic et Quitter
       TextBlock CursorText  : position du curseur et cadence, en direct
       TextBlock StatusText  : message de l'action en cours
 
@@ -46,6 +46,7 @@
 
         <StackPanel Orientation="Horizontal">
             <Button x:Name="MouseModeButton" Content="Souris regard : NON" Click="OnMouseModeClick" />
+            <Button x:Name="TestCircleButton" Content="Cercle test : OUI" Click="OnTestCircleClick" />
             <Button x:Name="DiagnosticButton" Content="Diagnostic" Click="OnDiagnosticClick" />
             <Button x:Name="QuitButton" Content="Quitter" Click="OnQuitClick" />
         </StackPanel>

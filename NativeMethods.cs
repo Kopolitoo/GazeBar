@@ -83,6 +83,10 @@ namespace GazeBar
         internal const int WM_MOUSEACTIVATE = 0x0021;     // message : « un clic va activer la fenêtre »
         internal const int MA_NOACTIVATE = 3;             // réponse : « non, ne l'active pas »
 
+        // Pour la fenêtre plein écran (OverlayWindow) qui doit laisser passer les clics :
+        internal const int WS_EX_TRANSPARENT = 0x00000020; // la souris « traverse » la fenêtre
+        internal const int WS_EX_LAYERED = 0x00080000;     // fenêtre à transparence (déjà mis par WPF, on l'assure)
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int GetWindowLong(IntPtr window, int index);
 
