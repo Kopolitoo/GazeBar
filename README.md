@@ -64,3 +64,9 @@ rayon et durée de fixation pour déposer, distance minimale de glissement, dur�
   est lui aussi lancé en administrateur.
 - Le mode jeu (regard vers déplacement relatif de la souris) n'est pas encore étudié.
 - Journal : `%LOCALAPPDATA%\GazeBar\gazebar.log`.
+
+## Licence
+
+GazeBar est distribué sous licence MIT : chacun peut l'utiliser, le modifier et le redistribuer
+librement, à condition de conserver la mention de copyright. Le logiciel est fourni sans garantie.
+Texte complet : [LICENSE.txt](LICENSE.txt).
