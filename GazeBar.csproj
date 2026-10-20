@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Fichier de projet (.csproj) : il dit à MSBuild comment fabriquer le programme.
+
+    Format moderne « SDK-style » : tous les fichiers .cs et .xaml du dossier sont
+    trouvés automatiquement. Quand vous ajouterez un fichier, il n'y a rien à déclarer ici.
+
+    Ce projet est une application WPF sur .NET Framework 4.8 (et non .NET 10), car la
+    bibliothèque Tobii.Interaction, qui fournit le regard, n'existe que pour ce cadre, en 32 bits.
+    C'est une application WPF : un programme Windows classique
+    (« de bureau »), qui peut donc simuler la souris et le clavier, afficher des
+    fenêtres transparentes, etc. Voir README.md.
+  -->
+  <PropertyGroup>
+    <!-- WinExe = programme avec fenêtres (pas de console noire derrière). -->
+    <OutputType>WinExe</OutputType>
+
+    <!-- .NET Framework 4.8, fourni avec Windows. -->
+    <TargetFramework>net48</TargetFramework>
+
+    <!-- 32 bits : la bibliothèque native de Tobii est copiée en 32 bits par défaut.
+         Cela fonctionne très bien sur un Windows 64 bits. -->
+    <PlatformTarget>x86</PlatformTarget>
+
+    <!-- Version du langage C# : la plus récente disponible. -->
+    <LangVersion>latest</LangVersion>
+
+    <!-- Active WPF. -->
+    <UseWPF>true</UseWPF>
+
+    <RootNamespace>GazeBar</RootNamespace>
+    <AssemblyName>GazeBar</AssemblyName>
+
+    <!-- Deux options volontairement désactivées pour que le code reste explicite :
+         - ImplicitUsings : sinon des « using » invisibles seraient ajoutés automatiquement ;
+         - Nullable : sinon le compilateur signalerait beaucoup d'avertissements sur les valeurs « null ». -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Le regard, via le moteur Tobii (même source que Mill Mouse). -->
+    <PackageReference Include="Tobii.Interaction" Version="0.7.3" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,60 @@
+<!--
+  ToolbarWindow.xaml : la barre d'outils, en haut de l'écran.
+
+  Réglages de la fenêtre (balise Window) :
+    WindowStyle="None"            pas de barre de titre ni de bordure
+    Topmost="True"                toujours au-dessus des autres fenêtres
+    ShowInTaskbar="False"         absente de la barre des tâches
+    ShowActivated="False"         ne prend pas le focus à son ouverture
+    SizeToContent                 la fenêtre s'adapte à son contenu
+  Le fait qu'elle ne prenne jamais le focus lors des clics est réglé dans le code
+  (ToolbarWindow.xaml.cs, méthode OnSourceInitialized) : sinon, cliquer sur la barre
+  retirerait le focus de la fenêtre où vous voulez agir.
+
+  Structure :
+    StackPanel (pile verticale)
+      StackPanel horizontal : les quatre boutons d'action
+      StackPanel horizontal : les boutons Diagnostic et Quitter
+      TextBlock CursorText  : position du curseur et cadence, en direct
+      TextBlock StatusText  : message de l'action en cours
+
+  Les attributs x:Name donnent un nom aux éléments pour les manipuler depuis le code C#.
+  Les attributs Click="..." désignent la méthode appelée lors d'un clic.
+-->
+<Window
+    x:Class="GazeBar.ToolbarWindow"
+    x:ClassModifier="internal"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="GazeBar"
+    WindowStyle="None"
+    ResizeMode="NoResize"
+    Topmost="True"
+    ShowInTaskbar="False"
+    ShowActivated="False"
+    SizeToContent="WidthAndHeight"
+    Background="#202124">
+
+    <StackPanel Margin="8">
+
+        <StackPanel Orientation="Horizontal">
+            <Button x:Name="LongPressButton" Content="Appui long" Click="OnLongPressClick" />
+            <Button x:Name="DragLeftButton" Content="Glisser (gauche)" Click="OnDragLeftClick" />
+            <Button x:Name="DragRightButton" Content="Glisser (clic droit)" Click="OnDragRightClick" />
+            <Button x:Name="CancelButton" Content="Annuler" Background="#8A3B3B" Click="OnCancelClick" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal">
+            <Button x:Name="MouseModeButton" Content="Souris regard : NON" Click="OnMouseModeClick" />
+            <Button x:Name="DiagnosticButton" Content="Diagnostic" Click="OnDiagnosticClick" />
+            <Button x:Name="QuitButton" Content="Quitter" Click="OnQuitClick" />
+        </StackPanel>
+
+        <TextBlock x:Name="CursorText" Margin="8,6,8,0" FontSize="20" Foreground="#9AA0A6"
+                   Text="Curseur : …" />
+        <TextBlock x:Name="GazeText" Margin="8,2,8,0" FontSize="20" Foreground="#81C995"
+                   Text="Regard : …" />
+        <TextBlock x:Name="StatusText" Margin="8,4,8,4" FontSize="22" Foreground="White"
+                   Text="Prêt." />
+    </StackPanel>
+</Window>

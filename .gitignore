@@ -1,0 +1,32 @@
+# Dossiers produits par la compilation
+bin/
+obj/
+AppPackages/
+BundleArtifacts/
+.vs/
+
+# Certificats et clés de signature : ne JAMAIS les publier
+*.pfx
+*.snk
+*.cer
+
+# Fichiers temporaires de l'éditeur
+*.user
+*.suo
+.vscode/*
+!.vscode/settings.json
+
+# Enregistrements de positions du regard (données personnelles)
+positions-*.csv
+
+# Journaux et résumés de test
+*.log
+tobiiprobe.txt
+
+# Données personnelles : le dictionnaire personnel du futur clavier prédictif ne doit
+# jamais être publié (il peut contenir des noms, adresses, mots de passe tapés...).
+dictionnaire-perso*
+*.perso.*
+
+# Paquets NuGet téléchargés
+packages/

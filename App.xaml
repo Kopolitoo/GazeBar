@@ -1,0 +1,52 @@
+<!--
+  App.xaml : définition de l'application (et non d'une fenêtre).
+
+  XAML est un langage de description d'interface : un fichier XML où chaque balise
+  est un élément visuel (bouton, texte...). Ici on ne définit que des « ressources »,
+  c'est-à-dire des éléments réutilisables par toutes les fenêtres.
+
+  Le style ci-dessous s'applique à TOUS les boutons : gros, contrastés, lisibles et
+  faciles à viser avec le regard. Il redéfinit aussi l'apparence au survol (gris clair)
+  et à l'appui (bleu), car l'apparence standard de Windows est peu contrastée sur fond sombre.
+
+  Il n'y a pas de StartupUri : c'est le code (App.xaml.cs) qui ouvre la première fenêtre.
+-->
+<Application
+    x:Class="GazeBar.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Application.Resources>
+        <Style TargetType="Button">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="#3C4043" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Padding" Value="22,14" />
+            <Setter Property="MinWidth" Value="150" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Box"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="#5F6368" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="#1A73E8" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Box" Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Application.Resources>
+</Application>

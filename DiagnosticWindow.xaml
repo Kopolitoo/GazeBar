@@ -1,0 +1,45 @@
+<!--
+  DiagnosticWindow.xaml : fenêtre de diagnostic du « regard par le curseur ».
+
+  Elle répond à la question : le curseur piloté par TD Control est-il un bon substitut
+  du regard ? Elle montre :
+    - la position du curseur (valable sur TOUT l'écran, même hors de cette fenêtre) ;
+    - combien de fois par seconde elle change (la cadence réelle) ;
+    - une miniature de l'écran avec un point (le curseur) et sa trace récente ;
+    - un bouton d'enregistrement qui écrit un fichier CSV d'analyse.
+
+  La miniature est un Canvas : une zone où l'on place les éléments à des coordonnées précises.
+  Les éléments dessinés dedans (point, trace) sont créés dans le code (DiagnosticWindow.xaml.cs).
+-->
+<Window
+    x:Class="GazeBar.DiagnosticWindow"
+    x:ClassModifier="internal"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="GazeBar : diagnostic du curseur"
+    SizeToContent="WidthAndHeight"
+    WindowStartupLocation="CenterScreen"
+    Background="#202124"
+    Foreground="White">
+
+    <StackPanel Margin="16">
+
+        <TextBlock x:Name="PositionText" FontSize="32" FontWeight="SemiBold" Text="Position : …" />
+        <TextBlock x:Name="RateText" FontSize="22" Margin="0,6,0,0" Text="Cadence : …" />
+        <TextBlock x:Name="GazeReadText" FontSize="24" Margin="0,6,0,0" Foreground="#81C995" Text="Regard : …" />
+        <TextBlock x:Name="IdleText" FontSize="22" Margin="0,2,0,0" Text="" />
+        <TextBlock x:Name="ScreenInfoText" FontSize="18" Margin="0,2,0,10" Foreground="#9AA0A6" Text="" />
+
+        <Border BorderBrush="#5F6368" BorderThickness="1" HorizontalAlignment="Left">
+            <Canvas x:Name="MapCanvas" Background="#101114" ClipToBounds="True" />
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+            <Button x:Name="RecordButton" Content="Enregistrer 20 s" Click="OnRecordClick" />
+            <Button x:Name="CloseButton" Content="Fermer" Click="OnCloseClick" />
+        </StackPanel>
+
+        <TextBlock x:Name="RecordText" FontSize="20" Margin="0,6,0,0" TextWrapping="Wrap" MaxWidth="680"
+                   Text="Enregistrement : cliquez, puis parcourez tout l'écran du regard (coins, bords, centre), et terminez en fixant le centre quelques secondes." />
+    </StackPanel>
+</Window>
