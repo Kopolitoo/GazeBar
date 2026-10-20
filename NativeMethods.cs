@@ -87,6 +87,19 @@ namespace GazeBar
         internal const int WS_EX_TRANSPARENT = 0x00000020; // la souris « traverse » la fenêtre
         internal const int WS_EX_LAYERED = 0x00080000;     // fenêtre à transparence (déjà mis par WPF, on l'assure)
 
+        /// <summary>
+        /// Change la position, la taille ou la place « au-dessus / en dessous » d'une fenêtre.
+        /// Ici on s'en sert seulement pour remettre le calque tout en haut de la pile des fenêtres.
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetWindowPos(IntPtr window, IntPtr insertAfter, int x, int y, int width, int height, uint flags);
+
+        internal static readonly IntPtr HWND_TOPMOST = new IntPtr(-1); // « au-dessus de tout »
+        internal const uint SWP_NOSIZE = 0x0001;      // ne pas changer la taille
+        internal const uint SWP_NOMOVE = 0x0002;      // ne pas déplacer
+        internal const uint SWP_NOACTIVATE = 0x0010;  // ne pas donner le focus
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int GetWindowLong(IntPtr window, int index);
 

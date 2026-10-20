@@ -57,20 +57,23 @@ namespace GazeBar
             _gaze = new GazeSource();
             _gaze.Start();
 
-            // Le calque plein écran, transparent aux clics, et le gestionnaire de modes.
-            // Pour l'étape 1, on démarre dans le mode de test (un cercle sur le regard).
-            _calque = new OverlayWindow();
-            _calque.Show();
-            _modes = new ModeManager(_gaze, _calque);
-            _modes.Demarrer(new ModeTest());
-
             // La barre d'outils reste disponible jusqu'à l'étape 4 (mode menu).
+            // Le calque est créé ici mais affiché APRÈS elle, pour être au-dessus.
+            _calque = new OverlayWindow();
+            _modes = new ModeManager(_gaze, _calque);
+
             ToolbarWindow toolbar = new ToolbarWindow(_sampler, _gaze, _modes);
             MainWindow = toolbar;
             // Fermer la barre ferme tout le programme, même si le calque ou le
             // diagnostic sont encore ouverts.
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             toolbar.Show();
+
+            // Le calque plein écran, transparent aux clics, et le gestionnaire de modes.
+            // Pour l'étape 1, on démarre dans le mode de test (un cercle sur le regard).
+            _calque.Show();
+            _calque.RemettreAuPremierPlan();
+            _modes.Demarrer(new ModeTest());
         }
 
         /// <summary>

@@ -69,8 +69,11 @@ de `HoldSession.cs` (il disparaîtra à l'étape 5).
 - `Modes/ModeManager` : connaît le mode courant et fait passer d'un mode à l'autre ; environ
   60 fois par seconde, il donne la position du regard (`EtatRegard`) au mode courant.
 - `Modes/Mode` : modèle commun à tous les modes (`Entrer`, `Actualiser`, `Quitter`).
-- `Modes/ModeTest` : provisoire, un cercle centré sur le regard brut (ou au centre de l'écran si
-  le regard est indisponible). Le bouton **Cercle test** de la barre l'affiche ou le cache.
+- `Modes/ModeTest` : provisoire, un cercle qui suit le regard (au centre de l'écran tant que le
+  regard est indisponible). Le bouton **Cercle test** de la barre l'affiche ou le cache.
+- `FiltreRegard` : lissage adaptatif (immobile quand on fixe, réactif quand l'œil se déplace),
+  réglé par `Lissage`, `ZoneMorteCurseur` et `RayonFixation`.
+- Le calque se remet au-dessus de toutes les fenêtres (y compris la barre) deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
 

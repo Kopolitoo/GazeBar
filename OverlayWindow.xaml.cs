@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace GazeBar
 {
@@ -21,9 +22,36 @@ namespace GazeBar
     /// </summary>
     internal partial class OverlayWindow : Window
     {
+        private readonly DispatcherTimer _premierPlan;
+
         public OverlayWindow()
         {
             InitializeComponent();
+
+            // Plusieurs fenêtres peuvent être « toujours au premier plan » (la barre d'outils,
+            // la fenêtre Diagnostic, d'autres logiciels…). Entre elles, c'est la dernière
+            // affichée ou activée qui gagne. Pour que le calque reste AU-DESSUS DE TOUT, on le
+            // remet en haut de la pile deux fois par seconde.
+            _premierPlan = new DispatcherTimer();
+            _premierPlan.Interval = TimeSpan.FromMilliseconds(500);
+            _premierPlan.Tick += (sender, e) => RemettreAuPremierPlan();
+            _premierPlan.Start();
+        }
+
+        /// <summary>
+        /// Place le calque tout en haut des fenêtres « toujours au premier plan », sans le
+        /// déplacer, sans changer sa taille et sans lui donner le focus.
+        /// </summary>
+        public void RemettreAuPremierPlan()
+        {
+            IntPtr handle = new WindowInteropHelper(this).Handle;
+            if (handle == IntPtr.Zero)
+            {
+                return;   // fenêtre pas encore créée
+            }
+            NativeMethods.SetWindowPos(
+                handle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
         }
 
         // ───────────────────────── Fenêtre transparente aux clics ─────────────────────────
