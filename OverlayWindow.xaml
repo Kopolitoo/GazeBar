@@ -39,7 +39,7 @@
 
     <!-- Canvas : une surface où l'on place les éléments par coordonnées (Canvas.Left / Canvas.Top). -->
     <Canvas x:Name="Surface">
-        <Ellipse x:Name="CercleFond" Stroke="#B0000000" StrokeThickness="7" Visibility="Collapsed" />
-        <Ellipse x:Name="Cercle" Stroke="White" StrokeThickness="3" Visibility="Collapsed" />
+        <Ellipse x:Name="CercleFond" Stroke="#B0000000" StrokeThickness="2" Opacity="0.5" Visibility="Collapsed" />
+        <Ellipse x:Name="Cercle" Stroke="Green" StrokeThickness="1" Opacity="0.5" Visibility="Collapsed" />
     </Canvas>
 </Window>
