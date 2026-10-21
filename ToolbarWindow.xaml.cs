@@ -22,6 +22,7 @@ namespace GazeBar
     {
         private readonly CursorSampler _sampler;
         private readonly GazeSource _gaze;
+        private readonly ModeManager _modes;
         private readonly GazeMouse _gazeMouse;
         private readonly double _screenWidth;
         private readonly double _screenHeight;
@@ -29,13 +30,14 @@ namespace GazeBar
         private readonly DispatcherTimer _refreshTimer;
         private DiagnosticWindow _diagnosticWindow;
 
-        public ToolbarWindow(CursorSampler sampler, GazeSource gaze)
+        public ToolbarWindow(CursorSampler sampler, GazeSource gaze, ModeManager modes)
         {
             // Construit les éléments décrits dans ToolbarWindow.xaml. Obligatoire en premier.
             InitializeComponent();
 
             _sampler = sampler;
             _gaze = gaze;
+            _modes = modes;
             _gazeMouse = new GazeMouse(gaze);
             _screenWidth = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN);
             _screenHeight = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN);
@@ -176,6 +178,25 @@ namespace GazeBar
                 MouseModeButton.Content = "Souris regard : NON";
                 MouseModeButton.ClearValue(System.Windows.Controls.Control.BackgroundProperty);
                 StatusText.Text = "Souris regard désactivée.";
+            }
+        }
+
+        /// <summary>
+        /// Affiche ou cache le cercle de test (étape 1) en passant du mode test au mode
+        /// inactif, et inversement. C'est le ModeManager qui fait le changement.
+        /// « is » teste le type d'un objet : le mode courant est-il un ModeTest ?
+        /// </summary>
+        private void OnTestCircleClick(object sender, RoutedEventArgs e)
+        {
+            if (_modes.ModeCourant is ModeTest)
+            {
+                _modes.ChangerMode(new ModeInactif());
+                TestCircleButton.Content = "Cercle test : NON";
+            }
+            else
+            {
+                _modes.ChangerMode(new ModeTest());
+                TestCircleButton.Content = "Cercle test : OUI";
             }
         }
 
