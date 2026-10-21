@@ -18,8 +18,9 @@
   Sa position et sa taille (tout l'écran) sont calculées dans le code, en tenant compte
   de la mise à l'échelle de Windows (125 %, 150 %…).
 
-  Le cercle est dessiné deux fois, l'un sur l'autre : un trait noir épais dessous et un trait
-  blanc plus fin dessus. Ainsi il reste visible sur un fond clair comme sur un fond sombre.
+  Le cercle est dessiné deux fois, l'un sur l'autre : un trait noir dessous et un trait vert
+  plus fin dessus, à moitié transparents (Opacity="0.5") pour rester discrets. Ainsi il reste
+  visible sur un fond clair comme sur un fond sombre.
 -->
 <Window
     x:Class="GazeBar.OverlayWindow"
