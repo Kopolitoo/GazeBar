@@ -20,7 +20,7 @@ namespace GazeBar
         // ───────────────────────── Réglages ─────────────────────────
         //
         // Le lissage, la zone morte et l'âge maximal d'une mesure ne sont plus des constantes
-        // écrites ici : ils viennent de Parametres.Courants (Lissage, ZoneMorteCurseur,
+        // écrites ici : ils viennent de Parametres.Courants (Lissage, MinMoveDistance,
         // AgeMaxMesure), donc du fichier parametres.json.
 
         /// <summary>Fréquence de mise à jour du curseur, en millisecondes entre deux étapes.</summary>
@@ -112,7 +112,7 @@ namespace GazeBar
             double dx = gx - _x;
             double dy = gy - _y;
             double distance = Math.Sqrt(dx * dx + dy * dy);
-            if (distance < Parametres.Courants.ZoneMorteCurseur)
+            if (distance < Parametres.Courants.MinMoveDistance)
             {
                 return;
             }

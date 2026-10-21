@@ -49,7 +49,7 @@ La barre ne prend jamais le focus, pour ne pas perturber la fenêtre où l'on ag
 4. **Glisser (clic droit)** : par exemple dans l'Explorateur sur un fichier, le menu de
    déplacement apparaît au relâchement. **Glisser (gauche)** : par exemple dans Paint.
 5. **Souris regard** (bouton à bascule) : le curseur suit directement le regard, lissé. Regarder hors de
-   l'écran met en pause. Réglages `Lissage` et `ZoneMorteCurseur` dans `parametres.json`. Avec ce mode, les
+   l'écran met en pause. Réglages `Lissage` et `MinMoveDistance` dans `parametres.json`. Avec ce mode, les
    glisser-déposer suivent le vrai regard.
 6. **Annuler** relâche tout immédiatement. **Quitter** ferme le programme.
 
@@ -72,7 +72,7 @@ de `HoldSession.cs` (il disparaîtra à l'étape 5).
 - `Modes/ModeTest` : provisoire, un cercle qui suit le regard (au centre de l'écran tant que le
   regard est indisponible). Le bouton **Cercle test** de la barre l'affiche ou le cache.
 - `FiltreRegard` : lissage adaptatif (immobile quand on fixe, réactif quand l'œil se déplace),
-  réglé par `Lissage`, `ZoneMorteCurseur` et `RayonFixation`.
+  réglé par `Lissage`, `MinMoveDistance` et `RayonFixation`.
 - Le calque se remet au-dessus de toutes les fenêtres (y compris la barre) deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.

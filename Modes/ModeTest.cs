@@ -1,3 +1,5 @@
+using System;
+
 namespace GazeBar
 {
     /// <summary>
@@ -15,7 +17,13 @@ namespace GazeBar
     /// </summary>
     internal sealed class ModeTest : Mode
     {
-        private readonly FiltreRegard _filtre = new FiltreRegard();
+        private double _x;
+        private double _y;
+        private double _ox;
+        private double _oy;
+
+        private int _slowCount; // Nombre de mesures à vitesse lente
+        private readonly int _maxSlowCount = 30; // Nombre maximum de mesures à vitesse lente avant de déclencher le mode de regard fixe : 30 mesures = 0.5 seconde
 
         public override string Nom
         {
@@ -25,17 +33,55 @@ namespace GazeBar
         public override void Entrer()
         {
             // Point de départ : le centre de l'écran.
-            _filtre.Placer(Gestionnaire.LargeurEcran / 2, Gestionnaire.HauteurEcran / 2);
+            _x = _ox = Gestionnaire.LargeurEcran / 2;
+            _y = _oy = Gestionnaire.HauteurEcran / 2;
+            _slowCount = 0;
+
         }
 
         public override void Actualiser(EtatRegard regard)
         {
             if (regard.SurEcran)
             {
-                _filtre.Avancer(regard.X, regard.Y);
+                // Calculer la distance depuis la dernière mesure
+                double dx = regard.X - _ox;
+                double dy = regard.Y - _oy;
+                int distance = (int)Math.Sqrt(dx * dx + dy * dy);
+
+                _ox = regard.X;
+                _oy = regard.Y;
+
+                if (distance < Parametres.Courants.MinMoveDistance)
+                {
+                    _slowCount += 1;
+                    if (_slowCount >= _maxSlowCount)
+                    {
+                        if (_slowCount == _maxSlowCount)
+                        {
+                            App.Log(" OK REGARD FIXE started");
+                            // On positionne le curseur sur la position du regard
+                            NativeMethods.SetCursorPos((int)Math.Round(_ox), (int)Math.Round(_oy));
+                            // On peut passer au mode de regard fixe
+                        }
+                        return;
+                    }
+                }
+                else
+                {
+                    if (_slowCount >= _maxSlowCount)
+                    {
+                        App.Log("RETOUR MOUVEMENT");
+                    }
+                    _slowCount = 0;
+                }
+                dx = _ox - _x;
+                dy = _oy - _y;
+
+                _x += dx * Parametres.Courants.Lissage;
+                _y += dy * Parametres.Courants.Lissage;
             }
 
-            Gestionnaire.Calque.AfficherCercle(_filtre.X, _filtre.Y, Parametres.Courants.RayonCercle);
+            Gestionnaire.Calque.AfficherCercle(_x, _y, Parametres.Courants.RayonCercle);
         }
 
         public override void Quitter()

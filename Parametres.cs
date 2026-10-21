@@ -50,9 +50,9 @@ namespace GazeBar
         [DataMember(Order = 10)]
         public double Lissage { get; set; }
 
-        /// <summary>Anti-tremblement du curseur, en pixels : en dessous, le curseur ne bouge pas.</summary>
+        /// <summary>Vitesse de déplacement minimum pour le mode de mouvement (distance en pixels entre deux mesures).</summary>
         [DataMember(Order = 11)]
-        public double ZoneMorteCurseur { get; set; }
+        public double MinMoveDistance { get; set; }
 
         /// <summary>Âge maximal d'une mesure du regard, en MILLISECONDES. Au-delà, le regard est considéré comme perdu.</summary>
         [DataMember(Order = 12)]
@@ -174,8 +174,8 @@ namespace GazeBar
         {
             VersionFichier = 1;
 
-            Lissage = 0.30;
-            ZoneMorteCurseur = 8;
+            Lissage = 0.15;
+            MinMoveDistance = 30;
             AgeMaxMesure = 300;
 
             RayonFixation = 30;
@@ -229,7 +229,7 @@ namespace GazeBar
         public void Corriger()
         {
             Lissage = Borner(Lissage, 0.01, 1);
-            ZoneMorteCurseur = Borner(ZoneMorteCurseur, 0, 100);
+            MinMoveDistance = Borner(MinMoveDistance, 0, 100);
             AgeMaxMesure = Borner(AgeMaxMesure, 50, 5000);
 
             RayonFixation = Borner(RayonFixation, 5, 300);
