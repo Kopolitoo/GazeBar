@@ -68,6 +68,17 @@ namespace GazeBar
         [DataMember(Order = 21)]
         public double DelaiFixation { get; set; }
 
+        /// <summary>
+        /// Vitesse maximale du regard pendant une fixation, en PIXELS PAR SECONDE.
+        /// Entre deux mesures, on calcule la vitesse du regard (distance ÷ temps écoulé) :
+        /// au-dessus de cette valeur, l'œil est en train de sauter vers un autre point
+        /// (une « saccade »), ce n'est pas une fixation.
+        /// Réglage ajouté à l'étape 2 (il ne figure pas dans la première version du cahier des
+        /// charges). 900 px/s correspond à 30 pixels entre deux mesures du PCEye (≈ 30 par seconde).
+        /// </summary>
+        [DataMember(Order = 24)]
+        public double VitesseMaxFixation { get; set; }
+
         /// <summary>Clic gauche automatique si la fixation se prolonge (oui / non).</summary>
         [DataMember(Order = 22)]
         public bool ClicDirect { get; set; }
@@ -180,6 +191,7 @@ namespace GazeBar
 
             RayonFixation = 30;
             DelaiFixation = 0.8;
+            VitesseMaxFixation = 900;
             ClicDirect = true;
             DelaiClicDirect = 1.5;
 
@@ -234,6 +246,7 @@ namespace GazeBar
 
             RayonFixation = Borner(RayonFixation, 5, 300);
             DelaiFixation = Borner(DelaiFixation, 0.1, 10);
+            VitesseMaxFixation = Borner(VitesseMaxFixation, 50, 20000);
             DelaiClicDirect = Borner(DelaiClicDirect, 0.1, 10);
 
             RayonCercle = Borner(RayonCercle, 20, 500);

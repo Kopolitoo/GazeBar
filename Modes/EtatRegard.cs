@@ -15,6 +15,22 @@ namespace GazeBar
         public double X;
         public double Y;
 
+        /// <summary>
+        /// Numéro de la mesure (augmente de 1 à chaque mesure reçue du PCEye). Si le numéro
+        /// n'a pas changé depuis le tic précédent, c'est la même mesure : il n'y a rien de neuf.
+        /// </summary>
+        public long Numero;
+
+        /// <summary>Instant où la mesure est arrivée, en millisecondes.</summary>
+        public double InstantMesureMs;
+
+        /// <summary>
+        /// L'heure de ce tic, en millisecondes, sur la même horloge que InstantMesureMs.
+        /// Toujours renseignée, même quand le regard n'est pas disponible. Les modes s'en
+        /// servent pour mesurer des durées (délai de fixation, délai d'activation…).
+        /// </summary>
+        public double MaintenantMs;
+
         /// <summary>Vrai si le regard est disponible mais en dehors de l'écran.</summary>
         public bool HorsEcran;
 

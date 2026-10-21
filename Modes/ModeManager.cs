@@ -16,6 +16,9 @@ namespace GazeBar
     ///
     /// Les modes y trouvent tout ce dont ils ont besoin : le regard (Regard), le calque plein
     /// écran (Calque) et la taille de l'écran.
+    ///
+    /// Le premier mode est en général le mode mouvement ; c'est lui qui passe la main au mode
+    /// regard fixe quand on fixe un point, et le mode regard fixe la lui rend.
     /// </summary>
     internal sealed class ModeManager
     {
@@ -149,6 +152,7 @@ namespace GazeBar
         private EtatRegard LireRegard()
         {
             EtatRegard etat = new EtatRegard();
+            etat.MaintenantMs = Regard.MaintenantMs;
 
             if (!Regard.IsRunning || !Regard.HasData ||
                 Regard.MsSinceLastSample > Parametres.Courants.AgeMaxMesure)
@@ -159,7 +163,9 @@ namespace GazeBar
 
             double x;
             double y;
-            Regard.GetLatest(out x, out y);
+            long numero;
+            double instantMs;
+            Regard.GetLatest(out x, out y, out numero, out instantMs);
 
             double largeur = LargeurEcran;
             double hauteur = HauteurEcran;
@@ -167,6 +173,8 @@ namespace GazeBar
             etat.Disponible = true;
             etat.X = x;
             etat.Y = y;
+            etat.Numero = numero;
+            etat.InstantMesureMs = instantMs;
             etat.HorsEcran = GazeSource.IsOffScreen(x, y, largeur, hauteur);
             etat.EnBasHorsEcran = y >= hauteur;
             return etat;

@@ -20,7 +20,19 @@
 
   Le cercle est dessiné deux fois, l'un sur l'autre : un trait noir dessous et un trait vert
   plus fin dessus, à moitié transparents (Opacity="0.5") pour rester discrets. Ainsi il reste
-  visible sur un fond clair comme sur un fond sombre.
+  visible sur un fond clair comme sur un fond sombre. En mode regard fixe, le trait de dessus
+  devient blanc et opaque : on voit tout de suite que le cercle est figé.
+
+  Éléments ajoutés à l'étape 2 (mode mouvement) :
+    Anneau        l'anneau de progression : un arc épais qui se remplit sur le bord du cercle,
+                  dans le sens des aiguilles d'une montre, en partant du haut ;
+    Icone         l'icône d'options du mode regard fixe : un carré sombre aux coins arrondis
+                  qui contient un symbole de la police Windows (« … », code E712) ;
+    AnneauIcone   l'anneau qui se remplit autour de l'icône quand on la regarde ;
+    Libelle       le texte « Options » affiché sous l'icône quand on la regarde (si
+                  AfficherLibelles est activé).
+  Les symboles viennent de la police « Segoe Fluent Icons » (Windows 11) ou, à défaut,
+  « Segoe MDL2 Assets » (Windows 10) : WPF prend la première présente sur l'ordinateur.
 -->
 <Window
     x:Class="GazeBar.OverlayWindow"
@@ -42,5 +54,23 @@
     <Canvas x:Name="Surface">
         <Ellipse x:Name="CercleFond" Stroke="#B0000000" StrokeThickness="2" Opacity="0.5" Visibility="Collapsed" />
         <Ellipse x:Name="Cercle" Stroke="Green" StrokeThickness="1" Opacity="0.5" Visibility="Collapsed" />
+
+        <!-- Anneau de progression du cercle. Sa forme (Data) est calculée dans le code. -->
+        <Path x:Name="Anneau" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"
+              StrokeEndLineCap="Round" Visibility="Collapsed" />
+
+        <!-- Icône d'options du mode regard fixe. Sa taille et sa place sont réglées dans le code. -->
+        <Border x:Name="Icone" Background="#D0202124" BorderBrush="White" BorderThickness="2"
+                CornerRadius="12" Visibility="Collapsed">
+            <TextBlock x:Name="IconeSymbole" Text="&#xE712;" Foreground="White"
+                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <Path x:Name="AnneauIcone" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"
+              StrokeEndLineCap="Round" Visibility="Collapsed" />
+        <Border x:Name="Libelle" Background="#E0202124" CornerRadius="6" Padding="8,2"
+                Visibility="Collapsed">
+            <TextBlock x:Name="LibelleTexte" Text="Options" Foreground="White" FontSize="20" />
+        </Border>
     </Canvas>
 </Window>

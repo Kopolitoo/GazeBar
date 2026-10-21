@@ -2,7 +2,7 @@ namespace GazeBar
 {
     /// <summary>
     /// Ce que tous les modes savent faire. C'est une classe « abstraite » : on ne crée jamais
-    /// un « Mode » tout court, mais un mode précis (ModeTest, plus tard ModeMouvement,
+    /// un « Mode » tout court, mais un mode précis (ModeMouvement, ModeRegardFixe, plus tard
     /// ModeMenu…) qui hérite de celle-ci et remplit les méthodes qui l'intéressent.
     ///
     /// Le ModeManager appelle ces méthodes au bon moment :

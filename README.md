@@ -51,7 +51,11 @@ La barre ne prend jamais le focus, pour ne pas perturber la fenêtre où l'on ag
 5. **Souris regard** (bouton à bascule) : le curseur suit directement le regard, lissé. Regarder hors de
    l'écran met en pause. Réglages `Lissage` et `ZoneMorteCurseur` dans `parametres.json`. Avec ce mode, les
    glisser-déposer suivent le vrai regard.
-6. **Annuler** relâche tout immédiatement. **Quitter** ferme le programme.
+6. **Mode mouvement** (bouton à bascule, activé au démarrage) : le cercle suit le regard, la
+   fixation fige le cercle et la fixation prolongée fait un clic gauche (voir plus bas).
+   **Suivi souris** (bouton à bascule) : le curseur suit aussi le cercle ; sinon, il ne bouge qu'au
+   moment du clic. Ce réglage est enregistré.
+7. **Annuler** relâche tout immédiatement. **Quitter** ferme le programme.
 
 ## Réglages
 
@@ -62,24 +66,38 @@ puis relancer GazeBar. Un fichier illisible est mis de côté (`parametres.json.
 remplacé par les valeurs par défaut. Seul le compte à rebours de 3 s reste une constante en haut
 de `HoldSession.cs` (il disparaîtra à l'étape 5).
 
-## Architecture des modes (étape 1 : socle-modes)
+## Architecture des modes
 
 - `OverlayWindow` : le « calque », une fenêtre transparente qui couvre tout l'écran, toujours au
-  premier plan, que les clics traversent et qui ne prend jamais le focus.
+  premier plan, que les clics traversent et qui ne prend jamais le focus. Il dessine le cercle,
+  l'anneau de progression et l'icône d'options.
 - `Modes/ModeManager` : connaît le mode courant et fait passer d'un mode à l'autre ; environ
   60 fois par seconde, il donne la position du regard (`EtatRegard`) au mode courant.
 - `Modes/Mode` : modèle commun à tous les modes (`Entrer`, `Actualiser`, `Quitter`).
-- `Modes/ModeTest` : provisoire, un cercle qui suit le regard (au centre de l'écran tant que le
-  regard est indisponible). Le bouton **Cercle test** de la barre l'affiche ou le cache.
-- `FiltreRegard` : lissage adaptatif (immobile quand on fixe, réactif quand l'œil se déplace),
-  réglé par `Lissage`, `ZoneMorteCurseur` et `RayonFixation`.
+- `Modes/ModeMouvement` (étape 2, mode par défaut) : un cercle lissé suit le regard ; avec
+  **Suivi souris**, le curseur le suit aussi. Quand le regard reste immobile, un anneau se
+  remplit sur le cercle ; plein, on passe en regard fixe.
+- `Modes/DetecteurFixation` : reconnaît une fixation. Une mesure est immobile si sa vitesse reste
+  sous `VitesseMaxFixation` (pixels par seconde) ET si elle reste à moins de `RayonFixation` du
+  point d'ancrage (la moyenne des mesures de la fixation). Il faut `DelaiFixation` secondes
+  d'immobilité, mesurées en vrai temps. Une mesure aberrante isolée est ignorée.
+- `Modes/ModeRegardFixe` : le cercle se fige (bord blanc) avec une icône d'options collée du côté
+  du centre de l'écran. Regarder dans le cercle pendant `DelaiClicDirect` fait un clic gauche
+  (si `ClicDirect` est activé) ; regarder l'icône pendant `DelaiActivation` l'active (le choix
+  d'action arrivera à l'étape 3 : pour l'instant, le curseur rejoint le point fixé) ; sortir du
+  cercle et de l'icône ramène au mode mouvement. Après un clic, une nouvelle fixation au même
+  endroit n'est pas reconnue tant que le regard n'en est pas sorti (pas de clics en rafale).
+- `Modes/ModeInactif` : plus rien ne suit le regard. Le bouton **Mode mouvement** de la barre y
+  passe ; le mode mouvement est aussi suspendu pendant un appui long, un glisser (il reprend
+  ensuite tout seul) ou la **Souris regard**.
 - Le calque se remet au-dessus de toutes les fenêtres (y compris la barre) deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
 
-Test de l'étape 1 : le cercle s'affiche au-dessus de toutes les fenêtres, suit le regard, et les
-clics passent à travers (on peut cliquer sur une icône du bureau située sous le cercle).
-Le journal indique la taille de l'écran et l'échelle détectée (ligne « Calque : … »).
+Test de l'étape 2 : on fixe un bouton, l'anneau se remplit puis le cercle se fige (bord blanc,
+icône d'options) ; on regarde ailleurs, il repart. En continuant à fixer le bouton, l'anneau se
+remplit à nouveau et un clic gauche est fait. Le journal note chaque passage en regard fixe et
+chaque clic direct.
 
 ## Limites connues
 
