@@ -20,6 +20,9 @@ namespace GazeBar
     /// <summary>
     /// LOGIQUE : déroule une action « bouton maintenu » du début à la fin.
     ///
+    /// ÉTAPE 4 : cette classe n'est plus utilisée, car la barre d'outils qui la lançait a été
+    /// retirée. Elle sera reprise à l'étape 5, depuis le choix d'action (sans compte à rebours).
+    ///
     /// Pourquoi un compte à rebours ? Pour cliquer sur le bouton de la barre d'outils,
     /// votre regard (donc le curseur) est sur la barre. Après le clic, vous avez
     /// quelques secondes pour regarder l'objet visé. À zéro, le bouton de la souris

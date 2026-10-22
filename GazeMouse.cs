@@ -7,6 +7,10 @@ namespace GazeBar
     /// LOGIQUE : mode « souris regard ». Quand il est activé, le curseur de Windows suit
     /// directement le regard (lu par GazeSource), sans attendre que l'on fixe un point.
     ///
+    /// ÉTAPE 4 : cette classe n'est plus utilisée (son bouton était dans la barre d'outils,
+    /// retirée). L'option « Suivi souris » du mode mouvement la remplace. Elle pourra servir
+    /// pour le glisser-déposer (étape 5), où le curseur suit le regard.
+    ///
     /// Trois protections :
     ///  - lissage : le curseur se rapproche du regard par petites étapes, ce qui efface
     ///    le tremblement naturel de l'œil ;

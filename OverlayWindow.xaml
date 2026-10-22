@@ -36,6 +36,11 @@
                   reste. Son contenu (capture agrandie, croix, icônes d'action et leurs anneaux)
                   est créé dans le code (ModeChoixAction et BoutonRegard). Le calque restant
                   transparent aux clics, cet écran noir ne capte jamais la souris.
+  Élément ajouté à l'étape 4 (mode menu) :
+    BarreMenu     la surface de la barre de menu, en bas de l'écran. Elle couvre tout le calque
+                  mais reste transparente : seuls la barre et ses boutons, créés dans le code
+                  (ModeMenu et BoutonRegard), sont visibles. Elle est placée AVANT l'écran
+                  noir, donc dessinée en dessous de lui.
   Les symboles viennent de la police « Segoe Fluent Icons » (Windows 11) ou, à défaut,
   « Segoe MDL2 Assets » (Windows 10) : WPF prend la première présente sur l'ordinateur.
 -->
@@ -77,6 +82,9 @@
                 Visibility="Collapsed">
             <TextBlock x:Name="LibelleTexte" Text="Options" Foreground="White" FontSize="20" />
         </Border>
+
+        <!-- Surface de la barre de menu (étape 4). Sa taille et son contenu sont réglés dans le code. -->
+        <Canvas x:Name="BarreMenu" Visibility="Collapsed" />
 
         <!-- Écran noir du mode choix d'action (étape 3). Sa taille est réglée dans le code. -->
         <Canvas x:Name="EcranChoix" Background="Black" Visibility="Collapsed" />

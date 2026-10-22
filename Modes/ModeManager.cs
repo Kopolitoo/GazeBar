@@ -19,6 +19,10 @@ namespace GazeBar
     ///
     /// Le premier mode est en général le mode mouvement ; c'est lui qui passe la main au mode
     /// regard fixe quand on fixe un point, et le mode regard fixe la lui rend.
+    ///
+    /// Étape 4 : c'est aussi lui qui ouvre le menu, quel que soit le mode courant (« toujours
+    /// une sortie ») : quand le regard reste en bas, hors de l'écran, pendant [DelaiMenu], on
+    /// passe au mode menu. Un mode peut l'empêcher (propriété Mode.MenuAutorise).
     /// </summary>
     internal sealed class ModeManager
     {
@@ -26,6 +30,9 @@ namespace GazeBar
         public const int IntervalleMs = 16;
 
         private readonly DispatcherTimer _horloge;
+
+        // Instant (ms) où le regard est passé en bas hors de l'écran ; -1 = il n'y est pas.
+        private double _debutEnBasMs = -1;
 
         public ModeManager(GazeSource regard, OverlayWindow calque)
         {
@@ -138,6 +145,12 @@ namespace GazeBar
 
             try
             {
+                // Le menu s'ouvre-t-il ? Si oui, le mode courant n'est pas actualisé à ce tic.
+                if (SurveillerMenu(etat))
+                {
+                    return;
+                }
+
                 ModeCourant.Actualiser(etat);
             }
             catch (Exception ex)
@@ -147,6 +160,35 @@ namespace GazeBar
                 MouseInjector.ReleaseAll();
                 App.Log("ERREUR dans le mode " + ModeCourant.Nom + " : " + ex);
             }
+        }
+
+        /// <summary>
+        /// Ouvre le menu quand le regard reste en bas, hors de l'écran, pendant [DelaiMenu].
+        /// Le minuteur repart de zéro dès que le regard est ailleurs, ou perdu : on ne compte
+        /// que ce qu'on voit vraiment. Renvoie vrai si le menu vient de s'ouvrir.
+        /// </summary>
+        private bool SurveillerMenu(EtatRegard etat)
+        {
+            if (!etat.Disponible || !etat.EnBasHorsEcran)
+            {
+                _debutEnBasMs = -1;
+                return false;
+            }
+
+            if (_debutEnBasMs < 0)
+            {
+                _debutEnBasMs = etat.MaintenantMs;
+                return false;
+            }
+
+            if (etat.MaintenantMs - _debutEnBasMs >= Parametres.Courants.DelaiMenu * 1000.0 &&
+                ModeCourant.MenuAutorise)
+            {
+                _debutEnBasMs = -1;
+                ChangerMode(new ModeMenu());
+                return true;
+            }
+            return false;
         }
 
         /// <summary>Prépare la « photo » du regard pour le mode courant.</summary>

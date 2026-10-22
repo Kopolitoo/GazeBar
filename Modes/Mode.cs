@@ -24,6 +24,17 @@ namespace GazeBar
         /// <summary>Nom lisible du mode, pour le journal et l'affichage.</summary>
         public abstract string Nom { get; }
 
+        /// <summary>
+        /// Vrai si le regard en bas hors de l'écran peut ouvrir le menu pendant ce mode (étape 4).
+        /// C'est le cas presque partout (« toujours une sortie », dit le cahier des charges) ;
+        /// un mode peut l'interdire, par exemple le menu lui-même, ou le choix d'action
+        /// pendant le court instant où il prend sa photo.
+        /// </summary>
+        public virtual bool MenuAutorise
+        {
+            get { return true; }
+        }
+
         /// <summary>Le gestionnaire qui pilote ce mode. Donné par le ModeManager avant Entrer(regard).</summary>
         protected ModeManager Gestionnaire { get; private set; }
 

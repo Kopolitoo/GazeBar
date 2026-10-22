@@ -1,7 +1,13 @@
 # GazeBar
 
-Barre d'outils pour la commande de l'ordinateur au regard, en complément de TD Control
-(Tobii Dynavox PCEye 5). Application WPF (.NET Framework 4.8, 32 bits), code commenté en français.
+Logiciel de commande de l'ordinateur au regard pour le Tobii Dynavox PCEye 5, organisé en
+modes (mouvement, regard fixe, choix d'action, menu…). Application WPF (.NET Framework 4.8,
+32 bits), code commenté en français. TD Control est mis en pause pendant l'utilisation de GazeBar.
+
+> Depuis l'étape 4, l'ancienne barre d'outils en haut de l'écran a disparu : tout se fait au
+> regard, et la barre de menu s'ouvre en regardant **en bas, hors de l'écran**. Les parties
+> « But de cette première version » et « Protocole de test » ci-dessous décrivent les premières
+> versions (avec la barre d'outils) et sont gardées pour mémoire.
 
 > Travail à plusieurs, branches et GitHub : voir [docs/GUIDE-GIT.md](docs/GUIDE-GIT.md).
 
@@ -102,11 +108,25 @@ de `HoldSession.cs` (il disparaîtra à l'étape 5).
   `DelaiActivation` l'active (anneau de progression). Avant le clic, l'écran noir est caché et
   l'on attend 60 ms qu'il ait disparu ; puis retour au mode mouvement.
 - `BoutonRegard` : un bouton activable au regard (symbole de la police Windows, pastille,
-  anneau, libellé au survol), dessiné sur le calque. Il servira aussi pour la barre de menu.
-- `Modes/ModeInactif` : plus rien ne suit le regard. Le bouton **Mode mouvement** de la barre y
-  passe ; le mode mouvement est aussi suspendu pendant un appui long, un glisser (il reprend
-  ensuite tout seul) ou la **Souris regard**.
-- Le calque se remet au-dessus de toutes les fenêtres (y compris la barre) deux fois par seconde.
+  anneau, libellé au survol), dessiné sur le calque. Il peut être vide (« + » grisé),
+  indisponible (son symbole, grisé) ou allumé (bord vert, pour un interrupteur).
+- `ViseurBoutons` (étape 4) : décide quel bouton est regardé et quand il s'active ; partagé par
+  le choix d'action et le menu.
+- `Modes/ModeMenu` (étape 4) : regarder en bas, hors de l'écran, pendant `DelaiMenu` (0,5 s)
+  ouvre une barre centrée en bas de l'écran, depuis n'importe quel mode (c'est le `ModeManager`
+  qui surveille). Boutons : Paramètres et Jeu (grisés, étapes 6 et 10), Calibration, Clavier
+  visuel, Pause (ou Reprendre si l'on vient de la pause), Suivi souris (interrupteur, bord vert
+  quand il est activé), Diagnostic, Quitter GazeBar (avec confirmation « Oui » / « Non »).
+  Regarder hors de la barre pendant `DelaiFermetureMenu` (1 s) la ferme et ramène au mode
+  d'avant. Un petit cercle montre où est le regard.
+- `Modes/ModePause` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
+  (bouton « Reprendre »).
+- `Modes/ModeCalibration` et `CalibrationTobii` (étape 4) : lancent l'outil de calibration Tobii
+  et attendent la fermeture de sa fenêtre pour revenir au mode mouvement. Le nom exact de la
+  commande Tobii n'a pas pu être vérifié : le journal note ce qui a été trouvé et essayé.
+- `CrochetClavier` (étape 4) : la touche **Échap** ramène au mode mouvement depuis n'importe quel
+  mode, pour l'aidant. La touche arrive aussi normalement au programme actif.
+- Le calque se remet au-dessus de toutes les fenêtres deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
 
@@ -118,6 +138,10 @@ chaque clic direct.
 Test de l'étape 3 : on fixe un fichier dans l'Explorateur, on regarde l'icône d'options, l'écran
 noir montre la zone agrandie ; on regarde « double clic » : l'écran noir disparaît et le fichier
 s'ouvre, sans toucher la souris.
+
+Test de l'étape 4 : on regarde en bas, hors de l'écran : la barre de menu apparaît. On regarde
+« Pause » : tout s'arrête. On regarde de nouveau en bas, puis « Reprendre » : le cercle revient.
+Le tout uniquement au regard. Échap ramène aussi au mode mouvement.
 
 ## Limites connues
 

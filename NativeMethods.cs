@@ -146,6 +146,60 @@ namespace GazeBar
 
         internal const uint SRCCOPY = 0x00CC0020;   // BitBlt : copie simple des pixels
 
+        // ───────────────────────── Fenêtres des autres programmes (étape 4) ─────────────────────────
+        //
+        // Pendant la calibration, GazeBar surveille la fenêtre de l'outil Tobii pour savoir
+        // quand elle se ferme (voir ModeCalibration).
+
+        /// <summary>La fenêtre active (celle qui reçoit le clavier), ou IntPtr.Zero.</summary>
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetForegroundWindow();
+
+        /// <summary>Vrai si cette fenêtre existe encore.</summary>
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool IsWindow(IntPtr window);
+
+        /// <summary>Vrai si cette fenêtre est visible (ni cachée, ni fermée).</summary>
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool IsWindowVisible(IntPtr window);
+
+        /// <summary>Donne le numéro du programme (processus) auquel appartient une fenêtre.</summary>
+        [DllImport("user32.dll")]
+        internal static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+
+        /// <summary>Lit le titre d'une fenêtre (pour le journal).</summary>
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern int GetWindowText(IntPtr window, System.Text.StringBuilder text, int maxCount);
+
+        // ───────────────────────── Touche Échap de l'aidant (étape 4) ─────────────────────────
+        //
+        // Un « crochet clavier » (hook) permet d'être prévenu de chaque touche appuyée, dans
+        // n'importe quel programme. GazeBar se contente d'OBSERVER : la touche continue son
+        // chemin normalement vers le programme actif (voir CrochetClavier.cs).
+
+        /// <summary>La fonction appelée par Windows à chaque touche (signature imposée par Windows).</summary>
+        internal delegate IntPtr LowLevelKeyboardProc(int code, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern IntPtr SetWindowsHookEx(int hookId, LowLevelKeyboardProc callback, IntPtr module, uint threadId);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool UnhookWindowsHookEx(IntPtr hook);
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        internal static extern IntPtr GetModuleHandle(string moduleName);
+
+        internal const int WH_KEYBOARD_LL = 13;     // crochet clavier « bas niveau », pour tout le système
+        internal const int WM_KEYDOWN = 0x0100;     // une touche est enfoncée
+        internal const int WM_SYSKEYDOWN = 0x0104;  // idem, avec Alt
+        internal const int VK_ESCAPE = 0x1B;        // code de la touche Échap
+
         // ───────────────────────── Précision de l'horloge ─────────────────────────
 
         /// <summary>Demande à Windows une horloge plus précise (1 ms au lieu de ~15 ms environ).</summary>

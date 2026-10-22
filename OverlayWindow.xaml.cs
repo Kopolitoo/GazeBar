@@ -268,6 +268,7 @@ namespace GazeBar
             MasquerAnneau();
             MasquerIcone();
             MasquerEcranChoix();
+            MasquerBarreMenu();
         }
 
         // ───────────────────────── Écran noir du choix d'action (étape 3) ─────────────────────────
@@ -303,6 +304,32 @@ namespace GazeBar
         public void MasquerEcranChoix()
         {
             EcranChoix.Visibility = Visibility.Collapsed;
+        }
+
+        // ───────────────────────── Barre de menu (étape 4) ─────────────────────────
+
+        /// <summary>
+        /// Vide la surface de la barre de menu et lui donne la taille du calque.
+        /// Elle reste cachée : le mode menu la remplit, puis appelle AfficherBarreMenu.
+        /// </summary>
+        public void PreparerBarreMenu()
+        {
+            BarreMenu.Children.Clear();
+            BarreMenu.Width = ActualWidth;
+            BarreMenu.Height = ActualHeight;
+            Canvas.SetLeft(BarreMenu, 0);
+            Canvas.SetTop(BarreMenu, 0);
+        }
+
+        public void AfficherBarreMenu()
+        {
+            BarreMenu.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>Cache la barre de menu (son contenu est gardé jusqu'au prochain PreparerBarreMenu).</summary>
+        public void MasquerBarreMenu()
+        {
+            BarreMenu.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>
