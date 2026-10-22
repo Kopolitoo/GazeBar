@@ -58,10 +58,10 @@ namespace GazeBar
         /// Espace entre deux boutons, et entre les boutons et le bord de la barre, en pixels.
         /// Assez grand pour que l'anneau de progression d'un bouton ne touche pas son voisin.
         /// </summary>
-        private const double Ecart = 40;
+        private const double Ecart = 60;
 
         /// <summary>Espace entre la barre et le bas de l'écran, en pixels.</summary>
-        private const double MargeBas = 10;
+        private const double MargeBas = 30;
 
         /// <summary>
         /// Marge autour de la barre, en pixels : le regard y est encore « dans la barre ».
@@ -402,7 +402,9 @@ namespace GazeBar
             // ── Taille des boutons : [TailleIcones], réduite si la barre ne tient pas dans
             //    la largeur de l'écran.
             int n = boutons.Count;
-            double taille = p.TailleIcones;
+            // Les boutons du menu sont deux fois plus grands que les autres icônes
+            // (demande de l'utilisateur du 22/10/2026).
+            double taille = 2 * p.TailleIcones;
             double tailleMax = (largeur - 20 - (n + 1) * Ecart) / n;
             taille = Math.Max(20, Math.Min(taille, tailleMax));
 
