@@ -34,6 +34,11 @@ namespace GazeBar
         // Instant (ms) où le regard est passé en bas hors de l'écran ; -1 = il n'y est pas.
         private double _debutEnBasMs = -1;
 
+        // Pour le journal : où était le regard au tic précédent (voir NoterOuEstLeRegard).
+        private string _situationRegard = "";
+        private double _dernierX;
+        private double _dernierY;
+
         public ModeManager(GazeSource regard, OverlayWindow calque)
         {
             Regard = regard;
@@ -169,6 +174,8 @@ namespace GazeBar
         /// </summary>
         private bool SurveillerMenu(EtatRegard etat)
         {
+            NoterOuEstLeRegard(etat);
+
             if (!etat.Disponible || !etat.EnBasHorsEcran)
             {
                 _debutEnBasMs = -1;
@@ -189,6 +196,46 @@ namespace GazeBar
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Diagnostic du menu : note dans le journal chaque fois que le regard change de
+        /// situation (sur l'écran, sous l'écran, hors de l'écran ailleurs, perdu), avec sa
+        /// dernière position connue. Sert à vérifier que le PCEye 5 mesure bien le regard
+        /// SOUS l'écran (condition pour ouvrir le menu), au lieu de le perdre.
+        /// </summary>
+        private void NoterOuEstLeRegard(EtatRegard etat)
+        {
+            string situation;
+            if (!etat.Disponible)
+            {
+                situation = "perdu";
+            }
+            else if (etat.EnBasHorsEcran)
+            {
+                situation = "sous l'écran";
+            }
+            else if (etat.HorsEcran)
+            {
+                situation = "hors de l'écran (pas en bas)";
+            }
+            else
+            {
+                situation = "sur l'écran";
+            }
+
+            if (etat.Disponible)
+            {
+                _dernierX = etat.X;
+                _dernierY = etat.Y;
+            }
+
+            if (situation != _situationRegard)
+            {
+                _situationRegard = situation;
+                App.Log("Regard : " + situation + " (dernière position X " + _dernierX.ToString("F0") +
+                        ", Y " + _dernierY.ToString("F0") + " ; écran " + LargeurEcran + " × " + HauteurEcran + ")");
+            }
         }
 
         /// <summary>Prépare la « photo » du regard pour le mode courant.</summary>
