@@ -87,10 +87,19 @@ de `HoldSession.cs` (il disparaîtra à l'étape 5).
 - `Modes/ModeRegardFixe` : le cercle se fige (bord blanc) avec une icône d'options collée du côté
   du centre de l'écran, et le curseur se place sur le point fixé. Si `ClicDirect` est activé
   (non par défaut, à mettre à `true` dans `parametres.json`), regarder dans le cercle pendant
-  `DelaiClicDirect` fait un clic gauche ; regarder l'icône pendant `DelaiActivation` l'active
-  (le choix d'action arrivera à l'étape 3 : pour l'instant, rien de plus) ; sortir du
+  `DelaiClicDirect` fait un clic gauche ; regarder l'icône pendant `DelaiActivation` ouvre le
+  choix d'action ; sortir du
   cercle et de l'icône ramène au mode mouvement. Après un clic, une nouvelle fixation au même
   endroit n'est pas reconnue tant que le regard n'en est pas sorti (pas de clics en rafale).
+- `Modes/ModeChoixAction` (étape 3) : la zone autour du curseur (carré de 2 × `RayonCercle`) est
+  photographiée (`CaptureEcran`), puis affichée agrandie ×2 au centre d'un écran noir, avec une
+  croix à la place du curseur. Autour, une couronne de sept emplacements : clic gauche (en haut),
+  clic droit (en haut à droite), double clic (en haut à gauche) ; les quatre autres sont vides
+  jusqu'aux étapes suivantes. À droite, une icône « retour ». Regarder une icône pendant
+  `DelaiActivation` l'active (anneau de progression). Avant le clic, l'écran noir est caché et
+  l'on attend 60 ms qu'il ait disparu ; puis retour au mode mouvement.
+- `BoutonRegard` : un bouton activable au regard (symbole de la police Windows, pastille,
+  anneau, libellé au survol), dessiné sur le calque. Il servira aussi pour la barre de menu.
 - `Modes/ModeInactif` : plus rien ne suit le regard. Le bouton **Mode mouvement** de la barre y
   passe ; le mode mouvement est aussi suspendu pendant un appui long, un glisser (il reprend
   ensuite tout seul) ou la **Souris regard**.
@@ -102,6 +111,10 @@ Test de l'étape 2 : on fixe un bouton, le cercle se fige (bord blanc, icône d'
 curseur se place sur le bouton ; on regarde ailleurs, il repart. Avec `ClicDirect` à `true`, en
 continuant à fixer le bouton, un anneau se remplit puis un clic gauche est fait. Le journal note chaque passage en regard fixe et
 chaque clic direct.
+
+Test de l'étape 3 : on fixe un fichier dans l'Explorateur, on regarde l'icône d'options, l'écran
+noir montre la zone agrandie ; on regarde « double clic » : l'écran noir disparaît et le fichier
+s'ouvre, sans toucher la souris.
 
 ## Limites connues
 

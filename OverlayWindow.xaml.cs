@@ -261,12 +261,63 @@ namespace GazeBar
             Libelle.Visibility = Visibility.Collapsed;
         }
 
-        /// <summary>Cache tout ce qui est dessiné sur le calque.</summary>
+        /// <summary>Cache tout ce qui est dessiné sur le calque (écran noir compris).</summary>
         public void MasquerTout()
         {
             MasquerCercle();
             MasquerAnneau();
             MasquerIcone();
+            MasquerEcranChoix();
+        }
+
+        // ───────────────────────── Écran noir du choix d'action (étape 3) ─────────────────────────
+
+        /// <summary>
+        /// Vrai quand le calque est réellement affiché à l'écran. Avant, aucune conversion de
+        /// coordonnées n'est possible (PointFromScreen échouerait).
+        /// </summary>
+        public bool Pret
+        {
+            get { return PresentationSource.FromVisual(this) != null; }
+        }
+
+        /// <summary>
+        /// Vide l'écran noir de son contenu précédent et lui donne la taille du calque.
+        /// Il reste caché : le mode le remplit, puis appelle AfficherEcranChoix.
+        /// </summary>
+        public void PreparerEcranChoix()
+        {
+            EcranChoix.Children.Clear();
+            EcranChoix.Width = ActualWidth;
+            EcranChoix.Height = ActualHeight;
+            Canvas.SetLeft(EcranChoix, 0);
+            Canvas.SetTop(EcranChoix, 0);
+        }
+
+        public void AfficherEcranChoix()
+        {
+            EcranChoix.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>Cache l'écran noir (son contenu est gardé jusqu'au prochain PreparerEcranChoix).</summary>
+        public void MasquerEcranChoix()
+        {
+            EcranChoix.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Convertit un point de l'écran (pixels réels) en position dans le calque (unités WPF).
+        /// À n'utiliser que si Pret est vrai.
+        /// </summary>
+        public Point VersWpf(double xPixels, double yPixels)
+        {
+            return PointFromScreen(new Point(xPixels, yPixels));
+        }
+
+        /// <summary>Convertit une longueur en pixels réels en longueur en unités WPF.</summary>
+        public double LongueurVersWpf(double pixels)
+        {
+            return PixelsVersWpf(pixels);
         }
 
         /// <summary>
@@ -289,6 +340,18 @@ namespace GazeBar
             Point centre = PointFromScreen(new Point(xPixels, yPixels));
             double rayon = PixelsVersWpf(rayonPixels);
 
+            chemin.Data = FormeArc(centre, rayon, progression);
+            chemin.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// La forme d'un arc qui part du haut et tourne dans le sens des aiguilles d'une montre,
+        /// sur une fraction « progression » du tour (centre et rayon en unités WPF).
+        /// « static » et « internal » : les boutons du choix d'action (BoutonRegard) s'en
+        /// servent aussi pour leur anneau de progression.
+        /// </summary>
+        internal static Geometry FormeArc(Point centre, double rayon, double progression)
+        {
             Geometry forme;
             if (progression >= 0.999)
             {
@@ -313,8 +376,7 @@ namespace GazeBar
             }
 
             forme.Freeze();
-            chemin.Data = forme;
-            chemin.Visibility = Visibility.Visible;
+            return forme;
         }
 
         /// <summary>Positionne une ellipse : son coin en haut à gauche est à (centre − rayon).</summary>
