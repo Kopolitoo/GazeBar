@@ -23,7 +23,11 @@ namespace GazeBar
     ///
     ///  2. CHOIX. Un écran noir couvre tout l'écran. Au centre : la photo agrandie ×2
     ///     (400 × 400 px) et une croix à la place du curseur. Autour : la couronne de sept
-    ///     emplacements d'action. À droite : l'icône « retour ».
+    ///     emplacements d'action. À gauche : les trois emplacements des modificateurs.
+    ///     À droite : l'icône « retour ». Un emplacement sans action est quand même dessiné,
+    ///     grisé, pour montrer qu'on pourra y mettre une action (demande de l'utilisateur
+    ///     du 22/10/2026). Par-dessus tout, un petit cercle (moitié de [RayonCercle]) montre
+    ///     où est le regard.
     ///     Regarder une icône pendant [DelaiActivation] l'active (son anneau se remplit).
     ///
     ///  3. EXÉCUTION. L'écran noir est caché, on attend [AttenteMs] qu'il ait disparu, puis le
@@ -37,7 +41,8 @@ namespace GazeBar
     ///     glisser-déposer dans la couronne ;
     ///   - étapes 7 et 8 : la loupe et le défilement dans la couronne ;
     ///   - étape 9 : le bouton de configuration de la disposition.
-    /// Pour l'instant, la couronne ne contient donc que trois actions sur sept emplacements.
+    /// Pour l'instant, la couronne ne contient donc que trois actions sur sept emplacements,
+    /// et les trois emplacements des modificateurs sont vides.
     /// </summary>
     internal sealed class ModeChoixAction : Mode
     {
@@ -97,9 +102,24 @@ namespace GazeBar
         private Etape _etape;
         private double _debutEtapeMs;
 
-        // Les boutons affichés, et l'action de chacun (même ordre).
+        /// <summary>Nombre d'emplacements de modificateurs, à gauche (Ctrl, Maj, Alt à l'étape 5).</summary>
+        private const int NombreModificateurs = 3;
+
+        /// <summary>Libellé d'un emplacement vide, affiché au survol.</summary>
+        private const string LibelleVide = "Emplacement libre (à configurer dans les paramètres)";
+
+        // Les boutons affichés, et l'action de chacun (même ordre ; null = emplacement vide).
         private readonly List<BoutonRegard> _boutons = new List<BoutonRegard>();
-        private readonly List<ActionChoix> _actions = new List<ActionChoix>();
+        private readonly List<ActionChoix?> _actions = new List<ActionChoix?>();
+
+        // Le petit cercle qui montre le regard : deux ellipses (trait noir dessous, vert dessus),
+        // ajoutées en dernier sur l'écran noir pour être par-dessus tout. Position lissée en
+        // pixels d'écran ; _cercleRegardPlace = faux tant qu'il n'a pas de position.
+        private Ellipse _cercleRegardFond;
+        private Ellipse _cercleRegard;
+        private double _rx;
+        private double _ry;
+        private bool _cercleRegardPlace;
 
         // Le bouton regardé (-1 = aucun), et le « candidat » vu sur les dernières mesures.
         private int _vise = -1;
@@ -180,6 +200,8 @@ namespace GazeBar
             Gestionnaire.Calque.EcranChoix.Children.Clear();
             _boutons.Clear();
             _actions.Clear();
+            _cercleRegard = null;
+            _cercleRegardFond = null;
         }
 
         // ───────────────────────── 2. Le choix ─────────────────────────
@@ -213,17 +235,21 @@ namespace GazeBar
                 _debutViseMs = -1;
             }
 
+            // Un emplacement vide ne s'active jamais : pas de progression.
             double progression = 0;
-            if (_vise >= 0 && _debutViseMs >= 0)
+            if (_vise >= 0 && _debutViseMs >= 0 && _boutons[_vise].Actif)
             {
                 progression = (maintenant - _debutViseMs) / (p.DelaiActivation * 1000.0);
             }
 
             if (progression >= 1)
             {
-                Activer(_actions[_vise]);
+                Activer(_actions[_vise].Value);
                 return;
             }
+
+            // Le petit cercle du regard (seulement quand le regard est sur l'écran).
+            DeplacerCercleRegard(regard, p);
 
             // Le dessin des boutons : anneau sur le bouton visé seulement.
             for (int i = 0; i < _boutons.Count; i++)
@@ -402,16 +428,23 @@ namespace GazeBar
 
             for (int i = 0; i < Disposition.Length; i++)
             {
-                if (!Disposition[i].HasValue)
-                {
-                    continue;   // emplacement vide pour l'instant
-                }
-
                 // Angle : -90° = en haut, puis un septième de tour par emplacement.
+                // Un emplacement vide (null) est dessiné grisé.
                 double angle = (-90 + i * 360.0 / Disposition.Length) * Math.PI / 180;
                 double x = cxEcran + rayonCouronne * Math.Cos(angle);
                 double y = cyEcran + rayonCouronne * Math.Sin(angle);
-                AjouterBouton(calque, ecran, Disposition[i].Value, x, y, taille);
+                AjouterBouton(calque, ecran, Disposition[i], x, y, taille);
+            }
+
+            // ── Les emplacements des modificateurs, à gauche : une colonne de trois, à
+            //    mi-chemin entre le bord gauche et la couronne. Vides jusqu'à l'étape 5.
+            double xModificateurs = (cxEcran - rayonCouronne - taille / 2) / 2;
+            xModificateurs = Math.Max(xModificateurs, taille / 2 + 10);
+            double ecart = taille + 30;
+            for (int i = 0; i < NombreModificateurs; i++)
+            {
+                double y = cyEcran + (i - (NombreModificateurs - 1) / 2.0) * ecart;
+                AjouterBouton(calque, ecran, null, xModificateurs, y, taille);
             }
 
             // ── L'icône « retour », à droite : à mi-chemin entre la couronne et le bord droit.
@@ -419,17 +452,72 @@ namespace GazeBar
             xRetour = Math.Min(xRetour, largeur - taille / 2 - 10);
             AjouterBouton(calque, ecran, ActionChoix.Retour, xRetour, cyEcran, taille);
 
+            // ── Le petit cercle du regard, ajouté EN DERNIER : il est ainsi dessiné par-dessus
+            //    la photo et les boutons. Il apparaîtra à la première mesure sur l'écran.
+            _cercleRegardFond = new Ellipse();
+            _cercleRegardFond.Stroke = Brushes.Black;
+            _cercleRegardFond.StrokeThickness = 4;
+            _cercleRegardFond.Opacity = 0.6;
+            _cercleRegardFond.Visibility = Visibility.Collapsed;
+            _cercleRegard = new Ellipse();
+            _cercleRegard.Stroke = Brushes.LimeGreen;
+            _cercleRegard.StrokeThickness = 2;
+            _cercleRegard.Visibility = Visibility.Collapsed;
+            ecran.Children.Add(_cercleRegardFond);
+            ecran.Children.Add(_cercleRegard);
+            _cercleRegardPlace = false;
+
             calque.AfficherEcranChoix();
             _etape = Etape.Choix;
             App.Log("Choix d'action : photo de " + cote + " × " + cote + " px en (" + ox + ", " + oy + ")");
             return true;
         }
 
-        /// <summary>Crée le bouton d'une action et le place sur l'écran noir.</summary>
-        private void AjouterBouton(OverlayWindow calque, Canvas ecran, ActionChoix action,
+        /// <summary>
+        /// Déplace le petit cercle du regard : à chaque tic, il parcourt une fraction [Lissage]
+        /// du chemin vers le regard, comme le cercle du mode mouvement. Son rayon est la moitié
+        /// de [RayonCercle]. Regard perdu ou hors de l'écran : il reste où il est.
+        /// </summary>
+        private void DeplacerCercleRegard(EtatRegard regard, Parametres p)
+        {
+            if (_cercleRegard == null || !regard.SurEcran)
+            {
+                return;
+            }
+
+            if (!_cercleRegardPlace)
+            {
+                _rx = regard.X;
+                _ry = regard.Y;
+                _cercleRegardPlace = true;
+            }
+            _rx += (regard.X - _rx) * p.Lissage;
+            _ry += (regard.Y - _ry) * p.Lissage;
+
+            OverlayWindow calque = Gestionnaire.Calque;
+            Point centre = calque.VersWpf(_rx, _ry);
+            double rayon = calque.LongueurVersWpf(p.RayonCercle / 2);
+            PlacerEllipse(_cercleRegardFond, centre, rayon);
+            PlacerEllipse(_cercleRegard, centre, rayon);
+        }
+
+        private static void PlacerEllipse(Ellipse ellipse, Point centre, double rayon)
+        {
+            ellipse.Width = rayon * 2;
+            ellipse.Height = rayon * 2;
+            Canvas.SetLeft(ellipse, centre.X - rayon);
+            Canvas.SetTop(ellipse, centre.Y - rayon);
+            ellipse.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// Crée le bouton d'une action (ou un emplacement vide si action est null) et le place
+        /// sur l'écran noir.
+        /// </summary>
+        private void AjouterBouton(OverlayWindow calque, Canvas ecran, ActionChoix? action,
                                    double x, double y, double taille)
         {
-            BoutonRegard bouton = CreerBouton(action);
+            BoutonRegard bouton = action.HasValue ? CreerBouton(action.Value) : BoutonRegard.Vide(LibelleVide);
             bouton.Placer(calque, ecran, x, y, taille);
             _boutons.Add(bouton);
             _actions.Add(action);

@@ -87,15 +87,18 @@ de `HoldSession.cs` (il disparaîtra à l'étape 5).
 - `Modes/ModeRegardFixe` : le cercle se fige (bord blanc) avec une icône d'options collée du côté
   du centre de l'écran, et le curseur se place sur le point fixé. Si `ClicDirect` est activé
   (non par défaut, à mettre à `true` dans `parametres.json`), regarder dans le cercle pendant
-  `DelaiClicDirect` fait un clic gauche ; regarder l'icône pendant `DelaiActivation` ouvre le
-  choix d'action ; sortir du
+  `DelaiClicDirect` fait un clic gauche ; regarder l'icône pendant `DelaiIconeOptions` (0,3 s,
+  plus court que les autres boutons) ouvre le choix d'action ; sortir du
   cercle et de l'icône ramène au mode mouvement. Après un clic, une nouvelle fixation au même
   endroit n'est pas reconnue tant que le regard n'en est pas sorti (pas de clics en rafale).
 - `Modes/ModeChoixAction` (étape 3) : la zone autour du curseur (carré de 2 × `RayonCercle`) est
   photographiée (`CaptureEcran`), puis affichée agrandie ×2 au centre d'un écran noir, avec une
   croix à la place du curseur. Autour, une couronne de sept emplacements : clic gauche (en haut),
   clic droit (en haut à droite), double clic (en haut à gauche) ; les quatre autres sont vides
-  jusqu'aux étapes suivantes. À droite, une icône « retour ». Regarder une icône pendant
+  jusqu'aux étapes suivantes. À gauche, trois emplacements de modificateurs (vides jusqu'à
+  l'étape 5). Les emplacements vides sont dessinés grisés avec un « + », pour montrer qu'on
+  pourra les configurer. À droite, une icône « retour ». Un petit cercle (moitié de
+  `RayonCercle`), par-dessus tout, montre où est le regard. Regarder une icône pendant
   `DelaiActivation` l'active (anneau de progression). Avant le clic, l'écran noir est caché et
   l'on attend 60 ms qu'il ait disparu ; puis retour au mode mouvement.
 - `BoutonRegard` : un bouton activable au regard (symbole de la police Windows, pastille,

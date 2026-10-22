@@ -16,6 +16,11 @@ namespace GazeBar
     ///   - un anneau de progression qui se remplit pendant qu'on le regarde ;
     ///   - un libellé en texte, affiché au survol si [AfficherLibelles] est activé.
     ///
+    /// Un bouton peut être « vide » (méthode Vide) : c'est un emplacement auquel aucune action
+    /// n'est encore attribuée. Il est dessiné grisé, avec un « + » pâle, pour montrer à
+    /// l'utilisateur qu'il pourra y mettre une action (dans les paramètres, étape 9). Il ne
+    /// s'active jamais ; seul son libellé apparaît au survol.
+    ///
     /// Il ne sait pas lui-même s'il est regardé ni depuis combien de temps : c'est le mode
     /// (ModeChoixAction) qui le décide et qui lui dit quoi dessiner (méthode Dessiner).
     /// Cette classe servira aussi pour la barre de menu (étape 4).
@@ -37,6 +42,24 @@ namespace GazeBar
         private static readonly Brush FondSurvol = Figer(new SolidColorBrush(Color.FromArgb(0xFF, 0x3C, 0x40, 0x43)));
         private static readonly Brush Blanc = Figer(new SolidColorBrush(Colors.White));
         private static readonly Brush Vert = Figer(new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xC8, 0x53)));
+        private static readonly Brush FondVide = Figer(new SolidColorBrush(Color.FromArgb(0x80, 0x50, 0x50, 0x50)));
+        private static readonly Brush FondVideSurvol = Figer(new SolidColorBrush(Color.FromArgb(0xA0, 0x60, 0x60, 0x60)));
+        private static readonly Brush Gris = Figer(new SolidColorBrush(Color.FromArgb(0xFF, 0x90, 0x90, 0x90)));
+
+        /// <summary>
+        /// Crée un emplacement vide (grisé, jamais activé), avec ce libellé au survol.
+        /// Symbole E710 = « + » (ajouter) de la police Windows.
+        /// </summary>
+        public static BoutonRegard Vide(string libelle)
+        {
+            BoutonRegard bouton = new BoutonRegard("\uE710", null, libelle);
+            bouton.Actif = false;
+            bouton._fond.Background = FondVide;
+            bouton._fond.BorderBrush = Gris;
+            bouton._symbole.Foreground = Gris;
+            bouton._symbole.Opacity = 0.6;
+            return bouton;
+        }
 
         /// <summary>
         /// Crée le bouton.
@@ -47,6 +70,7 @@ namespace GazeBar
         public BoutonRegard(string symbole, string pastille, string libelle)
         {
             Libelle = libelle;
+            Actif = true;
 
             _symbole = new TextBlock();
             _symbole.Text = symbole;
@@ -94,6 +118,9 @@ namespace GazeBar
             _libelle.Child = texte;
             _libelle.Visibility = Visibility.Collapsed;
         }
+
+        /// <summary>Faux pour un emplacement vide : il ne s'active jamais (pas d'anneau).</summary>
+        public bool Actif { get; private set; }
 
         /// <summary>Le texte affiché au survol (et écrit dans le journal à l'activation).</summary>
         public string Libelle { get; private set; }
@@ -164,9 +191,16 @@ namespace GazeBar
         /// </summary>
         public void Dessiner(double progression, bool survol, bool afficherLibelle)
         {
-            _fond.Background = survol ? FondSurvol : FondNormal;
+            if (Actif)
+            {
+                _fond.Background = survol ? FondSurvol : FondNormal;
+            }
+            else
+            {
+                _fond.Background = survol ? FondVideSurvol : FondVide;
+            }
 
-            if (progression > 0)
+            if (Actif && progression > 0)
             {
                 _anneau.Data = OverlayWindow.FormeArc(_centreWpf, _rayonAnneau, Math.Min(progression, 1));
                 _anneau.Visibility = Visibility.Visible;

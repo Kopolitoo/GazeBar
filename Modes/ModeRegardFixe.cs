@@ -18,7 +18,8 @@ namespace GazeBar
     ///  - dans le cercle : si [ClicDirect] est activé (non par défaut), l'anneau se remplit pendant
     ///    [DelaiClicDirect] ; plein, un clic gauche est fait sur P, puis retour au mode
     ///    mouvement. Regarder l'icône remet ce délai à zéro ;
-    ///  - sur l'icône : son anneau se remplit pendant [DelaiActivation] ; plein, l'icône
+    ///  - sur l'icône : son anneau se remplit pendant [DelaiIconeOptions] (plus court que
+    ///    [DelaiActivation]) ; plein, l'icône
     ///    s'active et ouvre le mode choix d'action (étape 3) ;
     ///  - hors du cercle et de l'icône : cercle et icône disparaissent, retour au mode mouvement.
     ///
@@ -157,7 +158,8 @@ namespace GazeBar
             double progressionIcone = 0;
             if (_debutIconeMs >= 0)
             {
-                progressionIcone = (maintenant - _debutIconeMs) / (p.DelaiActivation * 1000.0);
+                // Délai propre à l'icône d'options, plus court que celui des autres boutons.
+                progressionIcone = (maintenant - _debutIconeMs) / (p.DelaiIconeOptions * 1000.0);
             }
 
             // Une action est-elle arrivée à son terme ?
