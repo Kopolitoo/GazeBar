@@ -116,6 +116,15 @@ namespace GazeBar
         [DataMember(Order = 40)]
         public double DelaiActivation { get; set; }
 
+        /// <summary>
+        /// Durée du regard sur l'icône d'options du mode regard fixe avant son activation, en
+        /// secondes. Beaucoup plus courte que [DelaiActivation] (demande de l'utilisateur du
+        /// 22/10/2026) : c'est l'icône qu'on regarde le plus souvent, et la regarder par erreur
+        /// n'a pas de conséquence (le choix d'action propose toujours « retour »).
+        /// </summary>
+        [DataMember(Order = 43)]
+        public double DelaiIconeOptions { get; set; }
+
         /// <summary>Durée du regard en bas hors de l'écran avant l'ouverture du menu, en secondes.</summary>
         [DataMember(Order = 41)]
         public double DelaiMenu { get; set; }
@@ -212,6 +221,7 @@ namespace GazeBar
             AfficherLibelles = true;
 
             DelaiActivation = 0.8;
+            DelaiIconeOptions = 0.3;
             DelaiMenu = 0.5;
             DelaiFermetureMenu = 1.0;
 
@@ -265,6 +275,7 @@ namespace GazeBar
             TailleIcones = Borner(TailleIcones, 40, 400);
 
             DelaiActivation = Borner(DelaiActivation, 0.1, 10);
+            DelaiIconeOptions = Borner(DelaiIconeOptions, 0.1, 10);
             DelaiMenu = Borner(DelaiMenu, 0.1, 10);
             DelaiFermetureMenu = Borner(DelaiFermetureMenu, 0.1, 10);
 

@@ -74,6 +74,25 @@ namespace GazeBar
             }
         }
 
+        /// <summary>Un clic simple : appui puis relâchement, à l'endroit où est le curseur.</summary>
+        public static void Clic(MouseSide side)
+        {
+            Press(side);
+            Release(side);
+        }
+
+        /// <summary>
+        /// Un double clic gauche : deux clics envoyés aussitôt l'un après l'autre.
+        /// Windows les reconnaît comme un double clic s'ils arrivent dans le « délai de double
+        /// clic » réglé dans Windows (500 ms par défaut) et au même endroit : c'est le cas ici,
+        /// puisqu'ils partent à quelques microsecondes d'intervalle sans bouger le curseur.
+        /// </summary>
+        public static void DoubleClic()
+        {
+            Clic(MouseSide.Left);
+            Clic(MouseSide.Left);
+        }
+
         /// <summary>Relâche tous les boutons que nous avons enfoncés.</summary>
         public static void ReleaseAll()
         {

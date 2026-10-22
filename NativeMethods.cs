@@ -106,6 +106,46 @@ namespace GazeBar
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int SetWindowLong(IntPtr window, int index, int newValue);
 
+        // ───────────────────────── Capture d'écran (étape 3) ─────────────────────────
+        //
+        // Pour photographier une partie de l'écran, on utilise GDI, la vieille bibliothèque
+        // de dessin de Windows (toujours présente). Le principe, en 5 temps (voir CaptureEcran.cs) :
+        //   1. GetDC(0)                       : on obtient le « contexte de dessin » de l'écran entier ;
+        //   2. CreateCompatibleDC/Bitmap      : on prépare une image vide en mémoire ;
+        //   3. SelectObject                   : on « pose » cette image dans un contexte en mémoire ;
+        //   4. BitBlt                         : on copie le rectangle voulu de l'écran dans l'image ;
+        //   5. DeleteObject/DeleteDC/ReleaseDC: on rend tout à Windows (sinon, fuite de mémoire).
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetDC(IntPtr window);
+
+        [DllImport("user32.dll")]
+        internal static extern int ReleaseDC(IntPtr window, IntPtr dc);
+
+        [DllImport("gdi32.dll")]
+        internal static extern IntPtr CreateCompatibleDC(IntPtr dc);
+
+        [DllImport("gdi32.dll")]
+        internal static extern IntPtr CreateCompatibleBitmap(IntPtr dc, int width, int height);
+
+        [DllImport("gdi32.dll")]
+        internal static extern IntPtr SelectObject(IntPtr dc, IntPtr gdiObject);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool BitBlt(IntPtr destination, int x, int y, int width, int height,
+                                           IntPtr source, int sourceX, int sourceY, uint operation);
+
+        [DllImport("gdi32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool DeleteObject(IntPtr gdiObject);
+
+        [DllImport("gdi32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool DeleteDC(IntPtr dc);
+
+        internal const uint SRCCOPY = 0x00CC0020;   // BitBlt : copie simple des pixels
+
         // ───────────────────────── Précision de l'horloge ─────────────────────────
 
         /// <summary>Demande à Windows une horloge plus précise (1 ms au lieu de ~15 ms environ).</summary>
