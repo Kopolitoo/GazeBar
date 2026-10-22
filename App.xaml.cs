@@ -70,10 +70,10 @@ namespace GazeBar
             toolbar.Show();
 
             // Le calque plein écran, transparent aux clics, et le gestionnaire de modes.
-            // Pour l'étape 1, on démarre dans le mode de test (un cercle sur le regard).
+            // On démarre dans le mode mouvement (le mode par défaut du cahier des charges).
             _calque.Show();
             _calque.RemettreAuPremierPlan();
-            _modes.Demarrer(new ModeTest());
+            _modes.Demarrer(new ModeMouvement());
         }
 
         /// <summary>

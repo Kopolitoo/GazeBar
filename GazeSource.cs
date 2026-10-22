@@ -26,6 +26,7 @@ namespace GazeBar
         private double _y;
         private bool _hasData;
         private double _lastSampleMs = -1;
+        private long _numeroMesure;   // compteur : +1 à chaque nouvelle mesure reçue
 
         // Calcul de la cadence : on compte les mesures reçues pendant une fenêtre d'une seconde.
         private int _countInWindow;
@@ -100,6 +101,7 @@ namespace GazeBar
                 _y = y;
                 _hasData = true;
                 _lastSampleMs = now;
+                _numeroMesure++;
 
                 _countInWindow++;
                 double elapsed = now - _windowStartMs;
@@ -120,6 +122,33 @@ namespace GazeBar
                 x = _x;
                 y = _y;
             }
+        }
+
+        /// <summary>
+        /// Dernière position du regard, avec son numéro et l'instant où elle est arrivée.
+        ///
+        /// Pourquoi le numéro ? L'horloge des modes tourne à 60 tics par seconde, mais le
+        /// PCEye 5 n'envoie qu'environ 30 mesures par seconde : un tic sur deux voit donc la
+        /// MÊME mesure qu'au tic précédent. En comparant les numéros, un mode sait si la mesure
+        /// est nouvelle, et ne la compte qu'une seule fois.
+        /// L'instant (en millisecondes, sur l'horloge de GazeSource) permet de calculer une
+        /// vitesse ou une durée en vrai temps, quelle que soit la cadence.
+        /// </summary>
+        public void GetLatest(out double x, out double y, out long numero, out double instantMs)
+        {
+            lock (_lock)
+            {
+                x = _x;
+                y = _y;
+                numero = _numeroMesure;
+                instantMs = _lastSampleMs;
+            }
+        }
+
+        /// <summary>L'heure actuelle sur l'horloge de GazeSource, en millisecondes (même échelle que instantMs).</summary>
+        public double MaintenantMs
+        {
+            get { return _clock.Elapsed.TotalMilliseconds; }
         }
 
         /// <summary>Vrai si la position est en dehors de l'écran principal.</summary>

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace GazeBar
@@ -129,12 +130,42 @@ namespace GazeBar
 
         // ───────────────────────── Dessin ─────────────────────────
 
+        // Couleurs du trait de dessus du cercle : vert discret en mouvement, blanc en regard fixe.
+        // « Freeze » fige le pinceau : WPF le dessine alors plus vite.
+        private static readonly SolidColorBrush PinceauMouvement = Figer(new SolidColorBrush(Colors.Green));
+        private static readonly SolidColorBrush PinceauFixe = Figer(new SolidColorBrush(Colors.White));
+
+        private static SolidColorBrush Figer(SolidColorBrush pinceau)
+        {
+            pinceau.Freeze();
+            return pinceau;
+        }
+
         /// <summary>
-        /// Affiche le cercle centré sur (x, y), avec le rayon donné.
+        /// Affiche le cercle du mode mouvement (vert, discret) centré sur (x, y).
         /// Tout est en PIXELS D'ÉCRAN, comme le regard et le curseur.
         /// </summary>
         public void AfficherCercle(double xPixels, double yPixels, double rayonPixels)
         {
+            AfficherCercle(xPixels, yPixels, rayonPixels, false);
+        }
+
+        /// <summary>
+        /// Affiche le cercle centré sur (x, y), avec le rayon donné.
+        /// fixe = vrai : cercle du mode regard fixe (trait blanc et opaque).
+        /// </summary>
+        public void AfficherCercle(double xPixels, double yPixels, double rayonPixels, bool fixe)
+        {
+            CercleX = xPixels;
+            CercleY = yPixels;
+            CercleAffiche = true;
+
+            Cercle.Stroke = fixe ? PinceauFixe : PinceauMouvement;
+            Cercle.StrokeThickness = fixe ? 2 : 1;
+            Cercle.Opacity = fixe ? 1.0 : 0.5;
+            CercleFond.StrokeThickness = fixe ? 4 : 2;
+            CercleFond.Opacity = fixe ? 0.8 : 0.5;
+
             // Pas encore affichée à l'écran : rien à dessiner (PointFromScreen échouerait).
             if (PresentationSource.FromVisual(this) == null)
             {
@@ -150,15 +181,144 @@ namespace GazeBar
             PlacerEllipse(Cercle, centre, rayon);
         }
 
+        /// <summary>Centre du cercle tel qu'il est dessiné, en pixels d'écran (valable si CercleAffiche).</summary>
+        public double CercleX { get; private set; }
+
+        public double CercleY { get; private set; }
+
+        /// <summary>
+        /// Vrai si le cercle est visible. Un mode qui commence s'en sert pour reprendre le
+        /// cercle là où il est, au lieu de le faire sauter ailleurs.
+        /// </summary>
+        public bool CercleAffiche { get; private set; }
+
         /// <summary>Cache le cercle.</summary>
         public void MasquerCercle()
         {
+            CercleAffiche = false;
             CercleFond.Visibility = Visibility.Collapsed;
             Cercle.Visibility = Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// Affiche l'anneau de progression sur le bord d'un cercle centré sur (x, y).
+        /// progression va de 0 (rien) à 1 (tour complet).
+        /// </summary>
+        public void AfficherAnneau(double xPixels, double yPixels, double rayonPixels, double progression)
+        {
+            DessinerArc(Anneau, xPixels, yPixels, rayonPixels, progression);
+        }
+
+        public void MasquerAnneau()
+        {
+            Anneau.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Affiche l'icône d'options : un carré de côté [taille] centré sur (x, y), en pixels
+        /// d'écran. progression (0 à 1) remplit l'anneau autour d'elle ; à 0, pas d'anneau.
+        /// afficherLibelle : montre le texte « Options » sous l'icône.
+        /// </summary>
+        public void AfficherIcone(double xPixels, double yPixels, double taillePixels,
+                                  double progression, bool afficherLibelle)
+        {
+            if (PresentationSource.FromVisual(this) == null)
+            {
+                return;
+            }
+
+            Point centre = PointFromScreen(new Point(xPixels, yPixels));
+            double cote = PixelsVersWpf(taillePixels);
+
+            Icone.Width = cote;
+            Icone.Height = cote;
+            IconeSymbole.FontSize = cote * 0.5;
+            Canvas.SetLeft(Icone, centre.X - cote / 2);
+            Canvas.SetTop(Icone, centre.Y - cote / 2);
+            Icone.Visibility = Visibility.Visible;
+
+            // L'anneau entoure le carré : rayon = demi-diagonale du carré.
+            DessinerArc(AnneauIcone, xPixels, yPixels, taillePixels / 2 * Math.Sqrt(2) + 4, progression);
+
+            if (afficherLibelle)
+            {
+                // Mesure le libellé pour le centrer sous l'icône.
+                Libelle.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                Canvas.SetLeft(Libelle, centre.X - Libelle.DesiredSize.Width / 2);
+                Canvas.SetTop(Libelle, centre.Y + cote / 2 + 12);
+                Libelle.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                Libelle.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        public void MasquerIcone()
+        {
+            Icone.Visibility = Visibility.Collapsed;
+            AnneauIcone.Visibility = Visibility.Collapsed;
+            Libelle.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>Cache tout ce qui est dessiné sur le calque.</summary>
+        public void MasquerTout()
+        {
+            MasquerCercle();
+            MasquerAnneau();
+            MasquerIcone();
+        }
+
+        /// <summary>
+        /// Dessine dans « chemin » un arc de cercle : il part du haut et tourne dans le sens
+        /// des aiguilles d'une montre, sur une fraction « progression » du tour.
+        ///
+        /// En WPF, un arc se décrit par un point de départ et un ArcSegment (point d'arrivée,
+        /// rayons, sens de rotation, et « grand arc » si l'on dépasse un demi-tour).
+        /// Un tour complet ne peut pas s'écrire avec un seul arc (départ = arrivée) : on dessine
+        /// alors simplement un cercle entier.
+        /// </summary>
+        private void DessinerArc(Path chemin, double xPixels, double yPixels, double rayonPixels, double progression)
+        {
+            if (progression <= 0 || PresentationSource.FromVisual(this) == null)
+            {
+                chemin.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            Point centre = PointFromScreen(new Point(xPixels, yPixels));
+            double rayon = PixelsVersWpf(rayonPixels);
+
+            Geometry forme;
+            if (progression >= 0.999)
+            {
+                forme = new EllipseGeometry(centre, rayon, rayon);
+            }
+            else
+            {
+                double angle = progression * 2 * Math.PI;   // en radians, 0 = en haut
+                Point depart = new Point(centre.X, centre.Y - rayon);
+                Point arrivee = new Point(centre.X + rayon * Math.Sin(angle), centre.Y - rayon * Math.Cos(angle));
+
+                PathFigure figure = new PathFigure();
+                figure.StartPoint = depart;
+                figure.IsClosed = false;
+                figure.IsFilled = false;
+                figure.Segments.Add(new ArcSegment(
+                    arrivee, new Size(rayon, rayon), 0, angle > Math.PI, SweepDirection.Clockwise, true));
+
+                PathGeometry chemins = new PathGeometry();
+                chemins.Figures.Add(figure);
+                forme = chemins;
+            }
+
+            forme.Freeze();
+            chemin.Data = forme;
+            chemin.Visibility = Visibility.Visible;
+        }
+
         /// <summary>Positionne une ellipse : son coin en haut à gauche est à (centre − rayon).</summary>
-        private static void PlacerEllipse(System.Windows.Shapes.Ellipse ellipse, Point centre, double rayon)
+        private static void PlacerEllipse(Ellipse ellipse, Point centre, double rayon)
         {
             ellipse.Width = rayon * 2;
             ellipse.Height = rayon * 2;

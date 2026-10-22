@@ -30,6 +30,10 @@ namespace GazeBar
         private readonly DispatcherTimer _refreshTimer;
         private DiagnosticWindow _diagnosticWindow;
 
+        // Vrai si le mode mouvement a été suspendu pour un appui long ou un glisser, et doit
+        // reprendre à la fin de l'action.
+        private bool _repriseApresAppui;
+
         public ToolbarWindow(CursorSampler sampler, GazeSource gaze, ModeManager modes)
         {
             // Construit les éléments décrits dans ToolbarWindow.xaml. Obligatoire en premier.
@@ -51,6 +55,10 @@ namespace GazeBar
             _refreshTimer.Interval = TimeSpan.FromMilliseconds(200);
             _refreshTimer.Tick += OnRefreshTick;
             _refreshTimer.Start();
+
+            // Les boutons « Mode mouvement » et « Suivi souris » affichent l'état réel.
+            _modes.ModeChange += mode => AfficherEtatModes();
+            AfficherEtatModes();
 
             // Une fois la fenêtre mesurée, on la centre en haut de l'écran.
             Loaded += OnLoaded;
@@ -139,22 +147,54 @@ namespace GazeBar
         private void OnHoldStatusChanged(string message)
         {
             StatusText.Text = message;
+
+            // L'appui long ou le glisser est terminé (ou annulé) : si le mode mouvement avait
+            // été suspendu pour lui, il reprend. Sans cela, il n'y aurait plus de clic au
+            // regard pour le relancer.
+            if (_repriseApresAppui && !_hold.IsActive)
+            {
+                _repriseApresAppui = false;
+                if (_modes.ModeCourant is ModeInactif)
+                {
+                    _modes.ChangerMode(new ModeMouvement());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Avant un appui long ou un glisser : on suspend le mode mouvement (il ne doit ni
+        /// cliquer ni déplacer le curseur pendant l'action) et on note qu'il faudra le reprendre.
+        /// </summary>
+        private void SuspendrePendantAppui()
+        {
+            if (_hold.IsActive)
+            {
+                return;   // HoldSession refusera l'action : on ne touche à rien
+            }
+            if (!(_modes.ModeCourant is ModeInactif))
+            {
+                _repriseApresAppui = true;
+                _modes.ChangerMode(new ModeInactif());
+            }
         }
 
         // ───────────────────────── Clics sur les boutons ─────────────────────────
 
         private void OnLongPressClick(object sender, RoutedEventArgs e)
         {
+            SuspendrePendantAppui();
             _hold.Start(HoldKind.LongPressLeft);
         }
 
         private void OnDragLeftClick(object sender, RoutedEventArgs e)
         {
+            SuspendrePendantAppui();
             _hold.Start(HoldKind.DragLeft);
         }
 
         private void OnDragRightClick(object sender, RoutedEventArgs e)
         {
+            SuspendrePendantAppui();
             _hold.Start(HoldKind.DragRight);
         }
 
@@ -168,6 +208,7 @@ namespace GazeBar
             bool on = _gazeMouse.Toggle();
             if (on)
             {
+                ArreterModeMouvement();
                 MouseModeButton.Content = "Souris regard : OUI";
                 MouseModeButton.Background = new System.Windows.Media.SolidColorBrush(
                     System.Windows.Media.Color.FromRgb(0x1E, 0x8E, 0x3E));
@@ -182,22 +223,64 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Affiche ou cache le cercle de test (étape 1) en passant du mode test au mode
-        /// inactif, et inversement. C'est le ModeManager qui fait le changement.
-        /// « is » teste le type d'un objet : le mode courant est-il un ModeTest ?
+        /// Active ou désactive le mode mouvement (cercle qui suit le regard, fixation, clic
+        /// direct). Désactivé = mode inactif : plus rien ne suit le regard.
+        /// « is » teste le type d'un objet : le mode courant est-il le mode inactif ?
         /// </summary>
-        private void OnTestCircleClick(object sender, RoutedEventArgs e)
+        private void OnMovementModeClick(object sender, RoutedEventArgs e)
         {
-            if (_modes.ModeCourant is ModeTest)
+            if (_modes.ModeCourant is ModeInactif)
             {
-                _modes.ChangerMode(new ModeInactif());
-                TestCircleButton.Content = "Cercle test : NON";
+                // Le mode mouvement et la « souris regard » déplaceraient tous deux le curseur :
+                // on n'en garde qu'un.
+                if (_gazeMouse.IsEnabled)
+                {
+                    OnMouseModeClick(sender, e);
+                }
+                _modes.ChangerMode(new ModeMouvement());
+                StatusText.Text = "Mode mouvement activé : fixez un point pour figer le cercle.";
             }
             else
             {
-                _modes.ChangerMode(new ModeTest());
-                TestCircleButton.Content = "Cercle test : OUI";
+                _modes.ChangerMode(new ModeInactif());
+                StatusText.Text = "Mode mouvement désactivé.";
             }
+        }
+
+        /// <summary>
+        /// Option « suivi souris » : en mode mouvement, le curseur suit aussi le regard.
+        /// Le réglage est enregistré dans parametres.json. (À l'étape 4, cet interrupteur
+        /// passera dans la barre de menu.)
+        /// </summary>
+        private void OnFollowMouseClick(object sender, RoutedEventArgs e)
+        {
+            Parametres.Courants.SuiviSouris = !Parametres.Courants.SuiviSouris;
+            Parametres.Courants.Enregistrer();
+            AfficherEtatModes();
+            StatusText.Text = Parametres.Courants.SuiviSouris
+                ? "Suivi souris activé : le curseur suit le cercle."
+                : "Suivi souris désactivé : le curseur ne rejoint le regard qu'une fois fixé.";
+        }
+
+        /// <summary>
+        /// Passe en mode inactif s'il ne l'est pas déjà. Appelée avant un appui long, un
+        /// glisser ou la « souris regard » : le mode mouvement ne doit pas cliquer ou déplacer
+        /// le curseur pendant ces actions.
+        /// </summary>
+        private void ArreterModeMouvement()
+        {
+            if (!(_modes.ModeCourant is ModeInactif))
+            {
+                _modes.ChangerMode(new ModeInactif());
+            }
+        }
+
+        /// <summary>Met à jour le texte des boutons « Mode mouvement » et « Suivi souris ».</summary>
+        private void AfficherEtatModes()
+        {
+            bool actif = !(_modes.ModeCourant is ModeInactif);
+            MovementModeButton.Content = actif ? "Mode mouvement : OUI" : "Mode mouvement : NON";
+            FollowMouseButton.Content = Parametres.Courants.SuiviSouris ? "Suivi souris : OUI" : "Suivi souris : NON";
         }
 
         private void OnDiagnosticClick(object sender, RoutedEventArgs e)
