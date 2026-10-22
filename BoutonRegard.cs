@@ -21,9 +21,17 @@ namespace GazeBar
     /// l'utilisateur qu'il pourra y mettre une action (dans les paramètres, étape 9). Il ne
     /// s'active jamais ; seul son libellé apparaît au survol.
     ///
+    /// Un bouton peut aussi être « indisponible » (méthode Indisponible, étape 4) : sa fonction
+    /// existe dans le cahier des charges mais n'est pas encore programmée (par exemple
+    /// « Paramètres » dans la barre de menu). Il garde son vrai symbole, mais grisé, et ne
+    /// s'active jamais non plus.
+    ///
+    /// Un bouton peut être « allumé » (méthode DefinirAllume, étape 4) : un interrupteur en
+    /// position « oui », comme « Suivi souris » dans la barre de menu. Son bord devient vert.
+    ///
     /// Il ne sait pas lui-même s'il est regardé ni depuis combien de temps : c'est le mode
-    /// (ModeChoixAction) qui le décide et qui lui dit quoi dessiner (méthode Dessiner).
-    /// Cette classe servira aussi pour la barre de menu (étape 4).
+    /// (ModeChoixAction, ModeMenu) qui le décide, avec l'aide d'un ViseurBoutons, et qui lui
+    /// dit quoi dessiner (méthode Dessiner).
     ///
     /// Les positions sont données en PIXELS D'ÉCRAN, comme le regard ; la conversion en unités
     /// WPF est faite ici, avec l'aide du calque.
@@ -52,7 +60,16 @@ namespace GazeBar
         /// </summary>
         public static BoutonRegard Vide(string libelle)
         {
-            BoutonRegard bouton = new BoutonRegard("\uE710", null, libelle);
+            return Indisponible("\uE710", libelle);
+        }
+
+        /// <summary>
+        /// Crée un bouton grisé qui ne s'active jamais, avec son vrai symbole : pour une
+        /// fonction prévue mais pas encore programmée (étape 4 : « Paramètres », « Jeu »).
+        /// </summary>
+        public static BoutonRegard Indisponible(string symbole, string libelle)
+        {
+            BoutonRegard bouton = new BoutonRegard(symbole, null, libelle);
             bouton.Actif = false;
             bouton._fond.Background = FondVide;
             bouton._fond.BorderBrush = Gris;
@@ -119,8 +136,25 @@ namespace GazeBar
             _libelle.Visibility = Visibility.Collapsed;
         }
 
-        /// <summary>Faux pour un emplacement vide : il ne s'active jamais (pas d'anneau).</summary>
+        /// <summary>Faux pour un emplacement vide ou indisponible : il ne s'active jamais (pas d'anneau).</summary>
         public bool Actif { get; private set; }
+
+        /// <summary>Vrai pour un interrupteur en position « oui » (bord vert). Voir DefinirAllume.</summary>
+        public bool Allume { get; private set; }
+
+        /// <summary>
+        /// Allume ou éteint le bouton : un bouton allumé a un bord vert épais, pour montrer
+        /// qu'une option est activée (par exemple « Suivi souris »).
+        /// </summary>
+        public void DefinirAllume(bool allume)
+        {
+            Allume = allume;
+            if (Actif)
+            {
+                _fond.BorderBrush = allume ? Vert : Blanc;
+                _fond.BorderThickness = new Thickness(allume ? 5 : 2);
+            }
+        }
 
         /// <summary>Le texte affiché au survol (et écrit dans le journal à l'activation).</summary>
         public string Libelle { get; private set; }
@@ -136,8 +170,12 @@ namespace GazeBar
         /// <summary>
         /// Ajoute le bouton sur une surface du calque (par exemple l'écran noir) et le place,
         /// centré sur (x, y) en pixels d'écran, avec un côté de [taille] pixels.
+        /// libelleAuDessus : le libellé est affiché au-dessus du bouton au lieu d'en dessous
+        /// (pour la barre de menu, collée au bas de l'écran : en dessous, il serait caché).
+        /// « = false » : paramètre facultatif ; si on ne le donne pas, il vaut faux.
         /// </summary>
-        public void Placer(OverlayWindow calque, Canvas surface, double x, double y, double taille)
+        public void Placer(OverlayWindow calque, Canvas surface, double x, double y, double taille,
+                           bool libelleAuDessus = false)
         {
             X = x;
             Y = y;
@@ -160,10 +198,17 @@ namespace GazeBar
             _rayonAnneau = cote / 2 * Math.Sqrt(2) + 4;
             _centreWpf = centre;
 
-            // Le libellé est centré sous le bouton.
+            // Le libellé est centré sous le bouton (ou au-dessus, si demandé).
             _libelle.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Canvas.SetLeft(_libelle, centre.X - _libelle.DesiredSize.Width / 2);
-            Canvas.SetTop(_libelle, centre.Y + cote / 2 + 12);
+            if (libelleAuDessus)
+            {
+                Canvas.SetTop(_libelle, centre.Y - cote / 2 - 12 - _libelle.DesiredSize.Height);
+            }
+            else
+            {
+                Canvas.SetTop(_libelle, centre.Y + cote / 2 + 12);
+            }
 
             surface.Children.Add(_fond);
             surface.Children.Add(_anneau);

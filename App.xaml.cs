@@ -9,7 +9,9 @@ namespace GazeBar
     /// Classe de l'application : point d'entrée du programme.
     ///
     /// Elle lit les réglages, crée les objets « modèle » partagés (curseur, regard),
-    /// ouvre le calque plein écran et le gestionnaire de modes, puis la barre d'outils.
+    /// ouvre le calque plein écran et le gestionnaire de modes, et surveille la touche Échap.
+    /// Depuis l'étape 4, il n'y a plus de barre d'outils : tout passe par le regard, et la
+    /// barre de menu s'ouvre en regardant en bas, hors de l'écran.
     /// Elle s'assure aussi, en toute circonstance, que les boutons de la souris sont
     /// relâchés à la fermeture.
     ///
@@ -22,6 +24,8 @@ namespace GazeBar
         private GazeSource _gaze;
         private OverlayWindow _calque;
         private ModeManager _modes;
+        private CrochetClavier _clavier;
+        private DiagnosticWindow _diagnostic;
 
         /// <summary>
         /// Appelée par WPF au démarrage du programme.
@@ -57,23 +61,53 @@ namespace GazeBar
             _gaze = new GazeSource();
             _gaze.Start();
 
-            // La barre d'outils reste disponible jusqu'à l'étape 4 (mode menu).
-            // Le calque est créé ici mais affiché APRÈS elle, pour être au-dessus.
-            _calque = new OverlayWindow();
-            _modes = new ModeManager(_gaze, _calque);
-
-            ToolbarWindow toolbar = new ToolbarWindow(_sampler, _gaze, _modes);
-            MainWindow = toolbar;
-            // Fermer la barre ferme tout le programme, même si le calque ou le
-            // diagnostic sont encore ouverts.
-            ShutdownMode = ShutdownMode.OnMainWindowClose;
-            toolbar.Show();
+            // Le programme ne s'arrête que sur demande (bouton « Quitter GazeBar » du menu) :
+            // fermer la fenêtre Diagnostic ne doit pas tout fermer.
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             // Le calque plein écran, transparent aux clics, et le gestionnaire de modes.
             // On démarre dans le mode mouvement (le mode par défaut du cahier des charges).
+            _calque = new OverlayWindow();
+            _modes = new ModeManager(_gaze, _calque);
             _calque.Show();
             _calque.RemettreAuPremierPlan();
             _modes.Demarrer(new ModeMouvement());
+
+            // La touche Échap de l'aidant : retour au mode mouvement, depuis n'importe quel mode.
+            _clavier = new CrochetClavier();
+            _clavier.EchapAppuye += OnEchap;
+            _clavier.Installer();
+        }
+
+        /// <summary>
+        /// Touche Échap (pour l'aidant) : on relâche les boutons de la souris par sécurité et on
+        /// revient au mode mouvement, sauf si l'on y est déjà. La touche arrive aussi normalement
+        /// au programme actif (elle n'est pas « mangée » par GazeBar).
+        /// </summary>
+        private void OnEchap()
+        {
+            if (_modes == null || _modes.ModeCourant is ModeMouvement)
+            {
+                return;
+            }
+            App.Log("Touche Échap : retour au mode mouvement");
+            MouseInjector.ReleaseAll();
+            _modes.ChangerMode(new ModeMouvement());
+        }
+
+        /// <summary>
+        /// Ouvre la fenêtre Diagnostic (bouton du menu). Une seule à la fois : si elle est déjà
+        /// ouverte, on la remet simplement devant.
+        /// </summary>
+        internal void OuvrirDiagnostic()
+        {
+            if (_diagnostic == null)
+            {
+                _diagnostic = new DiagnosticWindow(_sampler, _gaze);
+                _diagnostic.Closed += (sender, args) => { _diagnostic = null; };
+            }
+            _diagnostic.Show();
+            _diagnostic.Activate();
         }
 
         /// <summary>
@@ -82,6 +116,10 @@ namespace GazeBar
         protected override void OnExit(ExitEventArgs e)
         {
             MouseInjector.ReleaseAll();
+            if (_clavier != null)
+            {
+                _clavier.Dispose();
+            }
             if (_modes != null)
             {
                 _modes.Arreter();

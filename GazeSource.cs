@@ -39,6 +39,16 @@ namespace GazeBar
         /// <summary>Message d'erreur si la connexion a échoué (sinon vide).</summary>
         public string ErrorMessage { get; private set; }
 
+        /// <summary>
+        /// L'objet Host de Tobii (null si la connexion a échoué). Sert uniquement à lancer
+        /// l'outil de calibration (voir CalibrationTobii.cs, étape 4). Son type est « object »
+        /// pour que le reste du programme n'ait pas à connaître Tobii.Interaction.
+        /// </summary>
+        public object Hote
+        {
+            get { return _host; }
+        }
+
         /// <summary>Vrai dès qu'au moins une mesure a été reçue.</summary>
         public bool HasData
         {

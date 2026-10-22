@@ -72,9 +72,6 @@ namespace GazeBar
         /// </summary>
         private const double AttenteMs = 60;
 
-        /// <summary>Nombre de mesures de suite qu'il faut sur un nouveau bouton pour le viser (comme en regard fixe).</summary>
-        private const int MesuresPourChanger = 2;
-
         /// <summary>
         /// Disposition de la couronne : les sept emplacements, en partant du haut et en tournant
         /// dans le sens des aiguilles d'une montre. null = emplacement vide (actions des étapes
@@ -121,14 +118,8 @@ namespace GazeBar
         private double _ry;
         private bool _cercleRegardPlace;
 
-        // Le bouton regardé (-1 = aucun), et le « candidat » vu sur les dernières mesures.
-        private int _vise = -1;
-        private int _candidat = -1;
-        private int _mesuresCandidat;
-        private long _dernierNumero = -1;
-
-        // Instant (ms) où le regard est arrivé sur le bouton visé ; -1 = minuteur arrêté.
-        private double _debutViseMs = -1;
+        // Décide quel bouton est regardé et quand il s'active (classe partagée avec le menu).
+        private readonly ViseurBoutons _viseur;
 
         // L'action choisie, en attente d'exécution (étape Execution).
         private ActionChoix _actionChoisie;
@@ -137,6 +128,7 @@ namespace GazeBar
         {
             _px = x;
             _py = y;
+            _viseur = new ViseurBoutons(_boutons);
         }
 
         public override string Nom
@@ -144,8 +136,21 @@ namespace GazeBar
             get { return "Choix d'action"; }
         }
 
+        /// <summary>
+        /// Le menu (regard en bas hors de l'écran) ne s'ouvre que pendant le choix : ni pendant
+        /// la photo, ni pendant l'exécution d'un clic, qui ne durent qu'un instant.
+        /// </summary>
+        public override bool MenuAutorise
+        {
+            get { return _etape == Etape.Choix; }
+        }
+
         public override void Entrer(EtatRegard regard)
         {
+            // On peut revenir dans ce mode en fermant le menu : on repart alors de zéro
+            // (nouvelle photo, aucun bouton visé).
+            _viseur.Reinitialiser();
+
             // 1. CAPTURE : on cache tout ce que GazeBar dessine, et on attend un peu avant la photo.
             Gestionnaire.Calque.MasquerTout();
             _etape = Etape.Capture;
@@ -209,98 +214,18 @@ namespace GazeBar
         private void ActualiserChoix(EtatRegard regard)
         {
             Parametres p = Parametres.Courants;
-            double maintenant = regard.MaintenantMs;
 
-            if (!regard.Disponible)
+            // Quel bouton est regardé ? L'un d'eux vient-il de s'activer ?
+            // (Un emplacement vide ne s'active jamais : voir ViseurBoutons.)
+            int active = _viseur.Actualiser(regard, p.DelaiActivation, p.AfficherLibelles);
+            if (active >= 0)
             {
-                // Regard perdu : on ne vise plus rien, pour ne jamais activer un bouton
-                // qu'on ne regarde plus.
-                _debutViseMs = -1;
-            }
-            else if (regard.Numero != _dernierNumero)
-            {
-                // Nouvelle mesure : sur quel bouton est-elle ? (hors écran → aucun)
-                _dernierNumero = regard.Numero;
-                int vu = regard.HorsEcran ? -1 : BoutonSous(regard.X, regard.Y);
-                ChangerViseSiBesoin(vu);
-            }
-
-            // Le minuteur du bouton visé.
-            if (regard.Disponible && _vise >= 0 && _debutViseMs < 0)
-            {
-                _debutViseMs = maintenant;
-            }
-            if (_vise < 0)
-            {
-                _debutViseMs = -1;
-            }
-
-            // Un emplacement vide ne s'active jamais : pas de progression.
-            double progression = 0;
-            if (_vise >= 0 && _debutViseMs >= 0 && _boutons[_vise].Actif)
-            {
-                progression = (maintenant - _debutViseMs) / (p.DelaiActivation * 1000.0);
-            }
-
-            if (progression >= 1)
-            {
-                Activer(_actions[_vise].Value);
+                Activer(_actions[active].Value);
                 return;
             }
 
             // Le petit cercle du regard (seulement quand le regard est sur l'écran).
             DeplacerCercleRegard(regard, p);
-
-            // Le dessin des boutons : anneau sur le bouton visé seulement.
-            for (int i = 0; i < _boutons.Count; i++)
-            {
-                bool survol = i == _vise;
-                _boutons[i].Dessiner(survol ? progression : 0, survol, survol && p.AfficherLibelles);
-            }
-        }
-
-        /// <summary>
-        /// Change de bouton visé seulement si le nouveau est confirmé par
-        /// [MesuresPourChanger] mesures de suite. Une mesure isolée est ignorée.
-        /// Changer de bouton remet le minuteur à zéro.
-        /// </summary>
-        private void ChangerViseSiBesoin(int vu)
-        {
-            if (vu == _vise)
-            {
-                _mesuresCandidat = 0;
-                return;
-            }
-
-            if (vu == _candidat && _mesuresCandidat > 0)
-            {
-                _mesuresCandidat++;
-            }
-            else
-            {
-                _candidat = vu;
-                _mesuresCandidat = 1;
-            }
-
-            if (_mesuresCandidat >= MesuresPourChanger)
-            {
-                _vise = vu;
-                _mesuresCandidat = 0;
-                _debutViseMs = -1;
-            }
-        }
-
-        /// <summary>Le numéro du bouton sous ce point du regard, ou -1.</summary>
-        private int BoutonSous(double x, double y)
-        {
-            for (int i = 0; i < _boutons.Count; i++)
-            {
-                if (_boutons[i].Contient(x, y))
-                {
-                    return i;
-                }
-            }
-            return -1;
         }
 
         /// <summary>Un bouton vient d'être activé.</summary>
