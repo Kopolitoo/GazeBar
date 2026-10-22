@@ -156,6 +156,10 @@ namespace GazeBar
         /// </summary>
         public void AfficherCercle(double xPixels, double yPixels, double rayonPixels, bool fixe)
         {
+            CercleX = xPixels;
+            CercleY = yPixels;
+            CercleAffiche = true;
+
             Cercle.Stroke = fixe ? PinceauFixe : PinceauMouvement;
             Cercle.StrokeThickness = fixe ? 2 : 1;
             Cercle.Opacity = fixe ? 1.0 : 0.5;
@@ -177,9 +181,21 @@ namespace GazeBar
             PlacerEllipse(Cercle, centre, rayon);
         }
 
+        /// <summary>Centre du cercle tel qu'il est dessiné, en pixels d'écran (valable si CercleAffiche).</summary>
+        public double CercleX { get; private set; }
+
+        public double CercleY { get; private set; }
+
+        /// <summary>
+        /// Vrai si le cercle est visible. Un mode qui commence s'en sert pour reprendre le
+        /// cercle là où il est, au lieu de le faire sauter ailleurs.
+        /// </summary>
+        public bool CercleAffiche { get; private set; }
+
         /// <summary>Cache le cercle.</summary>
         public void MasquerCercle()
         {
+            CercleAffiche = false;
             CercleFond.Visibility = Visibility.Collapsed;
             Cercle.Visibility = Visibility.Collapsed;
         }

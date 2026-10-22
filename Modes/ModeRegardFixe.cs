@@ -6,21 +6,21 @@ namespace GazeBar
     /// MODE REGARD FIXE (étape 2 du cahier des charges).
     ///
     /// On y arrive depuis le mode mouvement, quand le regard s'est fixé sur un point P.
-    ///  - Le cercle se fige autour de P, avec un bord blanc.
+    ///  - Le cercle se fige autour de P, avec un bord blanc. Il part de là où était le cercle
+    ///    du mode mouvement et glisse jusqu'à P en quelques tics : pas de saut visuel.
     ///  - Une icône d'options est collée au cercle, du côté tourné vers le centre de l'écran
     ///    (curseur en haut à gauche → icône en bas à droite, etc. ; au centre : en bas à droite).
-    ///  - Curseur : si [SuiviSouris] est activé, il est placé exactement sur P. Sinon, il ne
-    ///    bouge pas encore : il ne rejoindra P qu'au moment d'agir (clic ou icône), pour
-    ///    éviter de survoler inutilement des éléments.
+    ///  - Curseur : il est placé sur P dès l'entrée dans ce mode. C'est le seul moment où il
+    ///    rejoint le regard quand [SuiviSouris] est désactivé (choix de l'utilisateur du
+    ///    22/10/2026 ; le cahier des charges prévoyait de le placer à l'activation de l'icône).
     ///
     /// Ensuite, selon l'endroit où l'on regarde :
-    ///  - dans le cercle : si [ClicDirect] est activé, l'anneau se remplit pendant
+    ///  - dans le cercle : si [ClicDirect] est activé (non par défaut), l'anneau se remplit pendant
     ///    [DelaiClicDirect] ; plein, un clic gauche est fait sur P, puis retour au mode
     ///    mouvement. Regarder l'icône remet ce délai à zéro ;
     ///  - sur l'icône : son anneau se remplit pendant [DelaiActivation] ; plein, l'icône
     ///    s'active. Le mode « choix d'action » n'existe pas encore (étape 3) : pour l'instant,
-    ///    le curseur rejoint P, l'activation est notée dans le journal, et l'on revient au
-    ///    mode mouvement ;
+    ///    l'activation est notée dans le journal, et l'on revient au mode mouvement ;
     ///  - hors du cercle et de l'icône : cercle et icône disparaissent, retour au mode mouvement.
     ///
     /// Une seule mesure isolée dans une autre zone est ignorée (même tolérance que pour la
@@ -42,6 +42,10 @@ namespace GazeBar
         // Le point fixé, en pixels d'écran.
         private readonly double _px;
         private readonly double _py;
+
+        // Centre du cercle tel qu'il est dessiné : il glisse vers P (voir Entrer).
+        private double _cx;
+        private double _cy;
 
         // Centre de l'icône d'options, en pixels d'écran (calculé dans Entrer).
         private double _ix;
@@ -68,16 +72,26 @@ namespace GazeBar
             get { return "Regard fixe"; }
         }
 
-        public override void Entrer()
+        public override void Entrer(EtatRegard regard)
         {
             Parametres p = Parametres.Courants;
 
+            // Le cercle dessiné part de là où il est déjà (cercle du mode mouvement), sinon de P.
+            if (Gestionnaire.Calque.CercleAffiche)
+            {
+                _cx = Gestionnaire.Calque.CercleX;
+                _cy = Gestionnaire.Calque.CercleY;
+            }
+            else
+            {
+                _cx = _px;
+                _cy = _py;
+            }
+
             PlacerIcone(p.RayonCercle, p.TailleIcones);
 
-            if (p.SuiviSouris)
-            {
-                PlacerCurseur();
-            }
+            // Le regard est fixé : le curseur le rejoint maintenant.
+            PlacerCurseur();
 
             App.Log("Regard fixe en (" + _px.ToString("F0") + ", " + _py.ToString("F0") + ")");
         }
@@ -160,10 +174,13 @@ namespace GazeBar
             }
 
             // Le dessin.
-            Gestionnaire.Calque.AfficherCercle(_px, _py, p.RayonCercle, true);
+            // Le cercle glisse vers P d'une fraction [Lissage] à chaque tic (quelques tics suffisent).
+            _cx += (_px - _cx) * p.Lissage;
+            _cy += (_py - _cy) * p.Lissage;
+            Gestionnaire.Calque.AfficherCercle(_cx, _cy, p.RayonCercle, true);
             if (progressionClic > 0)
             {
-                Gestionnaire.Calque.AfficherAnneau(_px, _py, p.RayonCercle, progressionClic);
+                Gestionnaire.Calque.AfficherAnneau(_cx, _cy, p.RayonCercle, progressionClic);
             }
             else
             {
@@ -175,14 +192,16 @@ namespace GazeBar
 
         public override void Quitter()
         {
-            Gestionnaire.Calque.MasquerTout();
+            // Le cercle reste affiché : le mode mouvement le reprend là où il est.
+            Gestionnaire.Calque.MasquerAnneau();
+            Gestionnaire.Calque.MasquerIcone();
         }
 
         // ───────────────────────── Actions ─────────────────────────
 
         /// <summary>
         /// Clic gauche direct sur le point fixé. Le calque laisse passer les clics : inutile de
-        /// le cacher avant. Le curseur rejoint d'abord P (s'il n'y est pas déjà).
+        /// le cacher avant. Le curseur est replacé sur P par sécurité (il a pu être bougé).
         /// </summary>
         private void ClicDirect()
         {
@@ -195,7 +214,7 @@ namespace GazeBar
 
         /// <summary>
         /// Activation de l'icône d'options. À l'étape 3, elle ouvrira le mode choix d'action
-        /// (capture ×2 et couronne d'icônes). Pour l'instant : le curseur rejoint P, c'est tout.
+        /// (capture ×2 et couronne d'icônes). Pour l'instant, on revient simplement au mode mouvement.
         /// </summary>
         private void ActiverIcone()
         {

@@ -13,7 +13,7 @@ namespace GazeBar
             get { return "Inactif"; }
         }
 
-        public override void Entrer()
+        public override void Entrer(EtatRegard regard)
         {
             Gestionnaire.Calque.MasquerTout();
         }

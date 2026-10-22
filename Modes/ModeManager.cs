@@ -106,7 +106,8 @@ namespace GazeBar
             nouveau.Attacher(this);
 
             App.Log("Mode : " + (ancien == null ? "(aucun)" : ancien.Nom) + " → " + nouveau.Nom);
-            nouveau.Entrer();
+            // Le nouveau mode reçoit la position actuelle du regard pour s'initialiser.
+            nouveau.Entrer(LireRegard());
 
             Action<Mode> abonnes = ModeChange;
             if (abonnes != null)

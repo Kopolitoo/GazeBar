@@ -259,7 +259,7 @@ namespace GazeBar
             AfficherEtatModes();
             StatusText.Text = Parametres.Courants.SuiviSouris
                 ? "Suivi souris activé : le curseur suit le cercle."
-                : "Suivi souris désactivé : le curseur ne bouge qu'au moment d'agir.";
+                : "Suivi souris désactivé : le curseur ne rejoint le regard qu'une fois fixé.";
         }
 
         /// <summary>

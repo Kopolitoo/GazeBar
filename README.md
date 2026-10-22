@@ -52,9 +52,9 @@ La barre ne prend jamais le focus, pour ne pas perturber la fenêtre où l'on ag
    l'écran met en pause. Réglages `Lissage` et `ZoneMorteCurseur` dans `parametres.json`. Avec ce mode, les
    glisser-déposer suivent le vrai regard.
 6. **Mode mouvement** (bouton à bascule, activé au démarrage) : le cercle suit le regard, la
-   fixation fige le cercle et la fixation prolongée fait un clic gauche (voir plus bas).
-   **Suivi souris** (bouton à bascule) : le curseur suit aussi le cercle ; sinon, il ne bouge qu'au
-   moment du clic. Ce réglage est enregistré.
+   fixation fige le cercle et place le curseur sur le point fixé (voir plus bas).
+   **Suivi souris** (bouton à bascule, désactivé par défaut) : le curseur suit aussi le cercle ;
+   sinon, il ne rejoint le regard qu'une fois celui-ci fixé. Ce réglage est enregistré.
 7. **Annuler** relâche tout immédiatement. **Quitter** ferme le programme.
 
 ## Réglages
@@ -75,16 +75,20 @@ de `HoldSession.cs` (il disparaîtra à l'étape 5).
   60 fois par seconde, il donne la position du regard (`EtatRegard`) au mode courant.
 - `Modes/Mode` : modèle commun à tous les modes (`Entrer`, `Actualiser`, `Quitter`).
 - `Modes/ModeMouvement` (étape 2, mode par défaut) : un cercle lissé suit le regard ; avec
-  **Suivi souris**, le curseur le suit aussi. Quand le regard reste immobile, un anneau se
-  remplit sur le cercle ; plein, on passe en regard fixe.
+  **Suivi souris**, le curseur le suit aussi. Quand le regard reste immobile pendant
+  `DelaiFixation`, on passe en regard fixe (sans anneau de progression : l'anneau est réservé
+  aux boutons).
+- Chaque mode reçoit la position du regard dans `Entrer(regard)` pour s'initialiser, et reprend
+  le cercle là où il est dessiné : pas de saut d'un mode à l'autre, pas de place par défaut.
 - `Modes/DetecteurFixation` : reconnaît une fixation. Une mesure est immobile si sa vitesse reste
   sous `VitesseMaxFixation` (pixels par seconde) ET si elle reste à moins de `RayonFixation` du
   point d'ancrage (la moyenne des mesures de la fixation). Il faut `DelaiFixation` secondes
   d'immobilité, mesurées en vrai temps. Une mesure aberrante isolée est ignorée.
 - `Modes/ModeRegardFixe` : le cercle se fige (bord blanc) avec une icône d'options collée du côté
-  du centre de l'écran. Regarder dans le cercle pendant `DelaiClicDirect` fait un clic gauche
-  (si `ClicDirect` est activé) ; regarder l'icône pendant `DelaiActivation` l'active (le choix
-  d'action arrivera à l'étape 3 : pour l'instant, le curseur rejoint le point fixé) ; sortir du
+  du centre de l'écran, et le curseur se place sur le point fixé. Si `ClicDirect` est activé
+  (non par défaut, à mettre à `true` dans `parametres.json`), regarder dans le cercle pendant
+  `DelaiClicDirect` fait un clic gauche ; regarder l'icône pendant `DelaiActivation` l'active
+  (le choix d'action arrivera à l'étape 3 : pour l'instant, rien de plus) ; sortir du
   cercle et de l'icône ramène au mode mouvement. Après un clic, une nouvelle fixation au même
   endroit n'est pas reconnue tant que le regard n'en est pas sorti (pas de clics en rafale).
 - `Modes/ModeInactif` : plus rien ne suit le regard. Le bouton **Mode mouvement** de la barre y
@@ -94,9 +98,9 @@ de `HoldSession.cs` (il disparaîtra à l'étape 5).
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
 
-Test de l'étape 2 : on fixe un bouton, l'anneau se remplit puis le cercle se fige (bord blanc,
-icône d'options) ; on regarde ailleurs, il repart. En continuant à fixer le bouton, l'anneau se
-remplit à nouveau et un clic gauche est fait. Le journal note chaque passage en regard fixe et
+Test de l'étape 2 : on fixe un bouton, le cercle se fige (bord blanc, icône d'options) et le
+curseur se place sur le bouton ; on regarde ailleurs, il repart. Avec `ClicDirect` à `true`, en
+continuant à fixer le bouton, un anneau se remplit puis un clic gauche est fait. Le journal note chaque passage en regard fixe et
 chaque clic direct.
 
 ## Limites connues

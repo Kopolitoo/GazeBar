@@ -6,9 +6,15 @@ namespace GazeBar
     /// ModeMenu…) qui hérite de celle-ci et remplit les méthodes qui l'intéressent.
     ///
     /// Le ModeManager appelle ces méthodes au bon moment :
-    ///   Entrer()        une fois, quand le mode devient le mode courant ;
+    ///   Entrer(regard)  une fois, quand le mode devient le mode courant. Il reçoit la
+    ///                   position actuelle du regard, pour s'initialiser au bon endroit
+    ///                   (et non à une place par défaut comme le centre de l'écran) ;
     ///   Actualiser()    environ 60 fois par seconde, avec la dernière position du regard ;
     ///   Quitter()       une fois, quand on passe à un autre mode (pour tout ranger).
+    ///
+    /// Pour éviter un saut visuel d'un mode à l'autre, le cercle n'est PAS caché dans
+    /// Quitter : le mode suivant le reprend là où il est (Calque.CercleX, Calque.CercleY)
+    /// et le déplace en douceur. Un mode qui ne veut pas de cercle le cache dans son Entrer.
     ///
     /// « virtual » : la méthode a un comportement par défaut (ne rien faire), qu'un mode
     /// peut remplacer avec « override ».
@@ -18,7 +24,7 @@ namespace GazeBar
         /// <summary>Nom lisible du mode, pour le journal et l'affichage.</summary>
         public abstract string Nom { get; }
 
-        /// <summary>Le gestionnaire qui pilote ce mode. Donné par le ModeManager avant Entrer().</summary>
+        /// <summary>Le gestionnaire qui pilote ce mode. Donné par le ModeManager avant Entrer(regard).</summary>
         protected ModeManager Gestionnaire { get; private set; }
 
         /// <summary>Appelée par le ModeManager uniquement (d'où « internal »).</summary>
@@ -27,7 +33,7 @@ namespace GazeBar
             Gestionnaire = gestionnaire;
         }
 
-        public virtual void Entrer()
+        public virtual void Entrer(EtatRegard regard)
         {
         }
 

@@ -40,6 +40,15 @@ namespace GazeBar
         /// </summary>
         public static Parametres Courants { get; private set; } = new Parametres();
 
+        /// <summary>
+        /// Version actuelle du fichier de réglages.
+        ///   1 : étape 1 ;
+        ///   2 : étape 2 — ClicDirect et SuiviSouris passent à « non » par défaut (choix de
+        ///       l'utilisateur du 22/10/2026). Un fichier de version 1 est mis à jour une fois
+        ///       (voir MettreAJour).
+        /// </summary>
+        public const int VersionActuelle = 2;
+
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
         public int VersionFichier { get; set; }
@@ -79,7 +88,7 @@ namespace GazeBar
         [DataMember(Order = 24)]
         public double VitesseMaxFixation { get; set; }
 
-        /// <summary>Clic gauche automatique si la fixation se prolonge (oui / non).</summary>
+        /// <summary>Clic gauche automatique si la fixation se prolonge (oui / non). Non par défaut.</summary>
         [DataMember(Order = 22)]
         public bool ClicDirect { get; set; }
 
@@ -165,7 +174,10 @@ namespace GazeBar
 
         // ───────────────────────── Général ─────────────────────────
 
-        /// <summary>En mode mouvement, le curseur de la souris suit aussi le regard.</summary>
+        /// <summary>
+        /// En mode mouvement, le curseur de la souris suit aussi le regard. Non par défaut :
+        /// le curseur ne rejoint alors le regard qu'une fois celui-ci fixé (mode regard fixe).
+        /// </summary>
         [DataMember(Order = 90)]
         public bool SuiviSouris { get; set; }
 
@@ -183,7 +195,7 @@ namespace GazeBar
         /// </summary>
         public void ValeursParDefaut()
         {
-            VersionFichier = 1;
+            VersionFichier = VersionActuelle;
 
             Lissage = 0.30;
             ZoneMorteCurseur = 8;
@@ -192,7 +204,7 @@ namespace GazeBar
             RayonFixation = 30;
             DelaiFixation = 0.8;
             VitesseMaxFixation = 900;
-            ClicDirect = true;
+            ClicDirect = false;
             DelaiClicDirect = 1.5;
 
             RayonCercle = 100;
@@ -217,7 +229,7 @@ namespace GazeBar
             LissageJeu = 0.7;
             SensibiliteJeu = 1.0;
 
-            SuiviSouris = true;
+            SuiviSouris = false;
         }
 
         /// <summary>
@@ -268,6 +280,33 @@ namespace GazeBar
 
             LissageJeu = Borner(LissageJeu, 0.01, 1);
             SensibiliteJeu = Borner(SensibiliteJeu, 0.1, 10);
+        }
+
+        /// <summary>
+        /// Met à jour un fichier écrit par une version plus ancienne de GazeBar.
+        /// Renvoie vrai si quelque chose a changé (il faut alors réenregistrer le fichier).
+        ///
+        /// Pourquoi ? Changer une valeur par défaut ne suffit pas : le fichier déjà présent sur
+        /// l'ordinateur contient l'ancienne valeur (par exemple ClicDirect = true), et c'est
+        /// elle qui serait lue. On la corrige donc une seule fois, puis le numéro de version
+        /// est augmenté : ensuite, un choix fait par l'utilisateur dans le fichier est respecté.
+        /// </summary>
+        public bool MettreAJour()
+        {
+            if (VersionFichier >= VersionActuelle)
+            {
+                return false;
+            }
+
+            if (VersionFichier < 2)
+            {
+                ClicDirect = false;
+                SuiviSouris = false;
+                App.Log("Paramètres : mise à jour en version 2 (ClicDirect et SuiviSouris désactivés)");
+            }
+
+            VersionFichier = VersionActuelle;
+            return true;
         }
 
         /// <summary>Renvoie la valeur, ramenée entre min et max. Une valeur illisible (NaN) devient min.</summary>
@@ -332,6 +371,10 @@ namespace GazeBar
                 }
                 resultat.Corriger();
                 App.Log("Paramètres : lus depuis " + chemin);
+                if (resultat.MettreAJour())
+                {
+                    resultat.Enregistrer();
+                }
                 return resultat;
             }
             catch (Exception ex)

@@ -47,7 +47,7 @@
         <StackPanel Orientation="Horizontal">
             <Button x:Name="MouseModeButton" Content="Souris regard : NON" Click="OnMouseModeClick" />
             <Button x:Name="MovementModeButton" Content="Mode mouvement : OUI" Click="OnMovementModeClick" />
-            <Button x:Name="FollowMouseButton" Content="Suivi souris : OUI" Click="OnFollowMouseClick" />
+            <Button x:Name="FollowMouseButton" Content="Suivi souris : NON" Click="OnFollowMouseClick" />
             <Button x:Name="DiagnosticButton" Content="Diagnostic" Click="OnDiagnosticClick" />
             <Button x:Name="QuitButton" Content="Quitter" Click="OnQuitClick" />
         </StackPanel>
