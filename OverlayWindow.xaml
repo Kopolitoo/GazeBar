@@ -62,8 +62,8 @@
 
     <!-- Canvas : une surface où l'on place les éléments par coordonnées (Canvas.Left / Canvas.Top). -->
     <Canvas x:Name="Surface">
-        <Ellipse x:Name="CercleFond" Stroke="#B0000000" StrokeThickness="2" Opacity="0.5" Visibility="Collapsed" />
-        <Ellipse x:Name="Cercle" Stroke="Green" StrokeThickness="1" Opacity="0.5" Visibility="Collapsed" />
+        <Ellipse x:Name="CercleFond" Stroke="LightGray" StrokeThickness="2" Opacity="0.5" Visibility="Collapsed" />
+        <Ellipse x:Name="Cercle" Stroke="DarkGray" StrokeThickness="1" Opacity="0.3" Visibility="Collapsed" />
 
         <!-- Anneau de progression du cercle. Sa forme (Data) est calculée dans le code. -->
         <Path x:Name="Anneau" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"

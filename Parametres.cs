@@ -206,7 +206,7 @@ namespace GazeBar
         {
             VersionFichier = VersionActuelle;
 
-            Lissage = 0.30;
+            Lissage = 0.16;
             ZoneMorteCurseur = 8;
             AgeMaxMesure = 300;
 
@@ -216,16 +216,16 @@ namespace GazeBar
             ClicDirect = false;
             DelaiClicDirect = 1.5;
 
-            RayonCercle = 100;
+            RayonCercle = 190;
             TailleIcones = 120;
             AfficherLibelles = true;
 
-            DelaiActivation = 0.8;
+            DelaiActivation = 0.6;
             DelaiIconeOptions = 0.3;
             DelaiMenu = 0.5;
             DelaiFermetureMenu = 1.0;
 
-            LoupeAvantAction = false;
+            LoupeAvantAction = true;
             ZoomLoupe = 4;
 
             DureeAppuiLong = 1.5;
