@@ -20,7 +20,8 @@ namespace GazeBar
     ///    mouvement. Regarder l'icône remet ce délai à zéro ;
     ///  - sur l'icône : son anneau se remplit pendant [DelaiIconeOptions] (plus court que
     ///    [DelaiActivation]) ; plein, l'icône
-    ///    s'active et ouvre le mode choix d'action (étape 3) ;
+    ///    s'active et ouvre le mode choix d'action (étape 3), ou d'abord le mode loupe
+    ///    (étape 5) si [LoupeAvantAction] est activé ;
     ///  - hors du cercle et de l'icône : cercle et icône disparaissent, retour au mode mouvement.
     ///
     /// Une seule mesure isolée dans une autre zone est ignorée (même tolérance que pour la
@@ -216,18 +217,23 @@ namespace GazeBar
         /// <summary>
         /// Activation de l'icône d'options : on passe au mode choix d'action (étape 3), qui
         /// photographie la zone autour de P et propose les actions.
-        /// Le cahier des charges prévoit de passer d'abord par la loupe si [LoupeAvantAction]
-        /// est activé : la loupe n'existe pas encore (étape 7), on va donc directement au
-        /// choix d'action dans tous les cas.
+        /// Si l'option [LoupeAvantAction] est activée, on passe d'abord par le mode loupe
+        /// (étape 5), qui affine la position puis ouvre lui-même le choix d'action.
+        /// En attendant la fenêtre des paramètres (étape 7), cette option se règle à la main
+        /// dans %APPDATA%\GazeBar\parametres.json ("LoupeAvantAction": true).
         /// </summary>
         private void ActiverIcone()
         {
             PlacerCurseur();
             if (Parametres.Courants.LoupeAvantAction)
             {
-                App.Log("LoupeAvantAction est activé, mais la loupe arrivera à l'étape 7 : choix d'action direct");
+                // « false » : l'icône « retour » de la loupe ramènera au mode mouvement.
+                Gestionnaire.ChangerMode(new ModeLoupe(_px, _py, false));
             }
-            Gestionnaire.ChangerMode(new ModeChoixAction(_px, _py));
+            else
+            {
+                Gestionnaire.ChangerMode(new ModeChoixAction(_px, _py));
+            }
         }
 
         /// <summary>

@@ -70,7 +70,7 @@ Tous les réglages sont dans la classe `Parametres` (fichier `Parametres.cs`) et
 cahier des charges. On peut l'ouvrir avec le Bloc-notes (nombres décimaux avec un point : `0.3`),
 puis relancer GazeBar. Un fichier illisible est mis de côté (`parametres.json.illisible`) et
 remplacé par les valeurs par défaut. Seul le compte à rebours de 3 s reste une constante en haut
-de `HoldSession.cs` (il disparaîtra à l'étape 5).
+de `HoldSession.cs` (il disparaîtra à l'étape 6).
 
 ## Architecture des modes
 
@@ -94,19 +94,29 @@ de `HoldSession.cs` (il disparaîtra à l'étape 5).
   du centre de l'écran, et le curseur se place sur le point fixé. Si `ClicDirect` est activé
   (non par défaut, à mettre à `true` dans `parametres.json`), regarder dans le cercle pendant
   `DelaiClicDirect` fait un clic gauche ; regarder l'icône pendant `DelaiIconeOptions` (0,3 s,
-  plus court que les autres boutons) ouvre le choix d'action ; sortir du
+  plus court que les autres boutons) ouvre le choix d'action (ou d'abord la loupe si
+  `LoupeAvantAction` est à `true` dans `parametres.json`) ; sortir du
   cercle et de l'icône ramène au mode mouvement. Après un clic, une nouvelle fixation au même
   endroit n'est pas reconnue tant que le regard n'en est pas sorti (pas de clics en rafale).
 - `Modes/ModeChoixAction` (étape 3) : la zone autour du curseur (carré de 2 × `RayonCercle`) est
   photographiée (`CaptureEcran`), puis affichée agrandie ×2 au centre d'un écran noir, avec une
   croix à la place du curseur. Autour, une couronne de sept emplacements : clic gauche (en haut),
-  clic droit (en haut à droite), double clic (en haut à gauche) ; les quatre autres sont vides
-  jusqu'aux étapes suivantes. À gauche, trois emplacements de modificateurs (vides jusqu'à
-  l'étape 5). Les emplacements vides sont dessinés grisés avec un « + », pour montrer qu'on
+  clic droit (en haut à droite), double clic (en haut à gauche), loupe (emplacement 4, en bas à
+  gauche) ; les trois autres sont vides jusqu'aux étapes suivantes. À gauche, trois emplacements
+  de modificateurs (vides jusqu'à l'étape 6). Les emplacements vides sont dessinés grisés avec un « + », pour montrer qu'on
   pourra les configurer. À droite, une icône « retour ». Un petit cercle (moitié de
   `RayonCercle`), par-dessus tout, montre où est le regard. Regarder une icône pendant
   `DelaiActivation` l'active (anneau de progression). Avant le clic, l'écran noir est caché et
   l'on attend 60 ms qu'il ait disparu ; puis retour au mode mouvement.
+- `Modes/ModeLoupe` (étape 5) : affine la position du curseur. La même zone est photographiée,
+  puis affichée agrandie ×`ZoomLoupe` (×4, soit 800 × 800 px) au centre d'un écran noir ; un
+  petit cercle de 50 px suit le regard. Quand le regard se fixe sur la photo (même détection
+  qu'en mode mouvement), le point est ramené en coordonnées réelles (écart divisé par 4), le
+  curseur y est placé et le choix d'action s'ouvre sur ce point. Une erreur de 30 px du regard
+  ne vaut plus que 7 à 8 px réels. L'icône « retour » (à droite) revient sans rien faire au mode
+  d'où l'on vient : le choix d'action, ou le mode mouvement si l'on vient du regard fixe.
+  À l'ouverture, une fixation à l'endroit où l'on regardait déjà est ignorée tant que le regard
+  n'en est pas sorti.
 - `BoutonRegard` : un bouton activable au regard (symbole de la police Windows, pastille,
   anneau, libellé au survol), dessiné sur le calque. Il peut être vide (« + » grisé),
   indisponible (son symbole, grisé) ou allumé (bord vert, pour un interrupteur).
@@ -142,6 +152,12 @@ s'ouvre, sans toucher la souris.
 Test de l'étape 4 : on regarde en bas, hors de l'écran : la barre de menu apparaît. On regarde
 « Pause » : tout s'arrête. On regarde de nouveau en bas, puis « Reprendre » : le cercle revient.
 Le tout uniquement au regard. Échap ramène aussi au mode mouvement.
+
+Test de l'étape 5 : on fixe une petite case à cocher, on regarde l'icône d'options, puis
+« Loupe » dans la couronne : la zone apparaît agrandie ×4. On fixe la case sur la photo : le
+choix d'action s'ouvre, la croix est sur la case ; « clic gauche » la coche. Avec
+`"LoupeAvantAction": true` dans `parametres.json`, la loupe s'ouvre directement après l'icône
+d'options.
 
 ## Limites connues
 
