@@ -132,8 +132,8 @@ namespace GazeBar
 
         // Couleurs du trait de dessus du cercle : vert discret en mouvement, blanc en regard fixe.
         // « Freeze » fige le pinceau : WPF le dessine alors plus vite.
-        private static readonly SolidColorBrush PinceauMouvement = Figer(new SolidColorBrush(Colors.Green));
-        private static readonly SolidColorBrush PinceauFixe = Figer(new SolidColorBrush(Colors.White));
+        private static readonly SolidColorBrush PinceauMouvement = Figer(new SolidColorBrush(Colors.DarkGray));
+        private static readonly SolidColorBrush PinceauFixe = Figer(new SolidColorBrush(Colors.LightGray));
 
         private static SolidColorBrush Figer(SolidColorBrush pinceau)
         {
@@ -161,10 +161,10 @@ namespace GazeBar
             CercleAffiche = true;
 
             Cercle.Stroke = fixe ? PinceauFixe : PinceauMouvement;
-            Cercle.StrokeThickness = fixe ? 2 : 1;
-            Cercle.Opacity = fixe ? 1.0 : 0.5;
-            CercleFond.StrokeThickness = fixe ? 4 : 2;
-            CercleFond.Opacity = fixe ? 0.8 : 0.5;
+            Cercle.StrokeThickness = fixe ? 1.5 : 1;
+            Cercle.Opacity = fixe ? 0.6 : 0.3;
+           CercleFond.StrokeThickness = fixe ? 2.5 : 2;
+            CercleFond.Opacity = fixe ? 0.7 : 0.5;
 
             // Pas encore affichée à l'écran : rien à dessiner (PointFromScreen échouerait).
             if (PresentationSource.FromVisual(this) == null)
@@ -177,7 +177,7 @@ namespace GazeBar
             Point centre = PointFromScreen(new Point(xPixels, yPixels));
             double rayon = PixelsVersWpf(rayonPixels);
 
-            PlacerEllipse(CercleFond, centre, rayon);
+            PlacerEllipse(CercleFond, centre, PixelsVersWpf(rayonPixels + 2));
             PlacerEllipse(Cercle, centre, rayon);
         }
 
