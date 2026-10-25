@@ -36,12 +36,16 @@ namespace GazeBar
     ///
     /// L'icône « retour » ramène au mode mouvement sans rien faire.
     ///
-    /// Ce qui viendra plus tard (cahier des charges) :
-    ///   - étape 5 : les trois modificateurs Ctrl, Maj, Alt à gauche, l'appui long et le
+    /// L'action « Loupe » (étape 5, emplacement 4 de la couronne) ouvre le mode loupe sur le
+    /// même point P, pour affiner la position du curseur. La loupe revient ensuite ici, sur le
+    /// point affiné (ou sur P si l'on y choisit « retour »).
+    ///
+    /// Ce qui viendra plus tard (feuille de route réordonnée le 23/10/2026) :
+    ///   - étape 6 : les trois modificateurs Ctrl, Maj, Alt à gauche, l'appui long et le
     ///     glisser-déposer dans la couronne ;
-    ///   - étapes 7 et 8 : la loupe et le défilement dans la couronne ;
+    ///   - étape 8 : le défilement dans la couronne ;
     ///   - étape 9 : le bouton de configuration de la disposition.
-    /// Pour l'instant, la couronne ne contient donc que trois actions sur sept emplacements,
+    /// Pour l'instant, la couronne contient donc quatre actions sur sept emplacements,
     /// et les trois emplacements des modificateurs sont vides.
     /// </summary>
     internal sealed class ModeChoixAction : Mode
@@ -52,6 +56,7 @@ namespace GazeBar
             ClicGauche,
             ClicDroit,
             DoubleClic,
+            Loupe,
             Retour
         }
 
@@ -79,6 +84,7 @@ namespace GazeBar
         /// paramètres ; pour l'instant elle est écrite ici.
         ///   0 : en haut                  → clic gauche (l'action la plus courante)
         ///   1 : en haut à droite         → clic droit
+        ///   4 : en bas à gauche          → loupe (étape 5, choix de l'utilisateur du 23/10/2026)
         ///   6 : en haut à gauche         → double clic
         /// </summary>
         private static readonly ActionChoix?[] Disposition =
@@ -87,7 +93,7 @@ namespace GazeBar
             ActionChoix.ClicDroit,
             null,
             null,
-            null,
+            ActionChoix.Loupe,
             null,
             ActionChoix.DoubleClic
         };
@@ -238,6 +244,14 @@ namespace GazeBar
                 // Retour sans rien faire. Le mode mouvement repart du regard (le cercle a été
                 // caché pendant le choix, il n'y a donc pas de saut visible).
                 Gestionnaire.ChangerMode(new ModeMouvement());
+                return;
+            }
+
+            if (action == ActionChoix.Loupe)
+            {
+                // La loupe photographie elle-même la zone autour de P (l'écran noir sera caché
+                // par Quitter, juste avant). « true » : son icône « retour » ramènera ici.
+                Gestionnaire.ChangerMode(new ModeLoupe(_px, _py, true));
                 return;
             }
 
@@ -451,7 +465,7 @@ namespace GazeBar
         /// <summary>
         /// Le symbole, la pastille et le libellé de chaque action.
         /// Symboles de la police Windows (Segoe MDL2 Assets / Segoe Fluent Icons) :
-        ///   E962 = souris, E72B = flèche « retour ».
+        ///   E962 = souris, E71E = loupe, E72B = flèche « retour ».
         /// Les trois clics partagent le symbole de la souris ; la pastille les distingue.
         /// </summary>
         private static BoutonRegard CreerBouton(ActionChoix action)
@@ -464,6 +478,8 @@ namespace GazeBar
                     return new BoutonRegard("", "D", "Clic droit");
                 case ActionChoix.DoubleClic:
                     return new BoutonRegard("", "2×", "Double clic");
+                case ActionChoix.Loupe:
+                    return new BoutonRegard("\uE71E", null, "Loupe");
                 default:
                     return new BoutonRegard("", null, "Retour");
             }
