@@ -7,7 +7,7 @@ namespace GazeBar
     /// plus rien. Pratique pour regarder une vidéo ou lire sans rien déclencher.
     ///
     /// Une seule chose reste active : regarder en bas, hors de l'écran, pendant [DelaiMenu]
-    /// ouvre la barre de menu (c'est le ModeManager qui s'en charge, pour tous les modes).
+    /// ouvre la barre de menu (c'est le ModeManager qui s'en charge).
     /// Dans la barre, le bouton « Pause » devient alors « Reprendre », qui ramène au mode
     /// mouvement. La touche Échap de l'aidant ramène aussi au mode mouvement.
     ///
@@ -19,6 +19,12 @@ namespace GazeBar
         public override string Nom
         {
             get { return "Pause"; }
+        }
+
+        /// <summary>Le menu s'ouvre depuis la pause : c'est la seule façon d'en sortir au regard.</summary>
+        public override bool MenuAutorise
+        {
+            get { return true; }
         }
 
         public override void Entrer(EtatRegard regard)

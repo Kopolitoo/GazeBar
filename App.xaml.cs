@@ -36,17 +36,20 @@ namespace GazeBar
             Log("Démarrage de GazeBar");
 
             // Filets de sécurité : quelle que soit l'erreur, on relâche les boutons de la
-            // souris (un bouton resté enfoncé gênerait tout le reste de l'ordinateur),
+            // souris et les touches Ctrl, Maj, Alt (un bouton ou une touche resté enfoncé
+            // gênerait tout le reste de l'ordinateur),
             // et on note l'erreur dans le journal.
             DispatcherUnhandledException += (sender, args) =>
             {
                 MouseInjector.ReleaseAll();
+                InjecteurClavier.RelacherTout();
                 Log("ERREUR NON GÉRÉE (interface) : " + args.Exception);
                 args.Handled = true;   // on évite que le programme se ferme brutalement
             };
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 MouseInjector.ReleaseAll();
+                InjecteurClavier.RelacherTout();
                 Log("ERREUR NON GÉRÉE (.NET) : " + args.ExceptionObject);
             };
 
@@ -80,7 +83,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Touche Échap (pour l'aidant) : on relâche les boutons de la souris par sécurité et on
+        /// Touche Échap (pour l'aidant) : on relâche les boutons de la souris et les touches
+        /// modificatrices par sécurité (un glisser-déposer en cours est interrompu) et on
         /// revient au mode mouvement, sauf si l'on y est déjà. La touche arrive aussi normalement
         /// au programme actif (elle n'est pas « mangée » par GazeBar).
         /// </summary>
@@ -92,6 +96,7 @@ namespace GazeBar
             }
             App.Log("Touche Échap : retour au mode mouvement");
             MouseInjector.ReleaseAll();
+            InjecteurClavier.RelacherTout();
             _modes.ChangerMode(new ModeMouvement());
         }
 
@@ -116,6 +121,7 @@ namespace GazeBar
         protected override void OnExit(ExitEventArgs e)
         {
             MouseInjector.ReleaseAll();
+            InjecteurClavier.RelacherTout();
             if (_clavier != null)
             {
                 _clavier.Dispose();

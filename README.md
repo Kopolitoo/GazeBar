@@ -69,8 +69,9 @@ Tous les réglages sont dans la classe `Parametres` (fichier `Parametres.cs`) et
 `%APPDATA%\GazeBar\parametres.json`, créé au premier lancement avec les valeurs par défaut du
 cahier des charges. On peut l'ouvrir avec le Bloc-notes (nombres décimaux avec un point : `0.3`),
 puis relancer GazeBar. Un fichier illisible est mis de côté (`parametres.json.illisible`) et
-remplacé par les valeurs par défaut. Seul le compte à rebours de 3 s reste une constante en haut
-de `HoldSession.cs` (il disparaîtra à l'étape 6).
+remplacé par les valeurs par défaut. Les anciens fichiers `HoldSession.cs` (appui long, compte à
+rebours de 3 s) et `GazeMouse.cs` ont été supprimés à l'étape 6, ainsi que les réglages qui ne
+servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxAppui`).
 
 ## Architecture des modes
 
@@ -102,9 +103,9 @@ de `HoldSession.cs` (il disparaîtra à l'étape 6).
   photographiée (`CaptureEcran`), puis affichée agrandie ×2 au centre d'un écran noir, avec une
   croix à la place du curseur. Autour, une couronne de sept emplacements : clic gauche (en haut),
   clic droit (en haut à droite), double clic (en haut à gauche), loupe (emplacement 4, en bas à
-  gauche) ; les trois autres sont vides jusqu'aux étapes suivantes. À gauche, trois emplacements
-  de modificateurs (vides jusqu'à l'étape 6). Les emplacements vides sont dessinés grisés avec un « + », pour montrer qu'on
-  pourra les configurer. À droite, une icône « retour ». Un petit cercle (moitié de
+  gauche), glisser-déposer gauche (à droite), glisser-déposer droit (en bas à droite),
+  glisser-déposer android (à gauche). À gauche, les trois modificateurs Ctrl, Maj, Alt (étape 6).
+  Un emplacement vide serait dessiné grisé avec un « + », pour montrer qu'on pourra le configurer. À droite, une icône « retour ». Un petit cercle (moitié de
   `RayonCercle`), par-dessus tout, montre où est le regard. Regarder une icône pendant
   `DelaiActivation` l'active (anneau de progression). Avant le clic, l'écran noir est caché et
   l'on attend 60 ms qu'il ait disparu ; puis retour au mode mouvement.
@@ -117,14 +118,28 @@ de `HoldSession.cs` (il disparaîtra à l'étape 6).
   d'où l'on vient : le choix d'action, ou le mode mouvement si l'on vient du regard fixe.
   À l'ouverture, une fixation à l'endroit où l'on regardait déjà est ignorée tant que le regard
   n'en est pas sorti.
+- Modificateurs (étape 6, `Modificateurs`, `InjecteurClavier`) : dans le choix d'action, un
+  regard sur « Ctrl », « Maj » ou « Alt » l'allume (bord vert), un second l'éteint. Les touches
+  allumées sont enfoncées juste avant l'action et relâchées juste après (après le dépôt pour un
+  glisser). Elles s'éteignent après chaque action, et à chaque retour au mode mouvement.
+- Glisser-déposer (étape 6) : depuis la couronne du choix d'action, en trois temps.
+  1. `Modes/ModeGlisserArrivee` : le cercle suit le regard, une ligne blanche en pointillés part
+     du point de départ ; une fixation choisit l'arrivée.
+  2. `Modes/ModeLoupe` : la loupe affine l'arrivée.
+  3. `Modes/ModeGlisserExecution` : bouton enfoncé au départ, curseur déplacé jusqu'à l'arrivée
+     en `DureeGlisser` (0,5 s), bouton relâché. Pour le glisser-déposer **android**, une pause
+     de `DureePauseAndroid` (1 s) sépare l'appui du déplacement (il remplace l'appui long).
+  Pendant les temps 1 et 2, un bouton « retour » au bord droit de l'écran (centré verticalement)
+  annule sans rien enfoncer. `Modes/Glissement` décrit le glisser en cours (départ, bouton, pause).
 - `BoutonRegard` : un bouton activable au regard (symbole de la police Windows, pastille,
   anneau, libellé au survol), dessiné sur le calque. Il peut être vide (« + » grisé),
   indisponible (son symbole, grisé) ou allumé (bord vert, pour un interrupteur).
 - `ViseurBoutons` (étape 4) : décide quel bouton est regardé et quand il s'active ; partagé par
   le choix d'action et le menu.
 - `Modes/ModeMenu` (étape 4) : regarder en bas, hors de l'écran, pendant `DelaiMenu` (0,5 s)
-  ouvre une barre centrée en bas de l'écran, depuis n'importe quel mode (c'est le `ModeManager`
-  qui surveille). Boutons : Paramètres et Jeu (grisés, étapes 6 et 10), Calibration, Clavier
+  ouvre une barre centrée en bas de l'écran, uniquement depuis les modes mouvement et pause
+  (et plus tard jeu, depuis l'étape 6 ; c'est le `ModeManager` qui surveille). La loupe, le
+  choix d'action et le glisser-déposer ont leur bouton « retour ». Boutons : Paramètres et Jeu (grisés, étapes 6 et 10), Calibration, Clavier
   visuel, Pause (ou Reprendre si l'on vient de la pause), Suivi souris (interrupteur, bord vert
   quand il est activé), Diagnostic, Quitter GazeBar (avec confirmation « Oui » / « Non »).
   Regarder hors de la barre pendant `DelaiFermetureMenu` (1 s) la ferme et ramène au mode
@@ -158,6 +173,12 @@ Test de l'étape 5 : on fixe une petite case à cocher, on regarde l'icône d'op
 choix d'action s'ouvre, la croix est sur la case ; « clic gauche » la coche. Avec
 `"LoupeAvantAction": true` dans `parametres.json`, la loupe s'ouvre directement après l'icône
 d'options.
+
+Test de l'étape 6 : dans l'Explorateur, on fixe un fichier, on ouvre le choix d'action, on
+regarde « Ctrl » (bord vert) puis « clic gauche » ; on recommence sur un autre fichier : les deux
+sont sélectionnés. Puis on fixe un fichier, on choisit « glisser-déposer gauche » (quatre flèches,
+pastille G), on regarde le dossier d'arrivée (la ligne en pointillés suit), on le fixe, on affine
+dans la loupe : le fichier est déplacé. Le bouton « retour » à droite annule.
 
 ## Limites connues
 

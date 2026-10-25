@@ -16,6 +16,8 @@ namespace GazeBar
     ///
     /// Regard perdu ou hors de l'écran : le cercle et le curseur restent où ils sont, et la
     /// fixation en cours est oubliée.
+    ///
+    /// C'est l'un des seuls modes d'où le menu peut s'ouvrir (avec la pause, étape 6).
     /// </summary>
     internal sealed class ModeMouvement : Mode
     {
@@ -57,8 +59,18 @@ namespace GazeBar
             get { return "Mouvement"; }
         }
 
+        /// <summary>Le menu s'ouvre depuis le mode mouvement (regard en bas, hors de l'écran).</summary>
+        public override bool MenuAutorise
+        {
+            get { return true; }
+        }
+
         public override void Entrer(EtatRegard regard)
         {
+            // Retour au mode mouvement = fin de l'action (ou abandon) : les modificateurs
+            // Ctrl, Maj, Alt du choix d'action sont désactivés (voir Modificateurs.cs).
+            Modificateurs.ToutDesactiver();
+
             // Point de départ du cercle, sans jamais le placer « par défaut » au centre :
             //  - si un cercle est déjà affiché (on revient du mode regard fixe), on part de
             //    là où il est : il glissera en douceur vers le regard, sans saut ;

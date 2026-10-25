@@ -269,6 +269,7 @@ namespace GazeBar
             MasquerIcone();
             MasquerEcranChoix();
             MasquerBarreMenu();
+            MasquerSurfaceGlisser();
         }
 
         // ───────────────────────── Écran noir du choix d'action (étape 3) ─────────────────────────
@@ -330,6 +331,32 @@ namespace GazeBar
         public void MasquerBarreMenu()
         {
             BarreMenu.Visibility = Visibility.Collapsed;
+        }
+
+        // ───────────────────────── Surface du glisser-déposer (étape 6) ─────────────────────────
+
+        /// <summary>
+        /// Vide la surface du glisser-déposer et lui donne la taille du calque.
+        /// Elle reste cachée : le mode la remplit, puis appelle AfficherSurfaceGlisser.
+        /// </summary>
+        public void PreparerSurfaceGlisser()
+        {
+            SurfaceGlisser.Children.Clear();
+            SurfaceGlisser.Width = ActualWidth;
+            SurfaceGlisser.Height = ActualHeight;
+            Canvas.SetLeft(SurfaceGlisser, 0);
+            Canvas.SetTop(SurfaceGlisser, 0);
+        }
+
+        public void AfficherSurfaceGlisser()
+        {
+            SurfaceGlisser.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>Cache la surface du glisser-déposer (son contenu est gardé jusqu'au prochain PreparerSurfaceGlisser).</summary>
+        public void MasquerSurfaceGlisser()
+        {
+            SurfaceGlisser.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>
