@@ -20,7 +20,7 @@ namespace GazeBar
     ///  - depuis le mode choix d'action, avec l'action « Loupe » de la couronne
     ///    (emplacement 4 par défaut) ;
     ///  - depuis le mode regard fixe, directement, si l'option [LoupeAvantAction] est activée
-    ///    (à mettre à true dans parametres.json en attendant la fenêtre des paramètres, étape 7) ;
+    ///    (onglet « Loupe, glisser » du mode paramètres, étape 7) ;
     ///  - pendant un glisser-déposer (étape 6), pour affiner le point d'arrivée (2e temps,
     ///    voir Glissement.cs). La fixation lance alors l'exécution du glisser
     ///    (ModeGlisserExecution) au lieu du choix d'action, et l'icône « retour », placée au

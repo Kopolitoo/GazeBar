@@ -139,11 +139,26 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
 - `Modes/ModeMenu` (étape 4) : regarder en bas, hors de l'écran, pendant `DelaiMenu` (0,5 s)
   ouvre une barre centrée en bas de l'écran, uniquement depuis les modes mouvement et pause
   (et plus tard jeu, depuis l'étape 6 ; c'est le `ModeManager` qui surveille). La loupe, le
-  choix d'action et le glisser-déposer ont leur bouton « retour ». Boutons : Paramètres et Jeu (grisés, étapes 6 et 10), Calibration, Clavier
+  choix d'action et le glisser-déposer ont leur bouton « retour ». Boutons : Paramètres, Jeu (grisé, étape 10), Calibration, Clavier
   visuel, Pause (ou Reprendre si l'on vient de la pause), Suivi souris (interrupteur, bord vert
   quand il est activé), Diagnostic, Quitter GazeBar (avec confirmation « Oui » / « Non »).
   Regarder hors de la barre pendant `DelaiFermetureMenu` (1 s) la ferme et ramène au mode
   d'avant. Un petit cercle montre où est le regard.
+- `Modes/ModeParametres` et `FenetreParametres` (étape 7) : bouton « Paramètres » du menu. Une
+  fenêtre plein écran, fond noir, avec six onglets à gauche (Regard, Fixation, Délais, Affichage,
+  Loupe et glisser, Général ; liste dans `CatalogueParametres`). Chaque réglage : son nom, une
+  explication, puis « − », la valeur, « + » (ou « Non » / « Oui »). Garder le regard sur « − » ou
+  « + » répète le changement toutes les 0,4 s. « Défaut » (en haut à droite) remet les valeurs de
+  l'onglet affiché, après confirmation ; « Retour » (au milieu du bord droit) ou Échap ramène au
+  mode mouvement. Les nombres s'affichent avec un point (0.16). L'aidant peut cliquer sur une
+  valeur pour la taper (Entrée valide, Échap annule ; point ou virgule acceptés). Chaque
+  changement est appliqué tout de suite et enregistré. Contrairement au calque, cette fenêtre
+  accepte la souris et le clavier. `ICibleRegard` permet au `ViseurBoutons` de viser ses cibles.
+- Instance unique (étape 7, `App`) : si GazeBar tourne déjà, un deuxième lancement se ferme
+  aussitôt, sans rien afficher, et le note dans le journal.
+- `DemarrageWindows` (étape 7) : l'option `DemarrerAvecWindows` (onglet Général) inscrit GazeBar
+  dans la liste de démarrage de Windows (registre, `HKEY_CURRENT_USER\...\Run`), sans droits
+  d'administrateur : les fenêtres administrateur continuent d'ignorer ses clics.
 - `Modes/ModePause` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
   (bouton « Reprendre »).
 - `Modes/ModeCalibration` et `CalibrationTobii` (étape 4) : lancent l'outil de calibration Tobii
@@ -167,6 +182,13 @@ s'ouvre, sans toucher la souris.
 Test de l'étape 4 : on regarde en bas, hors de l'écran : la barre de menu apparaît. On regarde
 « Pause » : tout s'arrête. On regarde de nouveau en bas, puis « Reprendre » : le cercle revient.
 Le tout uniquement au regard. Échap ramène aussi au mode mouvement.
+
+Test de l'étape 7 : menu, « Paramètres » : l'écran noir s'ouvre sur l'onglet Regard. On garde
+le regard sur « + » du lissage : la valeur monte d'un pas toutes les 0,4 s. On regarde l'onglet
+Fixation, puis « Oui » pour le clic direct : il est encadré en bleu. « Défaut », puis « Oui » :
+les valeurs de l'onglet reviennent. L'aidant clique sur une valeur, tape 0,5 puis Entrée.
+« Retour » ramène au mode mouvement. Lancer GazeBar une deuxième fois ne fait rien (voir le
+journal).
 
 Test de l'étape 5 : on fixe une petite case à cocher, on regarde l'icône d'options, puis
 « Loupe » dans la couronne : la zone apparaît agrandie ×4. On fixe la case sur la photo : le

@@ -1,0 +1,178 @@
+using System.Windows;
+
+namespace GazeBar
+{
+    /// <summary>
+    /// MODE PARAMÈTRES (étape 7 du cahier des charges).
+    ///
+    /// Entrée : bouton « Paramètres » de la barre de menu.
+    ///
+    /// Affichage : la fenêtre FenetreParametres, plein écran, fond noir (voir ce fichier pour
+    /// la mise en page). Le calque est vidé : rien n'y est dessiné pendant ce mode.
+    ///
+    /// Le regard : ce mode fait le lien entre le regard et la fenêtre.
+    ///   - à chaque tic, la position du regard (pixels d'écran) est convertie en position sur
+    ///     la page 1920 × 1080 de la fenêtre, puis donnée à un ViseurBoutons, le même que
+    ///     pour le menu et le choix d'action ;
+    ///   - une cible regardée pendant [DelaiActivation] s'active ;
+    ///   - RÉPÉTITION (choix de l'utilisateur du 26/10/2026) : si le regard reste sur « − » ou
+    ///     « + », la valeur continue de changer, d'un pas toutes les [DelaiRepetition]
+    ///     secondes. Les autres cibles (onglets, Non / Oui…) ne s'activent qu'une fois : il
+    ///     faut quitter la cible du regard pour l'activer de nouveau ;
+    ///   - un petit cercle gris (50 px) montre où est le regard.
+    ///
+    /// Sortie : bouton « Retour » (au milieu du bord droit) ou touche Échap de l'aidant,
+    /// vers le mode mouvement. Le menu du bas ne s'ouvre pas ici (Mode.MenuAutorise reste
+    /// « non », règle du 25/10/2026).
+    ///
+    /// Chaque changement est appliqué tout de suite (Parametres.Courants) et enregistré dans
+    /// parametres.json.
+    ///
+    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// </summary>
+    internal sealed class ModeParametres : Mode
+    {
+        /// <summary>Intervalle de la répétition sur « − » et « + », en secondes.</summary>
+        private const double DelaiRepetition = 0.4;
+
+        private FenetreParametres _fenetre;
+        private ViseurBoutons _viseur;
+
+        // Version de la page vue au tic précédent : si elle change, les cibles ont changé.
+        private int _version = -1;
+
+        // La cible en cours de répétition (« − » ou « + »), ou -1.
+        private int _cibleRepetee = -1;
+
+        // Le petit cercle du regard : position lissée, en pixels d'écran.
+        private double _rx;
+        private double _ry;
+        private bool _cerclePlace;
+
+        public override string Nom
+        {
+            get { return "Paramètres"; }
+        }
+
+        public override void Entrer(EtatRegard regard)
+        {
+            // Rien sur le calque pendant ce mode : tout est dans la fenêtre.
+            Gestionnaire.Calque.MasquerTout();
+
+            _fenetre = new FenetreParametres();
+            _fenetre.RetourDemande += Retour;
+            _fenetre.Show();
+            // Activate : la fenêtre prend le clavier, pour que l'aidant puisse taper une valeur.
+            // (Windows peut le refuser si un autre programme est au premier plan ; un clic de
+            // l'aidant dans la fenêtre suffit alors.)
+            _fenetre.Activate();
+
+            _viseur = new ViseurBoutons(_fenetre.Cibles);
+            _version = -1;
+            _cibleRepetee = -1;
+
+            _cerclePlace = regard.SurEcran;
+            if (_cerclePlace)
+            {
+                _rx = regard.X;
+                _ry = regard.Y;
+            }
+        }
+
+        public override void Actualiser(EtatRegard regard)
+        {
+            if (_fenetre == null)
+            {
+                return;
+            }
+            Parametres p = Parametres.Courants;
+
+            // 1. La page a-t-elle été reconstruite (nouvel onglet, confirmation…) ? Le viseur
+            //    repart de zéro, et la cible qui se trouve sous le regard ne s'active pas tant
+            //    que le regard ne l'a pas quittée (comme dans le menu).
+            if (_fenetre.Version != _version)
+            {
+                _version = _fenetre.Version;
+                _viseur.ReinitialiserEtBloquer();
+                _cibleRepetee = -1;
+            }
+
+            // 2. Le regard, converti en coordonnées de la page. EtatRegard est une « struct » :
+            //    surPage est une copie, on peut changer X et Y sans toucher à l'original.
+            EtatRegard surPage = regard;
+            if (regard.Disponible)
+            {
+                Point point = _fenetre.VersPage(regard.X, regard.Y);
+                surPage.X = point.X;
+                surPage.Y = point.Y;
+            }
+
+            // 3. Les cibles. Pendant une répétition, le délai est plus court.
+            double delai = (_cibleRepetee >= 0 && _viseur.Vise == _cibleRepetee) ? DelaiRepetition : p.DelaiActivation;
+            int active = _viseur.Actualiser(surPage, delai, false);
+            if (_viseur.Vise != _cibleRepetee)
+            {
+                _cibleRepetee = -1;   // le regard a quitté « − » ou « + » : fin de la répétition
+            }
+
+            if (active >= 0)
+            {
+                if (_fenetre.CibleRepetable(active))
+                {
+                    _cibleRepetee = active;
+                }
+                else
+                {
+                    _viseur.BloquerJusquASortie();
+                }
+
+                _fenetre.Activer(active);
+                if (Gestionnaire.ModeCourant != this)
+                {
+                    return;   // « Retour » : on a déjà changé de mode
+                }
+            }
+
+            // 4. Le petit cercle du regard (seulement quand le regard est sur l'écran).
+            if (regard.SurEcran)
+            {
+                if (!_cerclePlace)
+                {
+                    _rx = regard.X;
+                    _ry = regard.Y;
+                    _cerclePlace = true;
+                }
+                _rx += (regard.X - _rx) * p.Lissage;
+                _ry += (regard.Y - _ry) * p.Lissage;
+                _fenetre.PlacerPointRegard(_fenetre.VersPage(_rx, _ry));
+            }
+        }
+
+        public override void Quitter()
+        {
+            if (_fenetre != null)
+            {
+                FenetreParametres fenetre = _fenetre;
+                _fenetre = null;
+                fenetre.RetourDemande -= Retour;
+                fenetre.Fermer();
+            }
+        }
+
+        /// <summary>
+        /// Touche Échap de l'aidant (appelée par App) : si une valeur est en cours de saisie,
+        /// la saisie est annulée et on reste ici. Renvoie vrai dans ce cas.
+        /// </summary>
+        public bool AnnulerSaisie()
+        {
+            return _fenetre != null && _fenetre.AnnulerSaisie();
+        }
+
+        /// <summary>Bouton « Retour » : retour au mode mouvement.</summary>
+        private void Retour()
+        {
+            App.Log("Paramètres : retour au mode mouvement");
+            Gestionnaire.ChangerMode(new ModeMouvement());
+        }
+    }
+}

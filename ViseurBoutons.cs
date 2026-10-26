@@ -4,6 +4,8 @@ namespace GazeBar
 {
     /// <summary>
     /// LOGIQUE : décide quel bouton (BoutonRegard) est regardé, et quand il s'active (étape 4).
+    /// Depuis l'étape 7, il vise toute cible qui implémente ICibleRegard (aussi les cibles du
+    /// mode paramètres).
     ///
     /// Ce travail était fait directement dans ModeChoixAction à l'étape 3. La barre de menu en
     /// a besoin aussi : on l'a donc sorti dans cette petite classe, partagée par les deux modes.
@@ -30,7 +32,10 @@ namespace GazeBar
         private const int MesuresPourChanger = 2;
 
         // La liste des boutons, partagée avec le mode (qui peut la remplir après coup).
-        private readonly List<BoutonRegard> _boutons;
+        // IReadOnlyList<ICibleRegard> (étape 7) : une liste qu'on peut lire mais pas modifier,
+        // de n'importe quelles cibles (BoutonRegard, CibleParametre…). Grâce à une règle de C#
+        // appelée « covariance », une List<BoutonRegard> peut être donnée telle quelle.
+        private readonly IReadOnlyList<ICibleRegard> _boutons;
 
         // Le bouton « candidat » vu sur les dernières mesures, et combien de fois de suite.
         private int _candidat;
@@ -46,7 +51,7 @@ namespace GazeBar
         // Vrai après ReinitialiserEtBloquer, jusqu'à la première nouvelle mesure.
         private bool _bloquerPremier;
 
-        public ViseurBoutons(List<BoutonRegard> boutons)
+        public ViseurBoutons(IReadOnlyList<ICibleRegard> boutons)
         {
             _boutons = boutons;
             Reinitialiser();
