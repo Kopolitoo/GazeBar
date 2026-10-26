@@ -20,9 +20,9 @@ namespace GazeBar
     /// Le premier mode est en général le mode mouvement ; c'est lui qui passe la main au mode
     /// regard fixe quand on fixe un point, et le mode regard fixe la lui rend.
     ///
-    /// Étape 4 : c'est aussi lui qui ouvre le menu, quel que soit le mode courant (« toujours
-    /// une sortie ») : quand le regard reste en bas, hors de l'écran, pendant [DelaiMenu], on
-    /// passe au mode menu. Un mode peut l'empêcher (propriété Mode.MenuAutorise).
+    /// Étape 4 : c'est aussi lui qui ouvre le menu : quand le regard reste en bas, hors de
+    /// l'écran, pendant [DelaiMenu], on passe au mode menu. Depuis l'étape 6, seuls les modes
+    /// mouvement et pause (et plus tard jeu) l'autorisent (propriété Mode.MenuAutorise).
     /// </summary>
     internal sealed class ModeManager
     {
@@ -161,8 +161,10 @@ namespace GazeBar
             catch (Exception ex)
             {
                 // Une erreur dans un mode ne doit pas tout bloquer : on la note, on relâche
-                // les boutons de la souris par sécurité, et l'horloge continue.
+                // les boutons de la souris et les touches du clavier par sécurité, et
+                // l'horloge continue.
                 MouseInjector.ReleaseAll();
+                InjecteurClavier.RelacherTout();
                 App.Log("ERREUR dans le mode " + ModeCourant.Nom + " : " + ex);
             }
         }

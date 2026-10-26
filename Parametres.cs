@@ -10,8 +10,9 @@ namespace GazeBar
     /// <summary>
     /// MODÈLE : tous les réglages de GazeBar, au même endroit.
     ///
-    /// Ils remplacent les constantes qui étaient écrites en haut de GazeMouse.cs et de
-    /// HoldSession.cs. Ils sont lus au démarrage et enregistrés dans le fichier :
+    /// Ils remplacent les constantes qui étaient écrites en haut des premiers fichiers
+    /// (GazeMouse.cs et HoldSession.cs, supprimés à l'étape 6). Ils sont lus au démarrage et
+    /// enregistrés dans le fichier :
     ///     %APPDATA%\GazeBar\parametres.json
     /// (par exemple C:\Users\Nom\AppData\Roaming\GazeBar\parametres.json).
     ///
@@ -45,9 +46,12 @@ namespace GazeBar
         ///   1 : étape 1 ;
         ///   2 : étape 2 — ClicDirect et SuiviSouris passent à « non » par défaut (choix de
         ///       l'utilisateur du 22/10/2026). Un fichier de version 1 est mis à jour une fois
-        ///       (voir MettreAJour).
+        ///       (voir MettreAJour) ;
+        ///   3 : étape 6 — nouveau glisser-déposer : DureePauseAndroid et DureeGlisser
+        ///       remplacent DureeAppuiLong, DelaiDepot, DistanceMinGlisser et DureeMaxAppui,
+        ///       supprimés (règle de l'utilisateur : un réglage qui ne sert plus est retiré).
         /// </summary>
-        public const int VersionActuelle = 2;
+        public const int VersionActuelle = 3;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -145,21 +149,21 @@ namespace GazeBar
 
         // ───────────────────────── Actions ─────────────────────────
 
-        /// <summary>Durée de l'appui long, en secondes.</summary>
+        /// <summary>
+        /// Glisser-déposer « android » : pause entre l'appui du bouton et le début du
+        /// déplacement, en secondes (comme pour déplacer une icône sur un téléphone).
+        /// Remplace l'ancien DureeAppuiLong (étape 6).
+        /// </summary>
         [DataMember(Order = 60)]
-        public double DureeAppuiLong { get; set; }
+        public double DureePauseAndroid { get; set; }
 
-        /// <summary>Durée de la fixation qui dépose un glisser, en secondes.</summary>
+        /// <summary>
+        /// Durée du déplacement du curseur pendant un glisser-déposer, en secondes : le curseur
+        /// va du point de départ au point d'arrivée en ce temps-là, bouton enfoncé.
+        /// Remplace l'ancien DelaiDepot (étape 6) : l'arrivée se fixe maintenant avec [DelaiFixation].
+        /// </summary>
         [DataMember(Order = 61)]
-        public double DelaiDepot { get; set; }
-
-        /// <summary>Distance minimale parcourue avant qu'un dépôt soit possible, en pixels.</summary>
-        [DataMember(Order = 62)]
-        public double DistanceMinGlisser { get; set; }
-
-        /// <summary>Sécurité : un bouton n'est jamais maintenu plus longtemps que cela, en secondes.</summary>
-        [DataMember(Order = 63)]
-        public double DureeMaxAppui { get; set; }
+        public double DureeGlisser { get; set; }
 
         // ───────────────────────── Défilement ─────────────────────────
 
@@ -228,10 +232,8 @@ namespace GazeBar
             LoupeAvantAction = true;
             ZoomLoupe = 4;
 
-            DureeAppuiLong = 1.5;
-            DelaiDepot = 1.2;
-            DistanceMinGlisser = 60;
-            DureeMaxAppui = 20;
+            DureePauseAndroid = 1.0;
+            DureeGlisser = 0.5;
 
             ZoneNeutreDefilement = 40;
             VitesseMaxDefilement = 10;
@@ -281,10 +283,8 @@ namespace GazeBar
 
             ZoomLoupe = Borner(ZoomLoupe, 1, 10);
 
-            DureeAppuiLong = Borner(DureeAppuiLong, 0.1, 30);
-            DelaiDepot = Borner(DelaiDepot, 0.1, 10);
-            DistanceMinGlisser = Borner(DistanceMinGlisser, 0, 1000);
-            DureeMaxAppui = Borner(DureeMaxAppui, 1, 120);
+            DureePauseAndroid = Borner(DureePauseAndroid, 0, 10);
+            DureeGlisser = Borner(DureeGlisser, 0.05, 10);
 
             ZoneNeutreDefilement = Borner(ZoneNeutreDefilement, 0, 500);
             VitesseMaxDefilement = Borner(VitesseMaxDefilement, 1, 100);
@@ -314,6 +314,14 @@ namespace GazeBar
                 ClicDirect = false;
                 SuiviSouris = false;
                 App.Log("Paramètres : mise à jour en version 2 (ClicDirect et SuiviSouris désactivés)");
+            }
+
+            if (VersionFichier < 3)
+            {
+                // Rien à corriger : les anciens réglages du glisser (DureeAppuiLong, DelaiDepot…)
+                // sont simplement ignorés à la lecture, et les nouveaux ont déjà leur valeur par
+                // défaut (voir AvantLecture). Réenregistrer le fichier les fait disparaître.
+                App.Log("Paramètres : mise à jour en version 3 (réglages du glisser-déposer remplacés)");
             }
 
             VersionFichier = VersionActuelle;

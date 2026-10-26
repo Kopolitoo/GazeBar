@@ -40,13 +40,18 @@ namespace GazeBar
     /// même point P, pour affiner la position du curseur. La loupe revient ensuite ici, sur le
     /// point affiné (ou sur P si l'on y choisit « retour »).
     ///
-    /// Ce qui viendra plus tard (feuille de route réordonnée le 23/10/2026) :
-    ///   - étape 6 : les trois modificateurs Ctrl, Maj, Alt à gauche, l'appui long et le
-    ///     glisser-déposer dans la couronne ;
-    ///   - étape 8 : le défilement dans la couronne ;
+    /// Étape 6 :
+    ///   - les trois actions « glisser-déposer » (gauche, droit, android) ouvrent le choix du
+    ///     point d'arrivée (ModeGlisserArrivee), avec P comme point de départ ;
+    ///   - les trois emplacements de gauche sont les modificateurs Ctrl, Maj et Alt. Un regard
+    ///     en active un (bord vert), un second le désactive ; le choix d'action reste ouvert.
+    ///     Les touches actives sont enfoncées juste avant l'action et relâchées juste après
+    ///     (voir Modificateurs.cs).
+    ///
+    /// Ce qui viendra plus tard :
+    ///   - étape 8 : le défilement dans la couronne (les sept emplacements sont pleins : il
+    ///     faudra choisir l'action qu'il remplace) ;
     ///   - étape 9 : le bouton de configuration de la disposition.
-    /// Pour l'instant, la couronne contient donc quatre actions sur sept emplacements,
-    /// et les trois emplacements des modificateurs sont vides.
     /// </summary>
     internal sealed class ModeChoixAction : Mode
     {
@@ -57,6 +62,12 @@ namespace GazeBar
             ClicDroit,
             DoubleClic,
             Loupe,
+            GlisserGauche,
+            GlisserDroit,
+            GlisserAndroid,
+            Ctrl,
+            Maj,
+            Alt,
             Retour
         }
 
@@ -84,18 +95,32 @@ namespace GazeBar
         /// paramètres ; pour l'instant elle est écrite ici.
         ///   0 : en haut                  → clic gauche (l'action la plus courante)
         ///   1 : en haut à droite         → clic droit
+        ///   2 : à droite                 → glisser-déposer gauche (étape 6)
+        ///   3 : en bas à droite          → glisser-déposer droit (étape 6)
         ///   4 : en bas à gauche          → loupe (étape 5, choix de l'utilisateur du 23/10/2026)
+        ///   5 : à gauche                 → glisser-déposer android (étape 6)
         ///   6 : en haut à gauche         → double clic
         /// </summary>
         private static readonly ActionChoix?[] Disposition =
         {
             ActionChoix.ClicGauche,
             ActionChoix.ClicDroit,
-            null,
-            null,
+            ActionChoix.GlisserGauche,
+            ActionChoix.GlisserDroit,
             ActionChoix.Loupe,
-            null,
+            ActionChoix.GlisserAndroid,
             ActionChoix.DoubleClic
+        };
+
+        /// <summary>
+        /// Les trois emplacements de gauche, de haut en bas : les modificateurs (étape 6).
+        /// Comme la couronne, cette disposition sera modifiable à l'étape 9.
+        /// </summary>
+        private static readonly ActionChoix?[] DispositionModificateurs =
+        {
+            ActionChoix.Ctrl,
+            ActionChoix.Maj,
+            ActionChoix.Alt
         };
 
         // Le point visé P (position du curseur), en pixels d'écran.
@@ -104,9 +129,6 @@ namespace GazeBar
 
         private Etape _etape;
         private double _debutEtapeMs;
-
-        /// <summary>Nombre d'emplacements de modificateurs, à gauche (Ctrl, Maj, Alt à l'étape 5).</summary>
-        private const int NombreModificateurs = 3;
 
         /// <summary>Libellé d'un emplacement vide, affiché au survol.</summary>
         private const string LibelleVide = "Emplacement libre (à configurer dans les paramètres)";
@@ -142,19 +164,8 @@ namespace GazeBar
             get { return "Choix d'action"; }
         }
 
-        /// <summary>
-        /// Le menu (regard en bas hors de l'écran) ne s'ouvre que pendant le choix : ni pendant
-        /// la photo, ni pendant l'exécution d'un clic, qui ne durent qu'un instant.
-        /// </summary>
-        public override bool MenuAutorise
-        {
-            get { return _etape == Etape.Choix; }
-        }
-
         public override void Entrer(EtatRegard regard)
         {
-            // On peut revenir dans ce mode en fermant le menu : on repart alors de zéro
-            // (nouvelle photo, aucun bouton visé).
             _viseur.Reinitialiser();
 
             // 1. CAPTURE : on cache tout ce que GazeBar dessine, et on attend un peu avant la photo.
@@ -247,6 +258,28 @@ namespace GazeBar
                 return;
             }
 
+            if (EstModificateur(action))
+            {
+                // Ctrl, Maj ou Alt : on l'allume ou on l'éteint, et on reste dans le choix.
+                // Le bouton est bloqué tant que le regard ne l'a pas quitté : sans cela, en
+                // continuant à le regarder, on l'allumerait et l'éteindrait sans fin.
+                bool actif = Modificateurs.Basculer(VersModificateur(action));
+                _boutons[_viseur.Vise].DefinirAllume(actif);
+                _viseur.BloquerJusquASortie();
+                return;
+            }
+
+            if (action == ActionChoix.GlisserGauche || action == ActionChoix.GlisserDroit ||
+                action == ActionChoix.GlisserAndroid)
+            {
+                // Le glisser-déposer part du point visé P. L'écran noir sera caché par Quitter,
+                // juste avant que le mode suivant ne montre l'écran réel.
+                MouseSide bouton = action == ActionChoix.GlisserDroit ? MouseSide.Right : MouseSide.Left;
+                bool avecPause = action == ActionChoix.GlisserAndroid;
+                Gestionnaire.ChangerMode(new ModeGlisserArrivee(new Glissement(_px, _py, bouton, avecPause)));
+                return;
+            }
+
             if (action == ActionChoix.Loupe)
             {
                 // La loupe photographie elle-même la zone autour de P (l'écran noir sera caché
@@ -269,6 +302,10 @@ namespace GazeBar
             // Le curseur est remis sur P par sécurité (il a pu être bougé entre-temps).
             NativeMethods.SetCursorPos((int)Math.Round(_px), (int)Math.Round(_py));
 
+            // Les modificateurs actifs sont enfoncés juste avant le clic…
+            string modificateurs = Modificateurs.Description();
+            Modificateurs.EnfoncerActifs();
+
             switch (_actionChoisie)
             {
                 case ActionChoix.ClicGauche:
@@ -282,7 +319,11 @@ namespace GazeBar
                     break;
             }
 
-            App.Log(_actionChoisie + " en (" + _px.ToString("F0") + ", " + _py.ToString("F0") + ")");
+            // … et relâchés juste après. (Le mode mouvement les désactivera ensuite.)
+            Modificateurs.RelacherTout();
+
+            App.Log(_actionChoisie + " en (" + _px.ToString("F0") + ", " + _py.ToString("F0") +
+                    "), modificateurs : " + modificateurs);
 
             // Retour au mode mouvement (choix de l'utilisateur). Une nouvelle fixation au même
             // endroit est ignorée tant que le regard n'en est pas sorti, comme après un clic direct.
@@ -375,15 +416,22 @@ namespace GazeBar
                 AjouterBouton(calque, ecran, Disposition[i], x, y, taille);
             }
 
-            // ── Les emplacements des modificateurs, à gauche : une colonne de trois, à
-            //    mi-chemin entre le bord gauche et la couronne. Vides jusqu'à l'étape 5.
+            // ── Les modificateurs, à gauche : une colonne de trois, à mi-chemin entre le bord
+            //    gauche et la couronne. Un modificateur déjà actif (par exemple Ctrl choisi avant
+            //    un passage par la loupe) est dessiné allumé.
             double xModificateurs = (cxEcran - rayonCouronne - taille / 2) / 2;
             xModificateurs = Math.Max(xModificateurs, taille / 2 + 10);
             double ecart = taille + 30;
-            for (int i = 0; i < NombreModificateurs; i++)
+            int nombre = DispositionModificateurs.Length;
+            for (int i = 0; i < nombre; i++)
             {
-                double y = cyEcran + (i - (NombreModificateurs - 1) / 2.0) * ecart;
-                AjouterBouton(calque, ecran, null, xModificateurs, y, taille);
+                double y = cyEcran + (i - (nombre - 1) / 2.0) * ecart;
+                ActionChoix? action = DispositionModificateurs[i];
+                BoutonRegard bouton = AjouterBouton(calque, ecran, action, xModificateurs, y, taille);
+                if (action.HasValue && EstModificateur(action.Value))
+                {
+                    bouton.DefinirAllume(Modificateurs.EstActif(VersModificateur(action.Value)));
+                }
             }
 
             // ── L'icône « retour », à droite : à mi-chemin entre la couronne et le bord droit.
@@ -450,23 +498,46 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Crée le bouton d'une action (ou un emplacement vide si action est null) et le place
-        /// sur l'écran noir.
+        /// Crée le bouton d'une action (ou un emplacement vide si action est null), le place
+        /// sur l'écran noir, et le renvoie.
         /// </summary>
-        private void AjouterBouton(OverlayWindow calque, Canvas ecran, ActionChoix? action,
-                                   double x, double y, double taille)
+        private BoutonRegard AjouterBouton(OverlayWindow calque, Canvas ecran, ActionChoix? action,
+                                           double x, double y, double taille)
         {
             BoutonRegard bouton = action.HasValue ? CreerBouton(action.Value) : BoutonRegard.Vide(LibelleVide);
             bouton.Placer(calque, ecran, x, y, taille);
             _boutons.Add(bouton);
             _actions.Add(action);
+            return bouton;
+        }
+
+        /// <summary>Vrai pour les actions des emplacements de gauche (Ctrl, Maj, Alt).</summary>
+        private static bool EstModificateur(ActionChoix action)
+        {
+            return action == ActionChoix.Ctrl || action == ActionChoix.Maj || action == ActionChoix.Alt;
+        }
+
+        /// <summary>Le modificateur qui correspond à l'action Ctrl, Maj ou Alt.</summary>
+        private static Modificateur VersModificateur(ActionChoix action)
+        {
+            switch (action)
+            {
+                case ActionChoix.Ctrl:
+                    return Modificateur.Ctrl;
+                case ActionChoix.Maj:
+                    return Modificateur.Maj;
+                default:
+                    return Modificateur.Alt;
+            }
         }
 
         /// <summary>
         /// Le symbole, la pastille et le libellé de chaque action.
         /// Symboles de la police Windows (Segoe MDL2 Assets / Segoe Fluent Icons) :
-        ///   E962 = souris, E71E = loupe, E72B = flèche « retour ».
-        /// Les trois clics partagent le symbole de la souris ; la pastille les distingue.
+        ///   E962 = souris, E71E = loupe, E7C2 = déplacer (quatre flèches), E72B = flèche « retour ».
+        /// Les trois clics partagent le symbole de la souris, les trois glisser-déposer celui des
+        /// quatre flèches ; la pastille les distingue (G = gauche, D = droit, A = android).
+        /// Les modificateurs affichent simplement leur nom (« Ctrl », « Maj », « Alt »).
         /// </summary>
         private static BoutonRegard CreerBouton(ActionChoix action)
         {
@@ -480,6 +551,18 @@ namespace GazeBar
                     return new BoutonRegard("", "2×", "Double clic");
                 case ActionChoix.Loupe:
                     return new BoutonRegard("\uE71E", null, "Loupe");
+                case ActionChoix.GlisserGauche:
+                    return new BoutonRegard("\uE7C2", "G", "Glisser-déposer gauche");
+                case ActionChoix.GlisserDroit:
+                    return new BoutonRegard("\uE7C2", "D", "Glisser-déposer droit");
+                case ActionChoix.GlisserAndroid:
+                    return new BoutonRegard("\uE7C2", "A", "Glisser-déposer android (pause avant de déplacer)");
+                case ActionChoix.Ctrl:
+                    return BoutonRegard.Texte("Ctrl", "Ctrl (activer / désactiver)");
+                case ActionChoix.Maj:
+                    return BoutonRegard.Texte("Maj", "Maj (activer / désactiver)");
+                case ActionChoix.Alt:
+                    return BoutonRegard.Texte("Alt", "Alt (activer / désactiver)");
                 default:
                     return new BoutonRegard("", null, "Retour");
             }

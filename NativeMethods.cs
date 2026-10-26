@@ -43,33 +43,72 @@ namespace GazeBar
         internal const int SM_CXSCREEN = 0;
         internal const int SM_CYSCREEN = 1;
 
-        // ───────────────────────── Simulation de la souris ─────────────────────────
+        // ───────────────────────── Simulation de la souris et du clavier ─────────────────────────
 
         /// <summary>Description d'une action de souris à simuler (structure MOUSEINPUT de Windows).</summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct MOUSEINPUT
         {
-            public int dx;             // déplacement en X (inutilisé ici : on ne bouge pas la souris)
-            public int dy;             // déplacement en Y (inutilisé)
+            public int dx;             // position ou déplacement en X (voir MOUSEEVENTF_ABSOLUTE)
+            public int dy;             // position ou déplacement en Y
             public uint mouseData;     // données supplémentaires (molette...) : inutilisé
-            public uint dwFlags;       // QUELLE action : bouton enfoncé, relâché...
+            public uint dwFlags;       // QUELLE action : bouton enfoncé, relâché, déplacement...
             public uint time;          // 0 = laisser Windows mettre l'heure
             public UIntPtr dwExtraInfo;
         }
 
-        /// <summary>Enveloppe d'une entrée simulée (structure INPUT de Windows). type = 0 pour une action de souris.</summary>
+        /// <summary>
+        /// Description d'une touche du clavier à simuler (structure KEYBDINPUT de Windows).
+        /// Ajoutée à l'étape 6 pour les modificateurs Ctrl, Maj et Alt.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct KEYBDINPUT
+        {
+            public ushort wVk;         // code de la touche (VK_CONTROL, VK_SHIFT…)
+            public ushort wScan;       // code matériel : inutilisé ici (0)
+            public uint dwFlags;       // 0 = touche enfoncée, KEYEVENTF_KEYUP = touche relâchée
+            public uint time;          // 0 = laisser Windows mettre l'heure
+            public UIntPtr dwExtraInfo;
+        }
+
+        /// <summary>
+        /// Une « union » : la souris ET le clavier sont rangés au MÊME endroit de la mémoire
+        /// (FieldOffset(0) pour les deux). Windows lit l'un ou l'autre selon INPUT.type.
+        /// C'est ainsi que la structure INPUT est définie en C ; la reproduire exactement permet
+        /// à Windows de trouver la bonne taille (SendInput la vérifie).
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        internal struct INPUTUNION
+        {
+            [FieldOffset(0)] public MOUSEINPUT mi;
+            [FieldOffset(0)] public KEYBDINPUT ki;
+        }
+
+        /// <summary>
+        /// Enveloppe d'une entrée simulée (structure INPUT de Windows).
+        /// type = INPUT_MOUSE (0) pour la souris, INPUT_KEYBOARD (1) pour le clavier.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct INPUT
         {
             public uint type;
-            public MOUSEINPUT mi;
+            public INPUTUNION u;
         }
 
         internal const uint INPUT_MOUSE = 0;
+        internal const uint INPUT_KEYBOARD = 1;
+        internal const uint MOUSEEVENTF_MOVE = 0x0001;
         internal const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         internal const uint MOUSEEVENTF_LEFTUP = 0x0004;
         internal const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
         internal const uint MOUSEEVENTF_RIGHTUP = 0x0010;
+        internal const uint MOUSEEVENTF_ABSOLUTE = 0x8000; // dx, dy = position sur l'écran (0 à 65535), pas un écart
+        internal const uint KEYEVENTF_KEYUP = 0x0002;
+
+        // Codes des touches modificatrices (« virtual-key codes »).
+        internal const ushort VK_SHIFT = 0x10;    // Maj
+        internal const ushort VK_CONTROL = 0x11;  // Ctrl
+        internal const ushort VK_MENU = 0x12;     // Alt (Windows l'appelle « menu »)
 
         /// <summary>Simule des actions de souris ou de clavier, comme si elles venaient du matériel.</summary>
         [DllImport("user32.dll", SetLastError = true)]

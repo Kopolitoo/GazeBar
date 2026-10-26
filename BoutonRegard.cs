@@ -29,6 +29,10 @@ namespace GazeBar
     /// Un bouton peut être « allumé » (méthode DefinirAllume, étape 4) : un interrupteur en
     /// position « oui », comme « Suivi souris » dans la barre de menu. Son bord devient vert.
     ///
+    /// Un bouton peut afficher un mot au lieu d'un symbole (méthode Texte, étape 6) : c'est le
+    /// cas des modificateurs « Ctrl », « Maj » et « Alt », qui n'ont pas de symbole parlant
+    /// dans la police d'icônes de Windows.
+    ///
     /// Il ne sait pas lui-même s'il est regardé ni depuis combien de temps : c'est le mode
     /// (ModeChoixAction, ModeMenu) qui le décide, avec l'aide d'un ViseurBoutons, et qui lui
     /// dit quoi dessiner (méthode Dessiner).
@@ -44,6 +48,9 @@ namespace GazeBar
         private readonly TextBlock _pastille;
         private readonly Path _anneau;
         private readonly Border _libelle;
+
+        // Taille du symbole par rapport au côté du bouton (plus petite pour un mot, voir Texte).
+        private double _facteurSymbole = 0.45;
 
         // Couleurs (figées une fois pour toutes, WPF les dessine alors plus vite).
         private static readonly Brush FondNormal = Figer(new SolidColorBrush(Color.FromArgb(0xE0, 0x20, 0x21, 0x24)));
@@ -61,6 +68,19 @@ namespace GazeBar
         public static BoutonRegard Vide(string libelle)
         {
             return Indisponible("\uE710", libelle);
+        }
+
+        /// <summary>
+        /// Crée un bouton qui affiche un mot (par exemple « Ctrl ») au lieu d'un symbole :
+        /// police ordinaire de Windows (Segoe UI), en gras, plus petite pour tenir dans le carré.
+        /// </summary>
+        public static BoutonRegard Texte(string mot, string libelle)
+        {
+            BoutonRegard bouton = new BoutonRegard(mot, null, libelle);
+            bouton._symbole.FontFamily = new FontFamily("Segoe UI");
+            bouton._symbole.FontWeight = FontWeights.Bold;
+            bouton._facteurSymbole = 0.28;
+            return bouton;
         }
 
         /// <summary>
@@ -186,7 +206,7 @@ namespace GazeBar
 
             _fond.Width = cote;
             _fond.Height = cote;
-            _symbole.FontSize = cote * 0.45;
+            _symbole.FontSize = cote * _facteurSymbole;
             _pastille.FontSize = cote * 0.2;
             Canvas.SetLeft(_fond, centre.X - cote / 2);
             Canvas.SetTop(_fond, centre.Y - cote / 2);

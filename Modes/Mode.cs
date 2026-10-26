@@ -25,14 +25,17 @@ namespace GazeBar
         public abstract string Nom { get; }
 
         /// <summary>
-        /// Vrai si le regard en bas hors de l'écran peut ouvrir le menu pendant ce mode (étape 4).
-        /// C'est le cas presque partout (« toujours une sortie », dit le cahier des charges) ;
-        /// un mode peut l'interdire, par exemple le menu lui-même, ou le choix d'action
-        /// pendant le court instant où il prend sa photo.
+        /// Vrai si le regard en bas hors de l'écran peut ouvrir le menu pendant ce mode.
+        ///
+        /// Depuis l'étape 6 (choix de l'utilisateur du 25/10/2026), le menu ne s'ouvre QUE
+        /// depuis les modes mouvement, pause et (plus tard) jeu. Les autres modes ont leur propre
+        /// sortie : un bouton « retour » dans la loupe, le choix d'action et le glisser-déposer.
+        /// La réponse par défaut est donc « non » ; seuls ModeMouvement et ModePause la
+        /// remplacent par « oui » (avec override).
         /// </summary>
         public virtual bool MenuAutorise
         {
-            get { return true; }
+            get { return false; }
         }
 
         /// <summary>Le gestionnaire qui pilote ce mode. Donné par le ModeManager avant Entrer(regard).</summary>

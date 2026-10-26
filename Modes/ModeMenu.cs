@@ -12,8 +12,8 @@ namespace GazeBar
     /// MODE MENU (étape 4 du cahier des charges).
     ///
     /// Entrée : regarder en bas, hors de l'écran, pendant [DelaiMenu]. C'est le ModeManager
-    /// qui surveille cela, quel que soit le mode (sauf si le mode l'interdit : voir
-    /// Mode.MenuAutorise).
+    /// qui surveille cela, uniquement depuis les modes mouvement et pause (et plus tard jeu) :
+    /// voir Mode.MenuAutorise (étape 6).
     ///
     /// Affichage : une barre centrée en bas de l'écran, avec des boutons activés au regard
     /// (BoutonRegard) : on regarde un bouton pendant [DelaiActivation], son anneau se remplit,
@@ -107,12 +107,6 @@ namespace GazeBar
         public override string Nom
         {
             get { return "Menu"; }
-        }
-
-        /// <summary>Le menu est déjà ouvert : le regard en bas ne le rouvre pas.</summary>
-        public override bool MenuAutorise
-        {
-            get { return false; }
         }
 
         public override void Entrer(EtatRegard regard)

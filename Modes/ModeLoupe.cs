@@ -16,11 +16,15 @@ namespace GazeBar
     /// [ZoomLoupe] fois (×4 par défaut) : une erreur de 30 px sur l'écran ne vaut plus que
     /// 30 ÷ 4 ≈ 7 à 8 px réels.
     ///
-    /// On y arrive de deux façons :
+    /// On y arrive de trois façons :
     ///  - depuis le mode choix d'action, avec l'action « Loupe » de la couronne
     ///    (emplacement 4 par défaut) ;
     ///  - depuis le mode regard fixe, directement, si l'option [LoupeAvantAction] est activée
-    ///    (à mettre à true dans parametres.json en attendant la fenêtre des paramètres, étape 7).
+    ///    (à mettre à true dans parametres.json en attendant la fenêtre des paramètres, étape 7) ;
+    ///  - pendant un glisser-déposer (étape 6), pour affiner le point d'arrivée (2e temps,
+    ///    voir Glissement.cs). La fixation lance alors l'exécution du glisser
+    ///    (ModeGlisserExecution) au lieu du choix d'action, et l'icône « retour », placée au
+    ///    bord droit de l'écran, annule le glisser-déposer (retour au mode mouvement).
     ///
     /// Comme le choix d'action, le mode se déroule en deux temps (« étapes ») :
     ///
@@ -73,6 +77,9 @@ namespace GazeBar
         // Vrai si l'on vient du choix d'action : l'icône « retour » y ramène.
         private readonly bool _retourAuChoixAction;
 
+        // Le glisser-déposer dont on affine l'arrivée, ou null pour une loupe ordinaire.
+        private readonly Glissement _glissement;
+
         private Etape _etape;
         private double _debutEtapeMs;
 
@@ -120,21 +127,26 @@ namespace GazeBar
             _viseur = new ViseurBoutons(_boutons);
         }
 
+        /// <summary>
+        /// Ouvre la loupe autour du point d'arrivée (x, y) d'un glisser-déposer (étape 6).
+        /// La fixation lance l'exécution du glisser ; l'icône « retour » l'annule.
+        /// </summary>
+        public ModeLoupe(double x, double y, Glissement glissement)
+        {
+            _px = x;
+            _py = y;
+            _glissement = glissement;
+            _viseur = new ViseurBoutons(_boutons);
+        }
+
         public override string Nom
         {
             get { return "Loupe"; }
         }
 
-        /// <summary>Comme le choix d'action : pas de menu pendant l'instant de la photo.</summary>
-        public override bool MenuAutorise
-        {
-            get { return _etape == Etape.Visee; }
-        }
-
         public override void Entrer(EtatRegard regard)
         {
-            // On peut revenir dans ce mode en fermant le menu : on repart alors de zéro
-            // (nouvelle photo, aucune fixation en cours).
+            // On repart de zéro : nouvelle photo, aucune fixation en cours.
             _viseur.Reinitialiser();
             _fixation.Reinitialiser();
 
@@ -257,6 +269,16 @@ namespace GazeBar
             x = Borner(x, _ox, _ox + _cote - 1);
             y = Borner(y, _oy, _oy + _cote - 1);
 
+            if (_glissement != null)
+            {
+                // Glisser-déposer : (x, y) est le point d'arrivée. Le curseur reste sur le point
+                // de départ ; c'est l'exécution qui l'emmènera, bouton enfoncé.
+                App.Log("Loupe : arrivée du glisser affinée en (" + x.ToString("F0") + ", " +
+                        y.ToString("F0") + "), au lieu de (" + _px.ToString("F0") + ", " + _py.ToString("F0") + ")");
+                Gestionnaire.ChangerMode(new ModeGlisserExecution(_glissement, x, y));
+                return;
+            }
+
             NativeMethods.SetCursorPos((int)Math.Round(x), (int)Math.Round(y));
             App.Log("Loupe : fixation en (" + fx.ToString("F0") + ", " + fy.ToString("F0") +
                     ") sur la photo → curseur en (" + x.ToString("F0") + ", " + y.ToString("F0") +
@@ -267,12 +289,16 @@ namespace GazeBar
 
         /// <summary>
         /// Icône « retour » : on revient d'où l'on vient, sans rien faire. Le curseur n'a pas
-        /// bougé (il est toujours sur P).
+        /// bougé (il est toujours sur P). Pendant un glisser-déposer, « retour » l'annule.
         /// </summary>
         private void Retour()
         {
-            App.Log("Loupe : retour");
-            if (_retourAuChoixAction)
+            App.Log(_glissement != null ? "Loupe : glisser-déposer annulé (retour)" : "Loupe : retour");
+            if (_glissement != null)
+            {
+                Gestionnaire.ChangerMode(new ModeMouvement());
+            }
+            else if (_retourAuChoixAction)
             {
                 Gestionnaire.ChangerMode(new ModeChoixAction(_px, _py));
             }
@@ -364,10 +390,17 @@ namespace GazeBar
 
             // ── L'icône « retour », à droite : à mi-chemin entre la photo et le bord droit,
             //    à la même hauteur que dans le choix d'action (milieu de l'écran).
+            //    Pendant un glisser-déposer, elle est collée au bord droit de l'écran, à la même
+            //    place que pendant le choix de l'arrivée (choix de l'utilisateur du 25/10/2026).
             //    Symbole E72B = flèche « retour » de la police Windows.
             double xRetour = (_gauche + coteAgrandi + largeur) / 2;
+            if (_glissement != null)
+            {
+                xRetour = largeur - taille / 2 - 10;
+            }
             xRetour = Math.Min(xRetour, largeur - taille / 2 - 10);
-            BoutonRegard retour = new BoutonRegard("", null, "Retour");
+            string libelleRetour = _glissement != null ? "Annuler le glisser-déposer" : "Retour";
+            BoutonRegard retour = new BoutonRegard("", null, libelleRetour);
             retour.Placer(calque, ecran, xRetour, cyEcran, taille);
             _boutons.Add(retour);
 

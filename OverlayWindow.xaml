@@ -41,6 +41,10 @@
                   mais reste transparente : seuls la barre et ses boutons, créés dans le code
                   (ModeMenu et BoutonRegard), sont visibles. Elle est placée AVANT l'écran
                   noir, donc dessinée en dessous de lui.
+  Élément ajouté à l'étape 6 (glisser-déposer) :
+    SurfaceGlisser  la surface du choix du point d'arrivée d'un glisser-déposer : la ligne en
+                  pointillés du trajet et le bouton « retour » au bord droit. Transparente,
+                  comme la barre de menu : on voit l'écran réel en dessous.
   Les symboles viennent de la police « Segoe Fluent Icons » (Windows 11) ou, à défaut,
   « Segoe MDL2 Assets » (Windows 10) : WPF prend la première présente sur l'ordinateur.
 -->
@@ -82,6 +86,9 @@
                 Visibility="Collapsed">
             <TextBlock x:Name="LibelleTexte" Text="Options" Foreground="White" FontSize="20" />
         </Border>
+
+        <!-- Surface du glisser-déposer (étape 6). Sa taille et son contenu sont réglés dans le code. -->
+        <Canvas x:Name="SurfaceGlisser" Visibility="Collapsed" />
 
         <!-- Surface de la barre de menu (étape 4). Sa taille et son contenu sont réglés dans le code. -->
         <Canvas x:Name="BarreMenu" Visibility="Collapsed" />
