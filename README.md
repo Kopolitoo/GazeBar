@@ -101,10 +101,11 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
   endroit n'est pas reconnue tant que le regard n'en est pas sorti (pas de clics en rafale).
 - `Modes/ModeChoixAction` (étape 3) : la zone autour du curseur (carré de 2 × `RayonCercle`) est
   photographiée (`CaptureEcran`), puis affichée agrandie ×2 au centre d'un écran noir, avec une
-  croix à la place du curseur. Autour, une couronne de sept emplacements : clic gauche (en haut),
-  clic droit (en haut à droite), double clic (en haut à gauche), loupe (emplacement 4, en bas à
-  gauche), glisser-déposer gauche (à droite), glisser-déposer droit (en bas à droite),
-  glisser-déposer android (à gauche). À gauche, les trois modificateurs Ctrl, Maj, Alt (étape 6).
+  croix à la place du curseur. Autour, une couronne de huit emplacements, deux par côté de la
+  photo : double clic et clic gauche (en haut), clic droit et glisser-déposer gauche (à droite),
+  glisser-déposer droit et loupe (en bas), glisser-déposer android et un emplacement libre pour
+  le défilement de l'étape 8 (à gauche). Sur le bord gauche de l'écran, les trois modificateurs
+  Ctrl, Maj, Alt (étape 6), à 60 px du bord et 60 px les uns des autres.
   Un emplacement vide serait dessiné grisé avec un « + », pour montrer qu'on pourra le configurer. À droite, une icône « retour ». Un petit cercle (moitié de
   `RayonCercle`), par-dessus tout, montre où est le regard. Regarder une icône pendant
   `DelaiActivation` l'active (anneau de progression). Avant le clic, l'écran noir est caché et

@@ -22,7 +22,7 @@ namespace GazeBar
     ///     contiendrait le cercle.
     ///
     ///  2. CHOIX. Un écran noir couvre tout l'écran. Au centre : la photo agrandie ×2
-    ///     (400 × 400 px) et une croix à la place du curseur. Autour : la couronne de sept
+    ///     (400 × 400 px) et une croix à la place du curseur. Autour : la couronne de huit
     ///     emplacements d'action. À gauche : les trois emplacements des modificateurs.
     ///     À droite : l'icône « retour ». Un emplacement sans action est quand même dessiné,
     ///     grisé, pour montrer qu'on pourra y mettre une action (demande de l'utilisateur
@@ -49,8 +49,7 @@ namespace GazeBar
     ///     (voir Modificateurs.cs).
     ///
     /// Ce qui viendra plus tard :
-    ///   - étape 8 : le défilement dans la couronne (les sept emplacements sont pleins : il
-    ///     faudra choisir l'action qu'il remplace) ;
+    ///   - étape 8 : le défilement dans la couronne (emplacement 6, laissé libre) ;
     ///   - étape 9 : le bouton de configuration de la disposition.
     /// </summary>
     internal sealed class ModeChoixAction : Mode
@@ -89,17 +88,18 @@ namespace GazeBar
         private const double AttenteMs = 60;
 
         /// <summary>
-        /// Disposition de la couronne : les sept emplacements, en partant du haut et en tournant
-        /// dans le sens des aiguilles d'une montre. null = emplacement vide (actions des étapes
-        /// suivantes). À l'étape 9, cette disposition sera modifiable et enregistrée avec les
-        /// paramètres ; pour l'instant elle est écrite ici.
-        ///   0 : en haut                  → clic gauche (l'action la plus courante)
-        ///   1 : en haut à droite         → clic droit
-        ///   2 : à droite                 → glisser-déposer gauche (étape 6)
-        ///   3 : en bas à droite          → glisser-déposer droit (étape 6)
-        ///   4 : en bas à gauche          → loupe (étape 5, choix de l'utilisateur du 23/10/2026)
-        ///   5 : à gauche                 → glisser-déposer android (étape 6)
-        ///   6 : en haut à gauche         → double clic
+        /// Disposition de la couronne : les huit emplacements, deux par côté de la photo, en
+        /// partant du haut et en tournant dans le sens des aiguilles d'une montre (voir
+        /// PlaceEmplacement). null = emplacement vide. À l'étape 9, cette disposition sera
+        /// modifiable et enregistrée avec les paramètres ; pour l'instant elle est écrite ici.
+        ///   0 : en haut, à droite        → clic gauche (l'action la plus courante)
+        ///   1 : à droite, en haut        → clic droit
+        ///   2 : à droite, en bas         → glisser-déposer gauche (étape 6)
+        ///   3 : en bas, à droite         → glisser-déposer droit (étape 6)
+        ///   4 : en bas, à gauche         → loupe (étape 5, choix de l'utilisateur du 23/10/2026)
+        ///   5 : à gauche, en bas         → glisser-déposer android (étape 6)
+        ///   6 : à gauche, en haut        → vide : place prévue pour le défilement (étape 8)
+        ///   7 : en haut, à gauche        → double clic (à côté du clic gauche)
         /// </summary>
         private static readonly ActionChoix?[] Disposition =
         {
@@ -109,8 +109,16 @@ namespace GazeBar
             ActionChoix.GlisserDroit,
             ActionChoix.Loupe,
             ActionChoix.GlisserAndroid,
+            null,
             ActionChoix.DoubleClic
         };
+
+        /// <summary>
+        /// Espace, en pixels, entre deux boutons voisins, entre les boutons et la photo, et entre
+        /// les modificateurs et le bord gauche de l'écran (demande de l'utilisateur du 26/10/2026 :
+        /// « environ 60 pixels »).
+        /// </summary>
+        private const double Espace = 60;
 
         /// <summary>
         /// Les trois emplacements de gauche, de haut en bas : les modificateurs (étape 6).
@@ -399,29 +407,32 @@ namespace GazeBar
             // ── La croix, à la place du curseur dans la photo agrandie.
             DessinerCroix(calque, ecran, gauche + (_px - ox) * Zoom, haut + (_py - oy) * Zoom);
 
-            // ── La couronne : sept emplacements sur un cercle autour de la photo.
-            //    Rayon : assez grand pour que les icônes ne touchent pas les coins de la photo
-            //    (demi-diagonale de la photo + demi-icône + marge), mais sans sortir de l'écran.
-            double rayonVoulu = coteAgrandi / 2 * Math.Sqrt(2) + taille / 2 + 20;
-            double rayonMax = Math.Min(largeur, hauteur) / 2 - taille / 2 - 10;
-            double rayonCouronne = Math.Min(rayonVoulu, rayonMax);
+            // ── La couronne : huit emplacements, DEUX PAR CÔTÉ de la photo (demande de
+            //    l'utilisateur du 26/10/2026, pour laisser une place au défilement de l'étape 8).
+            //    Sur chaque côté, les deux boutons sont séparés de [Espace] pixels et centrés
+            //    sur le milieu du côté. Ils sont à [Espace] pixels de la photo, sauf si l'écran
+            //    est trop petit (en haut et en bas sur un écran 1080p) : ils se rapprochent alors
+            //    de la photo pour rester entièrement sur l'écran.
+            double demiPhoto = coteAgrandi / 2;
+            double distanceVoulue = demiPhoto + Espace + taille / 2;
+            double distanceX = Math.Min(distanceVoulue, largeur / 2 - taille / 2 - 10);
+            double distanceY = Math.Min(distanceVoulue, hauteur / 2 - taille / 2 - 10);
+            double decalage = (taille + Espace) / 2;   // du milieu du côté au centre de chaque bouton
 
             for (int i = 0; i < Disposition.Length; i++)
             {
-                // Angle : -90° = en haut, puis un septième de tour par emplacement.
-                // Un emplacement vide (null) est dessiné grisé.
-                double angle = (-90 + i * 360.0 / Disposition.Length) * Math.PI / 180;
-                double x = cxEcran + rayonCouronne * Math.Cos(angle);
-                double y = cyEcran + rayonCouronne * Math.Sin(angle);
+                double x;
+                double y;
+                PlaceEmplacement(i, cxEcran, cyEcran, distanceX, distanceY, decalage, out x, out y);
                 AjouterBouton(calque, ecran, Disposition[i], x, y, taille);
             }
 
-            // ── Les modificateurs, à gauche : une colonne de trois, à mi-chemin entre le bord
-            //    gauche et la couronne. Un modificateur déjà actif (par exemple Ctrl choisi avant
-            //    un passage par la loupe) est dessiné allumé.
-            double xModificateurs = (cxEcran - rayonCouronne - taille / 2) / 2;
-            xModificateurs = Math.Max(xModificateurs, taille / 2 + 10);
-            double ecart = taille + 30;
+            // ── Les modificateurs : une colonne de trois, collée au bord gauche de l'écran
+            //    (demande du 26/10/2026), à [Espace] pixels du bord, et [Espace] pixels entre
+            //    eux. Un modificateur déjà actif (par exemple Ctrl choisi avant un passage par
+            //    la loupe) est dessiné allumé.
+            double xModificateurs = Espace + taille / 2;
+            double ecart = taille + Espace;
             int nombre = DispositionModificateurs.Length;
             for (int i = 0; i < nombre; i++)
             {
@@ -435,7 +446,7 @@ namespace GazeBar
             }
 
             // ── L'icône « retour », à droite : à mi-chemin entre la couronne et le bord droit.
-            double xRetour = (cxEcran + rayonCouronne + taille / 2 + largeur) / 2;
+            double xRetour = (cxEcran + distanceX + taille / 2 + largeur) / 2;
             xRetour = Math.Min(xRetour, largeur - taille / 2 - 10);
             AjouterBouton(calque, ecran, ActionChoix.Retour, xRetour, cyEcran, taille);
 
@@ -509,6 +520,35 @@ namespace GazeBar
             _boutons.Add(bouton);
             _actions.Add(action);
             return bouton;
+        }
+
+        /// <summary>
+        /// Centre de l'emplacement numéro « numero » de la couronne, en pixels d'écran.
+        /// Deux emplacements par côté de la photo, dans le sens des aiguilles d'une montre en
+        /// partant du haut :
+        ///         7   0
+        ///      6         1
+        ///         photo
+        ///      5         2
+        ///         4   3
+        /// distanceX, distanceY : écart entre le centre de l'écran et la ligne des boutons des
+        /// côtés gauche/droit (X) et haut/bas (Y) ; decalage : écart entre le milieu d'un côté
+        /// et le centre de chacun de ses deux boutons.
+        /// </summary>
+        private static void PlaceEmplacement(int numero, double cx, double cy, double distanceX,
+                                             double distanceY, double decalage, out double x, out double y)
+        {
+            switch (numero)
+            {
+                case 0: x = cx + decalage; y = cy - distanceY; break;
+                case 1: x = cx + distanceX; y = cy - decalage; break;
+                case 2: x = cx + distanceX; y = cy + decalage; break;
+                case 3: x = cx + decalage; y = cy + distanceY; break;
+                case 4: x = cx - decalage; y = cy + distanceY; break;
+                case 5: x = cx - distanceX; y = cy + decalage; break;
+                case 6: x = cx - distanceX; y = cy - decalage; break;
+                default: x = cx - decalage; y = cy - distanceY; break;
+            }
         }
 
         /// <summary>Vrai pour les actions des emplacements de gauche (Ctrl, Maj, Alt).</summary>
