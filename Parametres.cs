@@ -194,6 +194,14 @@ namespace GazeBar
         [DataMember(Order = 90)]
         public bool SuiviSouris { get; set; }
 
+        /// <summary>
+        /// Lancer GazeBar à l'ouverture de la session Windows (étape 7). Non par défaut.
+        /// Le fichier de réglages garde le choix ; c'est DemarrageWindows qui l'applique
+        /// réellement, dans le registre de Windows.
+        /// </summary>
+        [DataMember(Order = 91)]
+        public bool DemarrerAvecWindows { get; set; }
+
         // ───────────────────────── Valeurs par défaut ─────────────────────────
 
         /// <summary>Le constructeur : un objet neuf contient les valeurs par défaut.</summary>
@@ -204,7 +212,8 @@ namespace GazeBar
 
         /// <summary>
         /// Remet tous les réglages à leur valeur de départ (celles du cahier des charges).
-        /// Servira au bouton « valeurs par défaut » du mode paramètres.
+        /// Le bouton « Défaut » de chaque onglet du mode paramètres (étape 7) ne remet que
+        /// les réglages de son onglet : il lit ces valeurs dans un objet neuf (new Parametres()).
         /// </summary>
         public void ValeursParDefaut()
         {
@@ -242,6 +251,7 @@ namespace GazeBar
             SensibiliteJeu = 1.0;
 
             SuiviSouris = false;
+            DemarrerAvecWindows = false;
         }
 
         /// <summary>

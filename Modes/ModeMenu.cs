@@ -18,7 +18,7 @@ namespace GazeBar
     /// Affichage : une barre centrée en bas de l'écran, avec des boutons activés au regard
     /// (BoutonRegard) : on regarde un bouton pendant [DelaiActivation], son anneau se remplit,
     /// puis il s'active. De gauche à droite :
-    ///   Paramètres   grisé : le mode paramètres arrivera à l'étape 6 ;
+    ///   Paramètres   ouvre le mode paramètres (étape 7) ;
     ///   Jeu          grisé : le mode jeu arrivera à l'étape 10 ;
     ///   Calibration  lance l'outil de calibration Tobii (mode calibration) ;
     ///   Clavier      ouvre le clavier visuel de Windows, puis ferme le menu ;
@@ -43,6 +43,7 @@ namespace GazeBar
         /// <summary>Les actions des boutons de la barre.</summary>
         private enum ActionMenu
         {
+            Parametres,
             Calibration,
             Clavier,
             Pause,
@@ -204,6 +205,10 @@ namespace GazeBar
 
             switch (action)
             {
+                case ActionMenu.Parametres:
+                    Gestionnaire.ChangerMode(new ModeParametres());
+                    break;
+
                 case ActionMenu.Calibration:
                     // On note la fenêtre active AVANT de lancer l'outil : le mode calibration
                     // saura ainsi reconnaître la fenêtre de l'outil (voir ModeCalibration).
@@ -374,7 +379,7 @@ namespace GazeBar
                 // Symboles de la police Windows (Segoe MDL2 Assets / Segoe Fluent Icons) :
                 //   E713 engrenage, E7FC manette, E890 œil, E765 clavier, E769 pause,
                 //   E768 lecture, E962 souris, E9D9 diagnostic, E7E8 bouton marche/arrêt.
-                Ajouter(boutons, actions, BoutonRegard.Indisponible("", "Paramètres (à venir, étape 6)"), null);
+                Ajouter(boutons, actions, new BoutonRegard("", null, "Paramètres"), ActionMenu.Parametres);
                 Ajouter(boutons, actions, BoutonRegard.Indisponible("", "Jeu (à venir, étape 10)"), null);
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Calibration"), ActionMenu.Calibration);
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier visuel"), ActionMenu.Clavier);

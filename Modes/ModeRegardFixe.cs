@@ -219,8 +219,7 @@ namespace GazeBar
         /// photographie la zone autour de P et propose les actions.
         /// Si l'option [LoupeAvantAction] est activée, on passe d'abord par le mode loupe
         /// (étape 5), qui affine la position puis ouvre lui-même le choix d'action.
-        /// En attendant la fenêtre des paramètres (étape 7), cette option se règle à la main
-        /// dans %APPDATA%\GazeBar\parametres.json ("LoupeAvantAction": true).
+        /// Cette option se règle dans l'onglet « Loupe, glisser » du mode paramètres (étape 7).
         /// </summary>
         private void ActiverIcone()
         {

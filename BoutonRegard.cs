@@ -39,8 +39,11 @@ namespace GazeBar
     ///
     /// Les positions sont données en PIXELS D'ÉCRAN, comme le regard ; la conversion en unités
     /// WPF est faite ici, avec l'aide du calque.
+    ///
+    /// Depuis l'étape 7, il « implémente » ICibleRegard : ViseurBoutons sait ainsi viser aussi
+    /// bien un BoutonRegard qu'une cible du mode paramètres (CibleParametre).
     /// </summary>
-    internal sealed class BoutonRegard
+    internal sealed class BoutonRegard : ICibleRegard
     {
         // Les éléments WPF qui composent le bouton.
         private readonly Border _fond;

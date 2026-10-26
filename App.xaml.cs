@@ -1,12 +1,15 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows;
 
 namespace GazeBar
 {
     /// <summary>
     /// Classe de l'application : point d'entrée du programme.
+    ///
+    /// Étape 7 : une seule instance de GazeBar à la fois, et l'option [DemarrerAvecWindows].
     ///
     /// Elle lit les réglages, crée les objets « modèle » partagés (curseur, regard),
     /// ouvre le calque plein écran et le gestionnaire de modes, et surveille la touche Échap.
@@ -28,11 +31,37 @@ namespace GazeBar
         private DiagnosticWindow _diagnostic;
 
         /// <summary>
+        /// Le « verrou » d'instance unique (étape 7). Un Mutex est un objet de Windows qui porte
+        /// un nom ; un seul programme à la fois peut le posséder. Le premier GazeBar le prend ;
+        /// un deuxième GazeBar voit qu'il est déjà pris, et se ferme aussitôt.
+        /// « Local\ » : le nom vaut pour la session Windows de l'utilisateur.
+        /// </summary>
+        private const string NomVerrou = "Local\\GazeBar-InstanceUnique";
+        private Mutex _verrou;
+
+        // Vrai pour un deuxième GazeBar, qui se ferme sans rien faire (voir OnStartup / OnExit).
+        private bool _instanceEnTrop;
+
+        /// <summary>
         /// Appelée par WPF au démarrage du programme.
         /// </summary>
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // Une seule instance (cahier des charges, « Fonctionnement général ») : deux GazeBar
+            // en même temps dessineraient deux cercles et enverraient des clics en double.
+            // Si GazeBar tourne déjà, celui-ci se ferme aussitôt, sans rien afficher.
+            bool premier;
+            _verrou = new Mutex(true, NomVerrou, out premier);
+            if (!premier)
+            {
+                _instanceEnTrop = true;
+                Log("Deuxième lancement de GazeBar : une instance tourne déjà, fermeture");
+                Shutdown();
+                return;
+            }
+
             Log("Démarrage de GazeBar");
 
             // Filets de sécurité : quelle que soit l'erreur, on relâche les boutons de la
@@ -55,6 +84,10 @@ namespace GazeBar
 
             // Les réglages d'abord : tout le reste s'en sert.
             Parametres.Initialiser();
+
+            // Démarrage avec Windows : le registre est mis d'accord avec le fichier de réglages
+            // (et le chemin du programme est mis à jour s'il a été déplacé).
+            DemarrageWindows.Appliquer(Parametres.Courants.DemarrerAvecWindows);
 
             _sampler = new CursorSampler();
             _sampler.Start();
@@ -94,6 +127,13 @@ namespace GazeBar
             {
                 return;
             }
+
+            // Mode paramètres : pendant une saisie au clavier, Échap annule seulement la saisie.
+            ModeParametres parametres = _modes.ModeCourant as ModeParametres;
+            if (parametres != null && parametres.AnnulerSaisie())
+            {
+                return;
+            }
             App.Log("Touche Échap : retour au mode mouvement");
             MouseInjector.ReleaseAll();
             InjecteurClavier.RelacherTout();
@@ -120,6 +160,15 @@ namespace GazeBar
         /// </summary>
         protected override void OnExit(ExitEventArgs e)
         {
+            if (_instanceEnTrop)
+            {
+                // Deuxième GazeBar : il n'a rien démarré, il ne touche à rien (surtout pas aux
+                // boutons de la souris, que le premier GazeBar est peut-être en train de tenir).
+                _verrou.Dispose();
+                base.OnExit(e);
+                return;
+            }
+
             MouseInjector.ReleaseAll();
             InjecteurClavier.RelacherTout();
             if (_clavier != null)
@@ -139,6 +188,11 @@ namespace GazeBar
                 _gaze.Dispose();
             }
             Log("Arrêt de GazeBar");
+            if (_verrou != null)
+            {
+                _verrou.ReleaseMutex();
+                _verrou.Dispose();
+            }
             base.OnExit(e);
         }
 
