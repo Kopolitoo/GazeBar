@@ -165,7 +165,8 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
   un seul sens à la fois), d'autant plus vite que le regard est loin du cercle, jusqu'à
   `VitesseMaxDefilement` (10 crans/s) trois `RayonCercle` au-delà du bord. Un petit arc vert sur le
   cercle montre la direction. Rien ne défile avant un premier passage du regard dans le cercle,
-  ni quand le regard est perdu, hors de l'écran ou sur le bouton « retour » (bord droit, centré),
+  ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
+  l'écran compte, pour agrandir la plage de vitesse) ou sur le bouton « retour » (bord droit, centré),
   qui ramène au mode mouvement. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
 - `Modes/ModePause` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
   (bouton « Reprendre »).

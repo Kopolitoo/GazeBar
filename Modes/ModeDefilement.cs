@@ -41,8 +41,14 @@ namespace GazeBar
     ///   - à l'entrée, le regard est encore sur l'icône de la couronne, souvent hors du
     ///     cercle : rien ne défile tant que le regard n'est pas passé une première fois dans
     ///     le cercle ;
-    ///   - rien ne défile quand le regard est perdu, hors de l'écran ou sur le bouton retour
-    ///     (sinon, en allant regarder le bouton, on ferait défiler vers la droite).
+    ///   - rien ne défile quand le regard est perdu, trop loin hors de l'écran ou sur le
+    ///     bouton retour (sinon, en allant regarder le bouton, on ferait défiler vers la droite).
+    ///
+    /// Regard légèrement hors de l'écran : il compte quand même, jusqu'à [MargeHorsEcran]
+    /// pixels au-delà des bords (demande de l'utilisateur du 26/10/2026). Cela agrandit la
+    /// surface où l'on règle la vitesse : vers le haut et le bas, l'écran seul est trop court
+    /// pour atteindre la vitesse maximale. Le PCEye 5 mesure le regard hors de l'écran, mais
+    /// moins précisément ; au-delà de la marge, on considère la mesure comme inutilisable.
     ///
     /// Les modificateurs Ctrl, Maj, Alt choisis dans le choix d'action sont enfoncés pendant
     /// chaque mouvement de molette, puis relâchés : Ctrl + molette zoome dans la plupart des
@@ -72,6 +78,12 @@ namespace GazeBar
         /// pour une montée en vitesse plus progressive.
         /// </summary>
         private const double RayonsVitesseMax = 3;
+
+        /// <summary>
+        /// Jusqu'où, en pixels au-delà des bords de l'écran, le regard compte encore pour le
+        /// défilement (environ 5 cm sur un écran 24 pouces en 1080p). Plus loin, rien ne défile.
+        /// </summary>
+        private const double MargeHorsEcran = 200;
 
         // Le point visé P (le curseur et le centre du cercle), en pixels d'écran.
         private readonly double _px;
@@ -129,7 +141,7 @@ namespace GazeBar
             // Le curseur est remis sur P par sécurité : c'est la fenêtre sous lui qui défilera.
             NativeMethods.SetCursorPos((int)Math.Round(_px), (int)Math.Round(_py));
 
-            _place = regard.SurEcran;
+            _place = Utilisable(regard);
             _rx = regard.X;
             _ry = regard.Y;
             _arme = false;
@@ -163,9 +175,10 @@ namespace GazeBar
                 return;
             }
 
-            // 2. Pas de regard utilisable, ou regard sur le bouton : rien ne défile.
+            // 2. Pas de regard utilisable (perdu, ou trop loin hors de l'écran), ou regard sur
+            //    le bouton : rien ne défile. Un regard un peu hors de l'écran est utilisable.
             bool surRetour = regard.SurEcran && _boutons.Count > 0 && _boutons[0].Contient(regard.X, regard.Y);
-            if (!regard.SurEcran || surRetour)
+            if (!Utilisable(regard) || surRetour)
             {
                 _reserve = 0;
                 MasquerArc();
@@ -239,6 +252,20 @@ namespace GazeBar
             _boutons.Clear();
             _arc = null;
             _arcFond = null;
+        }
+
+        /// <summary>
+        /// Vrai si la mesure du regard peut servir au défilement : disponible, et sur l'écran
+        /// ou à moins de [MargeHorsEcran] pixels de ses bords.
+        /// </summary>
+        private bool Utilisable(EtatRegard regard)
+        {
+            if (!regard.Disponible)
+            {
+                return false;
+            }
+            return regard.X >= -MargeHorsEcran && regard.X < Gestionnaire.LargeurEcran + MargeHorsEcran &&
+                   regard.Y >= -MargeHorsEcran && regard.Y < Gestionnaire.HauteurEcran + MargeHorsEcran;
         }
 
         /// <summary>Envoie la molette, avec les modificateurs actifs enfoncés autour.</summary>
