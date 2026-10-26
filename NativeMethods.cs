@@ -51,7 +51,7 @@ namespace GazeBar
         {
             public int dx;             // position ou déplacement en X (voir MOUSEEVENTF_ABSOLUTE)
             public int dy;             // position ou déplacement en Y
-            public uint mouseData;     // données supplémentaires (molette...) : inutilisé
+            public uint mouseData;     // données supplémentaires : la quantité de molette (étape 8), sinon 0
             public uint dwFlags;       // QUELLE action : bouton enfoncé, relâché, déplacement...
             public uint time;          // 0 = laisser Windows mettre l'heure
             public UIntPtr dwExtraInfo;
@@ -102,6 +102,8 @@ namespace GazeBar
         internal const uint MOUSEEVENTF_LEFTUP = 0x0004;
         internal const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
         internal const uint MOUSEEVENTF_RIGHTUP = 0x0010;
+        internal const uint MOUSEEVENTF_WHEEL = 0x0800;    // molette verticale (étape 8) : quantité dans mouseData
+        internal const uint MOUSEEVENTF_HWHEEL = 0x1000;   // molette horizontale (étape 8)
         internal const uint MOUSEEVENTF_ABSOLUTE = 0x8000; // dx, dy = position sur l'écran (0 à 65535), pas un écart
         internal const uint KEYEVENTF_KEYUP = 0x0002;
 

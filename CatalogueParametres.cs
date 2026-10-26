@@ -196,12 +196,12 @@ namespace GazeBar
 
     /// <summary>
     /// LA LISTE DES ONGLETS ET DES RÉGLAGES du mode paramètres (étape 7), dans l'ordre
-    /// d'affichage. Regroupement validé par l'utilisateur le 26/10/2026 (six onglets).
+    /// d'affichage. Regroupement validé par l'utilisateur le 26/10/2026 (six onglets ; « Défilement » ajouté à l'étape 8).
     ///
     /// Pour ajouter un réglage plus tard : l'ajouter dans Parametres.cs (avec sa valeur par
     /// défaut et ses limites dans Corriger), puis ici, dans l'onglet voulu (cinq au plus par
-    /// onglet, pour que rien ne défile). Les réglages du défilement et du jeu ne sont pas
-    /// affichés tant que ces modes n'existent pas (étapes 8 et 10).
+    /// onglet, pour que rien ne défile). L'onglet « Défilement » est ajouté à l'étape 8 ;
+    /// les réglages du jeu ne sont pas affichés tant que ce mode n'existe pas (étape 10).
     /// </summary>
     internal static class CatalogueParametres
     {
@@ -261,6 +261,11 @@ namespace GazeBar
                                p => p.DureePauseAndroid, (p, v) => p.DureePauseAndroid = v),
                 Reglage.Nombre("Durée du glisser", "Trajet du curseur, bouton enfoncé", " s", 0.05,
                                p => p.DureeGlisser, (p, v) => p.DureeGlisser = v)),
+
+            // EC8F = flèches haut et bas (« Défilement », étape 8)
+            new Onglet("Défilement", "\uEC8F",
+                Reglage.Nombre("Vitesse maximale", "Atteinte trois rayons de cercle au-delà du bord", " crans/s", 1,
+                               p => p.VitesseMaxDefilement, (p, v) => p.VitesseMaxDefilement = v)),
 
             // E713 = engrenage (« Général »)
             new Onglet("Général", "",

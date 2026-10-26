@@ -14,7 +14,8 @@ namespace GazeBar
     /// INTERFACE : la fenêtre du mode paramètres (étape 7), plein écran, fond noir.
     ///
     /// Mise en page validée par l'utilisateur le 26/10/2026 :
-    ///   - six onglets à gauche (CatalogueParametres) ; un seul onglet affiché à la fois,
+    ///   - sept onglets à gauche (CatalogueParametres ; six au départ, « Défilement » ajouté à
+    ///     l'étape 8) ; un seul onglet affiché à la fois,
     ///     cinq réglages au plus, rien ne défile ;
     ///   - chaque réglage : son nom, une phrase d'explication, puis « − », la valeur, « + »
     ///     (ou « Non » / « Oui ») ; la valeur par défaut est rappelée sous la valeur ;
@@ -43,8 +44,10 @@ namespace GazeBar
         // ── Mise en page (en unités de la page 1920 × 1080).
         private const double OngletGauche = 60;
         private const double OngletLargeur = 340;
-        private const double OngletHauteur = 140;
-        private const double OngletPas = 160;          // d'un onglet au suivant (hauteur + 20)
+        private const double OngletHauteurMax = 140;   // hauteur d'un onglet quand il y a la place
+        private const double OngletEcart = 20;         // espace entre deux onglets
+        private const double OngletsHaut = 60;         // haut du premier onglet
+        private const double OngletsBas = 1040;        // le dernier onglet s'arrête avant cette ligne
         private const double ContenuGauche = 460;
         private const double LigneHaut = 92;
         private const double LignePas = 184;           // d'une ligne de réglage à la suivante
@@ -277,7 +280,12 @@ namespace GazeBar
             TextBlock titre = Texte("Paramètres — " + onglet.Nom, 30, Doux, false);
             Placer(titre, ContenuGauche, 26);
 
-            // ── Les onglets, à gauche.
+            // ── Les onglets, à gauche. Six onglets tiennent avec leur hauteur maximale (140) ;
+            //    à partir de sept (étape 8), ils se resserrent pour rester sur la page :
+            //    7 onglets → environ 123 de haut, 8 onglets → 105.
+            int nombreOnglets = CatalogueParametres.Onglets.Count;
+            double pas = Math.Min(OngletHauteurMax + OngletEcart,
+                                  (OngletsBas - OngletsHaut + OngletEcart) / Math.Max(1, nombreOnglets));
             for (int i = 0; i < CatalogueParametres.Onglets.Count; i++)
             {
                 Onglet o = CatalogueParametres.Onglets[i];
@@ -295,7 +303,7 @@ namespace GazeBar
                 ligne.Children.Add(nom);
 
                 int numero = i;   // copie pour la fonction ci-dessous (sinon elle verrait le dernier i)
-                AjouterCible(OngletGauche, 60 + i * OngletPas, OngletLargeur, OngletHauteur, ligne,
+                AjouterCible(OngletGauche, OngletsHaut + i * pas, OngletLargeur, pas - OngletEcart, ligne,
                              () => ChoisirOnglet(numero), false, i == _onglet);
             }
 

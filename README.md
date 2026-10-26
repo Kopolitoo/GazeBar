@@ -103,8 +103,7 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
   photographiée (`CaptureEcran`), puis affichée agrandie ×2 au centre d'un écran noir, avec une
   croix à la place du curseur. Autour, une couronne de huit emplacements, deux par côté de la
   photo : double clic et clic gauche (en haut), clic droit et glisser-déposer gauche (à droite),
-  glisser-déposer droit et loupe (en bas), glisser-déposer android et un emplacement libre pour
-  le défilement de l'étape 8 (à gauche). Sur le bord gauche de l'écran, les trois modificateurs
+  glisser-déposer droit et loupe (en bas), glisser-déposer android et défilement (à gauche, étape 8). Sur le bord gauche de l'écran, les trois modificateurs
   Ctrl, Maj, Alt (étape 6), à 60 px du bord et 60 px les uns des autres.
   Un emplacement vide serait dessiné grisé avec un « + », pour montrer qu'on pourra le configurer. À droite, une icône « retour ». Un petit cercle (moitié de
   `RayonCercle`), par-dessus tout, montre où est le regard. Regarder une icône pendant
@@ -146,8 +145,8 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
   Regarder hors de la barre pendant `DelaiFermetureMenu` (1 s) la ferme et ramène au mode
   d'avant. Un petit cercle montre où est le regard.
 - `Modes/ModeParametres` et `FenetreParametres` (étape 7) : bouton « Paramètres » du menu. Une
-  fenêtre plein écran, fond noir, avec six onglets à gauche (Regard, Fixation, Délais, Affichage,
-  Loupe et glisser, Général ; liste dans `CatalogueParametres`). Chaque réglage : son nom, une
+  fenêtre plein écran, fond noir, avec sept onglets à gauche (Regard, Fixation, Délais, Affichage,
+  Loupe et glisser, Défilement, Général ; liste dans `CatalogueParametres`). Chaque réglage : son nom, une
   explication, puis « − », la valeur, « + » (ou « Non » / « Oui »). Garder le regard sur « − » ou
   « + » répète le changement toutes les 0,4 s. « Défaut » (en haut à droite) remet les valeurs de
   l'onglet affiché, après confirmation ; « Retour » (au milieu du bord droit) ou Échap ramène au
@@ -160,6 +159,15 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
 - `DemarrageWindows` (étape 7) : l'option `DemarrerAvecWindows` (onglet Général) inscrit GazeBar
   dans la liste de démarrage de Windows (registre, `HKEY_CURRENT_USER\...\Run`), sans droits
   d'administrateur : les fenêtres administrateur continuent d'ignorer ses clics.
+- `Modes/ModeDefilement` (étape 8) : action « Défilement » de la couronne. Le cercle blanc reste
+  fixé sur le curseur. Regard dans le cercle : rien ne défile (zone morte). Regard au-dessus, en
+  dessous, à droite ou à gauche : la fenêtre sous le curseur défile dans ce sens (molette Windows,
+  un seul sens à la fois), d'autant plus vite que le regard est loin du cercle, jusqu'à
+  `VitesseMaxDefilement` (10 crans/s) trois `RayonCercle` au-delà du bord. Un petit arc vert sur le
+  cercle montre la direction. Rien ne défile avant un premier passage du regard dans le cercle,
+  ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
+  l'écran compte, pour agrandir la plage de vitesse) ou sur le bouton « retour » (bord droit, centré),
+  qui ramène au mode mouvement. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
 - `Modes/ModePause` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
   (bouton « Reprendre »).
 - `Modes/ModeCalibration` et `CalibrationTobii` (étape 4) : lancent l'outil de calibration Tobii
@@ -190,6 +198,11 @@ Fixation, puis « Oui » pour le clic direct : il est encadré en bleu. « Défa
 les valeurs de l'onglet reviennent. L'aidant clique sur une valeur, tape 0,5 puis Entrée.
 « Retour » ramène au mode mouvement. Lancer GazeBar une deuxième fois ne fait rien (voir le
 journal).
+
+Test de l'étape 8 : on ouvre une longue page web, on fixe le texte, on ouvre le choix d'action
+puis « Défilement » (à gauche, en haut). Le cercle blanc reste en place. On regarde dans le
+cercle : rien ne bouge. On regarde un peu sous le cercle : la page descend doucement ; plus bas :
+plus vite. Au-dessus : elle remonte. « Retour » au bord droit ramène au mode mouvement.
 
 Test de l'étape 5 : on fixe une petite case à cocher, on regarde l'icône d'options, puis
 « Loupe » dans la couronne : la zone apparaît agrandie ×4. On fixe la case sur la photo : le

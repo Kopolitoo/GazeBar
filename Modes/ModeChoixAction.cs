@@ -48,8 +48,9 @@ namespace GazeBar
     ///     Les touches actives sont enfoncées juste avant l'action et relâchées juste après
     ///     (voir Modificateurs.cs).
     ///
+    /// Étape 8 : l'action « Défilement » (emplacement 6) ouvre le mode défilement, centré sur P.
+    ///
     /// Ce qui viendra plus tard :
-    ///   - étape 8 : le défilement dans la couronne (emplacement 6, laissé libre) ;
     ///   - étape 9 : le bouton de configuration de la disposition.
     /// </summary>
     internal sealed class ModeChoixAction : Mode
@@ -64,6 +65,7 @@ namespace GazeBar
             GlisserGauche,
             GlisserDroit,
             GlisserAndroid,
+            Defilement,
             Ctrl,
             Maj,
             Alt,
@@ -98,7 +100,7 @@ namespace GazeBar
         ///   3 : en bas, à droite         → glisser-déposer droit (étape 6)
         ///   4 : en bas, à gauche         → loupe (étape 5, choix de l'utilisateur du 23/10/2026)
         ///   5 : à gauche, en bas         → glisser-déposer android (étape 6)
-        ///   6 : à gauche, en haut        → vide : place prévue pour le défilement (étape 8)
+        ///   6 : à gauche, en haut        → défilement (étape 8)
         ///   7 : en haut, à gauche        → double clic (à côté du clic gauche)
         /// </summary>
         private static readonly ActionChoix?[] Disposition =
@@ -109,7 +111,7 @@ namespace GazeBar
             ActionChoix.GlisserDroit,
             ActionChoix.Loupe,
             ActionChoix.GlisserAndroid,
-            null,
+            ActionChoix.Defilement,
             ActionChoix.DoubleClic
         };
 
@@ -285,6 +287,14 @@ namespace GazeBar
                 MouseSide bouton = action == ActionChoix.GlisserDroit ? MouseSide.Right : MouseSide.Left;
                 bool avecPause = action == ActionChoix.GlisserAndroid;
                 Gestionnaire.ChangerMode(new ModeGlisserArrivee(new Glissement(_px, _py, bouton, avecPause)));
+                return;
+            }
+
+            if (action == ActionChoix.Defilement)
+            {
+                // Le défilement se fait autour de P, sur l'écran réel (l'écran noir sera caché
+                // par Quitter, juste avant).
+                Gestionnaire.ChangerMode(new ModeDefilement(_px, _py));
                 return;
             }
 
@@ -574,7 +584,8 @@ namespace GazeBar
         /// <summary>
         /// Le symbole, la pastille et le libellé de chaque action.
         /// Symboles de la police Windows (Segoe MDL2 Assets / Segoe Fluent Icons) :
-        ///   E962 = souris, E71E = loupe, E7C2 = déplacer (quatre flèches), E72B = flèche « retour ».
+        ///   E962 = souris, E71E = loupe, E7C2 = déplacer (quatre flèches), E72B = flèche « retour »,
+    ///   EC8F = défilement (flèches haut et bas ; symbole à vérifier à l'écran).
         /// Les trois clics partagent le symbole de la souris, les trois glisser-déposer celui des
         /// quatre flèches ; la pastille les distingue (G = gauche, D = droit, A = android).
         /// Les modificateurs affichent simplement leur nom (« Ctrl », « Maj », « Alt »).
@@ -597,6 +608,8 @@ namespace GazeBar
                     return new BoutonRegard("\uE7C2", "D", "Glisser-déposer droit");
                 case ActionChoix.GlisserAndroid:
                     return new BoutonRegard("\uE7C2", "A", "Glisser-déposer android (pause avant de déplacer)");
+                case ActionChoix.Defilement:
+                    return new BoutonRegard("\uEC8F", null, "Défilement");
                 case ActionChoix.Ctrl:
                     return BoutonRegard.Texte("Ctrl", "Ctrl (activer / désactiver)");
                 case ActionChoix.Maj:
