@@ -143,6 +143,34 @@ namespace GazeBar
             Envoyer(input);
         }
 
+        /// <summary>
+        /// Un mouvement de molette (étape 8, mode défilement), à l'endroit où est le curseur.
+        ///
+        /// quantite : en « unités de molette » de Windows. Un cran d'une vraie molette vaut 120
+        /// (WHEEL_DELTA) ; on peut envoyer moins (30 = un quart de cran) pour un défilement plus
+        /// doux : la plupart des logiciels récents (navigateurs, Word, Explorateur) additionnent
+        /// ces petites quantités.
+        /// Sens, comme une vraie molette :
+        ///   - verticale : positif = vers le haut, négatif = vers le bas ;
+        ///   - horizontale : positif = vers la droite, négatif = vers la gauche.
+        ///
+        /// mouseData est déclaré « uint » (nombre sans signe) mais Windows le lit comme un
+        /// nombre signé : « unchecked » permet d'y ranger un nombre négatif tel quel.
+        /// </summary>
+        public static void Molette(int quantite, bool horizontale)
+        {
+            if (quantite == 0)
+            {
+                return;
+            }
+
+            NativeMethods.INPUT input = new NativeMethods.INPUT();
+            input.type = NativeMethods.INPUT_MOUSE;
+            input.u.mi.mouseData = unchecked((uint)quantite);
+            input.u.mi.dwFlags = horizontale ? NativeMethods.MOUSEEVENTF_HWHEEL : NativeMethods.MOUSEEVENTF_WHEEL;
+            Envoyer(input);
+        }
+
         private static bool IsDown(MouseSide side)
         {
             return side == MouseSide.Left ? _leftDown : _rightDown;

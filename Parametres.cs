@@ -167,11 +167,15 @@ namespace GazeBar
 
         // ───────────────────────── Défilement ─────────────────────────
 
-        /// <summary>Rayon de la zone centrale où rien ne défile, en pixels.</summary>
-        [DataMember(Order = 70)]
-        public double ZoneNeutreDefilement { get; set; }
+        // (Étape 8 : l'ancien réglage ZoneNeutreDefilement est supprimé, la zone où rien ne
+        //  défile est maintenant le cercle lui-même, de rayon [RayonCercle]. S'il est encore
+        //  dans parametres.json, il est simplement ignoré à la lecture.)
 
-        /// <summary>Vitesse de défilement au bord du cercle, en crans de molette par seconde.</summary>
+        /// <summary>
+        /// Vitesse maximale du mode défilement, en crans de molette par seconde (étape 8).
+        /// La vitesse vaut 0 au bord du cercle et atteint cette valeur un [RayonCercle] plus
+        /// loin ; au-delà, elle ne monte plus.
+        /// </summary>
         [DataMember(Order = 71)]
         public double VitesseMaxDefilement { get; set; }
 
@@ -244,7 +248,6 @@ namespace GazeBar
             DureePauseAndroid = 1.0;
             DureeGlisser = 0.5;
 
-            ZoneNeutreDefilement = 40;
             VitesseMaxDefilement = 10;
 
             LissageJeu = 0.7;
@@ -296,7 +299,6 @@ namespace GazeBar
             DureePauseAndroid = Borner(DureePauseAndroid, 0, 10);
             DureeGlisser = Borner(DureeGlisser, 0.05, 10);
 
-            ZoneNeutreDefilement = Borner(ZoneNeutreDefilement, 0, 500);
             VitesseMaxDefilement = Borner(VitesseMaxDefilement, 1, 100);
 
             LissageJeu = Borner(LissageJeu, 0.01, 1);
