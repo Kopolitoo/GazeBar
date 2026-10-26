@@ -27,7 +27,8 @@ namespace GazeBar
     ///     à droite → vers la droite, à gauche → vers la gauche. Un seul sens à la fois :
     ///     celui où l'écart avec le centre est le plus grand (pas de diagonale) ;
     ///   - VITESSE : 0 au bord du cercle, puis elle augmente avec la distance, jusqu'à
-    ///     [VitesseMaxDefilement] crans par seconde à un [RayonCercle] au-delà du bord.
+    ///     [VitesseMaxDefilement] crans par seconde à [RayonsVitesseMax] × [RayonCercle] au-delà
+    ///     du bord (trois rayons, demande de l'utilisateur du 26/10/2026).
     ///     Plus loin, elle ne monte plus ;
     ///   - on envoie des « événements de molette » Windows : c'est la fenêtre sous le curseur
     ///     qui défile (réglage Windows « Faire défiler les fenêtres inactives lorsque je pointe
@@ -64,6 +65,13 @@ namespace GazeBar
 
         /// <summary>Demi-ouverture de l'arc qui indique la direction, en degrés (arc de 50°).</summary>
         private const double DemiAngleArc = 25;
+
+        /// <summary>
+        /// Distance, comptée en rayons de cercle à partir du bord, où la vitesse atteint
+        /// [VitesseMaxDefilement]. D'abord 1, triplée à la demande de l'utilisateur (26/10/2026)
+        /// pour une montée en vitesse plus progressive.
+        /// </summary>
+        private const double RayonsVitesseMax = 3;
 
         // Le point visé P (le curseur et le centre du cercle), en pixels d'écran.
         private readonly double _px;
@@ -196,11 +204,11 @@ namespace GazeBar
             }
 
             // 5. La direction (un seul axe : celui du plus grand écart) et la vitesse.
-            //    Vitesse : de 0 au bord du cercle à [VitesseMaxDefilement] un rayon plus loin.
+            //    Vitesse : de 0 au bord du cercle à [VitesseMaxDefilement] trois rayons plus loin.
             bool horizontale = Math.Abs(dx) > Math.Abs(dy);
             // Molette : vers le haut et vers la droite = positif (voir MouseInjector.Molette).
             int sens = horizontale ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
-            double fraction = Math.Min(1.0, (distance - rayon) / rayon);
+            double fraction = Math.Min(1.0, (distance - rayon) / (RayonsVitesseMax * rayon));
             double cransParSeconde = fraction * p.VitesseMaxDefilement;
 
             DessinerArc(dx, dy, rayon);

@@ -163,7 +163,7 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
   fixé sur le curseur. Regard dans le cercle : rien ne défile (zone morte). Regard au-dessus, en
   dessous, à droite ou à gauche : la fenêtre sous le curseur défile dans ce sens (molette Windows,
   un seul sens à la fois), d'autant plus vite que le regard est loin du cercle, jusqu'à
-  `VitesseMaxDefilement` (10 crans/s) un `RayonCercle` au-delà du bord. Un petit arc vert sur le
+  `VitesseMaxDefilement` (10 crans/s) trois `RayonCercle` au-delà du bord. Un petit arc vert sur le
   cercle montre la direction. Rien ne défile avant un premier passage du regard dans le cercle,
   ni quand le regard est perdu, hors de l'écran ou sur le bouton « retour » (bord droit, centré),
   qui ramène au mode mouvement. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).

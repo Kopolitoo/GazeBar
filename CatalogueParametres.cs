@@ -264,7 +264,7 @@ namespace GazeBar
 
             // EC8F = flèches haut et bas (« Défilement », étape 8)
             new Onglet("Défilement", "\uEC8F",
-                Reglage.Nombre("Vitesse maximale", "Atteinte un rayon de cercle au-delà du bord", " crans/s", 1,
+                Reglage.Nombre("Vitesse maximale", "Atteinte trois rayons de cercle au-delà du bord", " crans/s", 1,
                                p => p.VitesseMaxDefilement, (p, v) => p.VitesseMaxDefilement = v)),
 
             // E713 = engrenage (« Général »)

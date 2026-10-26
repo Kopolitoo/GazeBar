@@ -173,7 +173,7 @@ namespace GazeBar
 
         /// <summary>
         /// Vitesse maximale du mode défilement, en crans de molette par seconde (étape 8).
-        /// La vitesse vaut 0 au bord du cercle et atteint cette valeur un [RayonCercle] plus
+        /// La vitesse vaut 0 au bord du cercle et atteint cette valeur trois [RayonCercle] plus
         /// loin ; au-delà, elle ne monte plus.
         /// </summary>
         [DataMember(Order = 71)]
