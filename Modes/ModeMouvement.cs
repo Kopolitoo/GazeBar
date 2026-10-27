@@ -5,10 +5,10 @@ namespace GazeBar
     /// <summary>
     /// MODE MOUVEMENT (mode par défaut, étape 2 du cahier des charges).
     ///
-    /// Un cercle de [RayonCercle] suit le regard sur le calque, lissé : à chaque tic, il
-    /// parcourt une fraction [Lissage] du chemin qui le sépare du regard.
+    /// Un cercle de [RayonCercle] suit le regard sur le calque, lissé ([Lissage], voir Lisseur.cs).
     /// Le curseur de la souris ne bouge pas, sauf si [SuiviSouris] est activé : il suit alors
-    /// le cercle (sauf s'il en est à moins de [ZoneMorteCurseur] pixels, pour ne pas trembler).
+    /// le cercle. Pour ne pas trembler, il ne se met en route que quand le cercle s'est éloigné
+    /// de plus de [ZoneMorteCurseur] pixels ; ensuite il le suit en continu jusqu'à le rattraper.
     ///
     /// En même temps, un DetecteurFixation surveille le regard. Quand le regard est resté
     /// immobile pendant [DelaiFixation], on passe au mode regard fixe sur le point fixé.
@@ -23,9 +23,11 @@ namespace GazeBar
     {
         private readonly DetecteurFixation _fixation = new DetecteurFixation();
 
-        // Position (décimale) du cercle lissé, en pixels d'écran.
-        private double _x;
-        private double _y;
+        // Position (décimale) du cercle lissé, en pixels d'écran (voir Lisseur.cs).
+        private readonly Lisseur _lisse = new Lisseur();
+
+        // Vrai quand le curseur est « en route » derrière le cercle ([SuiviSouris]).
+        private bool _curseurEnRoute;
 
         // Vrai dès que le cercle a une position (sinon, il n'est pas encore dessiné).
         private bool _place;
@@ -101,14 +103,13 @@ namespace GazeBar
 
             if (regard.SurEcran)
             {
-                // 1. Le cercle se rapproche du regard d'une fraction [Lissage] du chemin.
+                // 1. Le cercle se rapproche du regard, en douceur (voir Lisseur.cs).
                 //    (Première mesure reçue : il apparaît directement sur le regard.)
                 if (!_place)
                 {
                     Placer(regard.X, regard.Y);
                 }
-                _x += (regard.X - _x) * p.Lissage;
-                _y += (regard.Y - _y) * p.Lissage;
+                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
 
                 // 2. Le curseur suit le cercle, seulement si l'option [SuiviSouris] est
                 //    activée. Sinon, il ne bouge pas : il rejoindra le regard une fois fixé.
@@ -142,7 +143,7 @@ namespace GazeBar
             // 5. Le dessin du cercle (dès qu'on a une position).
             if (_place)
             {
-                Gestionnaire.Calque.AfficherCercle(_x, _y, p.RayonCercle, false);
+                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
             }
         }
 
@@ -155,13 +156,18 @@ namespace GazeBar
         /// <summary>Place le cercle directement en (x, y), sans lissage.</summary>
         private void Placer(double x, double y)
         {
-            _x = x;
-            _y = y;
+            _lisse.Placer(x, y);
             _place = true;
         }
 
         /// <summary>
-        /// Place le curseur sur le cercle, sauf s'il en est déjà à moins de zoneMorte pixels.
+        /// Fait suivre le cercle au curseur, sans le faire trembler :
+        ///  - au repos, le curseur ne bouge pas tant que le cercle en est à moins de zoneMorte
+        ///    pixels (le petit tremblement du regard est ignoré) ;
+        ///  - dès que le cercle s'en éloigne davantage, le curseur se met « en route » et suit le
+        ///    cercle à CHAQUE tic, en continu, jusqu'à l'avoir rattrapé (moins d'un pixel).
+        /// Avant, le curseur restait immobile puis sautait de zoneMorte pixels d'un coup, encore
+        /// et encore : il avançait par petits bonds, ce qui donnait un mouvement saccadé.
         /// On lit la vraie position du curseur : s'il a été déplacé par la souris entre-temps,
         /// on en tient compte.
         /// </summary>
@@ -173,12 +179,21 @@ namespace GazeBar
                 return;
             }
 
-            if (Distance(curseur.X, curseur.Y, _x, _y) < zoneMorte)
+            double distance = Distance(curseur.X, curseur.Y, _lisse.X, _lisse.Y);
+            if (!_curseurEnRoute && distance >= zoneMorte)
+            {
+                _curseurEnRoute = true;
+            }
+            if (!_curseurEnRoute)
             {
                 return;
             }
 
-            NativeMethods.SetCursorPos((int)Math.Round(_x), (int)Math.Round(_y));
+            NativeMethods.SetCursorPos((int)Math.Round(_lisse.X), (int)Math.Round(_lisse.Y));
+            if (distance < 1)
+            {
+                _curseurEnRoute = false; // rattrapé : retour au repos
+            }
         }
 
         private static double Distance(double x1, double y1, double x2, double y2)

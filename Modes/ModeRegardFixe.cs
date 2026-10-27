@@ -45,8 +45,7 @@ namespace GazeBar
         private readonly double _py;
 
         // Centre du cercle tel qu'il est dessiné : il glisse vers P (voir Entrer).
-        private double _cx;
-        private double _cy;
+        private readonly Lisseur _lisse = new Lisseur();
 
         // Centre de l'icône d'options, en pixels d'écran (calculé dans Entrer).
         private double _ix;
@@ -80,13 +79,11 @@ namespace GazeBar
             // Le cercle dessiné part de là où il est déjà (cercle du mode mouvement), sinon de P.
             if (Gestionnaire.Calque.CercleAffiche)
             {
-                _cx = Gestionnaire.Calque.CercleX;
-                _cy = Gestionnaire.Calque.CercleY;
+                _lisse.Placer(Gestionnaire.Calque.CercleX, Gestionnaire.Calque.CercleY);
             }
             else
             {
-                _cx = _px;
-                _cy = _py;
+                _lisse.Placer(_px, _py);
             }
 
             PlacerIcone(p.RayonCercle, p.TailleIcones);
@@ -176,13 +173,12 @@ namespace GazeBar
             }
 
             // Le dessin.
-            // Le cercle glisse vers P d'une fraction [Lissage] à chaque tic (quelques tics suffisent).
-            _cx += (_px - _cx) * p.Lissage;
-            _cy += (_py - _cy) * p.Lissage;
-            Gestionnaire.Calque.AfficherCercle(_cx, _cy, p.RayonCercle, true);
+            // Le cercle glisse en douceur vers P (voir Lisseur.cs ; quelques tics suffisent).
+            _lisse.Suivre(_px, _py, regard.MaintenantMs);
+            Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, true);
             if (progressionClic > 0)
             {
-                Gestionnaire.Calque.AfficherAnneau(_cx, _cy, p.RayonCercle, progressionClic);
+                Gestionnaire.Calque.AfficherAnneau(_lisse.X, _lisse.Y, p.RayonCercle, progressionClic);
             }
             else
             {

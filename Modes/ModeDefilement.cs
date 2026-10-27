@@ -94,8 +94,7 @@ namespace GazeBar
         private readonly ViseurBoutons _viseur;
 
         // Le regard lissé, en pixels d'écran ; _place = faux tant qu'il n'a pas de position.
-        private double _rx;
-        private double _ry;
+        private readonly Lisseur _lisse = new Lisseur();
         private bool _place;
 
         // Vrai une fois que le regard est passé dans le cercle (voir les précautions).
@@ -142,8 +141,7 @@ namespace GazeBar
             NativeMethods.SetCursorPos((int)Math.Round(_px), (int)Math.Round(_py));
 
             _place = Utilisable(regard);
-            _rx = regard.X;
-            _ry = regard.Y;
+            _lisse.Placer(regard.X, regard.Y);
             _arme = false;
             _reserve = 0;
             _dernierTicMs = regard.MaintenantMs;
@@ -185,19 +183,17 @@ namespace GazeBar
                 return;
             }
 
-            // 3. Le regard lissé se rapproche du regard d'une fraction [Lissage] du chemin.
+            // 3. Le regard lissé se rapproche du regard, en douceur (voir Lisseur.cs).
             if (!_place)
             {
-                _rx = regard.X;
-                _ry = regard.Y;
+                _lisse.Placer(regard.X, regard.Y);
                 _place = true;
             }
-            _rx += (regard.X - _rx) * p.Lissage;
-            _ry += (regard.Y - _ry) * p.Lissage;
+            _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
 
             // 4. Où est le regard par rapport au cercle ?
-            double dx = _rx - _px;
-            double dy = _ry - _py;
+            double dx = _lisse.X - _px;
+            double dy = _lisse.Y - _py;
             double distance = Math.Sqrt(dx * dx + dy * dy);
             double rayon = p.RayonCercle;
 

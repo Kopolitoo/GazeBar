@@ -45,8 +45,7 @@ namespace GazeBar
         private int _cibleRepetee = -1;
 
         // Le petit cercle du regard : position lissée, en pixels d'écran.
-        private double _rx;
-        private double _ry;
+        private readonly Lisseur _lisse = new Lisseur();
         private bool _cerclePlace;
 
         public override string Nom
@@ -74,8 +73,7 @@ namespace GazeBar
             _cerclePlace = regard.SurEcran;
             if (_cerclePlace)
             {
-                _rx = regard.X;
-                _ry = regard.Y;
+                _lisse.Placer(regard.X, regard.Y);
             }
         }
 
@@ -138,13 +136,11 @@ namespace GazeBar
             {
                 if (!_cerclePlace)
                 {
-                    _rx = regard.X;
-                    _ry = regard.Y;
+                    _lisse.Placer(regard.X, regard.Y);
                     _cerclePlace = true;
                 }
-                _rx += (regard.X - _rx) * p.Lissage;
-                _ry += (regard.Y - _ry) * p.Lissage;
-                _fenetre.PlacerPointRegard(_fenetre.VersPage(_rx, _ry));
+                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
+                _fenetre.PlacerPointRegard(_fenetre.VersPage(_lisse.X, _lisse.Y));
             }
         }
 

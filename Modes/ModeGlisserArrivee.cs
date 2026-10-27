@@ -51,8 +51,7 @@ namespace GazeBar
 
         // Position (décimale) du cercle lissé, en pixels d'écran ; _place = faux tant qu'il
         // n'a pas de position.
-        private double _x;
-        private double _y;
+        private readonly Lisseur _lisse = new Lisseur();
         private bool _place;
 
         // Zone ignorée : là où était le regard à l'entrée (voir le commentaire de la classe).
@@ -99,8 +98,7 @@ namespace GazeBar
 
             // Le cercle part du regard (le choix d'action l'avait caché : pas de saut visible).
             _place = regard.SurEcran;
-            _x = regard.X;
-            _y = regard.Y;
+            _lisse.Placer(regard.X, regard.Y);
 
             ConstruireSurface();
             App.Log("Glisser : choix de l'arrivée (" + _glissement.Nom + ", départ en (" +
@@ -123,15 +121,13 @@ namespace GazeBar
 
             if (regard.SurEcran)
             {
-                // 2. Le cercle se rapproche du regard d'une fraction [Lissage] du chemin.
+                // 2. Le cercle se rapproche du regard, en douceur (voir Lisseur.cs).
                 if (!_place)
                 {
-                    _x = regard.X;
-                    _y = regard.Y;
+                    _lisse.Placer(regard.X, regard.Y);
                     _place = true;
                 }
-                _x += (regard.X - _x) * p.Lissage;
-                _y += (regard.Y - _y) * p.Lissage;
+                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
 
                 // 3. La zone ignorée : le regard en est-il sorti ?
                 if (!_zoneIgnoreeConnue)
@@ -166,8 +162,8 @@ namespace GazeBar
             // 5. Le dessin : le cercle et la ligne du trajet.
             if (_place)
             {
-                Gestionnaire.Calque.AfficherCercle(_x, _y, p.RayonCercle, false);
-                PlacerLigne(_x, _y);
+                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
+                PlacerLigne(_lisse.X, _lisse.Y);
             }
         }
 

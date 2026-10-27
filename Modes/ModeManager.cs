@@ -1,5 +1,5 @@
 using System;
-using System.Windows.Threading;
+using System.Windows.Media;
 
 namespace GazeBar
 {
@@ -11,8 +11,16 @@ namespace GazeBar
     /// toujours ranger proprement l'ancien mode, de tout noter dans le journal, et plus tard
     /// d'ajouter des animations de transition à un seul endroit.
     ///
-    /// Il possède aussi l'horloge commune : environ 60 fois par seconde, il lit le regard,
-    /// prépare un EtatRegard et le donne au mode courant (méthode Actualiser du mode).
+    /// Il possède aussi l'horloge commune : à chaque image dessinée par l'écran (en général
+    /// 60 fois par seconde), il lit le regard, prépare un EtatRegard et le donne au mode courant
+    /// (méthode Actualiser du mode).
+    ///
+    /// Pourquoi « à chaque image » ? Avant, un minuteur (DispatcherTimer) tournait toutes les
+    /// 16 ms. Mais ce minuteur n'est pas précis sous Windows (il arrive souvent avec 15 ou 31 ms),
+    /// et il n'est pas synchronisé avec l'écran : certaines images montraient deux déplacements
+    /// du cercle, d'autres aucun. Résultat : un mouvement qui « accroche ». L'événement
+    /// CompositionTarget.Rendering de WPF est appelé juste avant que WPF dessine chaque image :
+    /// le cercle avance exactement une fois par image, régulièrement.
     ///
     /// Les modes y trouvent tout ce dont ils ont besoin : le regard (Regard), le calque plein
     /// écran (Calque) et la taille de l'écran.
@@ -26,10 +34,19 @@ namespace GazeBar
     /// </summary>
     internal sealed class ModeManager
     {
-        /// <summary>Intervalle entre deux actualisations, en millisecondes (16 ms ≈ 60 fois par seconde, la cadence de l'écran).</summary>
+        /// <summary>
+        /// Intervalle habituel entre deux actualisations, en millisecondes (16 ms ≈ 60 images par
+        /// seconde, la cadence de la plupart des écrans). Ce n'est qu'un ordre de grandeur :
+        /// l'horloge suit l'écran, et les modes mesurent toujours le temps réel (MaintenantMs).
+        /// </summary>
         public const int IntervalleMs = 16;
 
-        private readonly DispatcherTimer _horloge;
+        // Vrai entre Demarrer et Arreter (l'horloge est branchée sur CompositionTarget.Rendering).
+        private bool _enMarche;
+
+        // Heure de l'image déjà traitée : WPF appelle parfois Rendering deux fois pour la même
+        // image ; on ne la traite qu'une fois.
+        private TimeSpan _derniereImage = TimeSpan.Zero;
 
         // Instant (ms) où le regard est passé en bas hors de l'écran ; -1 = il n'y est pas.
         private double _debutEnBasMs = -1;
@@ -43,10 +60,6 @@ namespace GazeBar
         {
             Regard = regard;
             Calque = calque;
-
-            _horloge = new DispatcherTimer();
-            _horloge.Interval = TimeSpan.FromMilliseconds(IntervalleMs);
-            _horloge.Tick += OnTick;
         }
 
         /// <summary>La source du regard Tobii.</summary>
@@ -82,13 +95,21 @@ namespace GazeBar
         public void Demarrer(Mode premierMode)
         {
             ChangerMode(premierMode);
-            _horloge.Start();
+            if (!_enMarche)
+            {
+                CompositionTarget.Rendering += OnImage;
+                _enMarche = true;
+            }
         }
 
         /// <summary>Arrête l'horloge et quitte proprement le mode courant (à la fermeture du programme).</summary>
         public void Arreter()
         {
-            _horloge.Stop();
+            if (_enMarche)
+            {
+                CompositionTarget.Rendering -= OnImage;
+                _enMarche = false;
+            }
             if (ModeCourant != null)
             {
                 ModeCourant.Quitter();
@@ -139,7 +160,25 @@ namespace GazeBar
 
         // ───────────────────────── Horloge ─────────────────────────
 
-        private void OnTick(object sender, EventArgs e)
+        /// <summary>
+        /// Appelée par WPF juste avant de dessiner chaque image. On ne traite chaque image
+        /// qu'une seule fois (voir _derniereImage), puis on fait un tic.
+        /// </summary>
+        private void OnImage(object sender, EventArgs e)
+        {
+            RenderingEventArgs image = e as RenderingEventArgs;
+            if (image != null)
+            {
+                if (image.RenderingTime == _derniereImage)
+                {
+                    return;
+                }
+                _derniereImage = image.RenderingTime;
+            }
+            OnTick();
+        }
+
+        private void OnTick()
         {
             if (ModeCourant == null)
             {
