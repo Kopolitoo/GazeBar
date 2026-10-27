@@ -28,9 +28,9 @@ namespace GazeBar
         /// Vrai si le regard en bas hors de l'écran peut ouvrir le menu pendant ce mode.
         ///
         /// Depuis l'étape 6 (choix de l'utilisateur du 25/10/2026), le menu ne s'ouvre QUE
-        /// depuis les modes mouvement, pause et (plus tard) jeu. Les autres modes ont leur propre
+        /// depuis les modes mouvement, pause et jeu. Les autres modes ont leur propre
         /// sortie : un bouton « retour » dans la loupe, le choix d'action et le glisser-déposer.
-        /// La réponse par défaut est donc « non » ; seuls ModeMouvement et ModePause la
+        /// La réponse par défaut est donc « non » ; seuls ModeMouvement, ModePause et ModeJeu (étape 9) la
         /// remplacent par « oui » (avec override).
         /// </summary>
         public virtual bool MenuAutorise

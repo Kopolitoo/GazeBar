@@ -360,8 +360,8 @@ namespace GazeBar
             if (reglage.OuiNon)
             {
                 bool valeur = reglage.LireOuiNon(P);
-                AjouterCible(x, y, ChoixLargeur, BoutonCote, Mot("Non", 42), () => ChangerOuiNon(reglage, false), false, !valeur);
-                AjouterCible(x + ChoixLargeur + Ecart, y, ChoixLargeur, BoutonCote, Mot("Oui", 42), () => ChangerOuiNon(reglage, true), false, valeur);
+                AjouterCible(x, y, ChoixLargeur, BoutonCote, Mot(reglage.MotFaux, 42), () => ChangerOuiNon(reglage, false), false, !valeur);
+                AjouterCible(x + ChoixLargeur + Ecart, y, ChoixLargeur, BoutonCote, Mot(reglage.MotVrai, 42), () => ChangerOuiNon(reglage, true), false, valeur);
                 return;
             }
 

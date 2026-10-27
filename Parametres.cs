@@ -189,6 +189,44 @@ namespace GazeBar
         [DataMember(Order = 81)]
         public double SensibiliteJeu { get; set; }
 
+        /// <summary>
+        /// Variante du mode jeu (étape 9, choix de l'utilisateur du 27/10/2026) :
+        ///   « directe »  : le curseur suit le regard (par défaut, pour Mindball Play) ;
+        ///   « relative » : des déplacements sont envoyés au jeu (pour d'autres jeux).
+        /// Écrit en toutes lettres dans parametres.json, pour qu'on le lise facilement.
+        /// </summary>
+        [DataMember(Order = 82)]
+        public string SourisJeu { get; set; }
+
+        /// <summary>
+        /// Souris relative du mode jeu : comment traduire le regard en déplacement (étape 9).
+        ///   « suivi »   : le déplacement suit celui du regard (par défaut) ;
+        ///   « manette » : l'écart entre le regard et le centre de l'écran donne la vitesse.
+        /// Réglage ajouté à l'étape 9 : le cahier des charges propose ces deux façons « à tester ».
+        /// </summary>
+        [DataMember(Order = 83)]
+        public string RelativeJeu { get; set; }
+
+        // Les valeurs possibles de SourisJeu et RelativeJeu, écrites une seule fois.
+        public const string SourisDirecteTexte = "directe";
+        public const string SourisRelativeTexte = "relative";
+        public const string RelativeSuiviTexte = "suivi";
+        public const string RelativeManetteTexte = "manette";
+
+        /// <summary>Vrai si le mode jeu envoie des déplacements (SourisJeu = « relative »). Pas enregistré dans le fichier.</summary>
+        public bool SourisRelative
+        {
+            get { return SourisJeu == SourisRelativeTexte; }
+            set { SourisJeu = value ? SourisRelativeTexte : SourisDirecteTexte; }
+        }
+
+        /// <summary>Vrai si la souris relative fonctionne comme une manette (RelativeJeu = « manette »). Pas enregistré.</summary>
+        public bool RelativeManette
+        {
+            get { return RelativeJeu == RelativeManetteTexte; }
+            set { RelativeJeu = value ? RelativeManetteTexte : RelativeSuiviTexte; }
+        }
+
         // ───────────────────────── Général ─────────────────────────
 
         /// <summary>
@@ -252,6 +290,8 @@ namespace GazeBar
 
             LissageJeu = 0.7;
             SensibiliteJeu = 1.0;
+            SourisJeu = SourisDirecteTexte;
+            RelativeJeu = RelativeSuiviTexte;
 
             SuiviSouris = false;
             DemarrerAvecWindows = false;
@@ -303,6 +343,12 @@ namespace GazeBar
 
             LissageJeu = Borner(LissageJeu, 0.01, 1);
             SensibiliteJeu = Borner(SensibiliteJeu, 0.1, 10);
+
+            // Un mot inconnu (faute de frappe, majuscules…) redevient la valeur par défaut.
+            string souris = (SourisJeu ?? "").Trim().ToLowerInvariant();
+            SourisJeu = souris == SourisRelativeTexte ? SourisRelativeTexte : SourisDirecteTexte;
+            string relative = (RelativeJeu ?? "").Trim().ToLowerInvariant();
+            RelativeJeu = relative == RelativeManetteTexte ? RelativeManetteTexte : RelativeSuiviTexte;
         }
 
         /// <summary>

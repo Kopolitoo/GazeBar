@@ -30,7 +30,7 @@ namespace GazeBar
     ///
     /// Étape 4 : c'est aussi lui qui ouvre le menu : quand le regard reste en bas, hors de
     /// l'écran, pendant [DelaiMenu], on passe au mode menu. Depuis l'étape 6, seuls les modes
-    /// mouvement et pause (et plus tard jeu) l'autorisent (propriété Mode.MenuAutorise).
+    /// mouvement, pause et jeu (étape 9) l'autorisent (propriété Mode.MenuAutorise).
     /// </summary>
     internal sealed class ModeManager
     {
