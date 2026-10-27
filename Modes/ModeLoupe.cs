@@ -110,8 +110,7 @@ namespace GazeBar
         // Le petit cercle qui suit le regard : deux ellipses (trait noir dessous, vert dessus).
         private Ellipse _cercleRegardFond;
         private Ellipse _cercleRegard;
-        private double _rx;
-        private double _ry;
+        private readonly Lisseur _lisse = new Lisseur();
         private bool _cercleRegardPlace;
 
         /// <summary>
@@ -427,8 +426,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Déplace le petit cercle du regard : à chaque tic, il parcourt une fraction [Lissage]
-        /// du chemin vers le regard. Regard perdu ou hors de l'écran : il reste où il est.
+        /// Déplace le petit cercle du regard : il suit le regard en douceur ([Lissage], voir
+        /// Lisseur.cs). Regard perdu ou hors de l'écran : il reste où il est.
         /// </summary>
         private void DeplacerCercleRegard(EtatRegard regard, Parametres p)
         {
@@ -439,15 +438,13 @@ namespace GazeBar
 
             if (!_cercleRegardPlace)
             {
-                _rx = regard.X;
-                _ry = regard.Y;
+                _lisse.Placer(regard.X, regard.Y);
                 _cercleRegardPlace = true;
             }
-            _rx += (regard.X - _rx) * p.Lissage;
-            _ry += (regard.Y - _ry) * p.Lissage;
+            _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
 
             OverlayWindow calque = Gestionnaire.Calque;
-            Point centre = calque.VersWpf(_rx, _ry);
+            Point centre = calque.VersWpf(_lisse.X, _lisse.Y);
             double rayon = calque.LongueurVersWpf(DiametreCercleRegard / 2);
             PlacerEllipse(_cercleRegardFond, centre, rayon);
             PlacerEllipse(_cercleRegard, centre, rayon);

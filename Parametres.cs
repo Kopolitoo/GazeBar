@@ -59,7 +59,7 @@ namespace GazeBar
 
         // ───────────────────────── Regard ─────────────────────────
 
-        /// <summary>Fraction du chemin parcourue à chaque pas, entre 0 et 1 (0 = immobile, 1 = regard brut, tremblant).</summary>
+        /// <summary>Fraction du chemin parcourue en 16 ms (un tic), entre 0 et 1 (0 = immobile, 1 = regard brut, tremblant). Lissage double, en temps réel : voir Modes/Lisseur.cs.</summary>
         [DataMember(Order = 10)]
         public double Lissage { get; set; }
 

@@ -96,8 +96,7 @@ namespace GazeBar
         private double _debutHorsBarreMs = -1;
 
         // Le petit cercle du regard : position lissée en pixels d'écran.
-        private double _rx;
-        private double _ry;
+        private readonly Lisseur _lisse = new Lisseur();
         private bool _cerclePlace;
 
         public ModeMenu()
@@ -128,8 +127,7 @@ namespace GazeBar
             _cerclePlace = calque.CercleAffiche;
             if (_cerclePlace)
             {
-                _rx = calque.CercleX;
-                _ry = calque.CercleY;
+                _lisse.Placer(calque.CercleX, calque.CercleY);
             }
 
             Construire();
@@ -178,13 +176,11 @@ namespace GazeBar
             {
                 if (!_cerclePlace)
                 {
-                    _rx = regard.X;
-                    _ry = regard.Y;
+                    _lisse.Placer(regard.X, regard.Y);
                     _cerclePlace = true;
                 }
-                _rx += (regard.X - _rx) * p.Lissage;
-                _ry += (regard.Y - _ry) * p.Lissage;
-                Gestionnaire.Calque.AfficherCercle(_rx, _ry, p.RayonCercle / 2, false);
+                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
+                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle / 2, false);
             }
         }
 
