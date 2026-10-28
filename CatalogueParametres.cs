@@ -299,7 +299,7 @@ namespace GazeBar
                 Reglage.DeuxChoix("Souris relative", "Suivi : comme le regard. Manette : écart au centre",
                                   "Suivi", "Manette",
                                   p => p.RelativeManette, (p, v) => p.RelativeManette = v),
-                Reglage.Nombre("Lissage relatif", "Souris relative. Directe : lissage de l'onglet Regard", "", 0.05,
+                Reglage.Nombre("Lissage du jeu", "Plus petit = plus calme, plus grand = plus réactif", "", 0.01,
                                p => p.LissageJeu, (p, v) => p.LissageJeu = v),
                 Reglage.Nombre("Sensibilité", "Souris relative : multiplie les déplacements", " ×", 0.1,
                                p => p.SensibiliteJeu, (p, v) => p.SensibiliteJeu = v)),

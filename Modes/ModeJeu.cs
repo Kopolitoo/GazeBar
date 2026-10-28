@@ -18,7 +18,9 @@ namespace GazeBar
     ///   « directe » (par défaut, pour Mindball Play) : le curseur bouge EXACTEMENT comme en
     ///   mode mouvement avec le suivi souris, mais sans cercle (demande de l'utilisateur du
     ///   28/10/2026 : avec [LissageJeu] = 0.7 puis 0.3, le curseur saccadait trop). Donc :
-    ///   lissage [Lissage] (celui du mode mouvement) et anti-tremblement [ZoneMorteCurseur] :
+    ///   même lissage double que le mode mouvement, mais avec son propre réglage [LissageJeu]
+    ///   (0.16 par défaut, comme [Lissage] : l'utilisateur veut deux réglages séparés), et
+    ///   anti-tremblement [ZoneMorteCurseur] :
     ///   au repos, le curseur ne bouge pas tant que le regard lissé en est à moins de
     ///   [ZoneMorteCurseur] pixels ; au-delà, il le suit en continu jusqu'à l'avoir rattrapé.
     ///   Regard perdu ou hors de l'écran : le curseur reste où il est.
@@ -33,7 +35,6 @@ namespace GazeBar
     ///                   comme le petit levier d'une manette. Au centre, dans un cercle de rayon
     ///                   [RayonCercle], rien ne bouge ; la vitesse augmente ensuite jusqu'au bord
     ///                   de l'écran.
-    ///   Le lissage de la souris relative est [LissageJeu], plus réactif que [Lissage].
     ///   Regard perdu ou hors de l'écran : plus aucun déplacement n'est envoyé.
     ///
     /// Attention, limites connues : un jeu en « plein écran exclusif » peut cacher le calque de
@@ -49,10 +50,8 @@ namespace GazeBar
         /// </summary>
         private const double VitesseMaxManette = 1500;
 
-        // Le regard lissé : avec [Lissage] en souris directe (comme le mode mouvement), avec
-        // [LissageJeu] en souris relative. La fonction est relue à chaque tic.
-        private readonly Lisseur _lisse = new Lisseur(
-            () => Parametres.Courants.SourisRelative ? Parametres.Courants.LissageJeu : Parametres.Courants.Lissage);
+        // Le regard lissé avec [LissageJeu] (réglage séparé de [Lissage], celui du mode mouvement).
+        private readonly Lisseur _lisse = new Lisseur(() => Parametres.Courants.LissageJeu);
 
         // Vrai quand _lisse a une position valable (sinon on la place sur le regard).
         private bool _place;
