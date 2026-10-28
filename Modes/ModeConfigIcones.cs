@@ -24,8 +24,9 @@ namespace GazeBar
     ///   - « + » verte : l'emplacement est vide. Regarder l'icône ouvre LA LISTE.
     ///
     /// La liste : un rectangle aux bords arrondis qui occupe les trois quarts de l'écran, avec
-    /// les actions du même groupe qui ne sont pas encore placées (une action n'apparaît
-    /// qu'une fois), chacune avec son nom en dessous, et un bouton « Annuler ». Une fois
+    /// TOUTES les actions du même groupe, chacune avec son nom en dessous, et un bouton
+    /// « Annuler ». Une action peut être placée plusieurs fois dans son groupe (demande de
+    /// l'utilisateur du 28/10/2026), par exemple deux clics gauches dans la couronne. Une fois
     /// l'action choisie, elle est placée et la liste se ferme.
     ///
     /// Chaque changement est appliqué tout de suite (Parametres.Courants) et enregistré dans
@@ -303,7 +304,7 @@ namespace GazeBar
 
         /// <summary>
         /// La liste : un voile sombre sur tout l'écran, puis un rectangle aux bords arrondis
-        /// (les trois quarts de l'écran) avec un titre, les actions libres du groupe en grille
+        /// (les trois quarts de l'écran) avec un titre, toutes les actions du groupe en grille
         /// (quatre colonnes au plus), chacune avec son nom, et « Annuler » en bas.
         /// </summary>
         private void ConstruireListe(OverlayWindow calque, Canvas ecran, DispositionChoixAction mise, Parametres p)
@@ -351,16 +352,9 @@ namespace GazeBar
             AjouterTexteCentre(calque, ecran, "Annuler", mise.CentreX, yAnnuler + taille / 2 + policeNom * 0.4,
                                taille * 3, policeNom, Doux, false);
 
-            // ── Les actions libres du groupe : celles qui ne sont pas déjà placées.
-            List<ActionChoix> libres = new List<ActionChoix>();
-            ActionChoix?[] disposition = p.Disposition(_groupeChoisi);
-            foreach (ActionChoix action in CatalogueActions.Actions(_groupeChoisi))
-            {
-                if (Array.IndexOf(disposition, (ActionChoix?)action) < 0)
-                {
-                    libres.Add(action);
-                }
-            }
+            // ── Toutes les actions du groupe, même celles déjà placées ailleurs : une action
+            //    peut apparaître plusieurs fois (demande de l'utilisateur du 28/10/2026).
+            List<ActionChoix> libres = new List<ActionChoix>(CatalogueActions.Actions(_groupeChoisi));
 
             // La zone de la grille : entre le titre et « Annuler ».
             double hautGrille = haut + taille * 0.35 + policeTitre * 2;
@@ -368,8 +362,8 @@ namespace GazeBar
 
             if (libres.Count == 0)
             {
-                // Ne devrait pas arriver (un emplacement vide laisse toujours une action libre).
-                AjouterTexteCentre(calque, ecran, "Toutes les actions de ce groupe sont déjà placées.",
+                // Ne devrait pas arriver : chaque groupe a au moins une action.
+                AjouterTexteCentre(calque, ecran, "Aucune action pour ce groupe.",
                                    mise.CentreX, (hautGrille + basGrille) / 2, l, policeNom * 1.3, Doux, false);
                 return;
             }

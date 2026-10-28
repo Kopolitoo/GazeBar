@@ -174,7 +174,8 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
   couronne, trois modificateurs à gauche, Copier / Couper / Coller en haut) portent une pastille :
   « − » rouge sur une icône assignée (la regarder retire l'action), « + » verte sur un emplacement
   vide (la regarder ouvre une liste, dans un rectangle aux bords arrondis des trois quarts de
-  l'écran, avec les actions du même groupe pas encore placées et « Annuler »). Chaque changement
+  l'écran, avec toutes les actions du même groupe et « Annuler » ; une action peut être placée
+  plusieurs fois). Chaque changement
   est enregistré dans `parametres.json` (listes `IconesCouronne`, `IconesModificateurs`,
   `IconesUtilitaires`, version 6 ; "" = emplacement vide) ; « Défaut » dans l'onglet « Icônes »
   remet la disposition d'origine. Dans le choix d'action, un emplacement vide est grisé et ne
@@ -212,8 +213,8 @@ journal).
 
 Test de l'étape 10 : menu, « Paramètres », onglet « Icônes », « Configurer les icônes ». On
 regarde le « − » du clic gauche (en haut à gauche de la couronne) puis celui du clic droit : les
-deux emplacements deviennent vides (« + »). On regarde le premier : la liste propose clic gauche
-et clic droit ; on choisit « Clic droit ». On fait de même avec l'autre emplacement et « Clic
+deux emplacements deviennent vides (« + »). On regarde le premier : la liste propose toutes les
+actions de la couronne ; on choisit « Clic droit ». On fait de même avec l'autre emplacement et « Clic
 gauche » : les deux actions ont échangé leur place. « Retour », puis dans le choix d'action, les
 deux icônes sont à leur nouvelle place. Retirer « Couper » laisse un emplacement grisé en haut
 du choix d'action. « Défaut » dans l'onglet « Icônes » remet tout comme avant.

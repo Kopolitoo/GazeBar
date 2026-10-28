@@ -227,7 +227,15 @@ namespace GazeBar
                 // Le bouton est bloqué tant que le regard ne l'a pas quitté : sans cela, en
                 // continuant à le regarder, on l'allumerait et l'éteindrait sans fin.
                 bool actif = Modificateurs.Basculer(CatalogueActions.VersModificateur(action));
-                _boutons[_viseur.Vise].DefinirAllume(actif);
+                // Le même modificateur peut être placé sur plusieurs emplacements (étape 10) :
+                // toutes ses icônes s'allument ou s'éteignent ensemble.
+                for (int i = 0; i < _actions.Count; i++)
+                {
+                    if (_actions[i] == action)
+                    {
+                        _boutons[i].DefinirAllume(actif);
+                    }
+                }
                 _viseur.BloquerJusquASortie();
                 return;
             }

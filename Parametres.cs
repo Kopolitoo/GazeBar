@@ -292,9 +292,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Place une action sur un emplacement (null = le vider). Si cette action était déjà
-        /// sur un autre emplacement du groupe, cet autre emplacement est vidé : une action
-        /// n'apparaît qu'une fois. N'enregistre pas le fichier (voir Enregistrer).
+        /// Place une action sur un emplacement (null = le vider). La même action peut être
+        /// placée sur plusieurs emplacements du groupe (demande de l'utilisateur du
+        /// 28/10/2026). N'enregistre pas le fichier (voir Enregistrer).
         /// </summary>
         public void DefinirEmplacement(GroupeIcones groupe, int numero, ActionChoix? action)
         {
@@ -302,16 +302,6 @@ namespace GazeBar
             if (numero < 0 || numero >= disposition.Length)
             {
                 return;
-            }
-            if (action.HasValue)
-            {
-                for (int i = 0; i < disposition.Length; i++)
-                {
-                    if (disposition[i] == action)
-                    {
-                        disposition[i] = null;
-                    }
-                }
             }
             disposition[numero] = action;
             EcrireDisposition(groupe, disposition);
@@ -374,8 +364,8 @@ namespace GazeBar
 
         /// <summary>
         /// Remet en ordre la liste d'un groupe lue dans le fichier : le bon nombre de cases,
-        /// les noms inconnus ou d'un autre groupe vidés, et une action en double gardée
-        /// seulement à sa première place. Une liste absente reprend la disposition par défaut.
+        /// et les noms inconnus ou d'un autre groupe vidés (une action peut figurer plusieurs
+        /// fois). Une liste absente reprend la disposition par défaut.
         /// </summary>
         private void CorrigerIcones(GroupeIcones groupe)
         {
@@ -384,18 +374,7 @@ namespace GazeBar
                 EcrireDisposition(groupe, Convertir(CatalogueActions.DispositionParDefaut(groupe)));
                 return;
             }
-            ActionChoix?[] disposition = Disposition(groupe);
-            for (int i = 0; i < disposition.Length; i++)
-            {
-                for (int j = 0; j < i; j++)
-                {
-                    if (disposition[i].HasValue && disposition[j] == disposition[i])
-                    {
-                        disposition[i] = null;
-                    }
-                }
-            }
-            EcrireDisposition(groupe, disposition);
+            EcrireDisposition(groupe, Disposition(groupe));
         }
 
         private static ActionChoix?[] Convertir(ActionChoix[] actions)
