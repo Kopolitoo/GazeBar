@@ -195,7 +195,8 @@ namespace GazeBar
         public override void Quitter()
         {
             // La barre est cachée. Le petit cercle reste : le mode suivant le reprend là où il est.
-            Gestionnaire.Calque.MasquerBarreMenu();
+            // Fermeture animée (voir OverlayWindow.MasquerBarreMenu).
+            Gestionnaire.Calque.MasquerBarreMenu(true);
             _boutons.Clear();
             _actions.Clear();
         }
