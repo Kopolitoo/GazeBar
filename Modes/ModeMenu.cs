@@ -35,9 +35,8 @@ namespace GazeBar
     ///
     /// Depuis le mode PAUSE (demande de l'utilisateur du 28/10/2026) : la barre ne montre
     /// d'abord QUE le bouton « Reprendre » (lecture). Ainsi, pendant la pause, un regard vers
-    /// le bas ne peut rien déclencher d'autre. Activé, il met fin à la pause (on reviendra au
-    /// mode mouvement), et la barre complète apparaît à sa place : on peut alors choisir un
-    /// autre bouton, ou simplement quitter la barre du regard pour reprendre.
+    /// le bas ne peut rien déclencher d'autre. Activé, il met fin à la pause et ramène
+    /// directement au mode mouvement. Pour les autres boutons, on rouvre ensuite le menu.
     ///
     /// Un petit cercle (moitié de [RayonCercle]) montre où est le regard, comme dans le choix
     /// d'action.
@@ -262,11 +261,9 @@ namespace GazeBar
                     break;
 
                 case ActionMenu.Reprendre:
-                    // Fin de la pause : à la fermeture du menu, on ira au mode mouvement. La
-                    // barre complète remplace le bouton seul, avec l'animation d'apparition.
-                    _retour = new ModeMouvement();
-                    _dejaAffichee = false;
-                    Construire();
+                    // Fin de la pause : retour direct au mode mouvement, sans afficher les
+                    // autres boutons (choix de l'utilisateur du 28/10/2026).
+                    Gestionnaire.ChangerMode(new ModeMouvement());
                     break;
 
                 case ActionMenu.SuiviSouris:
@@ -423,8 +420,8 @@ namespace GazeBar
                 }
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Calibration"), ActionMenu.Calibration);
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier visuel"), ActionMenu.Clavier);
-                // (Depuis la pause, la barre complète n'apparaît qu'après « Reprendre » : ici,
-                // on n'est donc jamais en pause.)
+                // (Depuis la pause, seul « Reprendre » est affiché : ici, on n'est donc
+                // jamais en pause.)
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Pause"), ActionMenu.Pause);
                 BoutonRegard suivi = new BoutonRegard("", null, "Suivi souris");
                 suivi.DefinirAllume(p.SuiviSouris);
