@@ -18,7 +18,7 @@ namespace GazeBar
     ///
     /// Un bouton peut être « vide » (méthode Vide) : c'est un emplacement auquel aucune action
     /// n'est encore attribuée. Il est dessiné grisé, avec un « + » pâle, pour montrer à
-    /// l'utilisateur qu'il pourra y mettre une action (dans les paramètres, étape 9). Il ne
+    /// l'utilisateur qu'il pourra y mettre une action (écran de configuration des icônes, étape 10). Il ne
     /// s'active jamais ; seul son libellé apparaît au survol.
     ///
     /// Un bouton peut aussi être « indisponible » (méthode Indisponible, étape 4) : sa fonction
@@ -32,6 +32,12 @@ namespace GazeBar
     /// Un bouton peut afficher un mot au lieu d'un symbole (méthode Texte, étape 6) : c'est le
     /// cas des modificateurs « Ctrl », « Maj » et « Alt », qui n'ont pas de symbole parlant
     /// dans la police d'icônes de Windows.
+    ///
+    /// Étape 10, pour l'écran de configuration des icônes :
+    ///   - un emplacement vide peut être « configurable » (méthode VideConfigurable) : grisé
+    ///     comme un emplacement vide, mais il s'active (pour y placer une action) ;
+    ///   - une pastille ronde en haut à droite (méthode DefinirPastilleConfig) : « + » vert
+    ///     sur un emplacement vide, « − » rouge sur un emplacement assigné.
     ///
     /// Il ne sait pas lui-même s'il est regardé ni depuis combien de temps : c'est le mode
     /// (ModeChoixAction, ModeMenu) qui le décide, avec l'aide d'un ViseurBoutons, et qui lui
@@ -52,6 +58,13 @@ namespace GazeBar
         private readonly Path _anneau;
         private readonly Border _libelle;
 
+        // La pastille ronde « + » / « − » de l'écran de configuration (null = aucune).
+        private Border _pastilleConfig;
+        private TextBlock _signeConfig;
+
+        // Vrai pour un bouton dessiné grisé (emplacement vide, fonction indisponible).
+        private bool _grise;
+
         // Taille du symbole par rapport au côté du bouton (plus petite pour un mot, voir Texte).
         private double _facteurSymbole = 0.45;
 
@@ -63,6 +76,7 @@ namespace GazeBar
         private static readonly Brush FondVide = Figer(new SolidColorBrush(Color.FromArgb(0x80, 0x50, 0x50, 0x50)));
         private static readonly Brush FondVideSurvol = Figer(new SolidColorBrush(Color.FromArgb(0xA0, 0x60, 0x60, 0x60)));
         private static readonly Brush Gris = Figer(new SolidColorBrush(Color.FromArgb(0xFF, 0x90, 0x90, 0x90)));
+        private static readonly Brush Rouge = Figer(new SolidColorBrush(Color.FromArgb(0xFF, 0xE5, 0x39, 0x35)));
 
         /// <summary>
         /// Crée un emplacement vide (grisé, jamais activé), avec ce libellé au survol.
@@ -94,11 +108,48 @@ namespace GazeBar
         {
             BoutonRegard bouton = new BoutonRegard(symbole, null, libelle);
             bouton.Actif = false;
+            bouton._grise = true;
             bouton._fond.Background = FondVide;
             bouton._fond.BorderBrush = Gris;
             bouton._symbole.Foreground = Gris;
             bouton._symbole.Opacity = 0.6;
             return bouton;
+        }
+
+        /// <summary>
+        /// Crée un emplacement vide de l'écran de configuration (étape 10) : grisé, sans symbole
+        /// (la pastille « + » suffit), mais qui s'active, pour y placer une action.
+        /// </summary>
+        public static BoutonRegard VideConfigurable(string libelle)
+        {
+            BoutonRegard bouton = Indisponible("", libelle);
+            bouton.Actif = true;
+            return bouton;
+        }
+
+        /// <summary>
+        /// Ajoute la pastille ronde de l'écran de configuration (étape 10), en haut à droite :
+        /// plus = vrai → « + » sur fond vert (emplacement vide, on peut y placer une action) ;
+        /// plus = faux → « − » sur fond rouge (action assignée, on peut la retirer).
+        /// À appeler AVANT Placer. (« − » est le vrai signe moins, U+2212.)
+        /// </summary>
+        public void DefinirPastilleConfig(bool plus)
+        {
+            _signeConfig = new TextBlock();
+            _signeConfig.Text = plus ? "+" : "\u2212";
+            _signeConfig.Foreground = Blanc;
+            _signeConfig.FontFamily = new FontFamily("Segoe UI");
+            _signeConfig.FontWeight = FontWeights.Bold;
+            _signeConfig.HorizontalAlignment = HorizontalAlignment.Center;
+            _signeConfig.VerticalAlignment = VerticalAlignment.Center;
+            // Le signe est un peu trop bas dans sa ligne de texte : on le remonte légèrement.
+            _signeConfig.Margin = new Thickness(0, 0, 0, 4);
+
+            _pastilleConfig = new Border();
+            _pastilleConfig.Background = plus ? Vert : Rouge;
+            _pastilleConfig.BorderBrush = Blanc;
+            _pastilleConfig.BorderThickness = new Thickness(2);
+            _pastilleConfig.Child = _signeConfig;
         }
 
         /// <summary>
@@ -234,6 +285,23 @@ namespace GazeBar
             }
 
             surface.Children.Add(_fond);
+
+            // La pastille « + » / « − » (étape 10) : un rond d'environ un tiers du côté, dont le
+            // centre est un peu à l'intérieur du coin en haut à droite (il déborde du carré).
+            if (_pastilleConfig != null)
+            {
+                double diametre = cote * 0.34;
+                _pastilleConfig.Width = diametre;
+                _pastilleConfig.Height = diametre;
+                _pastilleConfig.CornerRadius = new CornerRadius(diametre / 2);
+                _signeConfig.FontSize = diametre * 0.8;
+                double xPastille = centre.X + cote / 2 - diametre * 0.2;
+                double yPastille = centre.Y - cote / 2 + diametre * 0.2;
+                Canvas.SetLeft(_pastilleConfig, xPastille - diametre / 2);
+                Canvas.SetTop(_pastilleConfig, yPastille - diametre / 2);
+                surface.Children.Add(_pastilleConfig);
+            }
+
             surface.Children.Add(_anneau);
             surface.Children.Add(_libelle);
         }
@@ -269,7 +337,7 @@ namespace GazeBar
         /// </summary>
         public void Dessiner(double progression, bool survol, bool afficherLibelle)
         {
-            if (Actif)
+            if (!_grise)
             {
                 _fond.Background = survol ? FondSurvol : FondNormal;
             }

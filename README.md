@@ -168,6 +168,17 @@ servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxA
   ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
   l'écran compte, pour agrandir la plage de vitesse) ou sur le bouton « retour » (bord droit, centré),
   qui ramène au mode mouvement. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
+- `Modes/ModeConfigIcones` (étape 10) : onglet « Icônes » des paramètres, bouton « Configurer les
+  icônes ». Même mise en page que le choix d'action (`DispositionChoixAction`, partagée par les
+  deux modes), avec un cadre gris à la place de la photo. Les quatorze emplacements (huit de la
+  couronne, trois modificateurs à gauche, Copier / Couper / Coller en haut) portent une pastille :
+  « − » rouge sur une icône assignée (la regarder retire l'action), « + » verte sur un emplacement
+  vide (la regarder ouvre une liste, dans un rectangle aux bords arrondis des trois quarts de
+  l'écran, avec les actions du même groupe pas encore placées et « Annuler »). Chaque changement
+  est enregistré dans `parametres.json` (listes `IconesCouronne`, `IconesModificateurs`,
+  `IconesUtilitaires`, version 6 ; "" = emplacement vide) ; « Défaut » dans l'onglet « Icônes »
+  remet la disposition d'origine. Dans le choix d'action, un emplacement vide est grisé et ne
+  fait rien. « Retour » ou Échap ramène à l'onglet « Icônes ». Liste des actions : `CatalogueActions`.
 - `Modes/ModePause` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
   (bouton « Reprendre »).
 - `Modes/ModeCalibration` et `CalibrationTobii` (étape 4) : lancent l'outil de calibration Tobii
@@ -198,6 +209,14 @@ Fixation, puis « Oui » pour le clic direct : il est encadré en bleu. « Défa
 les valeurs de l'onglet reviennent. L'aidant clique sur une valeur, tape 0,5 puis Entrée.
 « Retour » ramène au mode mouvement. Lancer GazeBar une deuxième fois ne fait rien (voir le
 journal).
+
+Test de l'étape 10 : menu, « Paramètres », onglet « Icônes », « Configurer les icônes ». On
+regarde le « − » du clic gauche (en haut à gauche de la couronne) puis celui du clic droit : les
+deux emplacements deviennent vides (« + »). On regarde le premier : la liste propose clic gauche
+et clic droit ; on choisit « Clic droit ». On fait de même avec l'autre emplacement et « Clic
+gauche » : les deux actions ont échangé leur place. « Retour », puis dans le choix d'action, les
+deux icônes sont à leur nouvelle place. Retirer « Couper » laisse un emplacement grisé en haut
+du choix d'action. « Défaut » dans l'onglet « Icônes » remet tout comme avant.
 
 Test de l'étape 8 : on ouvre une longue page web, on fixe le texte, on ouvre le choix d'action
 puis « Défilement » (à gauche, en haut). Le cercle blanc reste en place. On regarde dans le

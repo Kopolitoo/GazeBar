@@ -53,9 +53,12 @@ namespace GazeBar
         ///   4 : étape 9 — LissageJeu passe de 0.7 à 0.16 par défaut (essai de l'utilisateur
         ///       du 28/10/2026 : à 0.7, le curseur saccadait en souris directe) ;
         ///   5 : VitesseMaxDefilement passe de 10 à 15 crans/s par défaut (vitesse maximale du
-        ///       défilement augmentée de moitié, demande de l'utilisateur du 28/10/2026).
+        ///       défilement augmentée de moitié, demande de l'utilisateur du 28/10/2026) ;
+        ///   6 : étape 10 — disposition des icônes du choix d'action (IconesCouronne,
+        ///       IconesModificateurs, IconesUtilitaires). Rien à corriger : un fichier plus
+        ///       ancien n'a pas ces listes, elles gardent donc la disposition par défaut.
         /// </summary>
-        public const int VersionActuelle = 5;
+        public const int VersionActuelle = 6;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -253,6 +256,158 @@ namespace GazeBar
         [DataMember(Order = 91)]
         public bool DemarrerAvecWindows { get; set; }
 
+        // ───────────────────────── Icônes du choix d'action (étape 10) ─────────────────────────
+
+        /// <summary>
+        /// Les actions placées sur les huit emplacements de la couronne du choix d'action, en
+        /// partant du haut à droite dans le sens des aiguilles d'une montre (voir
+        /// DispositionChoixAction). Chaque action est écrite par son nom (par exemple
+        /// "ClicGauche", voir ActionChoix) ; "" = emplacement vide. Se règle dans l'écran de
+        /// configuration des icônes (onglet « Icônes » du mode paramètres).
+        /// </summary>
+        [DataMember(Order = 100)]
+        public string[] IconesCouronne { get; set; }
+
+        /// <summary>Les trois emplacements du bord gauche, de haut en bas ("Ctrl", "Maj", "Alt" ou "").</summary>
+        [DataMember(Order = 101)]
+        public string[] IconesModificateurs { get; set; }
+
+        /// <summary>Les trois emplacements du bord haut, de gauche à droite ("Copier", "Couper", "Coller" ou "").</summary>
+        [DataMember(Order = 102)]
+        public string[] IconesUtilitaires { get; set; }
+
+        /// <summary>
+        /// La disposition d'un groupe, lue dans les listes ci-dessus : un tableau avec une
+        /// case par emplacement, null pour un emplacement vide. Pas enregistré tel quel.
+        /// </summary>
+        public ActionChoix?[] Disposition(GroupeIcones groupe)
+        {
+            string[] noms = Noms(groupe) ?? new string[0];
+            ActionChoix?[] resultat = new ActionChoix?[CatalogueActions.NombreEmplacements(groupe)];
+            for (int i = 0; i < resultat.Length && i < noms.Length; i++)
+            {
+                resultat[i] = CatalogueActions.Lire(noms[i], groupe);
+            }
+            return resultat;
+        }
+
+        /// <summary>
+        /// Place une action sur un emplacement (null = le vider). Si cette action était déjà
+        /// sur un autre emplacement du groupe, cet autre emplacement est vidé : une action
+        /// n'apparaît qu'une fois. N'enregistre pas le fichier (voir Enregistrer).
+        /// </summary>
+        public void DefinirEmplacement(GroupeIcones groupe, int numero, ActionChoix? action)
+        {
+            ActionChoix?[] disposition = Disposition(groupe);
+            if (numero < 0 || numero >= disposition.Length)
+            {
+                return;
+            }
+            if (action.HasValue)
+            {
+                for (int i = 0; i < disposition.Length; i++)
+                {
+                    if (disposition[i] == action)
+                    {
+                        disposition[i] = null;
+                    }
+                }
+            }
+            disposition[numero] = action;
+            EcrireDisposition(groupe, disposition);
+        }
+
+        /// <summary>Remet la disposition d'origine des trois groupes (bouton « Défaut » de l'onglet « Icônes »).</summary>
+        public void IconesParDefaut()
+        {
+            IconesCouronne = NomsParDefaut(GroupeIcones.Couronne);
+            IconesModificateurs = NomsParDefaut(GroupeIcones.Modificateurs);
+            IconesUtilitaires = NomsParDefaut(GroupeIcones.Utilitaires);
+        }
+
+        /// <summary>La liste de noms d'un groupe, telle qu'enregistrée dans le fichier.</summary>
+        private string[] Noms(GroupeIcones groupe)
+        {
+            switch (groupe)
+            {
+                case GroupeIcones.Couronne:
+                    return IconesCouronne;
+                case GroupeIcones.Modificateurs:
+                    return IconesModificateurs;
+                default:
+                    return IconesUtilitaires;
+            }
+        }
+
+        /// <summary>Écrit une disposition (une case par emplacement) dans la liste de noms du groupe.</summary>
+        private void EcrireDisposition(GroupeIcones groupe, ActionChoix?[] disposition)
+        {
+            string[] noms = new string[disposition.Length];
+            for (int i = 0; i < noms.Length; i++)
+            {
+                noms[i] = CatalogueActions.Ecrire(disposition[i]);
+            }
+            switch (groupe)
+            {
+                case GroupeIcones.Couronne:
+                    IconesCouronne = noms;
+                    break;
+                case GroupeIcones.Modificateurs:
+                    IconesModificateurs = noms;
+                    break;
+                default:
+                    IconesUtilitaires = noms;
+                    break;
+            }
+        }
+
+        private static string[] NomsParDefaut(GroupeIcones groupe)
+        {
+            ActionChoix[] actions = CatalogueActions.DispositionParDefaut(groupe);
+            string[] noms = new string[actions.Length];
+            for (int i = 0; i < noms.Length; i++)
+            {
+                noms[i] = actions[i].ToString();
+            }
+            return noms;
+        }
+
+        /// <summary>
+        /// Remet en ordre la liste d'un groupe lue dans le fichier : le bon nombre de cases,
+        /// les noms inconnus ou d'un autre groupe vidés, et une action en double gardée
+        /// seulement à sa première place. Une liste absente reprend la disposition par défaut.
+        /// </summary>
+        private void CorrigerIcones(GroupeIcones groupe)
+        {
+            if (Noms(groupe) == null)
+            {
+                EcrireDisposition(groupe, Convertir(CatalogueActions.DispositionParDefaut(groupe)));
+                return;
+            }
+            ActionChoix?[] disposition = Disposition(groupe);
+            for (int i = 0; i < disposition.Length; i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    if (disposition[i].HasValue && disposition[j] == disposition[i])
+                    {
+                        disposition[i] = null;
+                    }
+                }
+            }
+            EcrireDisposition(groupe, disposition);
+        }
+
+        private static ActionChoix?[] Convertir(ActionChoix[] actions)
+        {
+            ActionChoix?[] resultat = new ActionChoix?[actions.Length];
+            for (int i = 0; i < actions.Length; i++)
+            {
+                resultat[i] = actions[i];
+            }
+            return resultat;
+        }
+
         // ───────────────────────── Valeurs par défaut ─────────────────────────
 
         /// <summary>Le constructeur : un objet neuf contient les valeurs par défaut.</summary>
@@ -304,6 +459,8 @@ namespace GazeBar
 
             SuiviSouris = false;
             DemarrerAvecWindows = false;
+
+            IconesParDefaut();
         }
 
         /// <summary>
@@ -358,6 +515,10 @@ namespace GazeBar
             SourisJeu = souris == SourisRelativeTexte ? SourisRelativeTexte : SourisDirecteTexte;
             string relative = (RelativeJeu ?? "").Trim().ToLowerInvariant();
             RelativeJeu = relative == RelativeManetteTexte ? RelativeManetteTexte : RelativeSuiviTexte;
+
+            CorrigerIcones(GroupeIcones.Couronne);
+            CorrigerIcones(GroupeIcones.Modificateurs);
+            CorrigerIcones(GroupeIcones.Utilitaires);
         }
 
         /// <summary>
@@ -409,6 +570,13 @@ namespace GazeBar
                     VitesseMaxDefilement = 15;
                 }
                 App.Log("Paramètres : mise à jour en version 5 (VitesseMaxDefilement 10 → 15)");
+            }
+
+            if (VersionFichier < 6)
+            {
+                // Rien à corriger : les listes d'icônes absentes du fichier ont gardé la
+                // disposition par défaut (voir AvantLecture). Réenregistrer le fichier les ajoute.
+                App.Log("Paramètres : mise à jour en version 6 (disposition des icônes du choix d'action)");
             }
             VersionFichier = VersionActuelle;
             return true;
