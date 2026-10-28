@@ -430,17 +430,12 @@ namespace GazeBar
             Canvas.SetTop(cadre, coin.Y - 2);
             ecran.Children.Add(cadre);
 
-            // ── L'icône « retour », à droite : à mi-chemin entre la photo et le bord droit,
+            // ── L'icône « retour », à droite,
             //    à la même hauteur que dans le choix d'action (milieu de l'écran).
             //    Pendant un glisser-déposer, elle est collée au bord droit de l'écran, à la même
             //    place que pendant le choix de l'arrivée (choix de l'utilisateur du 25/10/2026).
             //    Symbole E72B = flèche « retour » de la police Windows.
-            double xRetour = (_gauche + coteAgrandi + largeur) / 2;
-            if (_glissement != null)
-            {
-                xRetour = largeur - taille / 2 - 10;
-            }
-            xRetour = Math.Min(xRetour, largeur - taille / 2 - 10);
+            double xRetour = largeur - taille;
             string libelleRetour = _glissement != null ? "Annuler le glisser-déposer" : "Retour";
             BoutonRegard retour = new BoutonRegard("", null, libelleRetour);
             retour.FacteurZone = FacteurZoneRetour;
