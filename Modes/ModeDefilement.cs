@@ -11,24 +11,33 @@ namespace GazeBar
     /// MODE DÉFILEMENT (étape 8 du cahier des charges, description de l'utilisateur du 26/10/2026).
     ///
     /// On y arrive depuis le choix d'action, avec l'action « Défilement » de la couronne
-    /// (emplacement 6). Le curseur est sur le point visé P ; il n'en bouge plus.
+    /// (emplacement 0 depuis le 28/10/2026). Le curseur est sur le point visé P ; il n'en bouge plus.
     ///
     /// Affichage, par-dessus l'écran réel :
-    ///   - le cercle blanc de [RayonCercle], FIXÉ sur P (le curseur) ;
+    ///   - le cercle de la zone morte, FIXÉ sur P (le curseur). Son rayon est la moitié de
+    ///     [RayonCercle] (voir FacteurZoneMorte) ;
     ///   - un petit arc de cercle coloré, posé sur le cercle, du côté où se trouve le regard :
-    ///     il indique la direction du défilement. Il n'apparaît que quand le regard est hors
-    ///     du cercle, c'est-à-dire quand ça défile ;
+    ///     il indique la direction du défilement. Depuis le 28/10/2026 (demande de
+    ///     l'utilisateur), il est affiché EN PERMANENCE, même quand le regard est dans la zone
+    ///     morte (rien ne défile alors) : il montre toujours où GazeBar voit le regard. Regard
+    ///     perdu ou sur le bouton retour : il reste à sa dernière place ;
+    ///   - cercle et arc sont plus transparents que dans les autres modes (demande du
+    ///     28/10/2026), pour mieux voir ce qui défile dessous ;
     ///   - un bouton « retour » au bord droit de l'écran, centré verticalement : il ramène au
     ///     mode mouvement.
     ///
     /// Le défilement :
-    ///   - ZONE MORTE = LE CERCLE : regard dans le cercle → rien ne défile (on peut lire) ;
+    ///   - ZONE MORTE = LE CERCLE DESSINÉ, de rayon [RayonCercle] × [FacteurZoneMorte] (la
+    ///     moitié, demande de l'utilisateur du 28/10/2026) : regard dedans → rien ne défile ;
     ///   - DIRECTION : regard au-dessus du cercle → vers le haut, en dessous → vers le bas,
     ///     à droite → vers la droite, à gauche → vers la gauche. Un seul sens à la fois :
     ///     celui où l'écart avec le centre est le plus grand (pas de diagonale) ;
-    ///   - VITESSE : 0 au bord du cercle, puis elle augmente avec la distance, jusqu'à
+    ///   - VITESSE : 0 au bord de la zone morte, puis elle augmente avec la distance, jusqu'à
     ///     [VitesseMaxDefilement] crans par seconde à [RayonsVitesseMax] × [RayonCercle] au-delà
-    ///     du bord (trois rayons, demande de l'utilisateur du 26/10/2026).
+    ///     du bord (trois rayons, demande de l'utilisateur du 26/10/2026). Cette distance de
+    ///     montée en vitesse se compte toujours en rayons ENTIERS de [RayonCercle] : réduire la
+    ///     zone morte a seulement rapproché le début du défilement, sans rendre la montée plus
+    ///     brusque.
     ///     Plus loin, elle ne monte plus ;
     ///   - on envoie des « événements de molette » Windows : c'est la fenêtre sous le curseur
     ///     qui défile (réglage Windows « Faire défiler les fenêtres inactives lorsque je pointe
@@ -84,6 +93,18 @@ namespace GazeBar
         /// défilement (environ 5 cm sur un écran 24 pouces en 1080p). Plus loin, rien ne défile.
         /// </summary>
         private const double MargeHorsEcran = 200;
+
+        /// <summary>
+        /// Rayon de la zone morte (et du cercle dessiné), par rapport à [RayonCercle] : la moitié
+        /// (demande de l'utilisateur du 28/10/2026). Ne change que ce mode.
+        /// </summary>
+        private const double FacteurZoneMorte = 0.5;
+
+        /// <summary>
+        /// Opacité du cercle et de l'arc, par rapport à leur opacité habituelle : 0.5 = deux fois
+        /// plus transparents (demande du 28/10/2026 : « augmenter la transparence »).
+        /// </summary>
+        private const double Opacite = 0.5;
 
         // Le point visé P (le curseur et le centre du cercle), en pixels d'écran.
         private readonly double _px;
@@ -147,7 +168,7 @@ namespace GazeBar
             _dernierTicMs = regard.MaintenantMs;
 
             ConstruireSurface();
-            calque.AfficherCercle(_px, _py, Parametres.Courants.RayonCercle, true);
+            calque.AfficherCercle(_px, _py, Parametres.Courants.RayonCercle * FacteurZoneMorte, true, Opacite);
 
             App.Log("Défilement : début en (" + _px.ToString("F0") + ", " + _py.ToString("F0") +
                     "), modificateurs : " + Modificateurs.Description());
@@ -176,10 +197,10 @@ namespace GazeBar
             // 2. Pas de regard utilisable (perdu, ou trop loin hors de l'écran), ou regard sur
             //    le bouton : rien ne défile. Un regard un peu hors de l'écran est utilisable.
             bool surRetour = regard.SurEcran && _boutons.Count > 0 && _boutons[0].Contient(regard.X, regard.Y);
+            //    L'arc reste affiché à sa dernière place.
             if (!Utilisable(regard) || surRetour)
             {
                 _reserve = 0;
-                MasquerArc();
                 return;
             }
 
@@ -195,7 +216,14 @@ namespace GazeBar
             double dx = _lisse.X - _px;
             double dy = _lisse.Y - _py;
             double distance = Math.Sqrt(dx * dx + dy * dy);
-            double rayon = p.RayonCercle;
+            double rayon = p.RayonCercle * FacteurZoneMorte;
+
+            // L'arc est dessiné dans tous les cas, même dans la zone morte. Regard exactement
+            // au centre : pas de direction, l'arc reste où il était.
+            if (distance >= 1)
+            {
+                DessinerArc(dx, dy, rayon);
+            }
 
             if (distance <= rayon)
             {
@@ -203,7 +231,6 @@ namespace GazeBar
                 // permis (voir les précautions).
                 _arme = true;
                 _reserve = 0;
-                MasquerArc();
                 return;
             }
 
@@ -213,14 +240,13 @@ namespace GazeBar
             }
 
             // 5. La direction (un seul axe : celui du plus grand écart) et la vitesse.
-            //    Vitesse : de 0 au bord du cercle à [VitesseMaxDefilement] trois rayons plus loin.
+            //    Vitesse : de 0 au bord de la zone morte à [VitesseMaxDefilement] trois
+            //    [RayonCercle] entiers plus loin (voir le commentaire de la classe).
             bool horizontale = Math.Abs(dx) > Math.Abs(dy);
             // Molette : vers le haut et vers la droite = positif (voir MouseInjector.Molette).
             int sens = horizontale ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
-            double fraction = Math.Min(1.0, (distance - rayon) / (RayonsVitesseMax * rayon));
+            double fraction = Math.Min(1.0, (distance - rayon) / (RayonsVitesseMax * p.RayonCercle));
             double cransParSeconde = fraction * p.VitesseMaxDefilement;
-
-            DessinerArc(dx, dy, rayon);
 
             // 6. La réserve de molette : on repart de zéro si la direction a changé.
             if (horizontale != _reserveHorizontale || sens != _reserveSens)
@@ -298,13 +324,14 @@ namespace GazeBar
             _arcFond = new Path();
             _arcFond.Stroke = Brushes.Black;
             _arcFond.StrokeThickness = 10;
-            _arcFond.Opacity = 0.5;
+            _arcFond.Opacity = 0.5 * Opacite;
             _arcFond.StrokeStartLineCap = PenLineCap.Round;
             _arcFond.StrokeEndLineCap = PenLineCap.Round;
             _arcFond.Visibility = Visibility.Collapsed;
             _arc = new Path();
             _arc.Stroke = new SolidColorBrush(Color.FromRgb(0x00, 0xC8, 0x53));   // le vert des anneaux
             _arc.StrokeThickness = 6;
+            _arc.Opacity = Opacite;
             _arc.StrokeStartLineCap = PenLineCap.Round;
             _arc.StrokeEndLineCap = PenLineCap.Round;
             _arc.Visibility = Visibility.Collapsed;
@@ -358,15 +385,6 @@ namespace GazeBar
             _arc.Data = forme;
             _arcFond.Visibility = Visibility.Visible;
             _arc.Visibility = Visibility.Visible;
-        }
-
-        private void MasquerArc()
-        {
-            if (_arc != null)
-            {
-                _arc.Visibility = Visibility.Collapsed;
-                _arcFond.Visibility = Visibility.Collapsed;
-            }
         }
     }
 }

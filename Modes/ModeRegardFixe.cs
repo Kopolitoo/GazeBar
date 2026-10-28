@@ -40,6 +40,12 @@ namespace GazeBar
         // Nombre de mesures de suite qu'il faut dans une nouvelle zone pour y passer.
         private const int MesuresPourChanger = 2;
 
+        /// <summary>
+        /// Zone d'activation de l'icône d'options, par rapport à l'icône dessinée : 20 % plus
+        /// grande (demande de l'utilisateur du 28/10/2026). Le dessin, lui, ne change pas.
+        /// </summary>
+        private const double FacteurZoneIcone = 1.2;
+
         // Le point fixé, en pixels d'écran.
         private readonly double _px;
         private readonly double _py;
@@ -266,7 +272,10 @@ namespace GazeBar
         /// <summary>Dans quelle zone se trouve ce point du regard ?</summary>
         private Zone ZoneDe(double x, double y, Parametres p)
         {
-            double demiCote = p.TailleIcones / 2;
+            // La zone d'activation de l'icône est un carré [FacteurZoneIcone] fois plus grand
+            // que l'icône dessinée. Elle déborde un peu sur le cercle, près du coin qui le
+            // touche : là, c'est l'icône qui l'emporte (elle est testée en premier).
+            double demiCote = p.TailleIcones * FacteurZoneIcone / 2;
             if (Math.Abs(x - _ix) <= demiCote && Math.Abs(y - _iy) <= demiCote)
             {
                 return Zone.Icone;

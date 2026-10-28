@@ -48,7 +48,13 @@ namespace GazeBar
     ///     Les touches actives sont enfoncées juste avant l'action et relâchées juste après
     ///     (voir Modificateurs.cs).
     ///
-    /// Étape 8 : l'action « Défilement » (emplacement 6) ouvre le mode défilement, centré sur P.
+    /// Actions spéciales (demande de l'utilisateur du 28/10/2026) : Copier, Couper, Coller,
+    /// trois boutons collés en haut de l'écran, hors de la couronne, comme les modificateurs
+    /// le sont au bord gauche (voir DispositionSpeciales). Ils
+    /// envoient Ctrl + C, Ctrl + X et Ctrl + V à la fenêtre active ; « Coller » fait d'abord
+    /// un clic gauche sur P, pour placer le point d'insertion là où l'on regardait.
+    ///
+    /// Étape 8 : l'action « Défilement » (emplacement 0 depuis le 28/10/2026) ouvre le mode défilement, centré sur P.
     ///
     /// Ce qui viendra plus tard :
     ///   - étape 9 : le bouton de configuration de la disposition.
@@ -69,6 +75,9 @@ namespace GazeBar
             Ctrl,
             Maj,
             Alt,
+            Copier,
+            Couper,
+            Coller,
             Retour
         }
 
@@ -94,25 +103,47 @@ namespace GazeBar
         /// partant du haut et en tournant dans le sens des aiguilles d'une montre (voir
         /// PlaceEmplacement). null = emplacement vide. À l'étape 9, cette disposition sera
         /// modifiable et enregistrée avec les paramètres ; pour l'instant elle est écrite ici.
-        ///   0 : en haut, à droite        → clic gauche (l'action la plus courante)
+        /// Ordre choisi par l'utilisateur le 28/10/2026 (défilement et clic gauche échangés,
+        /// double clic déplacé) :
+        ///   0 : en haut, à droite        → défilement (étape 8)
         ///   1 : à droite, en haut        → clic droit
         ///   2 : à droite, en bas         → glisser-déposer gauche (étape 6)
         ///   3 : en bas, à droite         → glisser-déposer droit (étape 6)
         ///   4 : en bas, à gauche         → loupe (étape 5, choix de l'utilisateur du 23/10/2026)
         ///   5 : à gauche, en bas         → glisser-déposer android (étape 6)
-        ///   6 : à gauche, en haut        → défilement (étape 8)
-        ///   7 : en haut, à gauche        → double clic (à côté du clic gauche)
+        ///   6 : à gauche, en haut        → double clic
+        ///   7 : en haut, à gauche        → clic gauche
         /// </summary>
         private static readonly ActionChoix?[] Disposition =
         {
-            ActionChoix.ClicGauche,
+            ActionChoix.Defilement,
             ActionChoix.ClicDroit,
             ActionChoix.GlisserGauche,
             ActionChoix.GlisserDroit,
             ActionChoix.Loupe,
             ActionChoix.GlisserAndroid,
-            ActionChoix.Defilement,
-            ActionChoix.DoubleClic
+            ActionChoix.DoubleClic,
+            ActionChoix.ClicGauche
+        };
+
+        /// <summary>
+        /// Zone d'activation de TOUS les boutons de ce mode (couronne, modificateurs, retour),
+        /// par rapport au carré dessiné : 30 % plus grande (demande de l'utilisateur du
+        /// 28/10/2026). Avec des boutons de 120 px séparés de [Espace] = 60 px, chaque zone
+        /// déborde de 18 px de chaque côté : il reste 24 px entre deux zones voisines.
+        /// </summary>
+        private const double FacteurZone = 1.3;
+
+        /// <summary>
+        /// Les actions spéciales, de gauche à droite : une ligne collée au bord haut de l'écran,
+        /// centrée, qui ne fait pas partie de la couronne (demande de l'utilisateur du
+        /// 28/10/2026). Elles sont réparties comme les modificateurs le long du bord gauche.
+        /// </summary>
+        private static readonly ActionChoix[] DispositionSpeciales =
+        {
+            ActionChoix.Copier,
+            ActionChoix.Couper,
+            ActionChoix.Coller
         };
 
         /// <summary>
@@ -334,6 +365,17 @@ namespace GazeBar
                 case ActionChoix.DoubleClic:
                     MouseInjector.DoubleClic();
                     break;
+                case ActionChoix.Copier:
+                    RaccourciCtrl(NativeMethods.VK_C);
+                    break;
+                case ActionChoix.Couper:
+                    RaccourciCtrl(NativeMethods.VK_X);
+                    break;
+                case ActionChoix.Coller:
+                    // Clic d'abord : le point d'insertion se place là où l'on regardait.
+                    MouseInjector.Clic(MouseSide.Left);
+                    RaccourciCtrl(NativeMethods.VK_V);
+                    break;
             }
 
             // … et relâchés juste après. (Le mode mouvement les désactivera ensuite.)
@@ -345,6 +387,20 @@ namespace GazeBar
             // Retour au mode mouvement (choix de l'utilisateur). Une nouvelle fixation au même
             // endroit est ignorée tant que le regard n'en est pas sorti, comme après un clic direct.
             Gestionnaire.ChangerMode(new ModeMouvement(_px, _py));
+        }
+
+        /// <summary>
+        /// Envoie Ctrl + touche (copier, couper, coller) à la fenêtre active. Pas de clic pour
+        /// copier et couper : un clic effacerait la sélection. Si Ctrl était déjà enfoncé par
+        /// les modificateurs, Enfoncer ne fait rien ; Maj ou Alt actifs restent ajoutés (par
+        /// exemple Ctrl + Maj + V colle sans mise en forme dans beaucoup de logiciels).
+        /// </summary>
+        private static void RaccourciCtrl(ushort touche)
+        {
+            InjecteurClavier.Enfoncer(NativeMethods.VK_CONTROL);
+            InjecteurClavier.Enfoncer(touche);
+            InjecteurClavier.Relacher(touche);
+            InjecteurClavier.Relacher(NativeMethods.VK_CONTROL);
         }
 
         // ───────────────────────── 1. La photo et l'écran noir ─────────────────────────
@@ -426,7 +482,7 @@ namespace GazeBar
             double distanceVoulue = demiPhoto + Espace + taille / 2;
             double distanceX = Math.Min(distanceVoulue, largeur / 2 - taille / 2 - 10);
             double distanceY = Math.Min(distanceVoulue, hauteur / 2 - taille / 2 - 10);
-            double decalage = (taille + Espace) / 2;   // du milieu du côté au centre de chaque bouton
+            double decalage = taille + Espace;   // du milieu du côté au centre de chaque bouton
 
             for (int i = 0; i < Disposition.Length; i++)
             {
@@ -436,12 +492,27 @@ namespace GazeBar
                 AjouterBouton(calque, ecran, Disposition[i], x, y, taille);
             }
 
+            // ── Les actions spéciales : une ligne collée au bord haut de l'écran (10 px de
+            //    marge, comme la couronne quand elle touche le bord), centrée, avec le même
+            //    calcul d'écart que la colonne des modificateurs, mais sur la largeur.
+            //    Sur un écran 1920 × 1080 : x = 440, 960 et 1480. Celui du milieu passe entre
+            //    les deux emplacements du haut de la couronne ; ceux des côtés sont au-dessus
+            //    des emplacements des côtés gauche et droit.
+            int nombreSpeciales = DispositionSpeciales.Length;
+            double ecartSpeciales = (largeur - taille * nombreSpeciales) / nombreSpeciales;
+            double ySpeciales = taille / 2 + 10;
+            for (int i = 0; i < nombreSpeciales; i++)
+            {
+                double x = cxEcran + (i - (nombreSpeciales - 1) / 2.0) * (taille + ecartSpeciales);
+                AjouterBouton(calque, ecran, DispositionSpeciales[i], x, ySpeciales, taille);
+            }
+
             // ── Les modificateurs : une colonne de trois, collée au bord gauche de l'écran
             //    (demande du 26/10/2026), à [Espace] pixels du bord, et [Espace] pixels entre
             //    eux. Un modificateur déjà actif (par exemple Ctrl choisi avant un passage par
             //    la loupe) est dessiné allumé.
             double xModificateurs = Espace + taille / 2;
-            double ecart = taille + Espace;
+            double ecart = (hauteur - taille * 3) / 3;
             int nombre = DispositionModificateurs.Length;
             for (int i = 0; i < nombre; i++)
             {
@@ -454,9 +525,8 @@ namespace GazeBar
                 }
             }
 
-            // ── L'icône « retour », à droite : à mi-chemin entre la couronne et le bord droit.
-            double xRetour = (cxEcran + distanceX + taille / 2 + largeur) / 2;
-            xRetour = Math.Min(xRetour, largeur - taille / 2 - 10);
+            // ── L'icône « retour », à droite
+            double xRetour = largeur - taille;
             AjouterBouton(calque, ecran, ActionChoix.Retour, xRetour, cyEcran, taille);
 
             // ── Le petit cercle du regard, ajouté EN DERNIER : il est ainsi dessiné par-dessus
@@ -523,6 +593,7 @@ namespace GazeBar
                                            double x, double y, double taille)
         {
             BoutonRegard bouton = action.HasValue ? CreerBouton(action.Value) : BoutonRegard.Vide(LibelleVide);
+            bouton.FacteurZone = FacteurZone;
             bouton.Placer(calque, ecran, x, y, taille);
             _boutons.Add(bouton);
             _actions.Add(action);
@@ -613,6 +684,13 @@ namespace GazeBar
                     return BoutonRegard.Texte("Maj", "Maj (activer / désactiver)");
                 case ActionChoix.Alt:
                     return BoutonRegard.Texte("Alt", "Alt (activer / désactiver)");
+                // E8C8 = copier, E8C6 = ciseaux (couper), E77F = presse-papiers (coller).
+                case ActionChoix.Copier:
+                    return new BoutonRegard("\uE8C8", null, "Copier (Ctrl + C)");
+                case ActionChoix.Couper:
+                    return new BoutonRegard("\uE8C6", null, "Couper (Ctrl + X)");
+                case ActionChoix.Coller:
+                    return new BoutonRegard("\uE77F", null, "Coller ici (clic, puis Ctrl + V)");
                 default:
                     return new BoutonRegard("", null, "Retour");
             }

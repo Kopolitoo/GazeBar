@@ -23,16 +23,24 @@ namespace GazeBar
     ///                « Quitter le jeu » et ramène au mode mouvement ;
     ///   Calibration  lance l'outil de calibration Tobii (mode calibration) ;
     ///   Clavier      ouvre le clavier visuel de Windows, puis ferme le menu ;
-    ///   Pause        passe en mode pause. Si l'on vient du mode pause, ce bouton devient
-    ///                « Reprendre » et ramène au mode mouvement ;
+    ///   Pause        passe en mode pause ;
     ///   Suivi souris interrupteur : bord vert quand l'option est activée. Le menu reste
     ///                ouvert ; il faut quitter le bouton du regard pour pouvoir l'actionner
     ///                de nouveau ;
     ///   Diagnostic   ouvre la fenêtre Diagnostic (ajout : elle était dans l'ancienne barre) ;
     ///   Quitter      demande une confirmation (« Oui, quitter » / « Non »), puis ferme GazeBar.
     ///
-    /// Un petit cercle (moitié de [RayonCercle]) montre où est le regard, comme dans le choix
-    /// d'action.
+    /// Depuis le mode jeu, le bouton « Quitter le jeu » a un bord vert, comme un interrupteur
+    /// allumé : il montre que le mode jeu est actif (demande de l'utilisateur du 28/10/2026).
+    ///
+    /// Depuis le mode PAUSE (demande de l'utilisateur du 28/10/2026) : la barre ne montre
+    /// d'abord QUE le bouton « Reprendre » (lecture). Ainsi, pendant la pause, un regard vers
+    /// le bas ne peut rien déclencher d'autre. Activé, il met fin à la pause et ramène
+    /// directement au mode mouvement. Pour les autres boutons, on rouvre ensuite le menu.
+    ///
+    /// Le cercle du regard garde sa taille normale ([RayonCercle], comme en mode mouvement :
+    /// demande de l'utilisateur du 28/10/2026 ; avant, il était réduit de moitié). Il est
+    /// caché tant que le regard est dans la zone de la barre.
     ///
     /// Sortie : quand le regard quitte la barre pendant [DelaiFermetureMenu], elle disparaît
     /// et on revient au mode précédent. Le regard en bas, hors de l'écran, compte comme
@@ -90,6 +98,10 @@ namespace GazeBar
         // Vrai si la barre a pu être construite (le calque est affiché).
         private bool _construite;
 
+        // Vrai une fois la barre affichée depuis l'entrée dans le menu : seule la première
+        // apparition est animée (pas la barre « Oui / Non » de la confirmation).
+        private bool _dejaAffichee;
+
         // La zone de la barre (avec sa marge), en pixels d'écran.
         private double _zoneGauche;
         private double _zoneDroite;
@@ -98,7 +110,7 @@ namespace GazeBar
         // Instant (ms) où le regard a quitté la barre ; -1 = il est dedans.
         private double _debutHorsBarreMs = -1;
 
-        // Le petit cercle du regard : position lissée en pixels d'écran.
+        // Le cercle du regard : position lissée en pixels d'écran.
         private readonly Lisseur _lisse = new Lisseur();
         private bool _cerclePlace;
 
@@ -119,13 +131,14 @@ namespace GazeBar
             _confirmation = false;
             _message = null;
             _debutHorsBarreMs = -1;
+            _dejaAffichee = false;
 
             OverlayWindow calque = Gestionnaire.Calque;
             calque.MasquerAnneau();
             calque.MasquerIcone();
             calque.MasquerEcranChoix();
 
-            // Le petit cercle part de là où est le cercle actuel (pas de saut), sinon il
+            // Le cercle part de là où est le cercle actuel (pas de saut), sinon il
             // apparaîtra à la première mesure du regard sur l'écran.
             _cerclePlace = calque.CercleAffiche;
             if (_cerclePlace)
@@ -174,7 +187,10 @@ namespace GazeBar
                 }
             }
 
-            // 3. Le petit cercle du regard (seulement quand le regard est sur l'écran).
+            // 3. Le cercle du regard (seulement quand le regard est sur l'écran).
+            //    Il est caché quand le regard est dans la zone de la barre (avec sa marge) : il
+            //    gênerait la lecture des boutons (demande de l'utilisateur du 28/10/2026). Sa
+            //    position continue d'être suivie : il réapparaît sans saut en sortant de la zone.
             if (regard.SurEcran)
             {
                 if (!_cerclePlace)
@@ -183,14 +199,27 @@ namespace GazeBar
                     _cerclePlace = true;
                 }
                 _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
-                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle / 2, false);
+                if (DansLaBarre(regard))
+                {
+                    Gestionnaire.Calque.MasquerCercle();
+                }
+                else
+                {
+                    Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
+                }
+            }
+            else if (regard.EnBasHorsEcran)
+            {
+                // En bas, hors de l'écran : c'est aussi « dans la barre ».
+                Gestionnaire.Calque.MasquerCercle();
             }
         }
 
         public override void Quitter()
         {
-            // La barre est cachée. Le petit cercle reste : le mode suivant le reprend là où il est.
-            Gestionnaire.Calque.MasquerBarreMenu();
+            // La barre est cachée. Le cercle reste : le mode suivant le reprend là où il est.
+            // Fermeture animée (voir OverlayWindow.MasquerBarreMenu).
+            Gestionnaire.Calque.MasquerBarreMenu(true);
             _boutons.Clear();
             _actions.Clear();
         }
@@ -248,6 +277,8 @@ namespace GazeBar
                     break;
 
                 case ActionMenu.Reprendre:
+                    // Fin de la pause : retour direct au mode mouvement, sans afficher les
+                    // autres boutons (choix de l'utilisateur du 28/10/2026).
                     Gestionnaire.ChangerMode(new ModeMouvement());
                     break;
 
@@ -373,7 +404,12 @@ namespace GazeBar
             // ── Les boutons à afficher.
             List<BoutonRegard> boutons = new List<BoutonRegard>();
             List<ActionMenu?> actions = new List<ActionMenu?>();
-            if (_confirmation)
+            if (_retour is ModePause && !_confirmation)
+            {
+                // Pendant la pause : seul le bouton « Reprendre » (E768 = lecture).
+                Ajouter(boutons, actions, new BoutonRegard("", null, "Reprendre"), ActionMenu.Reprendre);
+            }
+            else if (_confirmation)
             {
                 // « Non » est à droite, « Oui » à gauche. La barre est plus courte et centrée :
                 // aucun des deux n'est à la place de l'ancien bouton « Quitter » (tout à droite),
@@ -389,7 +425,10 @@ namespace GazeBar
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Paramètres"), ActionMenu.Parametres);
                 if (_retour is ModeJeu)
                 {
-                    Ajouter(boutons, actions, new BoutonRegard("\uE7FC", null, "Quitter le jeu"), ActionMenu.QuitterJeu);
+                    // Bord vert : le mode jeu est actif.
+                    BoutonRegard quitterJeu = new BoutonRegard("\uE7FC", null, "Quitter le jeu");
+                    quitterJeu.DefinirAllume(true);
+                    Ajouter(boutons, actions, quitterJeu, ActionMenu.QuitterJeu);
                 }
                 else
                 {
@@ -397,14 +436,9 @@ namespace GazeBar
                 }
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Calibration"), ActionMenu.Calibration);
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier visuel"), ActionMenu.Clavier);
-                if (_retour is ModePause)
-                {
-                    Ajouter(boutons, actions, new BoutonRegard("", null, "Reprendre"), ActionMenu.Reprendre);
-                }
-                else
-                {
-                    Ajouter(boutons, actions, new BoutonRegard("", null, "Pause"), ActionMenu.Pause);
-                }
+                // (Depuis la pause, seul « Reprendre » est affiché : ici, on n'est donc
+                // jamais en pause.)
+                Ajouter(boutons, actions, new BoutonRegard("", null, "Pause"), ActionMenu.Pause);
                 BoutonRegard suivi = new BoutonRegard("", null, "Suivi souris");
                 suivi.DefinirAllume(p.SuiviSouris);
                 Ajouter(boutons, actions, suivi, ActionMenu.SuiviSouris);
@@ -484,7 +518,9 @@ namespace GazeBar
             // regard ne s'active pas tant que le regard ne l'a pas quitté.
             _viseur.ReinitialiserEtBloquer();
 
-            calque.AfficherBarreMenu();
+            // Première apparition depuis l'entrée dans le menu : animée (voir AfficherBarreMenu).
+            calque.AfficherBarreMenu(!_dejaAffichee);
+            _dejaAffichee = true;
             _construite = true;
         }
 

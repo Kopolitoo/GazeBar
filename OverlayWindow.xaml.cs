@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
@@ -156,15 +157,25 @@ namespace GazeBar
         /// </summary>
         public void AfficherCercle(double xPixels, double yPixels, double rayonPixels, bool fixe)
         {
+            AfficherCercle(xPixels, yPixels, rayonPixels, fixe, 1.0);
+        }
+
+        /// <summary>
+        /// Comme ci-dessus, avec une opacité réduite : attenuation = 1 → opacité habituelle,
+        /// 0.5 → deux fois plus transparent (mode défilement, demande du 28/10/2026).
+        /// </summary>
+        public void AfficherCercle(double xPixels, double yPixels, double rayonPixels, bool fixe,
+                                   double attenuation)
+        {
             CercleX = xPixels;
             CercleY = yPixels;
             CercleAffiche = true;
 
             Cercle.Stroke = fixe ? PinceauFixe : PinceauMouvement;
             Cercle.StrokeThickness = fixe ? 1.5 : 1;
-            Cercle.Opacity = fixe ? 0.6 : 0.3;
-           CercleFond.StrokeThickness = fixe ? 2.5 : 2;
-            CercleFond.Opacity = fixe ? 0.7 : 0.5;
+            Cercle.Opacity = (fixe ? 0.6 : 0.3) * attenuation;
+            CercleFond.StrokeThickness = fixe ? 2.5 : 2;
+            CercleFond.Opacity = (fixe ? 0.7 : 0.5) * attenuation;
 
             // Pas encore affichée à l'écran : rien à dessiner (PointFromScreen échouerait).
             if (PresentationSource.FromVisual(this) == null)
@@ -322,15 +333,142 @@ namespace GazeBar
             Canvas.SetTop(BarreMenu, 0);
         }
 
-        public void AfficherBarreMenu()
+        /// <summary>Durée de l'animation d'apparition de la barre de menu, en millisecondes.</summary>
+        private const double DureeApparitionMenuMs = 250;
+
+        /// <summary>
+        /// Distance parcourue par la barre pendant l'apparition, en unités WPF : elle monte
+        /// depuis un peu plus bas que sa place finale.
+        /// </summary>
+        private const double MonteeApparitionMenu = 80;
+
+        /// <summary>
+        /// Affiche la barre de menu.
+        /// anime = vrai : petite animation d'apparition (demande de l'utilisateur du 28/10/2026) :
+        /// la barre monte de [MonteeApparitionMenu] unités jusqu'à sa place, en passant de
+        /// transparente à opaque, en [DureeApparitionMenuMs] ms. Elle ralentit à la fin
+        /// (« EaseOut »), ce qui paraît plus naturel qu'une vitesse constante.
+        /// Ce sont les animations intégrées à WPF : aucune dépendance en plus.
+        /// Les zones d'activation des boutons sont tout de suite à leur place finale : pendant
+        /// ce quart de seconde, seul le dessin bouge (le délai d'activation est bien plus long).
+        /// </summary>
+        public void AfficherBarreMenu(bool anime = false)
         {
+            // Une fermeture animée encore en cours est annulée : sa fin ne doit pas cacher
+            // la barre qu'on est en train d'afficher.
+            _fermetureMenu = null;
             BarreMenu.Visibility = Visibility.Visible;
+
+            // Un TranslateTransform décale le dessin de la surface sans changer sa position.
+            TranslateTransform decalage = BarreMenu.RenderTransform as TranslateTransform;
+            if (decalage == null)
+            {
+                decalage = new TranslateTransform();
+                BarreMenu.RenderTransform = decalage;
+            }
+
+            if (!anime)
+            {
+                // Pas d'animation (par exemple la barre reconstruite pour « Oui / Non ») : si une
+                // apparition est encore en cours, on la laisse finir.
+                return;
+            }
+
+            Duration duree = new Duration(TimeSpan.FromMilliseconds(DureeApparitionMenuMs));
+            CubicEase ralenti = new CubicEase();
+            ralenti.EasingMode = EasingMode.EaseOut;
+
+            DoubleAnimation montee = new DoubleAnimation(MonteeApparitionMenu, 0, duree);
+            montee.EasingFunction = ralenti;
+            DoubleAnimation fondu = new DoubleAnimation(0, 1, duree);
+            fondu.EasingFunction = ralenti;
+
+            // BeginAnimation remplace une animation déjà en cours sur la même propriété.
+            decalage.BeginAnimation(TranslateTransform.YProperty, montee);
+            BarreMenu.BeginAnimation(OpacityProperty, fondu);
         }
 
-        /// <summary>Cache la barre de menu (son contenu est gardé jusqu'au prochain PreparerBarreMenu).</summary>
-        public void MasquerBarreMenu()
+        /// <summary>Durée de l'animation de fermeture de la barre de menu, en millisecondes.</summary>
+        private const double DureeFermetureMenuMs = 200;
+
+        // L'animation de fermeture en cours, ou null. Sert à reconnaître, quand une animation se
+        // termine, si c'est bien la dernière fermeture demandée (et pas une fermeture annulée
+        // parce que le menu a été rouvert entre-temps).
+        private DoubleAnimation _fermetureMenu;
+
+        /// <summary>
+        /// Cache la barre de menu (son contenu est gardé jusqu'au prochain PreparerBarreMenu).
+        /// anime = vrai : petite animation de fermeture (demande de l'utilisateur du 28/10/2026),
+        /// l'inverse de l'apparition : la barre redescend de [MonteeApparitionMenu] unités en
+        /// devenant transparente, en [DureeFermetureMenuMs] ms, en accélérant (« EaseIn »).
+        /// Les boutons ne réagissent déjà plus au regard : seul le dessin s'efface.
+        /// anime = faux (par défaut) : la barre disparaît tout de suite. C'est le cas de
+        /// MasquerTout, appelé par exemple avant une photo d'écran : là, il ne faut rien attendre.
+        /// </summary>
+        public void MasquerBarreMenu(bool anime = false)
         {
-            BarreMenu.Visibility = Visibility.Collapsed;
+            if (!anime || BarreMenu.Visibility != Visibility.Visible)
+            {
+                _fermetureMenu = null;
+                BarreMenu.Visibility = Visibility.Collapsed;
+                RemettreBarreMenuEnPlace();
+                return;
+            }
+
+            TranslateTransform decalage = BarreMenu.RenderTransform as TranslateTransform;
+            if (decalage == null)
+            {
+                decalage = new TranslateTransform();
+                BarreMenu.RenderTransform = decalage;
+            }
+
+            Duration duree = new Duration(TimeSpan.FromMilliseconds(DureeFermetureMenuMs));
+            CubicEase accelere = new CubicEase();
+            accelere.EasingMode = EasingMode.EaseIn;
+
+            // « null » comme point de départ : l'animation part de la valeur actuelle (utile si
+            // l'apparition n'était pas finie).
+            DoubleAnimation descente = new DoubleAnimation();
+            descente.To = MonteeApparitionMenu;
+            descente.Duration = duree;
+            descente.EasingFunction = accelere;
+            DoubleAnimation fondu = new DoubleAnimation();
+            fondu.To = 0;
+            fondu.Duration = duree;
+            fondu.EasingFunction = accelere;
+
+            // À la fin du fondu : la barre est cachée pour de bon, sauf si le menu a été
+            // rouvert entre-temps (alors _fermetureMenu a changé).
+            _fermetureMenu = fondu;
+            fondu.Completed += (s, e) =>
+            {
+                if (_fermetureMenu == fondu)
+                {
+                    _fermetureMenu = null;
+                    BarreMenu.Visibility = Visibility.Collapsed;
+                    RemettreBarreMenuEnPlace();
+                }
+            };
+
+            decalage.BeginAnimation(TranslateTransform.YProperty, descente);
+            BarreMenu.BeginAnimation(OpacityProperty, fondu);
+        }
+
+        /// <summary>
+        /// Arrête les animations de la barre et la remet à sa place, opaque. Sans cela, la fin
+        /// d'une animation « garde » sa dernière valeur (barre transparente et décalée).
+        /// BeginAnimation(…, null) retire l'animation : la propriété retrouve sa vraie valeur.
+        /// </summary>
+        private void RemettreBarreMenuEnPlace()
+        {
+            BarreMenu.BeginAnimation(OpacityProperty, null);
+            TranslateTransform decalage = BarreMenu.RenderTransform as TranslateTransform;
+            if (decalage != null)
+            {
+                decalage.BeginAnimation(TranslateTransform.YProperty, null);
+                decalage.Y = 0;
+            }
+            BarreMenu.Opacity = 1;
         }
 
         // ───────────────────────── Surface du glisser-déposer (étape 6) ─────────────────────────

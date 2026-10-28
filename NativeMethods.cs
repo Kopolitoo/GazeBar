@@ -111,6 +111,9 @@ namespace GazeBar
         internal const ushort VK_SHIFT = 0x10;    // Maj
         internal const ushort VK_CONTROL = 0x11;  // Ctrl
         internal const ushort VK_MENU = 0x12;     // Alt (Windows l'appelle « menu »)
+        internal const ushort VK_C = 0x43;        // touche C (copier, avec Ctrl)
+        internal const ushort VK_V = 0x56;        // touche V (coller, avec Ctrl)
+        internal const ushort VK_X = 0x58;        // touche X (couper, avec Ctrl)
 
         /// <summary>Simule des actions de souris ou de clavier, comme si elles venaient du matériel.</summary>
         [DllImport("user32.dll", SetLastError = true)]

@@ -51,9 +51,11 @@ namespace GazeBar
         ///       remplacent DureeAppuiLong, DelaiDepot, DistanceMinGlisser et DureeMaxAppui,
         ///       supprimés (règle de l'utilisateur : un réglage qui ne sert plus est retiré) ;
         ///   4 : étape 9 — LissageJeu passe de 0.7 à 0.16 par défaut (essai de l'utilisateur
-        ///       du 28/10/2026 : à 0.7, le curseur saccadait en souris directe).
+        ///       du 28/10/2026 : à 0.7, le curseur saccadait en souris directe) ;
+        ///   5 : VitesseMaxDefilement passe de 10 à 15 crans/s par défaut (vitesse maximale du
+        ///       défilement augmentée de moitié, demande de l'utilisateur du 28/10/2026).
         /// </summary>
-        public const int VersionActuelle = 4;
+        public const int VersionActuelle = 5;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -175,8 +177,9 @@ namespace GazeBar
 
         /// <summary>
         /// Vitesse maximale du mode défilement, en crans de molette par seconde (étape 8).
-        /// La vitesse vaut 0 au bord du cercle et atteint cette valeur trois [RayonCercle] plus
-        /// loin ; au-delà, elle ne monte plus.
+        /// La vitesse vaut 0 au bord de la zone morte (la moitié de [RayonCercle]) et atteint
+        /// cette valeur trois [RayonCercle] plus loin ; au-delà, elle ne monte plus.
+        /// 15 par défaut depuis le 28/10/2026 (10 avant).
         /// </summary>
         [DataMember(Order = 71)]
         public double VitesseMaxDefilement { get; set; }
@@ -292,7 +295,7 @@ namespace GazeBar
             DureePauseAndroid = 1.0;
             DureeGlisser = 0.5;
 
-            VitesseMaxDefilement = 10;
+            VitesseMaxDefilement = 15;
 
             LissageJeu = 0.16;
             SensibiliteJeu = 1.0;
@@ -396,6 +399,16 @@ namespace GazeBar
                     LissageJeu = 0.16;
                 }
                 App.Log("Paramètres : mise à jour en version 4 (LissageJeu 0.7 → 0.16)");
+            }
+
+            if (VersionFichier < 5)
+            {
+                // Seul l'ancien défaut est remplacé : une valeur choisie par l'utilisateur reste.
+                if (Math.Abs(VitesseMaxDefilement - 10) < 0.001)
+                {
+                    VitesseMaxDefilement = 15;
+                }
+                App.Log("Paramètres : mise à jour en version 5 (VitesseMaxDefilement 10 → 15)");
             }
             VersionFichier = VersionActuelle;
             return true;
