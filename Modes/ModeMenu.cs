@@ -90,6 +90,10 @@ namespace GazeBar
         // Vrai si la barre a pu être construite (le calque est affiché).
         private bool _construite;
 
+        // Vrai une fois la barre affichée depuis l'entrée dans le menu : seule la première
+        // apparition est animée (pas la barre « Oui / Non » de la confirmation).
+        private bool _dejaAffichee;
+
         // La zone de la barre (avec sa marge), en pixels d'écran.
         private double _zoneGauche;
         private double _zoneDroite;
@@ -119,6 +123,7 @@ namespace GazeBar
             _confirmation = false;
             _message = null;
             _debutHorsBarreMs = -1;
+            _dejaAffichee = false;
 
             OverlayWindow calque = Gestionnaire.Calque;
             calque.MasquerAnneau();
@@ -484,7 +489,9 @@ namespace GazeBar
             // regard ne s'active pas tant que le regard ne l'a pas quitté.
             _viseur.ReinitialiserEtBloquer();
 
-            calque.AfficherBarreMenu();
+            // Première apparition depuis l'entrée dans le menu : animée (voir AfficherBarreMenu).
+            calque.AfficherBarreMenu(!_dejaAffichee);
+            _dejaAffichee = true;
             _construite = true;
         }
 

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
@@ -332,9 +333,56 @@ namespace GazeBar
             Canvas.SetTop(BarreMenu, 0);
         }
 
-        public void AfficherBarreMenu()
+        /// <summary>Durée de l'animation d'apparition de la barre de menu, en millisecondes.</summary>
+        private const double DureeApparitionMenuMs = 250;
+
+        /// <summary>
+        /// Distance parcourue par la barre pendant l'apparition, en unités WPF : elle monte
+        /// depuis un peu plus bas que sa place finale.
+        /// </summary>
+        private const double MonteeApparitionMenu = 80;
+
+        /// <summary>
+        /// Affiche la barre de menu.
+        /// anime = vrai : petite animation d'apparition (demande de l'utilisateur du 28/10/2026) :
+        /// la barre monte de [MonteeApparitionMenu] unités jusqu'à sa place, en passant de
+        /// transparente à opaque, en [DureeApparitionMenuMs] ms. Elle ralentit à la fin
+        /// (« EaseOut »), ce qui paraît plus naturel qu'une vitesse constante.
+        /// Ce sont les animations intégrées à WPF : aucune dépendance en plus.
+        /// Les zones d'activation des boutons sont tout de suite à leur place finale : pendant
+        /// ce quart de seconde, seul le dessin bouge (le délai d'activation est bien plus long).
+        /// </summary>
+        public void AfficherBarreMenu(bool anime = false)
         {
             BarreMenu.Visibility = Visibility.Visible;
+
+            // Un TranslateTransform décale le dessin de la surface sans changer sa position.
+            TranslateTransform decalage = BarreMenu.RenderTransform as TranslateTransform;
+            if (decalage == null)
+            {
+                decalage = new TranslateTransform();
+                BarreMenu.RenderTransform = decalage;
+            }
+
+            if (!anime)
+            {
+                // Pas d'animation (par exemple la barre reconstruite pour « Oui / Non ») : si une
+                // apparition est encore en cours, on la laisse finir.
+                return;
+            }
+
+            Duration duree = new Duration(TimeSpan.FromMilliseconds(DureeApparitionMenuMs));
+            CubicEase ralenti = new CubicEase();
+            ralenti.EasingMode = EasingMode.EaseOut;
+
+            DoubleAnimation montee = new DoubleAnimation(MonteeApparitionMenu, 0, duree);
+            montee.EasingFunction = ralenti;
+            DoubleAnimation fondu = new DoubleAnimation(0, 1, duree);
+            fondu.EasingFunction = ralenti;
+
+            // BeginAnimation remplace une animation déjà en cours sur la même propriété.
+            decalage.BeginAnimation(TranslateTransform.YProperty, montee);
+            BarreMenu.BeginAnimation(OpacityProperty, fondu);
         }
 
         /// <summary>Cache la barre de menu (son contenu est gardé jusqu'au prochain PreparerBarreMenu).</summary>
