@@ -22,6 +22,9 @@ namespace GazeBar
     ///   - à droite : « Défaut » en haut (remet les valeurs de l'onglet affiché, après
     ///     confirmation) et « Retour » au milieu du bord (retour au mode mouvement).
     ///
+    /// Étape 10 : un neuvième onglet, « Icônes », avec un seul gros bouton « Configurer les
+    /// icônes » qui demande au mode d'ouvrir l'écran de configuration (ModeConfigIcones).
+    ///
     /// POURQUOI UNE VRAIE FENÊTRE, et pas un dessin sur le calque comme les autres modes ?
     /// Le calque laisse passer les clics et ne prend jamais le clavier. Or l'aidant doit
     /// pouvoir cliquer à la souris et taper une valeur au clavier (ou la dicter). Cette
@@ -90,8 +93,14 @@ namespace GazeBar
         // Vrai quand c'est le mode qui ferme la fenêtre (et non Alt+F4, par exemple).
         private bool _fermetureDemandee;
 
-        public FenetreParametres()
+        /// <summary>
+        /// Crée la fenêtre, ouverte sur l'onglet numéro « onglet » (0 = le premier). Au retour
+        /// de l'écran de configuration des icônes, elle s'ouvre sur l'onglet « Icônes ».
+        /// </summary>
+        public FenetreParametres(int onglet = 0)
         {
+            _onglet = Math.Max(0, Math.Min(onglet, CatalogueParametres.Onglets.Count - 1));
+
             Title = "GazeBar — Paramètres";
             WindowStyle = WindowStyle.None;
             ResizeMode = ResizeMode.NoResize;
@@ -130,6 +139,9 @@ namespace GazeBar
 
         /// <summary>Demande de retour au mode mouvement (bouton « Retour », ou fermeture par Windows).</summary>
         public event Action RetourDemande;
+
+        /// <summary>Bouton « Configurer les icônes » de l'onglet « Icônes » (étape 10).</summary>
+        public event Action ConfigurationIconesDemandee;
 
         /// <summary>
         /// Les cibles du regard. La même liste est gardée d'un bout à l'autre : elle est
@@ -322,6 +334,10 @@ namespace GazeBar
                 {
                     ConstruireInfoFichier(LigneHaut + onglet.Reglages.Count * LignePas);
                 }
+                if (onglet.Nom == CatalogueParametres.NomOngletIcones)
+                {
+                    ConstruireOngletIcones();
+                }
             }
 
             // ── La colonne de droite : « Défaut » en haut, « Retour » au milieu du bord.
@@ -419,13 +435,59 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// Onglet « Icônes » (étape 10) : une explication, puis un gros bouton qui ouvre l'écran
+        /// de configuration des icônes du choix d'action. E71D = grille de carrés.
+        /// </summary>
+        private void ConstruireOngletIcones()
+        {
+            StackPanel textes = new StackPanel();
+            textes.Children.Add(Texte("Icônes du choix d'action", 36, Blanc, true));
+            TextBlock explication = Texte(
+                "Choisir les actions de la couronne, des modificateurs (bord gauche) et des boutons " +
+                "Copier, Couper, Coller (bord haut). Un emplacement peut rester vide.", 23, Doux, false);
+            explication.TextWrapping = TextWrapping.Wrap;
+            explication.Width = 1140;
+            explication.Margin = new Thickness(0, 6, 0, 0);
+            textes.Children.Add(explication);
+            Placer(textes, ContenuGauche, LigneHaut + 20);
+
+            StackPanel bouton = new StackPanel();
+            bouton.Orientation = Orientation.Horizontal;
+            bouton.HorizontalAlignment = HorizontalAlignment.Center;
+            bouton.VerticalAlignment = VerticalAlignment.Center;
+            TextBlock symbole = Texte("\uE71D", 60, Blanc, false);
+            symbole.FontFamily = new FontFamily(PoliceIcones);
+            symbole.VerticalAlignment = VerticalAlignment.Center;
+            symbole.Margin = new Thickness(0, 0, 30, 0);
+            bouton.Children.Add(symbole);
+            TextBlock mot = Texte("Configurer les icônes", 42, Blanc, true);
+            mot.VerticalAlignment = VerticalAlignment.Center;
+            bouton.Children.Add(mot);
+
+            AjouterCible(ContenuGauche + 170, 420, 800, 180, bouton, DemanderConfigurationIcones, false, false);
+        }
+
+        private void DemanderConfigurationIcones()
+        {
+            ValiderSaisie();
+            Action abonnes = ConfigurationIconesDemandee;
+            if (abonnes != null)
+            {
+                abonnes();
+            }
+        }
+
+        /// <summary>
         /// La confirmation de « Défaut ». « Oui » et « Non » sont au milieu de la page, loin du
         /// bouton « Défaut » (en haut à droite) : on ne confirme jamais en continuant
         /// simplement à regarder au même endroit.
         /// </summary>
         private void ConstruireConfirmation(Onglet onglet)
         {
-            TextBlock question = Texte("Remettre les valeurs par défaut de l'onglet « " + onglet.Nom + " » ?", 40, Blanc, true);
+            string texteQuestion = onglet.Nom == CatalogueParametres.NomOngletIcones
+                ? "Remettre la disposition d'origine des icônes du choix d'action ?"
+                : "Remettre les valeurs par défaut de l'onglet « " + onglet.Nom + " » ?";
+            TextBlock question = Texte(texteQuestion, 40, Blanc, true);
             question.TextWrapping = TextWrapping.Wrap;
             question.Width = 1140;
             Placer(question, ContenuGauche, 300);
@@ -484,6 +546,10 @@ namespace GazeBar
         private void RemettreDefaut(Onglet onglet)
         {
             Parametres defaut = new Parametres();
+            if (onglet.Nom == CatalogueParametres.NomOngletIcones)
+            {
+                P.IconesParDefaut();   // l'onglet « Icônes » n'a pas de réglage, mais une disposition
+            }
             foreach (Reglage reglage in onglet.Reglages)
             {
                 reglage.Copier(defaut, P);

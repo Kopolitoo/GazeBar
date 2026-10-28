@@ -134,6 +134,14 @@ namespace GazeBar
             {
                 return;
             }
+
+            // Écran de configuration des icônes (étape 10) : Échap ramène aux paramètres.
+            ModeConfigIcones configuration = _modes.ModeCourant as ModeConfigIcones;
+            if (configuration != null)
+            {
+                configuration.RetourParametres();
+                return;
+            }
             App.Log("Touche Échap : retour au mode mouvement");
             MouseInjector.ReleaseAll();
             InjecteurClavier.RelacherTout();

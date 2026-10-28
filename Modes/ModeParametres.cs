@@ -21,6 +21,9 @@ namespace GazeBar
     ///     faut quitter la cible du regard pour l'activer de nouveau ;
     ///   - un petit cercle gris (50 px) montre où est le regard.
     ///
+    /// Étape 10 : le bouton « Configurer les icônes » de l'onglet « Icônes » ouvre l'écran de
+    /// configuration des icônes (ModeConfigIcones), qui revient ici, sur cet onglet.
+    ///
     /// Sortie : bouton « Retour » (au milieu du bord droit) ou touche Échap de l'aidant,
     /// vers le mode mouvement. Le menu du bas ne s'ouvre pas ici (Mode.MenuAutorise reste
     /// « non », règle du 25/10/2026).
@@ -35,6 +38,9 @@ namespace GazeBar
         /// <summary>Intervalle de la répétition sur « − » et « + », en secondes.</summary>
         private const double DelaiRepetition = 0.4;
 
+        // L'onglet affiché à l'ouverture (0 = le premier).
+        private readonly int _ongletDepart;
+
         private FenetreParametres _fenetre;
         private ViseurBoutons _viseur;
 
@@ -48,6 +54,12 @@ namespace GazeBar
         private readonly Lisseur _lisse = new Lisseur();
         private bool _cerclePlace;
 
+        /// <summary>Ouvre les paramètres sur l'onglet numéro « onglet » (le premier si on ne le donne pas).</summary>
+        public ModeParametres(int onglet = 0)
+        {
+            _ongletDepart = onglet;
+        }
+
         public override string Nom
         {
             get { return "Paramètres"; }
@@ -58,8 +70,9 @@ namespace GazeBar
             // Rien sur le calque pendant ce mode : tout est dans la fenêtre.
             Gestionnaire.Calque.MasquerTout();
 
-            _fenetre = new FenetreParametres();
+            _fenetre = new FenetreParametres(_ongletDepart);
             _fenetre.RetourDemande += Retour;
+            _fenetre.ConfigurationIconesDemandee += OuvrirConfigurationIcones;
             _fenetre.Show();
             // Activate : la fenêtre prend le clavier, pour que l'aidant puisse taper une valeur.
             // (Windows peut le refuser si un autre programme est au premier plan ; un clic de
@@ -151,6 +164,7 @@ namespace GazeBar
                 FenetreParametres fenetre = _fenetre;
                 _fenetre = null;
                 fenetre.RetourDemande -= Retour;
+                fenetre.ConfigurationIconesDemandee -= OuvrirConfigurationIcones;
                 fenetre.Fermer();
             }
         }
@@ -162,6 +176,13 @@ namespace GazeBar
         public bool AnnulerSaisie()
         {
             return _fenetre != null && _fenetre.AnnulerSaisie();
+        }
+
+        /// <summary>Bouton « Configurer les icônes » : ouvre l'écran de configuration des icônes.</summary>
+        private void OuvrirConfigurationIcones()
+        {
+            App.Log("Paramètres : configuration des icônes");
+            Gestionnaire.ChangerMode(new ModeConfigIcones());
         }
 
         /// <summary>Bouton « Retour » : retour au mode mouvement.</summary>

@@ -225,10 +225,23 @@ namespace GazeBar
     /// Pour ajouter un réglage plus tard : l'ajouter dans Parametres.cs (avec sa valeur par
     /// défaut et ses limites dans Corriger), puis ici, dans l'onglet voulu (cinq au plus par
     /// onglet, pour que rien ne défile). L'onglet « Défilement » est ajouté à l'étape 8,
-    /// l'onglet « Jeu » à l'étape 9.
+    /// l'onglet « Jeu » à l'étape 9, l'onglet « Icônes » à l'étape 10.
+    ///
+    /// L'onglet « Icônes » est particulier : il n'a pas de réglage « − / + », mais un gros
+    /// bouton qui ouvre l'écran de configuration des icônes du choix d'action
+    /// (ModeConfigIcones). Son bouton « Défaut » remet la disposition d'origine des icônes.
     /// </summary>
     internal static class CatalogueParametres
     {
+        /// <summary>Le nom de l'onglet « Icônes » (étape 10), reconnu par FenetreParametres.</summary>
+        public const string NomOngletIcones = "Icônes";
+
+        /// <summary>Le numéro de l'onglet « Icônes » dans la liste (pour y revenir après la configuration).</summary>
+        public static int NumeroOngletIcones
+        {
+            get { return Math.Max(0, Onglets.FindIndex(o => o.Nom == NomOngletIcones)); }
+        }
+
         public static readonly List<Onglet> Onglets = new List<Onglet>
         {
             // E7B3 = œil (« Regard »)
@@ -303,6 +316,10 @@ namespace GazeBar
                                p => p.LissageJeu, (p, v) => p.LissageJeu = v),
                 Reglage.Nombre("Sensibilité", "Souris relative : multiplie les déplacements", " ×", 0.1,
                                p => p.SensibiliteJeu, (p, v) => p.SensibiliteJeu = v)),
+
+            // E71D = grille de carrés (« Icônes », étape 10) : pas de réglage, un bouton
+            // « Configurer les icônes » (voir FenetreParametres.ConstruireOngletIcones).
+            new Onglet(NomOngletIcones, "\uE71D"),
 
             // E713 = engrenage (« Général »)
             new Onglet("Général", "",
