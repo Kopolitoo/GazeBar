@@ -23,13 +23,21 @@ namespace GazeBar
     ///                « Quitter le jeu » et ramène au mode mouvement ;
     ///   Calibration  lance l'outil de calibration Tobii (mode calibration) ;
     ///   Clavier      ouvre le clavier visuel de Windows, puis ferme le menu ;
-    ///   Pause        passe en mode pause. Si l'on vient du mode pause, ce bouton devient
-    ///                « Reprendre » et ramène au mode mouvement ;
+    ///   Pause        passe en mode pause ;
     ///   Suivi souris interrupteur : bord vert quand l'option est activée. Le menu reste
     ///                ouvert ; il faut quitter le bouton du regard pour pouvoir l'actionner
     ///                de nouveau ;
     ///   Diagnostic   ouvre la fenêtre Diagnostic (ajout : elle était dans l'ancienne barre) ;
     ///   Quitter      demande une confirmation (« Oui, quitter » / « Non »), puis ferme GazeBar.
+    ///
+    /// Depuis le mode jeu, le bouton « Quitter le jeu » a un bord vert, comme un interrupteur
+    /// allumé : il montre que le mode jeu est actif (demande de l'utilisateur du 28/10/2026).
+    ///
+    /// Depuis le mode PAUSE (demande de l'utilisateur du 28/10/2026) : la barre ne montre
+    /// d'abord QUE le bouton « Reprendre » (lecture). Ainsi, pendant la pause, un regard vers
+    /// le bas ne peut rien déclencher d'autre. Activé, il met fin à la pause (on reviendra au
+    /// mode mouvement), et la barre complète apparaît à sa place : on peut alors choisir un
+    /// autre bouton, ou simplement quitter la barre du regard pour reprendre.
     ///
     /// Un petit cercle (moitié de [RayonCercle]) montre où est le regard, comme dans le choix
     /// d'action.
@@ -254,7 +262,11 @@ namespace GazeBar
                     break;
 
                 case ActionMenu.Reprendre:
-                    Gestionnaire.ChangerMode(new ModeMouvement());
+                    // Fin de la pause : à la fermeture du menu, on ira au mode mouvement. La
+                    // barre complète remplace le bouton seul, avec l'animation d'apparition.
+                    _retour = new ModeMouvement();
+                    _dejaAffichee = false;
+                    Construire();
                     break;
 
                 case ActionMenu.SuiviSouris:
@@ -379,7 +391,12 @@ namespace GazeBar
             // ── Les boutons à afficher.
             List<BoutonRegard> boutons = new List<BoutonRegard>();
             List<ActionMenu?> actions = new List<ActionMenu?>();
-            if (_confirmation)
+            if (_retour is ModePause && !_confirmation)
+            {
+                // Pendant la pause : seul le bouton « Reprendre » (E768 = lecture).
+                Ajouter(boutons, actions, new BoutonRegard("", null, "Reprendre"), ActionMenu.Reprendre);
+            }
+            else if (_confirmation)
             {
                 // « Non » est à droite, « Oui » à gauche. La barre est plus courte et centrée :
                 // aucun des deux n'est à la place de l'ancien bouton « Quitter » (tout à droite),
@@ -395,7 +412,10 @@ namespace GazeBar
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Paramètres"), ActionMenu.Parametres);
                 if (_retour is ModeJeu)
                 {
-                    Ajouter(boutons, actions, new BoutonRegard("\uE7FC", null, "Quitter le jeu"), ActionMenu.QuitterJeu);
+                    // Bord vert : le mode jeu est actif.
+                    BoutonRegard quitterJeu = new BoutonRegard("\uE7FC", null, "Quitter le jeu");
+                    quitterJeu.DefinirAllume(true);
+                    Ajouter(boutons, actions, quitterJeu, ActionMenu.QuitterJeu);
                 }
                 else
                 {
@@ -403,14 +423,9 @@ namespace GazeBar
                 }
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Calibration"), ActionMenu.Calibration);
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier visuel"), ActionMenu.Clavier);
-                if (_retour is ModePause)
-                {
-                    Ajouter(boutons, actions, new BoutonRegard("", null, "Reprendre"), ActionMenu.Reprendre);
-                }
-                else
-                {
-                    Ajouter(boutons, actions, new BoutonRegard("", null, "Pause"), ActionMenu.Pause);
-                }
+                // (Depuis la pause, la barre complète n'apparaît qu'après « Reprendre » : ici,
+                // on n'est donc jamais en pause.)
+                Ajouter(boutons, actions, new BoutonRegard("", null, "Pause"), ActionMenu.Pause);
                 BoutonRegard suivi = new BoutonRegard("", null, "Suivi souris");
                 suivi.DefinirAllume(p.SuiviSouris);
                 Ajouter(boutons, actions, suivi, ActionMenu.SuiviSouris);

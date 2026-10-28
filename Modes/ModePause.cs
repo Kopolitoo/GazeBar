@@ -8,8 +8,8 @@ namespace GazeBar
     ///
     /// Une seule chose reste active : regarder en bas, hors de l'écran, pendant [DelaiMenu]
     /// ouvre la barre de menu (c'est le ModeManager qui s'en charge).
-    /// Dans la barre, le bouton « Pause » devient alors « Reprendre », qui ramène au mode
-    /// mouvement. La touche Échap de l'aidant ramène aussi au mode mouvement.
+    /// Depuis la pause, la barre ne montre que le bouton « Reprendre » ; activé, il met fin à
+    /// la pause et affiche la barre complète (voir ModeMenu). La touche Échap de l'aidant ramène aussi au mode mouvement.
     ///
     /// Ce mode remplace le « mode inactif » provisoire des étapes 1 à 3, qui servait à la
     /// barre d'outils (retirée à l'étape 4).
