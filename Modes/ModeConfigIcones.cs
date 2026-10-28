@@ -370,10 +370,15 @@ namespace GazeBar
 
             int colonnes = Math.Min(libres.Count, ColonnesListe);
             int lignes = (libres.Count + colonnes - 1) / colonnes;
-            // D'une colonne à l'autre : la largeur disponible partagée, sans dépasser trois icônes.
-            double pasX = Math.Min((l - taille) / colonnes, taille * 3);
-            // D'une ligne à l'autre : l'icône, son nom, et un espace.
-            double pasY = taille + policeNom * 2 + espace * 0.75;
+            // La grille occupe toute la place du rectangle (demande de l'utilisateur du
+            // 28/10/2026 : les icônes paraissaient petites au milieu de beaucoup d'espace).
+            // Chaque action reçoit une « case » : la largeur du rectangle partagée entre les
+            // colonnes, et la hauteur entre le titre et « Annuler » partagée entre les lignes.
+            // L'icône et son nom sont centrés dans leur case.
+            double pasX = l / colonnes;
+            double pasY = Math.Max((basGrille - hautGrille) / lignes, taille + policeNom * 2 + espace * 0.5);
+            // Centre de l'icône de la première ligne : le milieu de la case, remonté de la
+            // moitié de la hauteur du nom (le nom est écrit sous l'icône).
             double yPremiere = (hautGrille + basGrille) / 2 - (lignes - 1) * pasY / 2 - policeNom;
 
             for (int i = 0; i < libres.Count; i++)
@@ -389,7 +394,7 @@ namespace GazeBar
                 AjouterBouton(calque, ecran, CatalogueActions.CreerBouton(action), () => PlacerAction(action),
                               x, y, taille, true);
                 AjouterTexteCentre(calque, ecran, CatalogueActions.NomCourt(action), x, y + taille / 2 + policeNom * 0.4,
-                                   pasX, policeNom, Brushes.White, false);
+                                   pasX - espace, policeNom, Brushes.White, false);
             }
         }
 
