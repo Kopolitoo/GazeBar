@@ -436,7 +436,7 @@ namespace GazeBar
             double distanceVoulue = demiPhoto + Espace + taille / 2;
             double distanceX = Math.Min(distanceVoulue, largeur / 2 - taille / 2 - 10);
             double distanceY = Math.Min(distanceVoulue, hauteur / 2 - taille / 2 - 10);
-            double decalage = (taille + Espace) / 2;   // du milieu du côté au centre de chaque bouton
+            double decalage = taille + Espace;   // du milieu du côté au centre de chaque bouton
 
             for (int i = 0; i < Disposition.Length; i++)
             {
@@ -451,7 +451,7 @@ namespace GazeBar
             //    eux. Un modificateur déjà actif (par exemple Ctrl choisi avant un passage par
             //    la loupe) est dessiné allumé.
             double xModificateurs = Espace + taille / 2;
-            double ecart = taille + Espace;
+            double ecart = (hauteur - taille * 3) / 3;
             int nombre = DispositionModificateurs.Length;
             for (int i = 0; i < nombre; i++)
             {
@@ -464,9 +464,8 @@ namespace GazeBar
                 }
             }
 
-            // ── L'icône « retour », à droite : à mi-chemin entre la couronne et le bord droit.
-            double xRetour = (cxEcran + distanceX + taille / 2 + largeur) / 2;
-            xRetour = Math.Min(xRetour, largeur - taille / 2 - 10);
+            // ── L'icône « retour », à droite
+            double xRetour = largeur - taille;
             AjouterBouton(calque, ecran, ActionChoix.Retour, xRetour, cyEcran, taille);
 
             // ── Le petit cercle du regard, ajouté EN DERNIER : il est ainsi dessiné par-dessus
