@@ -242,13 +242,23 @@ namespace GazeBar
         private double _rayonAnneau;
 
         /// <summary>
-        /// Vrai si le point du regard (pixels d'écran) est sur le bouton.
-        /// La zone sensible est le carré du bouton, sans marge : les boutons sont assez grands
-        /// ([TailleIcones] = 120 px) pour qu'on n'en ait pas besoin.
+        /// Taille de la ZONE D'ACTIVATION (la zone où le regard « touche » le bouton), par
+        /// rapport au carré dessiné. 1 = le carré exactement (valeur par défaut) ; 1.3 = un
+        /// carré 30 % plus grand, centré sur le bouton. Le dessin ne change pas : seule la
+        /// zone sensible grandit (demande de l'utilisateur du 28/10/2026 pour le choix
+        /// d'action, la loupe…), ce qui pardonne mieux les petites erreurs du regard.
+        /// Attention : la zone ne doit pas déborder sur un bouton voisin.
+        /// </summary>
+        public double FacteurZone { get; set; } = 1.0;
+
+        /// <summary>
+        /// Vrai si le point du regard (pixels d'écran) est dans la zone d'activation du bouton :
+        /// un carré de côté [Taille] × [FacteurZone], centré sur le bouton.
         /// </summary>
         public bool Contient(double x, double y)
         {
-            return Math.Abs(x - X) <= Taille / 2 && Math.Abs(y - Y) <= Taille / 2;
+            double demiCote = Taille * FacteurZone / 2;
+            return Math.Abs(x - X) <= demiCote && Math.Abs(y - Y) <= demiCote;
         }
 
         /// <summary>

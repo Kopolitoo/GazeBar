@@ -48,7 +48,7 @@ namespace GazeBar
     ///     Les touches actives sont enfoncées juste avant l'action et relâchées juste après
     ///     (voir Modificateurs.cs).
     ///
-    /// Étape 8 : l'action « Défilement » (emplacement 6) ouvre le mode défilement, centré sur P.
+    /// Étape 8 : l'action « Défilement » (emplacement 0 depuis le 28/10/2026) ouvre le mode défilement, centré sur P.
     ///
     /// Ce qui viendra plus tard :
     ///   - étape 9 : le bouton de configuration de la disposition.
@@ -94,26 +94,36 @@ namespace GazeBar
         /// partant du haut et en tournant dans le sens des aiguilles d'une montre (voir
         /// PlaceEmplacement). null = emplacement vide. À l'étape 9, cette disposition sera
         /// modifiable et enregistrée avec les paramètres ; pour l'instant elle est écrite ici.
-        ///   0 : en haut, à droite        → clic gauche (l'action la plus courante)
+        /// Ordre choisi par l'utilisateur le 28/10/2026 (défilement et clic gauche échangés,
+        /// double clic déplacé) :
+        ///   0 : en haut, à droite        → défilement (étape 8)
         ///   1 : à droite, en haut        → clic droit
         ///   2 : à droite, en bas         → glisser-déposer gauche (étape 6)
         ///   3 : en bas, à droite         → glisser-déposer droit (étape 6)
         ///   4 : en bas, à gauche         → loupe (étape 5, choix de l'utilisateur du 23/10/2026)
         ///   5 : à gauche, en bas         → glisser-déposer android (étape 6)
-        ///   6 : à gauche, en haut        → défilement (étape 8)
-        ///   7 : en haut, à gauche        → double clic (à côté du clic gauche)
+        ///   6 : à gauche, en haut        → double clic
+        ///   7 : en haut, à gauche        → clic gauche
         /// </summary>
         private static readonly ActionChoix?[] Disposition =
         {
-            ActionChoix.ClicGauche,
+            ActionChoix.Defilement,
             ActionChoix.ClicDroit,
             ActionChoix.GlisserGauche,
             ActionChoix.GlisserDroit,
             ActionChoix.Loupe,
             ActionChoix.GlisserAndroid,
-            ActionChoix.Defilement,
-            ActionChoix.DoubleClic
+            ActionChoix.DoubleClic,
+            ActionChoix.ClicGauche
         };
+
+        /// <summary>
+        /// Zone d'activation de TOUS les boutons de ce mode (couronne, modificateurs, retour),
+        /// par rapport au carré dessiné : 30 % plus grande (demande de l'utilisateur du
+        /// 28/10/2026). Avec des boutons de 120 px séparés de [Espace] = 60 px, chaque zone
+        /// déborde de 18 px de chaque côté : il reste 24 px entre deux zones voisines.
+        /// </summary>
+        private const double FacteurZone = 1.3;
 
         /// <summary>
         /// Espace, en pixels, entre deux boutons voisins, entre les boutons et la photo, et entre
@@ -523,6 +533,7 @@ namespace GazeBar
                                            double x, double y, double taille)
         {
             BoutonRegard bouton = action.HasValue ? CreerBouton(action.Value) : BoutonRegard.Vide(LibelleVide);
+            bouton.FacteurZone = FacteurZone;
             bouton.Placer(calque, ecran, x, y, taille);
             _boutons.Add(bouton);
             _actions.Add(action);

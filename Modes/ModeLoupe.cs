@@ -49,6 +49,11 @@ namespace GazeBar
     ///    qui peut se trouver au-dessus de la photo. Une fixation n'est donc reconnue qu'une
     ///    fois le regard sorti de cet endroit (même principe que la « zone ignorée » du mode
     ///    mouvement après un clic) ;
+    ///    EXCEPTION (demande de l'utilisateur du 28/10/2026) : si, à l'ouverture, le regard est
+    ///    déjà sur l'endroit de la photo où apparaît P (le centre de l'écran, sauf près d'un
+    ///    bord), il n'y a pas de zone ignorée. C'est le cas quand l'icône d'options du regard
+    ///    fixe se trouvait près du centre de l'écran : on regarde déjà le bon endroit, il
+    ///    serait absurde d'obliger à bouger le regard pour valider la position ;
     ///  - seule une fixation SUR la photo compte. Le regard posé sur l'icône « retour » ou sur
     ///    le fond noir ne place jamais le curseur.
     /// </summary>
@@ -107,6 +112,18 @@ namespace GazeBar
         private double _zoneX;
         private double _zoneY;
 
+        // Où apparaît le point P sur la photo agrandie (pixels d'écran), calculé avec la photo.
+        // _cibleConnue = faux tant que la photo n'est pas construite.
+        private bool _cibleConnue;
+        private double _cibleX;
+        private double _cibleY;
+
+        /// <summary>
+        /// Zone d'activation du bouton « retour », par rapport au bouton dessiné : 30 % plus
+        /// grande (demande de l'utilisateur du 28/10/2026).
+        /// </summary>
+        private const double FacteurZoneRetour = 1.3;
+
         // Le petit cercle qui suit le regard : deux ellipses (trait noir dessous, vert dessus).
         private Ellipse _cercleRegardFond;
         private Ellipse _cercleRegard;
@@ -155,6 +172,7 @@ namespace GazeBar
             _zoneIgnoreeConnue = regard.SurEcran;
             _zoneX = regard.X;
             _zoneY = regard.Y;
+            _cibleConnue = false;
 
             // 1. CAPTURE : on cache tout ce que GazeBar dessine, et on attend un peu avant la photo.
             Gestionnaire.Calque.MasquerTout();
@@ -226,6 +244,7 @@ namespace GazeBar
                     _zoneX = regard.X;
                     _zoneY = regard.Y;
                     _zoneIgnoreeConnue = true;
+                    LeverZoneSiDejaSurLaCible(p);
                 }
                 else if (_zoneIgnoree && Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCercle)
                 {
@@ -307,6 +326,24 @@ namespace GazeBar
             }
         }
 
+        /// <summary>
+        /// Pas de zone ignorée si, à l'ouverture, le regard était déjà sur l'endroit de la photo
+        /// où apparaît P (à moins de [RayonCercle]) : voir l'exception dans le commentaire de la
+        /// classe. Ne fait rien tant que la photo ou la position du regard ne sont pas connues.
+        /// </summary>
+        private void LeverZoneSiDejaSurLaCible(Parametres p)
+        {
+            if (!_zoneIgnoree || !_zoneIgnoreeConnue || !_cibleConnue)
+            {
+                return;
+            }
+            if (Distance(_zoneX, _zoneY, _cibleX, _cibleY) <= p.RayonCercle)
+            {
+                _zoneIgnoree = false;
+                App.Log("Loupe : regard déjà sur le point visé, pas besoin de bouger le regard");
+            }
+        }
+
         /// <summary>Vrai si ce point (pixels d'écran) est sur la photo agrandie.</summary>
         private bool SurLaPhoto(double x, double y)
         {
@@ -364,6 +401,12 @@ namespace GazeBar
             _gauche = cxEcran - coteAgrandi / 2;
             _haut = cyEcran - coteAgrandi / 2;
 
+            // Où apparaît P sur la photo agrandie (le contraire du calcul de PlacerEtContinuer).
+            _cibleX = _gauche + (_px - _ox) * _zoom;
+            _cibleY = _haut + (_py - _oy) * _zoom;
+            _cibleConnue = true;
+            LeverZoneSiDejaSurLaCible(p);
+
             Image image = new Image();
             image.Source = photo;
             image.Stretch = Stretch.Fill;
@@ -400,6 +443,7 @@ namespace GazeBar
             xRetour = Math.Min(xRetour, largeur - taille / 2 - 10);
             string libelleRetour = _glissement != null ? "Annuler le glisser-déposer" : "Retour";
             BoutonRegard retour = new BoutonRegard("", null, libelleRetour);
+            retour.FacteurZone = FacteurZoneRetour;
             retour.Placer(calque, ecran, xRetour, cyEcran, taille);
             _boutons.Add(retour);
 

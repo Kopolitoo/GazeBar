@@ -156,15 +156,25 @@ namespace GazeBar
         /// </summary>
         public void AfficherCercle(double xPixels, double yPixels, double rayonPixels, bool fixe)
         {
+            AfficherCercle(xPixels, yPixels, rayonPixels, fixe, 1.0);
+        }
+
+        /// <summary>
+        /// Comme ci-dessus, avec une opacité réduite : attenuation = 1 → opacité habituelle,
+        /// 0.5 → deux fois plus transparent (mode défilement, demande du 28/10/2026).
+        /// </summary>
+        public void AfficherCercle(double xPixels, double yPixels, double rayonPixels, bool fixe,
+                                   double attenuation)
+        {
             CercleX = xPixels;
             CercleY = yPixels;
             CercleAffiche = true;
 
             Cercle.Stroke = fixe ? PinceauFixe : PinceauMouvement;
             Cercle.StrokeThickness = fixe ? 1.5 : 1;
-            Cercle.Opacity = fixe ? 0.6 : 0.3;
-           CercleFond.StrokeThickness = fixe ? 2.5 : 2;
-            CercleFond.Opacity = fixe ? 0.7 : 0.5;
+            Cercle.Opacity = (fixe ? 0.6 : 0.3) * attenuation;
+            CercleFond.StrokeThickness = fixe ? 2.5 : 2;
+            CercleFond.Opacity = (fixe ? 0.7 : 0.5) * attenuation;
 
             // Pas encore affichée à l'écran : rien à dessiner (PointFromScreen échouerait).
             if (PresentationSource.FromVisual(this) == null)
