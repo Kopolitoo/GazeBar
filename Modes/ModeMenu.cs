@@ -39,7 +39,8 @@ namespace GazeBar
     /// directement au mode mouvement. Pour les autres boutons, on rouvre ensuite le menu.
     ///
     /// Le cercle du regard garde sa taille normale ([RayonCercle], comme en mode mouvement :
-    /// demande de l'utilisateur du 28/10/2026 ; avant, il était réduit de moitié).
+    /// demande de l'utilisateur du 28/10/2026 ; avant, il était réduit de moitié). Il est
+    /// caché tant que le regard est dans la zone de la barre.
     ///
     /// Sortie : quand le regard quitte la barre pendant [DelaiFermetureMenu], elle disparaît
     /// et on revient au mode précédent. Le regard en bas, hors de l'écran, compte comme
@@ -187,6 +188,9 @@ namespace GazeBar
             }
 
             // 3. Le cercle du regard (seulement quand le regard est sur l'écran).
+            //    Il est caché quand le regard est dans la zone de la barre (avec sa marge) : il
+            //    gênerait la lecture des boutons (demande de l'utilisateur du 28/10/2026). Sa
+            //    position continue d'être suivie : il réapparaît sans saut en sortant de la zone.
             if (regard.SurEcran)
             {
                 if (!_cerclePlace)
@@ -195,7 +199,19 @@ namespace GazeBar
                     _cerclePlace = true;
                 }
                 _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
-                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
+                if (DansLaBarre(regard))
+                {
+                    Gestionnaire.Calque.MasquerCercle();
+                }
+                else
+                {
+                    Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
+                }
+            }
+            else if (regard.EnBasHorsEcran)
+            {
+                // En bas, hors de l'écran : c'est aussi « dans la barre ».
+                Gestionnaire.Calque.MasquerCercle();
             }
         }
 
