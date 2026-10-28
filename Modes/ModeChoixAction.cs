@@ -48,6 +48,11 @@ namespace GazeBar
     ///     Les touches actives sont enfoncées juste avant l'action et relâchées juste après
     ///     (voir Modificateurs.cs).
     ///
+    /// Actions spéciales (demande de l'utilisateur du 28/10/2026) : Copier, Couper, Coller,
+    /// trois boutons tout en haut de l'écran, centrés (voir DispositionSpeciales). Ils
+    /// envoient Ctrl + C, Ctrl + X et Ctrl + V à la fenêtre active ; « Coller » fait d'abord
+    /// un clic gauche sur P, pour placer le point d'insertion là où l'on regardait.
+    ///
     /// Étape 8 : l'action « Défilement » (emplacement 0 depuis le 28/10/2026) ouvre le mode défilement, centré sur P.
     ///
     /// Ce qui viendra plus tard :
@@ -69,6 +74,9 @@ namespace GazeBar
             Ctrl,
             Maj,
             Alt,
+            Copier,
+            Couper,
+            Coller,
             Retour
         }
 
@@ -124,6 +132,20 @@ namespace GazeBar
         /// déborde de 18 px de chaque côté : il reste 24 px entre deux zones voisines.
         /// </summary>
         private const double FacteurZone = 1.3;
+
+        /// <summary>
+        /// Les actions spéciales, de gauche à droite, tout en haut de l'écran et centrées
+        /// horizontalement, sur la même ligne que le haut de la couronne (demande de
+        /// l'utilisateur du 28/10/2026). Pour leur faire de la place, les deux emplacements du
+        /// haut de la couronne (0 et 7) sont écartés vers l'extérieur : la ligne du haut compte
+        /// alors cinq boutons régulièrement espacés : 7, Copier, Couper, Coller, 0.
+        /// </summary>
+        private static readonly ActionChoix[] DispositionSpeciales =
+        {
+            ActionChoix.Copier,
+            ActionChoix.Couper,
+            ActionChoix.Coller
+        };
 
         /// <summary>
         /// Espace, en pixels, entre deux boutons voisins, entre les boutons et la photo, et entre
@@ -344,6 +366,17 @@ namespace GazeBar
                 case ActionChoix.DoubleClic:
                     MouseInjector.DoubleClic();
                     break;
+                case ActionChoix.Copier:
+                    RaccourciCtrl(NativeMethods.VK_C);
+                    break;
+                case ActionChoix.Couper:
+                    RaccourciCtrl(NativeMethods.VK_X);
+                    break;
+                case ActionChoix.Coller:
+                    // Clic d'abord : le point d'insertion se place là où l'on regardait.
+                    MouseInjector.Clic(MouseSide.Left);
+                    RaccourciCtrl(NativeMethods.VK_V);
+                    break;
             }
 
             // … et relâchés juste après. (Le mode mouvement les désactivera ensuite.)
@@ -355,6 +388,20 @@ namespace GazeBar
             // Retour au mode mouvement (choix de l'utilisateur). Une nouvelle fixation au même
             // endroit est ignorée tant que le regard n'en est pas sorti, comme après un clic direct.
             Gestionnaire.ChangerMode(new ModeMouvement(_px, _py));
+        }
+
+        /// <summary>
+        /// Envoie Ctrl + touche (copier, couper, coller) à la fenêtre active. Pas de clic pour
+        /// copier et couper : un clic effacerait la sélection. Si Ctrl était déjà enfoncé par
+        /// les modificateurs, Enfoncer ne fait rien ; Maj ou Alt actifs restent ajoutés (par
+        /// exemple Ctrl + Maj + V colle sans mise en forme dans beaucoup de logiciels).
+        /// </summary>
+        private static void RaccourciCtrl(ushort touche)
+        {
+            InjecteurClavier.Enfoncer(NativeMethods.VK_CONTROL);
+            InjecteurClavier.Enfoncer(touche);
+            InjecteurClavier.Relacher(touche);
+            InjecteurClavier.Relacher(NativeMethods.VK_CONTROL);
         }
 
         // ───────────────────────── 1. La photo et l'écran noir ─────────────────────────
@@ -438,12 +485,24 @@ namespace GazeBar
             double distanceY = Math.Min(distanceVoulue, hauteur / 2 - taille / 2 - 10);
             double decalage = taille + Espace;   // du milieu du côté au centre de chaque bouton
 
+            // En haut, les actions spéciales occupent le milieu de la ligne : les emplacements
+            // 0 et 7 sont repoussés juste après elles, au même écart [Espace].
+            int nombreSpeciales = DispositionSpeciales.Length;
+            double decalageHaut = (nombreSpeciales + 1) / 2.0 * (taille + Espace);
+
             for (int i = 0; i < Disposition.Length; i++)
             {
                 double x;
                 double y;
-                PlaceEmplacement(i, cxEcran, cyEcran, distanceX, distanceY, decalage, out x, out y);
+                PlaceEmplacement(i, cxEcran, cyEcran, distanceX, distanceY, decalage, decalageHaut, out x, out y);
                 AjouterBouton(calque, ecran, Disposition[i], x, y, taille);
+            }
+
+            // ── Les actions spéciales : tout en haut, centrées horizontalement.
+            for (int i = 0; i < nombreSpeciales; i++)
+            {
+                double x = cxEcran + (i - (nombreSpeciales - 1) / 2.0) * (taille + Espace);
+                AjouterBouton(calque, ecran, DispositionSpeciales[i], x, cyEcran - distanceY, taille);
             }
 
             // ── Les modificateurs : une colonne de trois, collée au bord gauche de l'écran
@@ -550,21 +609,23 @@ namespace GazeBar
         ///         4   3
         /// distanceX, distanceY : écart entre le centre de l'écran et la ligne des boutons des
         /// côtés gauche/droit (X) et haut/bas (Y) ; decalage : écart entre le milieu d'un côté
-        /// et le centre de chacun de ses deux boutons.
+        /// et le centre de chacun de ses deux boutons ; decalageHaut : le même écart pour le
+        /// côté du haut, plus grand, car les actions spéciales sont au milieu.
         /// </summary>
         private static void PlaceEmplacement(int numero, double cx, double cy, double distanceX,
-                                             double distanceY, double decalage, out double x, out double y)
+                                             double distanceY, double decalage, double decalageHaut,
+                                             out double x, out double y)
         {
             switch (numero)
             {
-                case 0: x = cx + decalage; y = cy - distanceY; break;
+                case 0: x = cx + decalageHaut; y = cy - distanceY; break;
                 case 1: x = cx + distanceX; y = cy - decalage; break;
                 case 2: x = cx + distanceX; y = cy + decalage; break;
                 case 3: x = cx + decalage; y = cy + distanceY; break;
                 case 4: x = cx - decalage; y = cy + distanceY; break;
                 case 5: x = cx - distanceX; y = cy + decalage; break;
                 case 6: x = cx - distanceX; y = cy - decalage; break;
-                default: x = cx - decalage; y = cy - distanceY; break;
+                default: x = cx - decalageHaut; y = cy - distanceY; break;
             }
         }
 
@@ -623,6 +684,13 @@ namespace GazeBar
                     return BoutonRegard.Texte("Maj", "Maj (activer / désactiver)");
                 case ActionChoix.Alt:
                     return BoutonRegard.Texte("Alt", "Alt (activer / désactiver)");
+                // E8C8 = copier, E8C6 = ciseaux (couper), E77F = presse-papiers (coller).
+                case ActionChoix.Copier:
+                    return new BoutonRegard("\uE8C8", null, "Copier (Ctrl + C)");
+                case ActionChoix.Couper:
+                    return new BoutonRegard("\uE8C6", null, "Couper (Ctrl + X)");
+                case ActionChoix.Coller:
+                    return new BoutonRegard("\uE77F", null, "Coller ici (clic, puis Ctrl + V)");
                 default:
                     return new BoutonRegard("", null, "Retour");
             }
