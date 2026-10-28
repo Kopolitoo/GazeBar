@@ -38,8 +38,8 @@ namespace GazeBar
     /// le bas ne peut rien déclencher d'autre. Activé, il met fin à la pause et ramène
     /// directement au mode mouvement. Pour les autres boutons, on rouvre ensuite le menu.
     ///
-    /// Un petit cercle (moitié de [RayonCercle]) montre où est le regard, comme dans le choix
-    /// d'action.
+    /// Le cercle du regard garde sa taille normale ([RayonCercle], comme en mode mouvement :
+    /// demande de l'utilisateur du 28/10/2026 ; avant, il était réduit de moitié).
     ///
     /// Sortie : quand le regard quitte la barre pendant [DelaiFermetureMenu], elle disparaît
     /// et on revient au mode précédent. Le regard en bas, hors de l'écran, compte comme
@@ -109,7 +109,7 @@ namespace GazeBar
         // Instant (ms) où le regard a quitté la barre ; -1 = il est dedans.
         private double _debutHorsBarreMs = -1;
 
-        // Le petit cercle du regard : position lissée en pixels d'écran.
+        // Le cercle du regard : position lissée en pixels d'écran.
         private readonly Lisseur _lisse = new Lisseur();
         private bool _cerclePlace;
 
@@ -137,7 +137,7 @@ namespace GazeBar
             calque.MasquerIcone();
             calque.MasquerEcranChoix();
 
-            // Le petit cercle part de là où est le cercle actuel (pas de saut), sinon il
+            // Le cercle part de là où est le cercle actuel (pas de saut), sinon il
             // apparaîtra à la première mesure du regard sur l'écran.
             _cerclePlace = calque.CercleAffiche;
             if (_cerclePlace)
@@ -186,7 +186,7 @@ namespace GazeBar
                 }
             }
 
-            // 3. Le petit cercle du regard (seulement quand le regard est sur l'écran).
+            // 3. Le cercle du regard (seulement quand le regard est sur l'écran).
             if (regard.SurEcran)
             {
                 if (!_cerclePlace)
@@ -195,13 +195,13 @@ namespace GazeBar
                     _cerclePlace = true;
                 }
                 _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
-                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle / 2, false);
+                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
             }
         }
 
         public override void Quitter()
         {
-            // La barre est cachée. Le petit cercle reste : le mode suivant le reprend là où il est.
+            // La barre est cachée. Le cercle reste : le mode suivant le reprend là où il est.
             // Fermeture animée (voir OverlayWindow.MasquerBarreMenu).
             Gestionnaire.Calque.MasquerBarreMenu(true);
             _boutons.Clear();
