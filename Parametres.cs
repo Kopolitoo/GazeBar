@@ -49,9 +49,11 @@ namespace GazeBar
         ///       (voir MettreAJour) ;
         ///   3 : étape 6 — nouveau glisser-déposer : DureePauseAndroid et DureeGlisser
         ///       remplacent DureeAppuiLong, DelaiDepot, DistanceMinGlisser et DureeMaxAppui,
-        ///       supprimés (règle de l'utilisateur : un réglage qui ne sert plus est retiré).
+        ///       supprimés (règle de l'utilisateur : un réglage qui ne sert plus est retiré) ;
+        ///   4 : étape 9 — LissageJeu passe de 0.7 à 0.3 par défaut : en souris directe, le
+        ///       curseur sautait beaucoup trop (essai de l'utilisateur du 28/10/2026).
         /// </summary>
-        public const int VersionActuelle = 3;
+        public const int VersionActuelle = 4;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -181,7 +183,12 @@ namespace GazeBar
 
         // ───────────────────────── Jeu ─────────────────────────
 
-        /// <summary>Lissage du mode jeu (plus proche de 1 = plus réactif).</summary>
+        /// <summary>
+        /// Lissage du mode jeu (plus proche de 1 = plus réactif), même sens que [Lissage].
+        /// 0.3 par défaut depuis le 28/10/2026 (0.7 au départ : le curseur sautait trop).
+        /// Avec le lissage double (Lisseur.cs), 0.3 donne un retard d'environ 45 ms, deux fois
+        /// moins que le mode mouvement (0.16, environ 90 ms).
+        /// </summary>
         [DataMember(Order = 80)]
         public double LissageJeu { get; set; }
 
@@ -288,7 +295,7 @@ namespace GazeBar
 
             VitesseMaxDefilement = 10;
 
-            LissageJeu = 0.7;
+            LissageJeu = 0.3;
             SensibiliteJeu = 1.0;
             SourisJeu = SourisDirecteTexte;
             RelativeJeu = RelativeSuiviTexte;
@@ -382,6 +389,15 @@ namespace GazeBar
                 App.Log("Paramètres : mise à jour en version 3 (réglages du glisser-déposer remplacés)");
             }
 
+            if (VersionFichier < 4)
+            {
+                // Seul l'ancien défaut est remplacé : une valeur choisie par l'utilisateur reste.
+                if (Math.Abs(LissageJeu - 0.7) < 0.001)
+                {
+                    LissageJeu = 0.3;
+                }
+                App.Log("Paramètres : mise à jour en version 4 (LissageJeu 0.7 → 0.3)");
+            }
             VersionFichier = VersionActuelle;
             return true;
         }
