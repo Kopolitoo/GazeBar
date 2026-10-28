@@ -60,6 +60,25 @@ namespace GazeBar
         /// </summary>
         private const double EcartMaxMs = 50;
 
+        // Où lire le réglage de lissage : [Lissage] d'habitude, [LissageJeu] en mode jeu.
+        private readonly Func<double> _lireLissage;
+
+        /// <summary>Lisseur habituel, qui utilise le réglage [Lissage].</summary>
+        public Lisseur()
+            : this(() => Parametres.Courants.Lissage)
+        {
+        }
+
+        /// <summary>
+        /// Lisseur qui lit son lissage ailleurs (étape 9 : le mode jeu utilise [LissageJeu]).
+        /// lireLissage est une fonction, appelée à chaque tic : un changement du réglage
+        /// s'applique tout de suite.
+        /// </summary>
+        public Lisseur(Func<double> lireLissage)
+        {
+            _lireLissage = lireLissage;
+        }
+
         // Premier étage (suit le regard).
         private double _x1;
         private double _y1;
@@ -102,7 +121,7 @@ namespace GazeBar
             }
 
             // 2. Lissage 1 (ou plus) : pas de lissage, le cercle est sur la cible.
-            double lissage = Parametres.Courants.Lissage;
+            double lissage = _lireLissage();
             if (lissage >= 0.999)
             {
                 Placer(cibleX, cibleY);

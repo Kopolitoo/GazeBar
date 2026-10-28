@@ -12,6 +12,9 @@ namespace GazeBar
     /// Deux sortes de réglages :
     ///   - un NOMBRE (Lissage, DelaiFixation…) : boutons « − », valeur, « + » ;
     ///   - un OUI / NON (ClicDirect, SuiviSouris…) : boutons « Non » et « Oui ».
+    ///     Variante (étape 9) : un choix entre deux mots, par exemple « directe » ou
+    ///     « relative » pour SourisJeu. C'est le même affichage, avec d'autres mots sur les
+    ///     deux boutons (voir DeuxChoix).
     ///
     /// Lire et Ecrire sont des « fonctions rangées dans une variable » (délégués). Par exemple
     ///     p => p.Lissage                 lit le lissage d'un objet Parametres p ;
@@ -50,8 +53,14 @@ namespace GazeBar
         /// <summary>Nombre de chiffres après le point, déduit du pas (0.05 → 2 chiffres).</summary>
         public int Decimales { get; private set; }
 
-        /// <summary>Vrai pour un réglage oui / non.</summary>
+        /// <summary>Vrai pour un réglage oui / non (ou un choix entre deux mots).</summary>
         public bool OuiNon { get; private set; }
+
+        /// <summary>Le mot du bouton de gauche (valeur « faux ») : « Non » d'habitude.</summary>
+        public string MotFaux { get; private set; }
+
+        /// <summary>Le mot du bouton de droite (valeur « vrai ») : « Oui » d'habitude.</summary>
+        public string MotVrai { get; private set; }
 
         private Func<Parametres, double> _lireNombre;
         private Action<Parametres, double> _ecrireNombre;
@@ -81,11 +90,25 @@ namespace GazeBar
                                        Func<Parametres, bool> lire, Action<Parametres, bool> ecrire,
                                        Action<Parametres> apres = null)
         {
+            return DeuxChoix(nom, explication, "Non", "Oui", lire, ecrire, apres);
+        }
+
+        /// <summary>
+        /// Crée un choix entre deux mots (étape 9). Le réglage est rangé comme un oui / non :
+        /// « faux » = motFaux (bouton de gauche), « vrai » = motVrai (bouton de droite).
+        /// Exemple : DeuxChoix("Souris", "…", "Directe", "Relative", p => p.SourisRelative, …).
+        /// </summary>
+        public static Reglage DeuxChoix(string nom, string explication, string motFaux, string motVrai,
+                                        Func<Parametres, bool> lire, Action<Parametres, bool> ecrire,
+                                        Action<Parametres> apres = null)
+        {
             Reglage r = new Reglage();
             r.Nom = nom;
             r.Explication = explication;
             r.Unite = "";
             r.OuiNon = true;
+            r.MotFaux = motFaux;
+            r.MotVrai = motVrai;
             r._lireOuiNon = lire;
             r._ecrireOuiNon = ecrire;
             r.ApresChangement = apres;
@@ -136,12 +159,12 @@ namespace GazeBar
             }
         }
 
-        /// <summary>La valeur prête à afficher, avec son unité : « 0.16 », « 0.8 s », « oui ».</summary>
+        /// <summary>La valeur prête à afficher, avec son unité : « 0.16 », « 0.8 s », « oui », « directe ».</summary>
         public string Texte(Parametres p)
         {
             if (OuiNon)
             {
-                return LireOuiNon(p) ? "oui" : "non";
+                return (LireOuiNon(p) ? MotVrai : MotFaux).ToLowerInvariant();
             }
             return TexteNombre(LireNombre(p)) + Unite;
         }
@@ -196,12 +219,13 @@ namespace GazeBar
 
     /// <summary>
     /// LA LISTE DES ONGLETS ET DES RÉGLAGES du mode paramètres (étape 7), dans l'ordre
-    /// d'affichage. Regroupement validé par l'utilisateur le 26/10/2026 (six onglets ; « Défilement » ajouté à l'étape 8).
+    /// d'affichage. Regroupement validé par l'utilisateur le 26/10/2026 (six onglets ; « Défilement » ajouté à l'étape 8,
+    /// « Jeu » à l'étape 9).
     ///
     /// Pour ajouter un réglage plus tard : l'ajouter dans Parametres.cs (avec sa valeur par
     /// défaut et ses limites dans Corriger), puis ici, dans l'onglet voulu (cinq au plus par
-    /// onglet, pour que rien ne défile). L'onglet « Défilement » est ajouté à l'étape 8 ;
-    /// les réglages du jeu ne sont pas affichés tant que ce mode n'existe pas (étape 10).
+    /// onglet, pour que rien ne défile). L'onglet « Défilement » est ajouté à l'étape 8,
+    /// l'onglet « Jeu » à l'étape 9.
     /// </summary>
     internal static class CatalogueParametres
     {
@@ -266,6 +290,19 @@ namespace GazeBar
             new Onglet("Défilement", "\uEC8F",
                 Reglage.Nombre("Vitesse maximale", "Atteinte trois rayons de cercle au-delà du bord", " crans/s", 1,
                                p => p.VitesseMaxDefilement, (p, v) => p.VitesseMaxDefilement = v)),
+
+            // E7FC = manette (« Jeu », étape 9)
+            new Onglet("Jeu", "\uE7FC",
+                Reglage.DeuxChoix("Souris du jeu", "Directe pour Mindball, relative pour d'autres jeux",
+                                  "Directe", "Relative",
+                                  p => p.SourisRelative, (p, v) => p.SourisRelative = v),
+                Reglage.DeuxChoix("Souris relative", "Suivi : comme le regard. Manette : écart au centre",
+                                  "Suivi", "Manette",
+                                  p => p.RelativeManette, (p, v) => p.RelativeManette = v),
+                Reglage.Nombre("Lissage du jeu", "Plus petit = plus calme, plus grand = plus réactif", "", 0.01,
+                               p => p.LissageJeu, (p, v) => p.LissageJeu = v),
+                Reglage.Nombre("Sensibilité", "Souris relative : multiplie les déplacements", " ×", 0.1,
+                               p => p.SensibiliteJeu, (p, v) => p.SensibiliteJeu = v)),
 
             // E713 = engrenage (« Général »)
             new Onglet("Général", "",

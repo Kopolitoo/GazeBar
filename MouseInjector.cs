@@ -144,6 +144,30 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// Déplace le curseur de (dx, dy) pixels par rapport à sa place actuelle, comme une vraie
+        /// souris qu'on pousse (étape 9, mode jeu « relatif »).
+        ///
+        /// Sans MOUSEEVENTF_ABSOLUTE, dx et dy sont un ÉCART et non une position. C'est ce que
+        /// lisent les jeux en « entrée brute ». Pour les autres logiciels, Windows peut appliquer
+        /// l'accélération de la souris (option « Améliorer la précision du pointeur ») : le
+        /// curseur peut alors aller un peu plus loin que l'écart demandé.
+        /// </summary>
+        public static void DeplacerDe(int dx, int dy)
+        {
+            if (dx == 0 && dy == 0)
+            {
+                return;
+            }
+
+            NativeMethods.INPUT input = new NativeMethods.INPUT();
+            input.type = NativeMethods.INPUT_MOUSE;
+            input.u.mi.dx = dx;
+            input.u.mi.dy = dy;
+            input.u.mi.dwFlags = NativeMethods.MOUSEEVENTF_MOVE;
+            Envoyer(input);
+        }
+
+        /// <summary>
         /// Un mouvement de molette (étape 8, mode défilement), à l'endroit où est le curseur.
         ///
         /// quantite : en « unités de molette » de Windows. Un cran d'une vraie molette vaut 120

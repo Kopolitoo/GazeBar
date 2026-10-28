@@ -12,14 +12,15 @@ namespace GazeBar
     /// MODE MENU (étape 4 du cahier des charges).
     ///
     /// Entrée : regarder en bas, hors de l'écran, pendant [DelaiMenu]. C'est le ModeManager
-    /// qui surveille cela, uniquement depuis les modes mouvement et pause (et plus tard jeu) :
+    /// qui surveille cela, uniquement depuis les modes mouvement, pause et jeu :
     /// voir Mode.MenuAutorise (étape 6).
     ///
     /// Affichage : une barre centrée en bas de l'écran, avec des boutons activés au regard
     /// (BoutonRegard) : on regarde un bouton pendant [DelaiActivation], son anneau se remplit,
     /// puis il s'active. De gauche à droite :
     ///   Paramètres   ouvre le mode paramètres (étape 7) ;
-    ///   Jeu          grisé : le mode jeu arrivera à l'étape 10 ;
+    ///   Jeu          passe en mode jeu (étape 9). Si l'on vient du mode jeu, ce bouton devient
+    ///                « Quitter le jeu » et ramène au mode mouvement ;
     ///   Calibration  lance l'outil de calibration Tobii (mode calibration) ;
     ///   Clavier      ouvre le clavier visuel de Windows, puis ferme le menu ;
     ///   Pause        passe en mode pause. Si l'on vient du mode pause, ce bouton devient
@@ -44,6 +45,8 @@ namespace GazeBar
         private enum ActionMenu
         {
             Parametres,
+            Jeu,
+            QuitterJeu,
             Calibration,
             Clavier,
             Pause,
@@ -203,6 +206,14 @@ namespace GazeBar
             {
                 case ActionMenu.Parametres:
                     Gestionnaire.ChangerMode(new ModeParametres());
+                    break;
+
+                case ActionMenu.Jeu:
+                    Gestionnaire.ChangerMode(new ModeJeu());
+                    break;
+
+                case ActionMenu.QuitterJeu:
+                    Gestionnaire.ChangerMode(new ModeMouvement());
                     break;
 
                 case ActionMenu.Calibration:
@@ -376,7 +387,14 @@ namespace GazeBar
                 //   E713 engrenage, E7FC manette, E890 œil, E765 clavier, E769 pause,
                 //   E768 lecture, E962 souris, E9D9 diagnostic, E7E8 bouton marche/arrêt.
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Paramètres"), ActionMenu.Parametres);
-                Ajouter(boutons, actions, BoutonRegard.Indisponible("", "Jeu (à venir, étape 10)"), null);
+                if (_retour is ModeJeu)
+                {
+                    Ajouter(boutons, actions, new BoutonRegard("\uE7FC", null, "Quitter le jeu"), ActionMenu.QuitterJeu);
+                }
+                else
+                {
+                    Ajouter(boutons, actions, new BoutonRegard("\uE7FC", null, "Jeu"), ActionMenu.Jeu);
+                }
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Calibration"), ActionMenu.Calibration);
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier visuel"), ActionMenu.Clavier);
                 if (_retour is ModePause)

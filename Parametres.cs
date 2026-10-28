@@ -49,9 +49,11 @@ namespace GazeBar
         ///       (voir MettreAJour) ;
         ///   3 : étape 6 — nouveau glisser-déposer : DureePauseAndroid et DureeGlisser
         ///       remplacent DureeAppuiLong, DelaiDepot, DistanceMinGlisser et DureeMaxAppui,
-        ///       supprimés (règle de l'utilisateur : un réglage qui ne sert plus est retiré).
+        ///       supprimés (règle de l'utilisateur : un réglage qui ne sert plus est retiré) ;
+        ///   4 : étape 9 — LissageJeu passe de 0.7 à 0.16 par défaut (essai de l'utilisateur
+        ///       du 28/10/2026 : à 0.7, le curseur saccadait en souris directe).
         /// </summary>
-        public const int VersionActuelle = 3;
+        public const int VersionActuelle = 4;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -181,13 +183,55 @@ namespace GazeBar
 
         // ───────────────────────── Jeu ─────────────────────────
 
-        /// <summary>Lissage du mode jeu (plus proche de 1 = plus réactif).</summary>
+        /// <summary>
+        /// Lissage du mode jeu, même sens et même calcul que [Lissage] (voir Modes/Lisseur.cs),
+        /// mais réglé à part (demande de l'utilisateur du 28/10/2026). 0.16 par défaut, comme
+        /// le mode mouvement (0.7 au départ : le curseur saccadait beaucoup trop).
+        /// </summary>
         [DataMember(Order = 80)]
         public double LissageJeu { get; set; }
 
         /// <summary>Multiplicateur des déplacements relatifs en mode jeu.</summary>
         [DataMember(Order = 81)]
         public double SensibiliteJeu { get; set; }
+
+        /// <summary>
+        /// Variante du mode jeu (étape 9, choix de l'utilisateur du 27/10/2026) :
+        ///   « directe »  : le curseur suit le regard (par défaut, pour Mindball Play) ;
+        ///   « relative » : des déplacements sont envoyés au jeu (pour d'autres jeux).
+        /// Écrit en toutes lettres dans parametres.json, pour qu'on le lise facilement.
+        /// </summary>
+        [DataMember(Order = 82)]
+        public string SourisJeu { get; set; }
+
+        /// <summary>
+        /// Souris relative du mode jeu : comment traduire le regard en déplacement (étape 9).
+        ///   « suivi »   : le déplacement suit celui du regard (par défaut) ;
+        ///   « manette » : l'écart entre le regard et le centre de l'écran donne la vitesse.
+        /// Réglage ajouté à l'étape 9 : le cahier des charges propose ces deux façons « à tester ».
+        /// </summary>
+        [DataMember(Order = 83)]
+        public string RelativeJeu { get; set; }
+
+        // Les valeurs possibles de SourisJeu et RelativeJeu, écrites une seule fois.
+        public const string SourisDirecteTexte = "directe";
+        public const string SourisRelativeTexte = "relative";
+        public const string RelativeSuiviTexte = "suivi";
+        public const string RelativeManetteTexte = "manette";
+
+        /// <summary>Vrai si le mode jeu envoie des déplacements (SourisJeu = « relative »). Pas enregistré dans le fichier.</summary>
+        public bool SourisRelative
+        {
+            get { return SourisJeu == SourisRelativeTexte; }
+            set { SourisJeu = value ? SourisRelativeTexte : SourisDirecteTexte; }
+        }
+
+        /// <summary>Vrai si la souris relative fonctionne comme une manette (RelativeJeu = « manette »). Pas enregistré.</summary>
+        public bool RelativeManette
+        {
+            get { return RelativeJeu == RelativeManetteTexte; }
+            set { RelativeJeu = value ? RelativeManetteTexte : RelativeSuiviTexte; }
+        }
 
         // ───────────────────────── Général ─────────────────────────
 
@@ -250,8 +294,10 @@ namespace GazeBar
 
             VitesseMaxDefilement = 10;
 
-            LissageJeu = 0.7;
+            LissageJeu = 0.16;
             SensibiliteJeu = 1.0;
+            SourisJeu = SourisDirecteTexte;
+            RelativeJeu = RelativeSuiviTexte;
 
             SuiviSouris = false;
             DemarrerAvecWindows = false;
@@ -303,6 +349,12 @@ namespace GazeBar
 
             LissageJeu = Borner(LissageJeu, 0.01, 1);
             SensibiliteJeu = Borner(SensibiliteJeu, 0.1, 10);
+
+            // Un mot inconnu (faute de frappe, majuscules…) redevient la valeur par défaut.
+            string souris = (SourisJeu ?? "").Trim().ToLowerInvariant();
+            SourisJeu = souris == SourisRelativeTexte ? SourisRelativeTexte : SourisDirecteTexte;
+            string relative = (RelativeJeu ?? "").Trim().ToLowerInvariant();
+            RelativeJeu = relative == RelativeManetteTexte ? RelativeManetteTexte : RelativeSuiviTexte;
         }
 
         /// <summary>
@@ -336,6 +388,15 @@ namespace GazeBar
                 App.Log("Paramètres : mise à jour en version 3 (réglages du glisser-déposer remplacés)");
             }
 
+            if (VersionFichier < 4)
+            {
+                // Seul l'ancien défaut est remplacé : une valeur choisie par l'utilisateur reste.
+                if (Math.Abs(LissageJeu - 0.7) < 0.001)
+                {
+                    LissageJeu = 0.16;
+                }
+                App.Log("Paramètres : mise à jour en version 4 (LissageJeu 0.7 → 0.16)");
+            }
             VersionFichier = VersionActuelle;
             return true;
         }
