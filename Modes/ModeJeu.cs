@@ -11,13 +11,17 @@ namespace GazeBar
     ///
     /// Dans ce mode, rien n'est dessiné : pas de cercle, pas de fixation, pas de regard fixe,
     /// pas de clic au regard. L'utilisateur clique avec son contacteur ; aucune touche du
-    /// clavier n'est envoyée. Le lissage est [LissageJeu], beaucoup plus réactif que [Lissage].
+    /// clavier n'est envoyée.
     ///
     /// Deux variantes, choisies par le réglage [SourisJeu] :
     ///
-    ///   « directe » (par défaut, pour Mindball Play) : le curseur est placé sur le regard
-    ///   lissé à chaque image (SetCursorPos, comme le suivi souris). Regard perdu ou hors de
-    ///   l'écran : le curseur reste où il est.
+    ///   « directe » (par défaut, pour Mindball Play) : le curseur bouge EXACTEMENT comme en
+    ///   mode mouvement avec le suivi souris, mais sans cercle (demande de l'utilisateur du
+    ///   28/10/2026 : avec [LissageJeu] = 0.7 puis 0.3, le curseur saccadait trop). Donc :
+    ///   lissage [Lissage] (celui du mode mouvement) et anti-tremblement [ZoneMorteCurseur] :
+    ///   au repos, le curseur ne bouge pas tant que le regard lissé en est à moins de
+    ///   [ZoneMorteCurseur] pixels ; au-delà, il le suit en continu jusqu'à l'avoir rattrapé.
+    ///   Regard perdu ou hors de l'écran : le curseur reste où il est.
     ///
     ///   « relative » (pour d'autres jeux) : beaucoup de jeux ignorent la position du curseur
     ///   et ne lisent que les DÉPLACEMENTS de la souris (« entrée brute »). On envoie donc des
@@ -29,6 +33,7 @@ namespace GazeBar
     ///                   comme le petit levier d'une manette. Au centre, dans un cercle de rayon
     ///                   [RayonCercle], rien ne bouge ; la vitesse augmente ensuite jusqu'au bord
     ///                   de l'écran.
+    ///   Le lissage de la souris relative est [LissageJeu], plus réactif que [Lissage].
     ///   Regard perdu ou hors de l'écran : plus aucun déplacement n'est envoyé.
     ///
     /// Attention, limites connues : un jeu en « plein écran exclusif » peut cacher le calque de
@@ -44,15 +49,17 @@ namespace GazeBar
         /// </summary>
         private const double VitesseMaxManette = 1500;
 
-        // Le regard lissé avec [LissageJeu] (et non [Lissage]).
-        private readonly Lisseur _lisse = new Lisseur(() => Parametres.Courants.LissageJeu);
+        // Le regard lissé : avec [Lissage] en souris directe (comme le mode mouvement), avec
+        // [LissageJeu] en souris relative. La fonction est relue à chaque tic.
+        private readonly Lisseur _lisse = new Lisseur(
+            () => Parametres.Courants.SourisRelative ? Parametres.Courants.LissageJeu : Parametres.Courants.Lissage);
 
         // Vrai quand _lisse a une position valable (sinon on la place sur le regard).
         private bool _place;
 
-        // Souris directe : dernière position envoyée, pour ne pas répéter SetCursorPos inutilement.
-        private int _dernierX = int.MinValue;
-        private int _dernierY = int.MinValue;
+        // Souris directe : vrai quand le curseur est « en route » derrière le regard lissé
+        // (même principe que le suivi souris du mode mouvement).
+        private bool _curseurEnRoute;
 
         // Souris relative, mode suivi : position lissée au tic précédent.
         private double _precedentX;
@@ -86,8 +93,7 @@ namespace GazeBar
             // On repart de zéro à chaque entrée (aussi au retour du menu) : le lissage repart
             // du regard actuel, sans glisser depuis une vieille position.
             _place = false;
-            _dernierX = int.MinValue;
-            _dernierY = int.MinValue;
+            _curseurEnRoute = false;
             _resteX = 0;
             _resteY = 0;
             _dernierMs = -1;
@@ -113,15 +119,23 @@ namespace GazeBar
 
             if (!_place)
             {
-                _lisse.Placer(regard.X, regard.Y);
-                _precedentX = regard.X;
-                _precedentY = regard.Y;
+                // Point de départ du lissage. En souris directe, on part du CURSEUR (comme le
+                // cercle du mode mouvement part de sa place) : il glisse vers le regard au lieu
+                // de sauter. En souris relative, on part du regard (aucun déplacement envoyé).
+                NativeMethods.POINT curseur;
+                if (!p.SourisRelative && NativeMethods.GetCursorPos(out curseur))
+                {
+                    _lisse.Placer(curseur.X, curseur.Y);
+                }
+                else
+                {
+                    _lisse.Placer(regard.X, regard.Y);
+                }
+                _precedentX = _lisse.X;
+                _precedentY = _lisse.Y;
                 _place = true;
             }
-            else
-            {
-                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
-            }
+            _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
 
             if (!p.SourisRelative)
             {
@@ -137,18 +151,40 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Souris directe : le curseur est posé sur le regard lissé.</summary>
+        /// <summary>
+        /// Souris directe : le curseur suit le regard lissé, comme le suivi souris du mode
+        /// mouvement (ModeMouvement.DeplacerCurseur) :
+        ///  - au repos, le curseur ne bouge pas tant que le regard lissé en est à moins de
+        ///    [ZoneMorteCurseur] pixels (le petit tremblement du regard est ignoré) ;
+        ///  - au-delà, il se met « en route » et suit à chaque image, en continu, jusqu'à
+        ///    l'avoir rattrapé (moins d'un pixel), puis revient au repos.
+        /// On lit la vraie position du curseur : si le jeu l'a déplacé, on en tient compte.
+        /// </summary>
         private void SourisDirecte()
         {
-            int x = (int)Math.Round(_lisse.X);
-            int y = (int)Math.Round(_lisse.Y);
-            if (x == _dernierX && y == _dernierY)
+            NativeMethods.POINT curseur;
+            if (!NativeMethods.GetCursorPos(out curseur))
             {
                 return;
             }
-            NativeMethods.SetCursorPos(x, y);
-            _dernierX = x;
-            _dernierY = y;
+
+            double ecartX = curseur.X - _lisse.X;
+            double ecartY = curseur.Y - _lisse.Y;
+            double distance = Math.Sqrt(ecartX * ecartX + ecartY * ecartY);
+            if (!_curseurEnRoute && distance >= Parametres.Courants.ZoneMorteCurseur)
+            {
+                _curseurEnRoute = true;
+            }
+            if (!_curseurEnRoute)
+            {
+                return;
+            }
+
+            NativeMethods.SetCursorPos((int)Math.Round(_lisse.X), (int)Math.Round(_lisse.Y));
+            if (distance < 1)
+            {
+                _curseurEnRoute = false; // rattrapé : retour au repos
+            }
         }
 
         /// <summary>Souris relative « suivi » : on envoie le déplacement du regard lissé depuis le tic précédent.</summary>
