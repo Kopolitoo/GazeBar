@@ -236,6 +236,10 @@ namespace GazeBar
     /// L'onglet « Icônes » est particulier : il n'a pas de réglage « − / + », mais un gros
     /// bouton qui ouvre l'écran de configuration des icônes du choix d'action
     /// (ModeConfigIcones). Son bouton « Défaut » remet la disposition d'origine des icônes.
+    ///
+    /// L'onglet « Outils » (dernier) n'a pas de réglage non plus : deux gros boutons,
+    /// « Calibration » et « Diagnostic », qui étaient avant dans la barre de menu. Il n'a pas
+    /// de bouton « Défaut » (il n'y a rien à remettre).
     /// </summary>
     internal static class CatalogueParametres
     {
@@ -247,6 +251,12 @@ namespace GazeBar
         {
             get { return Math.Max(0, Onglets.FindIndex(o => o.Nom == NomOngletIcones)); }
         }
+
+        /// <summary>
+        /// Le nom de l'onglet « Outils » (calibration et diagnostic, déplacés de la barre de
+        /// menu le 29/10/2026), reconnu par FenetreParametres.
+        /// </summary>
+        public const string NomOngletOutils = "Outils";
 
         public static readonly List<Onglet> Onglets = new List<Onglet>
         {
@@ -333,7 +343,11 @@ namespace GazeBar
             new Onglet("Général", "",
                 Reglage.OuiOuNon("Démarrer avec Windows", "Lancer GazeBar à l'ouverture de session",
                                  p => p.DemarrerAvecWindows, (p, v) => p.DemarrerAvecWindows = v,
-                                 p => DemarrageWindows.Appliquer(p.DemarrerAvecWindows)))
+                                 p => DemarrageWindows.Appliquer(p.DemarrerAvecWindows))),
+
+            // E90F = clé à molette (« Outils », 29/10/2026) : pas de réglage, deux gros boutons
+            // « Calibration » et « Diagnostic » (voir FenetreParametres.ConstruireOngletOutils).
+            new Onglet(NomOngletOutils, "\uE90F")
         };
     }
 }

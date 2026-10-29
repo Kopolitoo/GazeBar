@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 
 namespace GazeBar
@@ -23,6 +24,12 @@ namespace GazeBar
     ///
     /// Étape 10 : le bouton « Configurer les icônes » de l'onglet « Icônes » ouvre l'écran de
     /// configuration des icônes (ModeConfigIcones), qui revient ici, sur cet onglet.
+    ///
+    /// Onglet « Outils » (29/10/2026, boutons déplacés de la barre de menu) :
+    ///   - « Calibration » lance l'outil Tobii puis passe en mode calibration (qui revient au
+    ///     mode mouvement quand l'outil se ferme). Si le lancement échoue, on reste ici et le
+    ///     message s'affiche dans l'onglet ;
+    ///   - « Diagnostic » revient au mode mouvement et ouvre la fenêtre Diagnostic.
     ///
     /// Sortie : bouton « Retour » (au milieu du bord droit) ou touche Échap de l'aidant,
     /// vers le mode mouvement. Le menu du bas ne s'ouvre pas ici (Mode.MenuAutorise reste
@@ -73,6 +80,8 @@ namespace GazeBar
             _fenetre = new FenetreParametres(_ongletDepart);
             _fenetre.RetourDemande += Retour;
             _fenetre.ConfigurationIconesDemandee += OuvrirConfigurationIcones;
+            _fenetre.CalibrationDemandee += LancerCalibration;
+            _fenetre.DiagnosticDemande += OuvrirDiagnostic;
             _fenetre.Show();
             // Activate : la fenêtre prend le clavier, pour que l'aidant puisse taper une valeur.
             // (Windows peut le refuser si un autre programme est au premier plan ; un clic de
@@ -166,6 +175,8 @@ namespace GazeBar
                 _fenetre = null;
                 fenetre.RetourDemande -= Retour;
                 fenetre.ConfigurationIconesDemandee -= OuvrirConfigurationIcones;
+                fenetre.CalibrationDemandee -= LancerCalibration;
+                fenetre.DiagnosticDemande -= OuvrirDiagnostic;
                 fenetre.Fermer();
             }
         }
@@ -198,6 +209,57 @@ namespace GazeBar
         {
             App.Log("Paramètres : configuration des icônes");
             Gestionnaire.ChangerMode(new ModeConfigIcones());
+        }
+
+        /// <summary>
+        /// Bouton « Calibration » de l'onglet « Outils ».
+        ///
+        /// Difficulté : la fenêtre des paramètres est plein écran et « toujours devant »
+        /// (Topmost). Si on lançait l'outil Tobii sans rien faire, sa fenêtre serait cachée
+        /// derrière. On CACHE donc d'abord la fenêtre des paramètres (Hide : elle existe
+        /// toujours, elle n'est simplement plus affichée).
+        ///
+        /// Ensuite, comme depuis la barre de menu, on note la fenêtre active AVANT de lancer
+        /// l'outil : le mode calibration saura reconnaître la fenêtre de l'outil, qui sera la
+        /// suivante à devenir active (voir ModeCalibration). En cachant la nôtre, Windows a
+        /// rendu active une autre fenêtre (l'application d'avant) : c'est elle qu'on note.
+        ///
+        /// Si le lancement échoue, on réaffiche la fenêtre et on montre le message.
+        /// </summary>
+        private void LancerCalibration()
+        {
+            if (_fenetre == null)
+            {
+                return;
+            }
+            App.Log("Paramètres : calibration");
+            _fenetre.Hide();
+            IntPtr fenetreAvant = NativeMethods.GetForegroundWindow();
+
+            string message;
+            if (CalibrationTobii.Lancer(Gestionnaire.Regard, out message))
+            {
+                // Quitter() fermera la fenêtre des paramètres (déjà cachée).
+                Gestionnaire.ChangerMode(new ModeCalibration(fenetreAvant));
+            }
+            else
+            {
+                _fenetre.Show();
+                _fenetre.Activate();
+                _fenetre.AfficherMessageOutils(message);
+            }
+        }
+
+        /// <summary>
+        /// Bouton « Diagnostic » de l'onglet « Outils » : retour au mode mouvement (la fenêtre
+        /// des paramètres, toujours devant, cacherait la fenêtre Diagnostic), puis ouverture de
+        /// la fenêtre Diagnostic.
+        /// </summary>
+        private void OuvrirDiagnostic()
+        {
+            App.Log("Paramètres : diagnostic");
+            Gestionnaire.ChangerMode(new ModeMouvement());
+            ((App)Application.Current).OuvrirDiagnostic();
         }
 
         /// <summary>Bouton « Retour » : retour au mode mouvement.</summary>
