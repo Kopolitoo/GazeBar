@@ -75,6 +75,14 @@ namespace GazeBar
 
         private const int ENUM_CURRENT_SETTINGS = -1;
 
+        /// <summary>
+        /// La mise à l'échelle « système » du programme, en points par pouce (96 = 100 %,
+        /// 144 = 150 %). Elle est fixée au démarrage du programme et ne change plus ensuite
+        /// (étape 11, voir Ecran.EchelleDemarrage). Windows 10 version 1607 et plus.
+        /// </summary>
+        [DllImport("user32.dll")]
+        internal static extern uint GetDpiForSystem();
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool EnumDisplaySettings(string nomEcran, int numeroMode, ref DEVMODE mode);

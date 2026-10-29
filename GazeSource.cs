@@ -132,6 +132,10 @@ namespace GazeBar
                 x = _x;
                 y = _y;
             }
+            // Correction de l'échelle (étape 11, voir Ecran.FacteurRegard) : 1 d'habitude.
+            double facteur = Ecran.FacteurRegard;
+            x *= facteur;
+            y *= facteur;
         }
 
         /// <summary>
@@ -153,6 +157,10 @@ namespace GazeBar
                 numero = _numeroMesure;
                 instantMs = _lastSampleMs;
             }
+            // Correction de l'échelle (étape 11, voir Ecran.FacteurRegard) : 1 d'habitude.
+            double facteur = Ecran.FacteurRegard;
+            x *= facteur;
+            y *= facteur;
         }
 
         /// <summary>L'heure actuelle sur l'horloge de GazeSource, en millisecondes (même échelle que instantMs).</summary>
@@ -165,24 +173,6 @@ namespace GazeBar
         public static bool IsOffScreen(double x, double y, double screenWidth, double screenHeight)
         {
             return x < 0 || y < 0 || x >= screenWidth || y >= screenHeight;
-        }
-
-        /// <summary>
-        /// Coupe puis rétablit la connexion au moteur Tobii (étape 11, correction du 29/10/2026).
-        ///
-        /// Essai de l'utilisateur : GazeBar lancé en 1920 × 1080 à 100 %, puis écran passé en
-        /// 3840 × 2160 ; Windows met alors la mise à l'échelle à 150 %. Le cercle ne pouvait plus
-        /// atteindre le bord opposé de l'écran, « comme ralenti » ; en remettant 100 %, tout
-        /// rentrait dans l'ordre. Hypothèse (non vérifiée) : Tobii.Interaction garde la mise à
-        /// l'échelle connue au moment de la connexion, et donne le regard dans ces anciennes
-        /// unités (3840 ÷ 1.5 = 2560 au plus). Une nouvelle connexion devrait lui faire relire
-        /// l'écran. Appelée par le gestionnaire de modes après chaque changement d'écran.
-        /// </summary>
-        public void Redemarrer()
-        {
-            App.Log("Regard Tobii : reconnexion après un changement d'écran");
-            Dispose();
-            Start();
         }
 
         public void Dispose()

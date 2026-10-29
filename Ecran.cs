@@ -67,6 +67,30 @@ namespace GazeBar
         /// <summary>Taille du texte de Windows (Accessibilité) : 1 = 100 %, 2.25 = 225 %.</summary>
         public static double TexteWindows { get; private set; } = 1;
 
+        /// <summary>
+        /// La mise à l'échelle de Windows AU DÉMARRAGE de GazeBar (1 = 100 %). Windows la
+        /// « fige » pour le programme : elle ne change plus ensuite, même si l'on change la
+        /// mise à l'échelle dans les paramètres de Windows. Lue avec GetDpiForSystem.
+        /// </summary>
+        public static double EchelleDemarrage { get; } = LireEchelleDemarrage();
+
+        /// <summary>
+        /// Correction du regard Tobii (étape 11, correction du 29/10/2026).
+        ///
+        /// Essai de l'utilisateur : GazeBar lancé en 1920 × 1080 à 100 %, puis écran passé en
+        /// 3840 × 2160 à 150 %. Le journal montre que le regard reçu de Tobii ne dépassait plus
+        /// X 1830 environ (au lieu de 3840) ; revenu à 100 %, il atteignait de nouveau 3802.
+        /// Tobii donne donc le regard dans les unités de l'échelle du DÉMARRAGE : il est réduit
+        /// de 150 ÷ 100 = 1.5. On le multiplie par ce rapport pour retrouver les vrais pixels.
+        /// Quand l'échelle n'a pas changé depuis le démarrage (cas habituel), le rapport vaut 1
+        /// et rien ne change (c'est pourquoi tout marchait en 4K à 200 % dès le lancement).
+        /// </summary>
+        public static double FacteurRegard
+        {
+            // Avant la première mesure (au tout début), pas de correction.
+            get { return _mesure ? EchelleWindows / EchelleDemarrage : 1; }
+        }
+
         /// <summary>Hauteur de l'écran en unités WPF (1080 pour un écran 4K à 200 % ou 1080p à 100 %).</summary>
         public static double HauteurUnites
         {
@@ -185,7 +209,9 @@ namespace GazeBar
             HauteurPixels = hauteur;
             EchelleWindows = echelle;
             TexteWindows = texte;
-            App.Log("Écran : " + Description() + (premiere ? "" : " (changement détecté)"));
+            App.Log("Écran : " + Description() + (premiere ? "" : " (changement détecté)") +
+                    " ; échelle au démarrage " + (EchelleDemarrage * 100).ToString("F0") +
+                    " %, regard Tobii × " + FacteurRegard.ToString("0.###"));
 
             if (premiere)
             {
@@ -204,6 +230,24 @@ namespace GazeBar
         {
             return LargeurPixels.ToString("F0") + " × " + HauteurPixels.ToString("F0") + " px, échelle " +
                    (EchelleWindows * 100).ToString("F0") + " %, texte " + (TexteWindows * 100).ToString("F0") + " %";
+        }
+
+        /// <summary>La mise à l'échelle figée au démarrage (voir EchelleDemarrage). 1 si elle est illisible.</summary>
+        private static double LireEchelleDemarrage()
+        {
+            try
+            {
+                uint dpi = NativeMethods.GetDpiForSystem();
+                if (dpi > 0)
+                {
+                    return dpi / 96.0;   // 96 points par pouce = 100 %
+                }
+            }
+            catch (EntryPointNotFoundException)
+            {
+                // Windows 10 trop ancien (avant la version 1607) : pas de GetDpiForSystem.
+            }
+            return 1;
         }
 
         /// <summary>
