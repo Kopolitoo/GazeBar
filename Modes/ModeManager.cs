@@ -60,6 +60,32 @@ namespace GazeBar
         {
             Regard = regard;
             Calque = calque;
+
+            // Étape 11 : l'écran peut changer pendant que GazeBar tourne.
+            Ecran.Change += OnEcranChange;
+        }
+
+        /// <summary>
+        /// La résolution, la mise à l'échelle ou la taille du texte de Windows a changé
+        /// (étape 11). Le mode courant s'adapte s'il le peut (Mode.AdapterEcran) ; sinon on
+        /// revient au mode mouvement, comme avec la touche Échap : boutons de la souris et
+        /// touches Ctrl, Maj, Alt relâchés par sécurité (un glisser-déposer est interrompu).
+        /// </summary>
+        private void OnEcranChange()
+        {
+            if (ModeCourant == null)
+            {
+                return;
+            }
+            if (ModeCourant.AdapterEcran())
+            {
+                App.Log("Écran changé : le mode " + ModeCourant.Nom + " continue avec les nouvelles tailles");
+                return;
+            }
+            App.Log("Écran changé : retour au mode mouvement (le mode " + ModeCourant.Nom + " était placé pour l'ancien écran)");
+            MouseInjector.ReleaseAll();
+            InjecteurClavier.RelacherTout();
+            ChangerMode(new ModeMouvement());
         }
 
         /// <summary>La source du regard Tobii.</summary>
@@ -77,16 +103,20 @@ namespace GazeBar
         /// <summary>Déclenché après chaque changement de mode. L'interface peut s'en servir pour s'afficher à jour.</summary>
         public event Action<Mode> ModeChange;
 
-        /// <summary>Largeur de l'écran principal, en pixels réels.</summary>
+        /// <summary>
+        /// Largeur de l'écran principal, en pixels réels, mesurée par Ecran (étape 11 :
+        /// GetSystemMetrics ne voyait pas un changement de résolution fait pendant que GazeBar
+        /// tourne, voir NativeMethods.TailleEcranPrincipal).
+        /// </summary>
         public double LargeurEcran
         {
-            get { return NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN); }
+            get { return Ecran.LargeurPixels; }
         }
 
-        /// <summary>Hauteur de l'écran principal, en pixels réels.</summary>
+        /// <summary>Hauteur de l'écran principal, en pixels réels, mesurée par Ecran.</summary>
         public double HauteurEcran
         {
-            get { return NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN); }
+            get { return Ecran.HauteurPixels; }
         }
 
         // ───────────────────────── Commandes ─────────────────────────

@@ -71,6 +71,15 @@ namespace GazeBar
             get { return true; }
         }
 
+        /// <summary>
+        /// L'écran a changé (étape 11) : ce mode continue, car il redessine le cercle à chaque tic,
+        /// avec les tailles du nouvel écran.
+        /// </summary>
+        public override bool AdapterEcran()
+        {
+            return true;
+        }
+
         public override void Entrer(EtatRegard regard)
         {
             // Retour au mode mouvement = fin de l'action (ou abandon) : les modificateurs
@@ -121,14 +130,14 @@ namespace GazeBar
                 //    activée. Sinon, il ne bouge pas : il rejoindra le regard une fois fixé.
                 if (p.SuiviSouris)
                 {
-                    DeplacerCurseur(p.ZoneMorteCurseur);
+                    DeplacerCurseur(p.ZoneMorteCurseurPx);
                 }
             }
 
             // 3. Le regard est-il sorti de la zone ignorée ? (Seulement avec un regard sur
             //    l'écran, comme avant : un regard hors de l'écran ne compte pas.)
             if (regard.SurEcran && _zoneIgnoree &&
-                Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCercle)
+                Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCerclePx)
             {
                 _zoneIgnoree = false;
             }
@@ -153,7 +162,7 @@ namespace GazeBar
             // 5. Le dessin du cercle (dès qu'on a une position).
             if (_place)
             {
-                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
+                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCerclePx, false);
             }
         }
 

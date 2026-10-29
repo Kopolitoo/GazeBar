@@ -132,6 +132,10 @@ namespace GazeBar
                 x = _x;
                 y = _y;
             }
+            // Correction de l'échelle (étape 11, voir Ecran.FacteurRegard) : 1 d'habitude.
+            double facteur = Ecran.FacteurRegard;
+            x *= facteur;
+            y *= facteur;
         }
 
         /// <summary>
@@ -153,6 +157,10 @@ namespace GazeBar
                 numero = _numeroMesure;
                 instantMs = _lastSampleMs;
             }
+            // Correction de l'échelle (étape 11, voir Ecran.FacteurRegard) : 1 d'habitude.
+            double facteur = Ecran.FacteurRegard;
+            x *= facteur;
+            y *= facteur;
         }
 
         /// <summary>L'heure actuelle sur l'horloge de GazeSource, en millisecondes (même échelle que instantMs).</summary>

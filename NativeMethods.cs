@@ -43,6 +43,93 @@ namespace GazeBar
         internal const int SM_CXSCREEN = 0;
         internal const int SM_CYSCREEN = 1;
 
+        /// <summary>
+        /// Taille RÉELLE de l'écran principal, en pixels (étape 11, correction du 29/10/2026).
+        ///
+        /// Pourquoi pas GetSystemMetrics ? Essai de l'utilisateur : GazeBar lancé en
+        /// 1920 × 1080 à 100 %, puis écran passé en 3840 × 2160 à 200 % : GetSystemMetrics
+        /// continuait de répondre 1920 × 1080. Windows « fige » ses réponses à la mise à
+        /// l'échelle du démarrage du programme : 3840 pixels à 200 %, vus avec l'échelle du
+        /// démarrage (100 %), font 3840 × 100 ÷ 200 = 1920. Le changement n'était donc pas vu,
+        /// et le calque ne couvrait plus que le quart en haut à gauche de l'écran.
+        ///
+        /// EnumDisplaySettings, lui, donne le « mode d'affichage » en cours de l'écran : sa vraie
+        /// résolution, quelle que soit la mise à l'échelle. En cas d'échec, on se rabat sur
+        /// GetSystemMetrics.
+        /// </summary>
+        internal static void TailleEcranPrincipal(out double largeur, out double hauteur)
+        {
+            DEVMODE mode = new DEVMODE();
+            mode.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
+            // null = l'écran principal ; ENUM_CURRENT_SETTINGS = le mode utilisé en ce moment.
+            if (EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref mode) &&
+                mode.dmPelsWidth > 0 && mode.dmPelsHeight > 0)
+            {
+                largeur = mode.dmPelsWidth;
+                hauteur = mode.dmPelsHeight;
+                return;
+            }
+            largeur = GetSystemMetrics(SM_CXSCREEN);
+            hauteur = GetSystemMetrics(SM_CYSCREEN);
+        }
+
+        private const int ENUM_CURRENT_SETTINGS = -1;
+
+        /// <summary>
+        /// La mise à l'échelle « système » du programme, en points par pouce (96 = 100 %,
+        /// 144 = 150 %). Elle est fixée au démarrage du programme et ne change plus ensuite
+        /// (étape 11, voir Ecran.EchelleDemarrage). Windows 10 version 1607 et plus.
+        /// </summary>
+        [DllImport("user32.dll")]
+        internal static extern uint GetDpiForSystem();
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EnumDisplaySettings(string nomEcran, int numeroMode, ref DEVMODE mode);
+
+        /// <summary>
+        /// Description d'un mode d'affichage (structure DEVMODE de Windows). Seuls dmSize (à
+        /// remplir avant l'appel), dmPelsWidth et dmPelsHeight (la résolution) servent ici ;
+        /// les autres champs doivent quand même être là, dans cet ordre, pour que la structure
+        /// ait exactement la taille attendue par Windows.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct DEVMODE
+        {
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string dmDeviceName;
+            public short dmSpecVersion;
+            public short dmDriverVersion;
+            public short dmSize;
+            public short dmDriverExtra;
+            public int dmFields;
+            public int dmPositionX;
+            public int dmPositionY;
+            public int dmDisplayOrientation;
+            public int dmDisplayFixedOutput;
+            public short dmColor;
+            public short dmDuplex;
+            public short dmYResolution;
+            public short dmTTOption;
+            public short dmCollate;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string dmFormName;
+            public short dmLogPixels;
+            public int dmBitsPerPel;
+            public int dmPelsWidth;
+            public int dmPelsHeight;
+            public int dmDisplayFlags;
+            public int dmDisplayFrequency;
+            public int dmICMMethod;
+            public int dmICMIntent;
+            public int dmMediaType;
+            public int dmDitherType;
+            public int dmReserved1;
+            public int dmReserved2;
+            public int dmPanningWidth;
+            public int dmPanningHeight;
+        }
+
         // ───────────────────────── Simulation de la souris et du clavier ─────────────────────────
 
         /// <summary>Description d'une action de souris à simuler (structure MOUSEINPUT de Windows).</summary>
@@ -126,6 +213,10 @@ namespace GazeBar
         internal const int WS_EX_TOOLWINDOW = 0x00000080; // fenêtre d'outils : absente d'Alt+Tab
         internal const int WM_MOUSEACTIVATE = 0x0021;     // message : « un clic va activer la fenêtre »
         internal const int MA_NOACTIVATE = 3;             // réponse : « non, ne l'active pas »
+
+        // Messages envoyés par Windows à toutes les fenêtres (étape 11, voir OverlayWindow.Crochet) :
+        internal const int WM_SETTINGCHANGE = 0x001A;     // un réglage de Windows a changé
+        internal const int WM_DISPLAYCHANGE = 0x007E;     // la résolution de l'écran a changé
 
         // Pour la fenêtre plein écran (OverlayWindow) qui doit laisser passer les clics :
         internal const int WS_EX_TRANSPARENT = 0x00000020; // la souris « traverse » la fenêtre

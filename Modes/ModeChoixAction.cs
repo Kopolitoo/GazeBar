@@ -351,12 +351,12 @@ namespace GazeBar
             Parametres p = Parametres.Courants;
             double largeur = Gestionnaire.LargeurEcran;
             double hauteur = Gestionnaire.HauteurEcran;
-            double taille = p.TailleIcones;
+            double taille = p.TailleIconesPx;
 
             // ── La photo : le carré qui englobe le cercle, centré sur P. Près d'un bord de
             //    l'écran, le carré est décalé pour rester entièrement sur l'écran (P n'est alors
             //    plus au centre de la photo, et la croix non plus).
-            int cote = (int)Math.Round(2 * p.RayonCercle);
+            int cote = (int)Math.Round(2 * p.RayonCerclePx);
             cote = Math.Min(cote, (int)Math.Min(largeur, hauteur));
             int ox = (int)Borner(Math.Round(_px - cote / 2.0), 0, largeur - cote);
             int oy = (int)Borner(Math.Round(_py - cote / 2.0), 0, hauteur - cote);
@@ -395,11 +395,13 @@ namespace GazeBar
             // Un fin cadre gris autour de la photo.
             Rectangle cadre = new Rectangle();
             cadre.Stroke = Brushes.Gray;
-            cadre.StrokeThickness = 2;
-            cadre.Width = image.Width + 4;
-            cadre.Height = image.Height + 4;
-            Canvas.SetLeft(cadre, coin.X - 2);
-            Canvas.SetTop(cadre, coin.Y - 2);
+            // Épaisseur en unités de l'écran de référence, convertie (étape 11, voir Ecran.cs).
+            double trait = Ecran.Unites(2);
+            cadre.StrokeThickness = trait;
+            cadre.Width = image.Width + 2 * trait;
+            cadre.Height = image.Height + 2 * trait;
+            Canvas.SetLeft(cadre, coin.X - trait);
+            Canvas.SetTop(cadre, coin.Y - trait);
             ecran.Children.Add(cadre);
 
             // ── La croix, à la place du curseur dans la photo agrandie.
@@ -431,12 +433,12 @@ namespace GazeBar
             //    la photo et les boutons. Il apparaîtra à la première mesure sur l'écran.
             _cercleRegardFond = new Ellipse();
             _cercleRegardFond.Stroke = Brushes.Black;
-            _cercleRegardFond.StrokeThickness = 4;
+            _cercleRegardFond.StrokeThickness = Ecran.Unites(4);
             _cercleRegardFond.Opacity = 0.6;
             _cercleRegardFond.Visibility = Visibility.Collapsed;
             _cercleRegard = new Ellipse();
             _cercleRegard.Stroke = Brushes.LimeGreen;
-            _cercleRegard.StrokeThickness = 2;
+            _cercleRegard.StrokeThickness = Ecran.Unites(2);
             _cercleRegard.Visibility = Visibility.Collapsed;
             ecran.Children.Add(_cercleRegardFond);
             ecran.Children.Add(_cercleRegard);
@@ -471,7 +473,7 @@ namespace GazeBar
 
             OverlayWindow calque = Gestionnaire.Calque;
             Point centre = calque.VersWpf(_lisse.X, _lisse.Y);
-            double rayon = calque.LongueurVersWpf(p.RayonCercle / 2);
+            double rayon = calque.LongueurVersWpf(p.RayonCerclePx / 2);
             PlacerEllipse(_cercleRegardFond, centre, rayon);
             PlacerEllipse(_cercleRegard, centre, rayon);
         }
@@ -507,12 +509,16 @@ namespace GazeBar
         private static void DessinerCroix(OverlayWindow calque, Canvas ecran, double x, double y)
         {
             Point centre = calque.VersWpf(x, y);
-            double demi = calque.LongueurVersWpf(20);
+            // Demi-longueur : 20 px de l'écran 4K ; épaisseurs : unités de l'écran de référence
+            // (étape 11, voir Ecran.cs).
+            double demi = calque.LongueurVersWpf(Ecran.Px(20));
+            double epais = Ecran.Unites(5);
+            double fin = Ecran.Unites(2);
 
-            AjouterTrait(ecran, centre.X - demi, centre.Y, centre.X + demi, centre.Y, Brushes.Black, 5);
-            AjouterTrait(ecran, centre.X, centre.Y - demi, centre.X, centre.Y + demi, Brushes.Black, 5);
-            AjouterTrait(ecran, centre.X - demi, centre.Y, centre.X + demi, centre.Y, Brushes.White, 2);
-            AjouterTrait(ecran, centre.X, centre.Y - demi, centre.X, centre.Y + demi, Brushes.White, 2);
+            AjouterTrait(ecran, centre.X - demi, centre.Y, centre.X + demi, centre.Y, Brushes.Black, epais);
+            AjouterTrait(ecran, centre.X, centre.Y - demi, centre.X, centre.Y + demi, Brushes.Black, epais);
+            AjouterTrait(ecran, centre.X - demi, centre.Y, centre.X + demi, centre.Y, Brushes.White, fin);
+            AjouterTrait(ecran, centre.X, centre.Y - demi, centre.X, centre.Y + demi, Brushes.White, fin);
         }
 
         private static void AjouterTrait(Canvas ecran, double x1, double y1, double x2, double y2,

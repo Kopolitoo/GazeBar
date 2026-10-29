@@ -128,8 +128,9 @@ namespace GazeBar
         /// </summary>
         public static void DeplacerVers(double x, double y)
         {
-            double largeur = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN);
-            double hauteur = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN);
+            // Taille mesurée par Ecran (la vraie résolution, même après un changement, étape 11).
+            double largeur = Ecran.LargeurPixels;
+            double hauteur = Ecran.HauteurPixels;
             if (largeur < 2 || hauteur < 2)
             {
                 return;

@@ -69,17 +69,24 @@ namespace GazeBar
         /// <summary>
         /// Espace entre deux boutons, et entre les boutons et le bord de la barre, en pixels.
         /// Assez grand pour que l'anneau de progression d'un bouton ne touche pas son voisin.
+        /// Étape 11 : ces trois distances sont des pixels de l'écran 4K, converties pour
+        /// l'écran actuel (Ecran.Px, ou Ecran.PxRegard pour la marge du regard).
         /// </summary>
-        private const double Ecart = 60;
+        private const double Ecart4K = 60;
 
-        /// <summary>Espace entre la barre et le bas de l'écran, en pixels.</summary>
-        private const double MargeBas = 30;
+        private static double Ecart
+        {
+            get { return Ecran.Px(Ecart4K); }
+        }
+
+        /// <summary>Espace entre la barre et le bas de l'écran, en pixels de l'écran 4K.</summary>
+        private const double MargeBas4K = 30;
 
         /// <summary>
-        /// Marge autour de la barre, en pixels : le regard y est encore « dans la barre ».
-        /// Évite de fermer le menu quand le regard frôle le bord.
+        /// Marge autour de la barre, en pixels de l'écran 4K : le regard y est encore « dans la
+        /// barre ». Évite de fermer le menu quand le regard frôle le bord.
         /// </summary>
-        private const double MargeZone = 60;
+        private const double MargeZone4K = 60;
 
         // Les boutons affichés, et l'action de chacun (même ordre ; null = bouton indisponible).
         private readonly List<BoutonRegard> _boutons = new List<BoutonRegard>();
@@ -207,7 +214,7 @@ namespace GazeBar
                 }
                 else
                 {
-                    Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
+                    Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCerclePx, false);
                 }
             }
         }
@@ -448,21 +455,21 @@ namespace GazeBar
             int n = boutons.Count;
             // Les boutons du menu sont deux fois plus grands que les autres icônes
             // (demande de l'utilisateur du 22/10/2026).
-            double taille = 2 * p.TailleIcones;
-            double tailleMax = (largeur - 20 - (n + 1) * Ecart) / n;
-            taille = Math.Max(20, Math.Min(taille, tailleMax));
+            double taille = 2 * p.TailleIconesPx;
+            double tailleMax = (largeur - Ecran.Px(20) - (n + 1) * Ecart) / n;
+            taille = Math.Max(Ecran.Px(20), Math.Min(taille, tailleMax));
 
             // ── Le fond de la barre : un rectangle sombre aux coins arrondis, centré en bas.
             double largeurBarre = n * taille + (n + 1) * Ecart;
             double hauteurBarre = taille + 2 * Ecart;
             double gauche = (largeur - largeurBarre) / 2;
-            double haut = hauteur - MargeBas - hauteurBarre;
+            double haut = hauteur - Ecran.Px(MargeBas4K) - hauteurBarre;
 
             Border fond = new Border();
             fond.Background = new SolidColorBrush(Color.FromArgb(0xE0, 0x20, 0x21, 0x24));
             fond.BorderBrush = Brushes.Gray;
-            fond.BorderThickness = new Thickness(1);
-            fond.CornerRadius = new CornerRadius(16);
+            fond.BorderThickness = new Thickness(Ecran.Unites(1));
+            fond.CornerRadius = new CornerRadius(Ecran.Unites(16));
             fond.Width = calque.LongueurVersWpf(largeurBarre);
             fond.Height = calque.LongueurVersWpf(hauteurBarre);
             Point coin = calque.VersWpf(gauche, haut);
@@ -488,28 +495,32 @@ namespace GazeBar
                 TextBlock texte = new TextBlock();
                 texte.Text = _message;
                 texte.Foreground = Brushes.White;
-                texte.FontSize = 28;
+                // Le message suit la taille du texte de Windows (étape 11).
+                texte.FontSize = Ecran.Police(28);
                 Border cadre = new Border();
                 cadre.Background = new SolidColorBrush(Color.FromArgb(0xE0, 0x20, 0x21, 0x24));
-                cadre.CornerRadius = new CornerRadius(8);
-                cadre.Padding = new Thickness(16, 6, 16, 6);
+                cadre.CornerRadius = new CornerRadius(Ecran.Unites(8));
+                cadre.Padding = new Thickness(Ecran.Unites(16), Ecran.Unites(6), Ecran.Unites(16), Ecran.Unites(6));
                 cadre.Child = texte;
                 cadre.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
 
-                Point centreHaut = calque.VersWpf(largeur / 2, haut - 20);
+                Point centreHaut = calque.VersWpf(largeur / 2, haut - Ecran.Px(20));
                 Canvas.SetLeft(cadre, centreHaut.X - cadre.DesiredSize.Width / 2);
                 Canvas.SetTop(cadre, centreHaut.Y - cadre.DesiredSize.Height);
                 surface.Children.Add(cadre);
 
-                // Le message fait partie de la barre pour la fermeture (hauteur convertie
-                // en pixels d'écran : environ 80 px).
-                hautZone = haut - 20 - 80;
+                // Le message fait partie de la barre pour la fermeture. Sa hauteur mesurée est
+                // en unités WPF : on la convertit en pixels d'écran (étape 11 ; c'était une
+                // estimation fixe de 80 px avant).
+                double hauteurMessage = cadre.DesiredSize.Height / calque.LongueurVersWpf(1);
+                hautZone = haut - Ecran.Px(20) - hauteurMessage;
             }
 
             // ── La zone « dans la barre », avec sa marge.
-            _zoneGauche = gauche - MargeZone;
-            _zoneDroite = gauche + largeurBarre + MargeZone;
-            _zoneHaut = hautZone - MargeZone;
+            double margeZone = Ecran.PxRegard(MargeZone4K);
+            _zoneGauche = gauche - margeZone;
+            _zoneDroite = gauche + largeurBarre + margeZone;
+            _zoneHaut = hautZone - margeZone;
 
             // Les boutons ont changé : on repart de zéro, et le bouton éventuellement sous le
             // regard ne s'active pas tant que le regard ne l'a pas quitté.

@@ -53,7 +53,7 @@ namespace GazeBar
     ///   - rien ne défile quand le regard est perdu, trop loin hors de l'écran ou sur le
     ///     bouton retour (sinon, en allant regarder le bouton, on ferait défiler vers la droite).
     ///
-    /// Regard légèrement hors de l'écran : il compte quand même, jusqu'à [MargeHorsEcran]
+    /// Regard légèrement hors de l'écran : il compte quand même, jusqu'à [MargeHorsEcran4K]
     /// pixels au-delà des bords (demande de l'utilisateur du 26/10/2026). Cela agrandit la
     /// surface où l'on règle la vitesse : vers le haut et le bas, l'écran seul est trop court
     /// pour atteindre la vitesse maximale. Le PCEye 5 mesure le regard hors de l'écran, mais
@@ -89,10 +89,11 @@ namespace GazeBar
         private const double RayonsVitesseMax = 3;
 
         /// <summary>
-        /// Jusqu'où, en pixels au-delà des bords de l'écran, le regard compte encore pour le
-        /// défilement (environ 5 cm sur un écran 24 pouces en 1080p). Plus loin, rien ne défile.
+        /// Jusqu'où, en pixels de l'écran 4K au-delà des bords de l'écran, le regard compte
+        /// encore pour le défilement. Plus loin, rien ne défile. Étape 11 : convertie pour
+        /// l'écran actuel avec Ecran.PxRegard (200 px en 4K → 100 px en 1920 × 1080).
         /// </summary>
-        private const double MargeHorsEcran = 200;
+        private const double MargeHorsEcran4K = 200;
 
         /// <summary>
         /// Rayon de la zone morte (et du cercle dessiné), par rapport à [RayonCercle] : la moitié
@@ -168,7 +169,7 @@ namespace GazeBar
             _dernierTicMs = regard.MaintenantMs;
 
             ConstruireSurface();
-            calque.AfficherCercle(_px, _py, Parametres.Courants.RayonCercle * FacteurZoneMorte, true, Opacite);
+            calque.AfficherCercle(_px, _py, Parametres.Courants.RayonCerclePx * FacteurZoneMorte, true, Opacite);
 
             App.Log("Défilement : début en (" + _px.ToString("F0") + ", " + _py.ToString("F0") +
                     "), modificateurs : " + Modificateurs.Description());
@@ -216,7 +217,7 @@ namespace GazeBar
             double dx = _lisse.X - _px;
             double dy = _lisse.Y - _py;
             double distance = Math.Sqrt(dx * dx + dy * dy);
-            double rayon = p.RayonCercle * FacteurZoneMorte;
+            double rayon = p.RayonCerclePx * FacteurZoneMorte;
 
             // L'arc est dessiné dans tous les cas, même dans la zone morte. Regard exactement
             // au centre : pas de direction, l'arc reste où il était.
@@ -245,7 +246,7 @@ namespace GazeBar
             bool horizontale = Math.Abs(dx) > Math.Abs(dy);
             // Molette : vers le haut et vers la droite = positif (voir MouseInjector.Molette).
             int sens = horizontale ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
-            double fraction = Math.Min(1.0, (distance - rayon) / (RayonsVitesseMax * p.RayonCercle));
+            double fraction = Math.Min(1.0, (distance - rayon) / (RayonsVitesseMax * p.RayonCerclePx));
             double cransParSeconde = fraction * p.VitesseMaxDefilement;
 
             // 6. La réserve de molette : on repart de zéro si la direction a changé.
@@ -278,7 +279,7 @@ namespace GazeBar
 
         /// <summary>
         /// Vrai si la mesure du regard peut servir au défilement : disponible, et sur l'écran
-        /// ou à moins de [MargeHorsEcran] pixels de ses bords.
+        /// ou à moins de [MargeHorsEcran4K] pixels de ses bords.
         /// </summary>
         private bool Utilisable(EtatRegard regard)
         {
@@ -286,8 +287,9 @@ namespace GazeBar
             {
                 return false;
             }
-            return regard.X >= -MargeHorsEcran && regard.X < Gestionnaire.LargeurEcran + MargeHorsEcran &&
-                   regard.Y >= -MargeHorsEcran && regard.Y < Gestionnaire.HauteurEcran + MargeHorsEcran;
+            double marge = Ecran.PxRegard(MargeHorsEcran4K);
+            return regard.X >= -marge && regard.X < Gestionnaire.LargeurEcran + marge &&
+                   regard.Y >= -marge && regard.Y < Gestionnaire.HauteurEcran + marge;
         }
 
         /// <summary>Envoie la molette, avec les modificateurs actifs enfoncés autour.</summary>
@@ -319,18 +321,18 @@ namespace GazeBar
             OverlayWindow calque = Gestionnaire.Calque;
             calque.PreparerSurfaceGlisser();
             Canvas surface = calque.SurfaceGlisser;
-            double taille = Parametres.Courants.TailleIcones;
+            double taille = Parametres.Courants.TailleIconesPx;
 
             _arcFond = new Path();
             _arcFond.Stroke = Brushes.Black;
-            _arcFond.StrokeThickness = 10;
+            _arcFond.StrokeThickness = Ecran.Unites(10);
             _arcFond.Opacity = 0.5 * Opacite;
             _arcFond.StrokeStartLineCap = PenLineCap.Round;
             _arcFond.StrokeEndLineCap = PenLineCap.Round;
             _arcFond.Visibility = Visibility.Collapsed;
             _arc = new Path();
             _arc.Stroke = new SolidColorBrush(Color.FromRgb(0x00, 0xC8, 0x53));   // le vert des anneaux
-            _arc.StrokeThickness = 6;
+            _arc.StrokeThickness = Ecran.Unites(6);
             _arc.Opacity = Opacite;
             _arc.StrokeStartLineCap = PenLineCap.Round;
             _arc.StrokeEndLineCap = PenLineCap.Round;
@@ -340,7 +342,7 @@ namespace GazeBar
 
             // Le bouton « retour », au bord droit de l'écran, centré verticalement.
             // Symbole E72B = flèche « retour » de la police Windows.
-            double xRetour = Gestionnaire.LargeurEcran - taille / 2 - 10;
+            double xRetour = Gestionnaire.LargeurEcran - taille / 2 - Ecran.Px(10);
             double yRetour = Gestionnaire.HauteurEcran / 2;
             BoutonRegard retour = new BoutonRegard("", null, "Quitter le défilement");
             retour.Placer(calque, surface, xRetour, yRetour, taille);

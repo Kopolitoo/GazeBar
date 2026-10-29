@@ -38,6 +38,55 @@ namespace GazeBar
             _premierPlan.Interval = TimeSpan.FromMilliseconds(500);
             _premierPlan.Tick += (sender, e) => RemettreAuPremierPlan();
             _premierPlan.Start();
+
+            // Étape 11 : surveillance de l'écran (résolution, mise à l'échelle, taille du
+            // texte). Windows prévient le calque par des messages (voir Crochet), mais on
+            // vérifie aussi toutes les deux secondes : on ne sait pas encore si Windows envoie
+            // bien un message quand on change la taille du texte (à vérifier en essai).
+            _surveillanceEcran = new DispatcherTimer();
+            _surveillanceEcran.Interval = TimeSpan.FromSeconds(2);
+            _surveillanceEcran.Tick += (sender, e) => CouvrirEcran();
+            _surveillanceEcran.Start();
+
+            // Après un message de Windows, on attend une demi-seconde avant de mesurer :
+            // un changement de résolution envoie souvent plusieurs messages de suite, et
+            // l'écran met un instant à se stabiliser. Une seule mesure suffit.
+            _mesureDifferee = new DispatcherTimer();
+            _mesureDifferee.Interval = TimeSpan.FromMilliseconds(500);
+            _mesureDifferee.Tick += (sender, e) =>
+            {
+                _mesureDifferee.Stop();
+                CouvrirEcran();
+            };
+        }
+
+        private readonly DispatcherTimer _surveillanceEcran;
+        private readonly DispatcherTimer _mesureDifferee;
+
+        /// <summary>
+        /// Demande une nouvelle mesure de l'écran dans une demi-seconde. Si une demande est déjà
+        /// en attente, le compte à rebours repart de zéro (Stop puis Start).
+        /// </summary>
+        private void PlanifierMesure()
+        {
+            _mesureDifferee.Stop();
+            _mesureDifferee.Start();
+        }
+
+        /// <summary>
+        /// Le « crochet » des messages de Windows adressés au calque (étape 11). On ne garde
+        /// que deux messages, envoyés à toutes les fenêtres :
+        ///   WM_DISPLAYCHANGE : la résolution de l'écran a changé ;
+        ///   WM_SETTINGCHANGE : un réglage de Windows a changé (peut-être la taille du texte).
+        /// handled reste faux : le message continue son chemin normal.
+        /// </summary>
+        private IntPtr Crochet(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (message == NativeMethods.WM_DISPLAYCHANGE || message == NativeMethods.WM_SETTINGCHANGE)
+            {
+                PlanifierMesure();
+            }
+            return IntPtr.Zero;
         }
 
         /// <summary>
@@ -85,25 +134,40 @@ namespace GazeBar
                 | NativeMethods.WS_EX_NOACTIVATE
                 | NativeMethods.WS_EX_TOOLWINDOW);
 
+            // Étape 11 : on écoute les messages de Windows (voir Crochet).
+            HwndSource source = HwndSource.FromHwnd(handle);
+            if (source != null)
+            {
+                source.AddHook(Crochet);
+            }
+
             CouvrirEcran();
         }
 
         /// <summary>
         /// Appelée par WPF si la mise à l'échelle de Windows change pendant que GazeBar tourne
-        /// (par exemple de 100 % à 125 % dans les paramètres d'affichage). On recalcule la taille.
+        /// (par exemple de 100 % à 125 % dans les paramètres d'affichage). On recalcule la
+        /// taille tout de suite, puis une deuxième fois une demi-seconde plus tard (étape 11) :
+        /// la résolution change souvent en même temps.
         /// </summary>
         protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
         {
             base.OnDpiChanged(oldDpi, newDpi);
             CouvrirEcran();
+            PlanifierMesure();
         }
 
         /// <summary>
         /// Place la fenêtre sur tout l'écran principal.
         ///
-        /// GetSystemMetrics donne la taille de l'écran en pixels réels (GazeBar est déclaré
+        /// TailleEcranPrincipal donne la taille de l'écran en pixels réels (GazeBar est déclaré
         /// « sensible au DPI » dans app.manifest). TransformFromDevice est la conversion
         /// « pixels réels → unités WPF » fournie par WPF pour cette fenêtre.
+        ///
+        /// Étape 11 : la mesure est aussi donnée à Ecran, qui prévient le reste du programme si
+        /// la résolution, la mise à l'échelle ou la taille du texte a changé. La taille de la
+        /// fenêtre n'est réécrite (et notée dans le journal) que si elle a changé, car cette
+        /// méthode est maintenant appelée toutes les deux secondes.
         /// </summary>
         private void CouvrirEcran()
         {
@@ -113,20 +177,36 @@ namespace GazeBar
                 return;
             }
 
-            double largeurPixels = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN);
-            double hauteurPixels = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN);
+            // La vraie résolution, même après un changement (voir NativeMethods.TailleEcranPrincipal).
+            double largeurPixels;
+            double hauteurPixels;
+            NativeMethods.TailleEcranPrincipal(out largeurPixels, out hauteurPixels);
+
+            if (largeurPixels <= 0 || hauteurPixels <= 0)
+            {
+                return;   // écran en train de changer : on réessaiera plus tard
+            }
 
             Matrix versWpf = source.CompositionTarget.TransformFromDevice;
             Point taille = versWpf.Transform(new Point(largeurPixels, hauteurPixels));
 
-            Left = 0;
-            Top = 0;
-            Width = taille.X;
-            Height = taille.Y;
+            // (Une taille pas encore donnée vaut NaN, « pas un nombre » : on la donne alors.)
+            bool tailleChangee = double.IsNaN(Width) || double.IsNaN(Height) || Left != 0 || Top != 0 ||
+                                 Math.Abs(Width - taille.X) > 0.5 || Math.Abs(Height - taille.Y) > 0.5;
+            if (tailleChangee)
+            {
+                Left = 0;
+                Top = 0;
+                Width = taille.X;
+                Height = taille.Y;
 
-            App.Log("Calque : écran " + largeurPixels + " × " + hauteurPixels + " pixels = " +
-                    taille.X.ToString("F0") + " × " + taille.Y.ToString("F0") + " unités WPF (échelle " +
-                    (largeurPixels / taille.X * 100).ToString("F0") + " %)");
+                App.Log("Calque : écran " + largeurPixels + " × " + hauteurPixels + " pixels = " +
+                        taille.X.ToString("F0") + " × " + taille.Y.ToString("F0") + " unités WPF (échelle " +
+                        (largeurPixels / taille.X * 100).ToString("F0") + " %)");
+            }
+
+            // TransformToDevice : unités WPF → pixels réels. M22 = facteur vertical (1.25 à 125 %).
+            Ecran.Mesurer(source.CompositionTarget.TransformToDevice.M22);
         }
 
         // ───────────────────────── Dessin ─────────────────────────
@@ -172,9 +252,10 @@ namespace GazeBar
             CercleAffiche = true;
 
             Cercle.Stroke = fixe ? PinceauFixe : PinceauMouvement;
-            Cercle.StrokeThickness = fixe ? 1.5 : 1;
+            // Épaisseurs en unités de l'écran de référence, converties (étape 11, voir Ecran.cs).
+            Cercle.StrokeThickness = Ecran.Unites(fixe ? 1.5 : 1);
             Cercle.Opacity = (fixe ? 0.6 : 0.3) * attenuation;
-            CercleFond.StrokeThickness = fixe ? 2.5 : 2;
+            CercleFond.StrokeThickness = Ecran.Unites(fixe ? 2.5 : 2);
             CercleFond.Opacity = (fixe ? 0.7 : 0.5) * attenuation;
 
             // Pas encore affichée à l'écran : rien à dessiner (PointFromScreen échouerait).
@@ -188,7 +269,7 @@ namespace GazeBar
             Point centre = PointFromScreen(new Point(xPixels, yPixels));
             double rayon = PixelsVersWpf(rayonPixels);
 
-            PlacerEllipse(CercleFond, centre, PixelsVersWpf(rayonPixels + 2));
+            PlacerEllipse(CercleFond, centre, PixelsVersWpf(rayonPixels + Ecran.Px(2)));
             PlacerEllipse(Cercle, centre, rayon);
         }
 
@@ -217,6 +298,7 @@ namespace GazeBar
         /// </summary>
         public void AfficherAnneau(double xPixels, double yPixels, double rayonPixels, double progression)
         {
+            Anneau.StrokeThickness = Ecran.Unites(6);
             DessinerArc(Anneau, xPixels, yPixels, rayonPixels, progression);
         }
 
@@ -243,20 +325,27 @@ namespace GazeBar
 
             Icone.Width = cote;
             Icone.Height = cote;
+            Icone.BorderThickness = new Thickness(Ecran.Unites(2));
+            Icone.CornerRadius = new CornerRadius(Ecran.Unites(12));
             IconeSymbole.FontSize = cote * 0.5;
+            AnneauIcone.StrokeThickness = Ecran.Unites(6);
             Canvas.SetLeft(Icone, centre.X - cote / 2);
             Canvas.SetTop(Icone, centre.Y - cote / 2);
             Icone.Visibility = Visibility.Visible;
 
             // L'anneau entoure le carré : rayon = demi-diagonale du carré.
-            DessinerArc(AnneauIcone, xPixels, yPixels, taillePixels / 2 * Math.Sqrt(2) + 4, progression);
+            DessinerArc(AnneauIcone, xPixels, yPixels, taillePixels / 2 * Math.Sqrt(2) + Ecran.Px(4), progression);
 
             if (afficherLibelle)
             {
+                // Le libellé suit la taille du texte de Windows (étape 11, voir Ecran.Police).
+                LibelleTexte.FontSize = Ecran.Police(20);
+                Libelle.CornerRadius = new CornerRadius(Ecran.Unites(6));
+                Libelle.Padding = new Thickness(Ecran.Unites(8), Ecran.Unites(2), Ecran.Unites(8), Ecran.Unites(2));
                 // Mesure le libellé pour le centrer sous l'icône.
                 Libelle.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 Canvas.SetLeft(Libelle, centre.X - Libelle.DesiredSize.Width / 2);
-                Canvas.SetTop(Libelle, centre.Y + cote / 2 + 12);
+                Canvas.SetTop(Libelle, centre.Y + cote / 2 + Ecran.Unites(12));
                 Libelle.Visibility = Visibility.Visible;
             }
             else
@@ -378,7 +467,7 @@ namespace GazeBar
             CubicEase ralenti = new CubicEase();
             ralenti.EasingMode = EasingMode.EaseOut;
 
-            DoubleAnimation montee = new DoubleAnimation(MonteeApparitionMenu, 0, duree);
+            DoubleAnimation montee = new DoubleAnimation(Ecran.Unites(MonteeApparitionMenu), 0, duree);
             montee.EasingFunction = ralenti;
             DoubleAnimation fondu = new DoubleAnimation(0, 1, duree);
             fondu.EasingFunction = ralenti;
@@ -429,7 +518,7 @@ namespace GazeBar
             // « null » comme point de départ : l'animation part de la valeur actuelle (utile si
             // l'apparition n'était pas finie).
             DoubleAnimation descente = new DoubleAnimation();
-            descente.To = MonteeApparitionMenu;
+            descente.To = Ecran.Unites(MonteeApparitionMenu);
             descente.Duration = duree;
             descente.EasingFunction = accelere;
             DoubleAnimation fondu = new DoubleAnimation();

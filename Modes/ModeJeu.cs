@@ -44,7 +44,8 @@ namespace GazeBar
     internal sealed class ModeJeu : Mode
     {
         /// <summary>
-        /// Mode manette : vitesse maximale du curseur, en pixels par seconde, atteinte quand le
+        /// Mode manette : vitesse maximale du curseur, en pixels de l'écran 4K par seconde
+        /// (convertie avec Ecran.PxRegard, étape 11), atteinte quand le
         /// regard est au bord de l'écran (avant multiplication par [SensibiliteJeu]).
         /// Valeur de départ, à ajuster après essai.
         /// </summary>
@@ -81,6 +82,15 @@ namespace GazeBar
         public override bool MenuAutorise
         {
             get { return true; }
+        }
+
+        /// <summary>
+        /// L'écran a changé (étape 11) : ce mode continue, car un jeu ne doit pas être interrompu, et la position
+        /// du curseur est recalculée à chaque tic.
+        /// </summary>
+        public override bool AdapterEcran()
+        {
+            return true;
         }
 
         public override void Entrer(EtatRegard regard)
@@ -170,7 +180,7 @@ namespace GazeBar
             double ecartX = curseur.X - _lisse.X;
             double ecartY = curseur.Y - _lisse.Y;
             double distance = Math.Sqrt(ecartX * ecartX + ecartY * ecartY);
-            if (!_curseurEnRoute && distance >= Parametres.Courants.ZoneMorteCurseur)
+            if (!_curseurEnRoute && distance >= Parametres.Courants.ZoneMorteCurseurPx)
             {
                 _curseurEnRoute = true;
             }
@@ -220,7 +230,7 @@ namespace GazeBar
             double distance = Math.Sqrt(ecartX * ecartX + ecartY * ecartY);
 
             // Zone neutre au centre : le cercle de rayon [RayonCercle], comme pour le défilement.
-            double zoneNeutre = Parametres.Courants.RayonCercle;
+            double zoneNeutre = Parametres.Courants.RayonCerclePx;
             // Distance où la vitesse est au maximum : le bord le plus proche (demi-hauteur).
             double distanceMax = Math.Min(centreX, centreY);
             if (distance <= zoneNeutre || distanceMax <= zoneNeutre)
@@ -230,7 +240,8 @@ namespace GazeBar
 
             // De 0 (bord de la zone neutre) à 1 (bord de l'écran), sans dépasser 1.
             double force = Math.Min(1.0, (distance - zoneNeutre) / (distanceMax - zoneNeutre));
-            double vitesse = force * VitesseMaxManette * Parametres.Courants.SensibiliteJeu;
+            // VitesseMaxManette est en pixels de l'écran 4K par seconde : convertie (étape 11).
+            double vitesse = force * Ecran.PxRegard(VitesseMaxManette) * Parametres.Courants.SensibiliteJeu;
 
             // Même direction que l'écart (ecart / distance = direction de longueur 1).
             EnvoyerDeplacement(ecartX / distance * vitesse * dt, ecartY / distance * vitesse * dt);

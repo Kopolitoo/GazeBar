@@ -125,11 +125,11 @@ namespace GazeBar
             if (duree > 0)
             {
                 double vitesse = Distance(x, y, _precX, _precY) / duree * 1000.0;
-                vitesseOk = vitesse <= p.VitesseMaxFixation;
+                vitesseOk = vitesse <= p.VitesseMaxFixationPx;
             }
 
             // Test 2 : la distance au point d'ancrage.
-            bool dispersionOk = Distance(x, y, X, Y) <= p.RayonFixation;
+            bool dispersionOk = Distance(x, y, X, Y) <= p.RayonFixationPx;
 
             if (vitesseOk && dispersionOk)
             {
