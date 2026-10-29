@@ -34,6 +34,12 @@ namespace GazeBar
             // la fenêtre Diagnostic, d'autres logiciels…). Entre elles, c'est la dernière
             // affichée ou activée qui gagne. Pour que le calque reste AU-DESSUS DE TOUT, on le
             // remet en haut de la pile deux fois par seconde.
+            //
+            // Limite connue (29/10/2026) : le menu Démarrer, la recherche et le centre de
+            // notifications de Windows sont dans une « couche » réservée au système, plus haute
+            // que toutes les fenêtres « toujours au premier plan ». Le calque passe donc dessous
+            // malgré ce minuteur. Seul un programme déclaré « uiAccess » (manifeste), signé
+            // numériquement et installé dans C:\Program Files peut s'afficher au-dessus.
             _premierPlan = new DispatcherTimer();
             _premierPlan.Interval = TimeSpan.FromMilliseconds(500);
             _premierPlan.Tick += (sender, e) => RemettreAuPremierPlan();
