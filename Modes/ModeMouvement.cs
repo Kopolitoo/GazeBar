@@ -14,8 +14,12 @@ namespace GazeBar
     /// immobile pendant [DelaiFixation], on passe au mode regard fixe sur le point fixé.
     /// (Pas d'anneau de progression pendant cette attente.)
     ///
-    /// Regard perdu ou hors de l'écran : le cercle et le curseur restent où ils sont, et la
-    /// fixation en cours est oubliée.
+    /// Regard hors de l'écran : le cercle continue de suivre le regard, mais bloqué aux bords
+    /// de l'écran (chaque axe séparément, voir EtatRegard.XEcran). Regard au-dessus de l'écran :
+    /// le cercle glisse de gauche à droite le long du bord du haut ; regard à droite : il glisse
+    /// de haut en bas le long du bord droit. La fixation, elle, est oubliée : on ne passe
+    /// jamais en regard fixe sur un bord à cause d'un regard hors de l'écran.
+    /// Regard perdu (pas de mesure) : le cercle et le curseur restent où ils sont.
     ///
     /// C'est l'un des seuls modes d'où le menu peut s'ouvrir (avec la pause, étape 6).
     /// </summary>
@@ -76,16 +80,16 @@ namespace GazeBar
             // Point de départ du cercle, sans jamais le placer « par défaut » au centre :
             //  - si un cercle est déjà affiché (on revient du mode regard fixe), on part de
             //    là où il est : il glissera en douceur vers le regard, sans saut ;
-            //  - sinon, on part directement du regard ;
+            //  - sinon, on part directement du regard (ramené dans l'écran s'il en sort) ;
             //  - si le regard n'est pas encore disponible, rien n'est dessiné : le cercle
-            //    apparaîtra à la première mesure sur l'écran.
+            //    apparaîtra à la première mesure.
             if (Gestionnaire.Calque.CercleAffiche)
             {
                 Placer(Gestionnaire.Calque.CercleX, Gestionnaire.Calque.CercleY);
             }
-            else if (regard.SurEcran)
+            else if (regard.Disponible)
             {
-                Placer(regard.X, regard.Y);
+                Placer(regard.XEcran, regard.YEcran);
             }
             else
             {
@@ -101,15 +105,17 @@ namespace GazeBar
         {
             Parametres p = Parametres.Courants;
 
-            if (regard.SurEcran)
+            if (regard.Disponible)
             {
                 // 1. Le cercle se rapproche du regard, en douceur (voir Lisseur.cs).
                 //    (Première mesure reçue : il apparaît directement sur le regard.)
+                //    On vise la position RAMENÉE DANS L'ÉCRAN : si le regard sort de l'écran,
+                //    le cercle reste au bord et glisse le long de ce bord.
                 if (!_place)
                 {
-                    Placer(regard.X, regard.Y);
+                    Placer(regard.XEcran, regard.YEcran);
                 }
-                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
+                _lisse.Suivre(regard.XEcran, regard.YEcran, regard.MaintenantMs);
 
                 // 2. Le curseur suit le cercle, seulement si l'option [SuiviSouris] est
                 //    activée. Sinon, il ne bouge pas : il rejoindra le regard une fois fixé.
@@ -117,15 +123,19 @@ namespace GazeBar
                 {
                     DeplacerCurseur(p.ZoneMorteCurseur);
                 }
+            }
 
-                // 3. Le regard est-il sorti de la zone ignorée ?
-                if (_zoneIgnoree && Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCercle)
-                {
-                    _zoneIgnoree = false;
-                }
+            // 3. Le regard est-il sorti de la zone ignorée ? (Seulement avec un regard sur
+            //    l'écran, comme avant : un regard hors de l'écran ne compte pas.)
+            if (regard.SurEcran && _zoneIgnoree &&
+                Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCercle)
+            {
+                _zoneIgnoree = false;
             }
 
             // 4. La fixation. Dans la zone ignorée, on ne la laisse pas progresser.
+            //    Elle utilise le VRAI regard (pas la position ramenée dans l'écran) : un regard
+            //    hors de l'écran remet la fixation à zéro (voir DetecteurFixation.Ajouter).
             //    Pas d'anneau de progression ici (choix de l'utilisateur) : l'anneau est
             //    réservé aux boutons (icône d'options, choix d'action, barre de menu).
             _fixation.Ajouter(regard);
