@@ -73,6 +73,14 @@ namespace GazeBar
         /// </summary>
         private void OnEcranChange()
         {
+            // Le moteur Tobii est reconnecté, pour qu'il donne le regard dans les unités du
+            // nouvel écran (voir GazeSource.Redemarrer). Sauf pendant la calibration, qui se
+            // sert de la connexion en cours.
+            if (!(ModeCourant is ModeCalibration))
+            {
+                Regard.Redemarrer();
+            }
+
             if (ModeCourant == null)
             {
                 return;
