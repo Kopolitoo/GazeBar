@@ -229,7 +229,23 @@ namespace GazeBar
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
+            CouvrirEcran();
+        }
 
+        /// <summary>
+        /// L'écran a changé pendant que la fenêtre est ouverte (étape 11, appelée par le mode) :
+        /// elle reprend la taille de l'écran, et la page est reconstruite (une saisie en cours
+        /// est validée).
+        /// </summary>
+        public void AdapterEcran()
+        {
+            CouvrirEcran();
+            Construire();
+        }
+
+        /// <summary>Donne à la fenêtre la taille exacte de l'écran principal.</summary>
+        private void CouvrirEcran()
+        {
             HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
             if (source == null || source.CompositionTarget == null)
             {
@@ -334,6 +350,10 @@ namespace GazeBar
                 {
                     ConstruireInfoFichier(LigneHaut + onglet.Reglages.Count * LignePas);
                 }
+                if (onglet.Nom == NomOngletAffichage)
+                {
+                    ConstruireInfoEcran(LigneHaut + onglet.Reglages.Count * LignePas);
+                }
                 if (onglet.Nom == CatalogueParametres.NomOngletIcones)
                 {
                     ConstruireOngletIcones();
@@ -417,6 +437,24 @@ namespace GazeBar
             };
             Placer(cadre.Bord, x + BoutonCote + Ecart, y);
             _cadres[reglage] = cadre;
+        }
+
+        /// <summary>Le nom de l'onglet « Affichage », sous lequel l'écran détecté est rappelé (étape 11).</summary>
+        private const string NomOngletAffichage = "Affichage";
+
+        /// <summary>
+        /// Onglet « Affichage » (étape 11) : l'écran détecté par GazeBar (résolution, mise à
+        /// l'échelle et taille du texte de Windows), pour vérifier que le changement a été vu.
+        /// </summary>
+        private void ConstruireInfoEcran(double haut)
+        {
+            StackPanel info = new StackPanel();
+            info.Children.Add(Texte("Écran détecté", 36, Blanc, true));
+            TextBlock description = Texte(Ecran.Description(), 24, Doux, false);
+            description.Margin = new Thickness(0, 6, 0, 0);
+            info.Children.Add(description);
+            info.Children.Add(Texte("Tailles en % de la hauteur de l'écran.", 23, Doux, false));
+            Placer(info, ContenuGauche, haut + 30);
         }
 
         /// <summary>Onglet Général : rappel de l'endroit où les réglages sont enregistrés.</summary>

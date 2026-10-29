@@ -73,6 +73,15 @@ remplacé par les valeurs par défaut. Les anciens fichiers `HoldSession.cs` (ap
 rebours de 3 s) et `GazeMouse.cs` ont été supprimés à l'étape 6, ainsi que les réglages qui ne
 servaient plus (`DureeAppuiLong`, `DelaiDepot`, `DistanceMinGlisser`, `DureeMaxAppui`).
 
+Depuis l'étape 11 (`Ecran.cs`), les tailles sont en **% de la hauteur de l'écran** et non plus en
+pixels : `RayonCercle` 8.8 (190 px en 4K, 95 px en 1920 × 1080), `TailleIcones` 5.6,
+`RayonFixation` 1.4, `ZoneMorteCurseur` 0.4, `VitesseMaxFixation` 42 (%/s). Un fichier plus
+ancien (version 6) est converti une fois, en divisant les pixels par 21.6 (valeurs réglées sur
+un écran de 2160 px de haut). `TailleInterface` (75, 100, 125 ou 150 %, onglet « Affichage »)
+agrandit ou réduit tout ce qui est dessiné, sauf les réglages du regard. Les textes du calque
+suivent aussi la taille du texte de Windows (Accessibilité). Les changements de résolution, de
+mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tourne.
+
 ## Architecture des modes
 
 - `OverlayWindow` : le « calque », une fenêtre transparente qui couvre tout l'écran, toujours au
@@ -223,6 +232,15 @@ Test de l'étape 8 : on ouvre une longue page web, on fixe le texte, on ouvre le
 puis « Défilement » (à gauche, en haut). Le cercle blanc reste en place. On regarde dans le
 cercle : rien ne bouge. On regarde un peu sous le cercle : la page descend doucement ; plus bas :
 plus vite. Au-dessus : elle remonte. « Retour » au bord droit ramène au mode mouvement.
+
+Test de l'étape 11 : écran en 1920 × 1080 à 100 %. Au premier lancement, le journal note
+« mise à jour en version 7 » et l'écran détecté ; le cercle, les icônes et la barre de menu ont
+à l'œil la même taille qu'avant en 4K. Onglet « Affichage » : « Écran détecté » donne la
+résolution, l'échelle et la taille du texte ; « Taille de l'interface » à 150 % agrandit le
+cercle, les icônes et le menu. Pendant que GazeBar tourne, on change la résolution, puis la
+mise à l'échelle (125 %), puis la taille du texte de Windows : à chaque fois, le journal note
+« changement détecté » et les tailles s'adaptent (un choix d'action ou une loupe ouverts se
+ferment, retour au mode mouvement ; la pause, le jeu et les paramètres restent ouverts).
 
 Test de l'étape 5 : on fixe une petite case à cocher, on regarde l'icône d'options, puis
 « Loupe » dans la couronne : la zone apparaît agrandie ×4. On fixe la case sur la photo : le

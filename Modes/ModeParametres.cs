@@ -171,6 +171,20 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// L'écran a changé (étape 11) : on reste dans les paramètres. La fenêtre reprend la
+        /// taille de l'écran et la page est redessinée (l'onglet « Affichage » montre l'écran
+        /// détecté). La page de 1920 × 1080 unités s'adapte toute seule (Viewbox).
+        /// </summary>
+        public override bool AdapterEcran()
+        {
+            if (_fenetre != null)
+            {
+                _fenetre.AdapterEcran();
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Touche Échap de l'aidant (appelée par App) : si une valeur est en cours de saisie,
         /// la saisie est annulée et on reste ici. Renvoie vrai dans ce cas.
         /// </summary>

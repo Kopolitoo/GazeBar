@@ -56,9 +56,13 @@ namespace GazeBar
         ///       défilement augmentée de moitié, demande de l'utilisateur du 28/10/2026) ;
         ///   6 : étape 10 — disposition des icônes du choix d'action (IconesCouronne,
         ///       IconesModificateurs, IconesUtilitaires). Rien à corriger : un fichier plus
-        ///       ancien n'a pas ces listes, elles gardent donc la disposition par défaut.
+        ///       ancien n'a pas ces listes, elles gardent donc la disposition par défaut ;
+        ///   7 : étape 11 — les tailles passent des pixels au POURCENTAGE DE LA HAUTEUR DE
+        ///       L'ÉCRAN (ZoneMorteCurseur, RayonFixation, VitesseMaxFixation, RayonCercle,
+        ///       TailleIcones), et nouveau réglage TailleInterface. Les anciennes valeurs, réglées
+        ///       sur l'écran 4K de l'utilisateur (2160 px de haut), sont converties une fois.
         /// </summary>
-        public const int VersionActuelle = 6;
+        public const int VersionActuelle = 7;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -70,7 +74,11 @@ namespace GazeBar
         [DataMember(Order = 10)]
         public double Lissage { get; set; }
 
-        /// <summary>Anti-tremblement du curseur, en pixels : en dessous, le curseur ne bouge pas.</summary>
+        /// <summary>
+        /// Anti-tremblement du curseur, en % DE LA HAUTEUR DE L'ÉCRAN (étape 11 ; en pixels
+        /// avant) : en dessous, le curseur ne bouge pas. 0.4 % = 4 px sur un écran de 1080 px.
+        /// Dans le code, utiliser ZoneMorteCurseurPx (la valeur en pixels de l'écran actuel).
+        /// </summary>
         [DataMember(Order = 11)]
         public double ZoneMorteCurseur { get; set; }
 
@@ -80,7 +88,10 @@ namespace GazeBar
 
         // ───────────────────────── Fixation ─────────────────────────
 
-        /// <summary>Le regard est « immobile » tant qu'il reste dans ce rayon, en pixels.</summary>
+        /// <summary>
+        /// Le regard est « immobile » tant qu'il reste dans ce rayon, en % de la hauteur de
+        /// l'écran (étape 11). 1.4 % = 15 px sur un écran de 1080 px. Dans le code : RayonFixationPx.
+        /// </summary>
         [DataMember(Order = 20)]
         public double RayonFixation { get; set; }
 
@@ -89,12 +100,14 @@ namespace GazeBar
         public double DelaiFixation { get; set; }
 
         /// <summary>
-        /// Vitesse maximale du regard pendant une fixation, en PIXELS PAR SECONDE.
+        /// Vitesse maximale du regard pendant une fixation, en % DE LA HAUTEUR DE L'ÉCRAN PAR
+        /// SECONDE (étape 11 ; en pixels par seconde avant). Dans le code : VitesseMaxFixationPx.
         /// Entre deux mesures, on calcule la vitesse du regard (distance ÷ temps écoulé) :
         /// au-dessus de cette valeur, l'œil est en train de sauter vers un autre point
         /// (une « saccade »), ce n'est pas une fixation.
         /// Réglage ajouté à l'étape 2 (il ne figure pas dans la première version du cahier des
-        /// charges). 900 px/s correspond à 30 pixels entre deux mesures du PCEye (≈ 30 par seconde).
+        /// charges). 42 %/s = 907 px/s sur l'écran 4K (l'ancienne valeur, 900 px/s), soit
+        /// 30 pixels entre deux mesures du PCEye (≈ 30 par seconde).
         /// </summary>
         [DataMember(Order = 24)]
         public double VitesseMaxFixation { get; set; }
@@ -109,13 +122,63 @@ namespace GazeBar
 
         // ───────────────────────── Affichage ─────────────────────────
 
-        /// <summary>Rayon du cercle du mode mouvement (et zone de sortie du regard fixe), en pixels.</summary>
+        /// <summary>
+        /// Rayon du cercle du mode mouvement (et zone de sortie du regard fixe), en % de la
+        /// hauteur de l'écran (étape 11). 8.8 % = 190 px en 4K, 95 px en 1080p.
+        /// Dans le code : RayonCerclePx (qui tient compte aussi de [TailleInterface]).
+        /// </summary>
         [DataMember(Order = 30)]
         public double RayonCercle { get; set; }
 
-        /// <summary>Côté des icônes activables au regard, en pixels.</summary>
+        /// <summary>
+        /// Côté des icônes activables au regard, en % de la hauteur de l'écran (étape 11).
+        /// 5.6 % = 121 px en 4K, 60 px en 1080p. Dans le code : TailleIconesPx.
+        /// </summary>
         [DataMember(Order = 31)]
         public double TailleIcones { get; set; }
+
+        /// <summary>
+        /// Taille de l'interface, en % (étape 11) : 75 (petite), 100 (normale, par défaut),
+        /// 125 (grande) ou 150 (très grande). Agrandit ou réduit tout ce qui est dessiné
+        /// sur le calque (cercle, icônes, barre de menu, textes…), mais pas les réglages du
+        /// regard (rayon de fixation, vitesse maximale, anti-tremblement). Voir Ecran.cs.
+        /// </summary>
+        [DataMember(Order = 33)]
+        public double TailleInterface { get; set; }
+
+        // ── Les mêmes réglages en PIXELS de l'écran actuel (étape 11). Calculés à chaque
+        //    lecture (l'écran peut changer pendant que GazeBar tourne) et pas enregistrés dans
+        //    le fichier (pas de [DataMember]). C'est eux que les modes utilisent.
+
+        /// <summary>[ZoneMorteCurseur] en pixels de l'écran actuel.</summary>
+        public double ZoneMorteCurseurPx
+        {
+            get { return Ecran.Pourcent(ZoneMorteCurseur); }
+        }
+
+        /// <summary>[RayonFixation] en pixels de l'écran actuel.</summary>
+        public double RayonFixationPx
+        {
+            get { return Ecran.Pourcent(RayonFixation); }
+        }
+
+        /// <summary>[VitesseMaxFixation] en pixels par seconde sur l'écran actuel.</summary>
+        public double VitesseMaxFixationPx
+        {
+            get { return Ecran.Pourcent(VitesseMaxFixation); }
+        }
+
+        /// <summary>[RayonCercle] en pixels de l'écran actuel, multiplié par [TailleInterface].</summary>
+        public double RayonCerclePx
+        {
+            get { return Ecran.PourcentInterface(RayonCercle); }
+        }
+
+        /// <summary>[TailleIcones] en pixels de l'écran actuel, multiplié par [TailleInterface].</summary>
+        public double TailleIconesPx
+        {
+            get { return Ecran.PourcentInterface(TailleIcones); }
+        }
 
         /// <summary>Afficher le libellé d'une action au survol de son icône (mode apprentissage).</summary>
         [DataMember(Order = 32)]
@@ -405,17 +468,20 @@ namespace GazeBar
             VersionFichier = VersionActuelle;
 
             Lissage = 0.16;
-            ZoneMorteCurseur = 8;
+            // Tailles en % de la hauteur de l'écran (étape 11) : ce sont les anciennes valeurs
+            // en pixels de l'écran 4K (8, 30, 900, 190, 120) divisées par 21.6, arrondies.
+            ZoneMorteCurseur = 0.4;
             AgeMaxMesure = 300;
 
-            RayonFixation = 30;
+            RayonFixation = 1.4;
             DelaiFixation = 0.8;
-            VitesseMaxFixation = 900;
+            VitesseMaxFixation = 42;
             ClicDirect = false;
             DelaiClicDirect = 1.5;
 
-            RayonCercle = 190;
-            TailleIcones = 120;
+            RayonCercle = 8.8;
+            TailleIcones = 5.6;
+            TailleInterface = 100;
             AfficherLibelles = true;
 
             DelaiActivation = 0.6;
@@ -463,16 +529,18 @@ namespace GazeBar
         public void Corriger()
         {
             Lissage = Borner(Lissage, 0.01, 1);
-            ZoneMorteCurseur = Borner(ZoneMorteCurseur, 0, 100);
+            // Limites des tailles en % de la hauteur de l'écran (étape 11).
+            ZoneMorteCurseur = Borner(ZoneMorteCurseur, 0, 5);
             AgeMaxMesure = Borner(AgeMaxMesure, 50, 5000);
 
-            RayonFixation = Borner(RayonFixation, 5, 300);
+            RayonFixation = Borner(RayonFixation, 0.2, 14);
             DelaiFixation = Borner(DelaiFixation, 0.1, 10);
-            VitesseMaxFixation = Borner(VitesseMaxFixation, 50, 20000);
+            VitesseMaxFixation = Borner(VitesseMaxFixation, 2, 900);
             DelaiClicDirect = Borner(DelaiClicDirect, 0.1, 10);
 
-            RayonCercle = Borner(RayonCercle, 20, 500);
-            TailleIcones = Borner(TailleIcones, 40, 400);
+            RayonCercle = Borner(RayonCercle, 1, 23);
+            TailleIcones = Borner(TailleIcones, 2, 19);
+            TailleInterface = Borner(TailleInterface, 75, 150);
 
             DelaiActivation = Borner(DelaiActivation, 0.1, 10);
             DelaiIconeOptions = Borner(DelaiIconeOptions, 0.1, 10);
@@ -557,8 +625,33 @@ namespace GazeBar
                 // disposition par défaut (voir AvantLecture). Réenregistrer le fichier les ajoute.
                 App.Log("Paramètres : mise à jour en version 6 (disposition des icônes du choix d'action)");
             }
+
+            if (VersionFichier < 7)
+            {
+                // Les tailles étaient en pixels, réglées sur l'écran 4K de l'utilisateur
+                // (2160 px de haut). Elles deviennent des % de la hauteur de l'écran :
+                // pourcentage = pixels ÷ 2160 × 100 = pixels ÷ 21.6.
+                // On divise TOUJOURS par 2160, et non par la hauteur de l'écran actuel : les
+                // valeurs ont été réglées en 4K, même si l'écran est maintenant en 1920 × 1080.
+                // Exemple : RayonCercle 190 px → 8.8 %.
+                ZoneMorteCurseur = PixelsVersPourcent(ZoneMorteCurseur, 1);
+                RayonFixation = PixelsVersPourcent(RayonFixation, 1);
+                VitesseMaxFixation = PixelsVersPourcent(VitesseMaxFixation, 0);
+                RayonCercle = PixelsVersPourcent(RayonCercle, 1);
+                TailleIcones = PixelsVersPourcent(TailleIcones, 1);
+                App.Log("Paramètres : mise à jour en version 7 (tailles en % de la hauteur de l'écran)");
+            }
             VersionFichier = VersionActuelle;
             return true;
+        }
+
+        /// <summary>
+        /// Conversion de la version 7 : des pixels de l'écran 4K en % de sa hauteur, arrondi
+        /// à « decimales » chiffres après le point (comme dans le mode paramètres).
+        /// </summary>
+        private static double PixelsVersPourcent(double pixels, int decimales)
+        {
+            return Math.Round(pixels / Ecran.HauteurReferencePixels * 100, decimales);
         }
 
         /// <summary>Renvoie la valeur, ramenée entre min et max. Une valeur illisible (NaN) devient min.</summary>
@@ -621,9 +714,13 @@ namespace GazeBar
                 {
                     resultat = (Parametres)serialiseur.ReadObject(fichier);
                 }
-                resultat.Corriger();
                 App.Log("Paramètres : lus depuis " + chemin);
-                if (resultat.MettreAJour())
+                // La mise à jour d'un ancien fichier passe AVANT Corriger (étape 11) : les
+                // anciennes tailles en pixels (190…) dépasseraient les nouvelles limites en %
+                // (23 au plus) et seraient abîmées avant d'être converties.
+                bool misAJour = resultat.MettreAJour();
+                resultat.Corriger();
+                if (misAJour)
                 {
                     resultat.Enregistrer();
                 }

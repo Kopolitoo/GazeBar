@@ -13,6 +13,9 @@ namespace GazeBar
     /// l'utilisateur du 28/10/2026) : ils sont donc rangés ici, et les deux modes s'en servent.
     ///
     /// Toutes les positions sont des CENTRES, en pixels d'écran (comme le regard).
+    ///
+    /// Étape 11 : [Espace] et [MargeBord] sont des pixels de l'écran 4K de l'utilisateur,
+    /// convertis pour l'écran actuel avec Ecran.Px (60 px en 4K → 30 px en 1920 × 1080).
     /// </summary>
     internal sealed class DispositionChoixAction
     {
@@ -20,14 +23,25 @@ namespace GazeBar
         public const double Zoom = 2;
 
         /// <summary>
-        /// Espace, en pixels, entre deux boutons voisins, entre les boutons et la photo, et entre
+        /// Espace, en pixels de l'écran 4K, entre deux boutons voisins, entre les boutons et la photo, et entre
         /// les modificateurs et le bord gauche de l'écran (demande de l'utilisateur du 26/10/2026 :
         /// « environ 60 pixels »).
         /// </summary>
-        public const double Espace = 60;
+        public const double Espace4K = 60;
 
-        /// <summary>Marge, en pixels, entre un bouton et le bord de l'écran quand il y est collé.</summary>
-        private const double MargeBord = 10;
+        /// <summary>[Espace4K] en pixels de l'écran actuel (avec [TailleInterface]).</summary>
+        public static double Espace
+        {
+            get { return Ecran.Px(Espace4K); }
+        }
+
+        /// <summary>Marge, en pixels de l'écran 4K, entre un bouton et le bord de l'écran quand il y est collé.</summary>
+        private const double MargeBord4K = 10;
+
+        private static double MargeBord
+        {
+            get { return Ecran.Px(MargeBord4K); }
+        }
 
         /// <summary>
         /// Calcule la mise en page pour un écran de cette taille, des boutons de ce côté

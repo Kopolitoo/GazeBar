@@ -92,7 +92,7 @@ namespace GazeBar
                 _lisse.Placer(_px, _py);
             }
 
-            PlacerIcone(p.RayonCercle, p.TailleIcones);
+            PlacerIcone(p.RayonCerclePx, p.TailleIconesPx);
 
             // Le regard est fixé : le curseur le rejoint maintenant.
             PlacerCurseur();
@@ -181,16 +181,16 @@ namespace GazeBar
             // Le dessin.
             // Le cercle glisse en douceur vers P (voir Lisseur.cs ; quelques tics suffisent).
             _lisse.Suivre(_px, _py, regard.MaintenantMs);
-            Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, true);
+            Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCerclePx, true);
             if (progressionClic > 0)
             {
-                Gestionnaire.Calque.AfficherAnneau(_lisse.X, _lisse.Y, p.RayonCercle, progressionClic);
+                Gestionnaire.Calque.AfficherAnneau(_lisse.X, _lisse.Y, p.RayonCerclePx, progressionClic);
             }
             else
             {
                 Gestionnaire.Calque.MasquerAnneau();
             }
-            Gestionnaire.Calque.AfficherIcone(_ix, _iy, p.TailleIcones, progressionIcone,
+            Gestionnaire.Calque.AfficherIcone(_ix, _iy, p.TailleIconesPx, progressionIcone,
                                               p.AfficherLibelles && _zone == Zone.Icone);
         }
 
@@ -275,7 +275,7 @@ namespace GazeBar
             // La zone d'activation de l'icône est un carré [FacteurZoneIcone] fois plus grand
             // que l'icône dessinée. Elle déborde un peu sur le cercle, près du coin qui le
             // touche : là, c'est l'icône qui l'emporte (elle est testée en premier).
-            double demiCote = p.TailleIcones * FacteurZoneIcone / 2;
+            double demiCote = p.TailleIconesPx * FacteurZoneIcone / 2;
             if (Math.Abs(x - _ix) <= demiCote && Math.Abs(y - _iy) <= demiCote)
             {
                 return Zone.Icone;
@@ -283,7 +283,7 @@ namespace GazeBar
 
             double dx = x - _px;
             double dy = y - _py;
-            if (Math.Sqrt(dx * dx + dy * dy) <= p.RayonCercle)
+            if (Math.Sqrt(dx * dx + dy * dy) <= p.RayonCerclePx)
             {
                 return Zone.Cercle;
             }

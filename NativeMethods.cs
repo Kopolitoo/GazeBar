@@ -127,6 +127,10 @@ namespace GazeBar
         internal const int WM_MOUSEACTIVATE = 0x0021;     // message : « un clic va activer la fenêtre »
         internal const int MA_NOACTIVATE = 3;             // réponse : « non, ne l'active pas »
 
+        // Messages envoyés par Windows à toutes les fenêtres (étape 11, voir OverlayWindow.Crochet) :
+        internal const int WM_SETTINGCHANGE = 0x001A;     // un réglage de Windows a changé
+        internal const int WM_DISPLAYCHANGE = 0x007E;     // la résolution de l'écran a changé
+
         // Pour la fenêtre plein écran (OverlayWindow) qui doit laisser passer les clics :
         internal const int WS_EX_TRANSPARENT = 0x00000020; // la souris « traverse » la fenêtre
         internal const int WS_EX_LAYERED = 0x00080000;     // fenêtre à transparence (déjà mis par WPF, on l'assure)

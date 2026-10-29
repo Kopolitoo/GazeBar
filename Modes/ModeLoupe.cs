@@ -72,7 +72,10 @@ namespace GazeBar
         /// </summary>
         private const double AttenteMs = 60;
 
-        /// <summary>Diamètre du petit cercle qui suit le regard, en pixels (cahier des charges : 50 px).</summary>
+        /// <summary>
+        /// Diamètre du petit cercle qui suit le regard, en pixels de l'écran 4K (cahier des
+        /// charges : 50 px), converti avec Ecran.Px (étape 11).
+        /// </summary>
         private const double DiametreCercleRegard = 50;
 
         // Le point visé P (position du curseur à l'entrée), en pixels d'écran.
@@ -246,7 +249,7 @@ namespace GazeBar
                     _zoneIgnoreeConnue = true;
                     LeverZoneSiDejaSurLaCible(p);
                 }
-                else if (_zoneIgnoree && Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCercle)
+                else if (_zoneIgnoree && Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCerclePx)
                 {
                     _zoneIgnoree = false;
                 }
@@ -337,7 +340,7 @@ namespace GazeBar
             {
                 return;
             }
-            if (Distance(_zoneX, _zoneY, _cibleX, _cibleY) <= p.RayonCercle)
+            if (Distance(_zoneX, _zoneY, _cibleX, _cibleY) <= p.RayonCerclePx)
             {
                 _zoneIgnoree = false;
                 App.Log("Loupe : regard déjà sur le point visé, pas besoin de bouger le regard");
@@ -369,15 +372,16 @@ namespace GazeBar
             Parametres p = Parametres.Courants;
             double largeur = Gestionnaire.LargeurEcran;
             double hauteur = Gestionnaire.HauteurEcran;
-            double taille = p.TailleIcones;
+            double taille = p.TailleIconesPx;
             _zoom = p.ZoomLoupe;
 
             // ── La zone photographiée : le carré qui englobe le cercle, centré sur P.
-            //    La photo agrandie doit tenir sur l'écran (avec une marge de 40 px) : sur un
+            //    La photo agrandie doit tenir sur l'écran (avec une marge de 40 px de l'écran 4K,
+            //    convertie avec Ecran.Px, étape 11) : sur un
             //    petit écran, ou avec un grand zoom, on photographie donc un carré plus petit.
             //    Exemple : écran de 1080 px de haut, zoom 4 → au plus (1080 − 40) ÷ 4 = 260 px.
-            int cote = (int)Math.Round(2 * p.RayonCercle);
-            int coteMax = (int)Math.Floor((Math.Min(largeur, hauteur) - 40) / _zoom);
+            int cote = (int)Math.Round(2 * p.RayonCerclePx);
+            int coteMax = (int)Math.Floor((Math.Min(largeur, hauteur) - Ecran.Px(40)) / _zoom);
             cote = Math.Max(10, Math.Min(cote, coteMax));
             //    Près d'un bord de l'écran, le carré est décalé pour rester entièrement sur
             //    l'écran (P n'est alors plus au centre de la photo).
@@ -423,11 +427,13 @@ namespace GazeBar
             // Un fin cadre gris autour de la photo.
             Rectangle cadre = new Rectangle();
             cadre.Stroke = Brushes.Gray;
-            cadre.StrokeThickness = 2;
-            cadre.Width = image.Width + 4;
-            cadre.Height = image.Height + 4;
-            Canvas.SetLeft(cadre, coin.X - 2);
-            Canvas.SetTop(cadre, coin.Y - 2);
+            // Épaisseur en unités de l'écran de référence, convertie (étape 11, voir Ecran.cs).
+            double trait = Ecran.Unites(2);
+            cadre.StrokeThickness = trait;
+            cadre.Width = image.Width + 2 * trait;
+            cadre.Height = image.Height + 2 * trait;
+            Canvas.SetLeft(cadre, coin.X - trait);
+            Canvas.SetTop(cadre, coin.Y - trait);
             ecran.Children.Add(cadre);
 
             // ── L'icône « retour », à droite,
@@ -446,12 +452,12 @@ namespace GazeBar
             //    Il apparaîtra à la première mesure sur l'écran.
             _cercleRegardFond = new Ellipse();
             _cercleRegardFond.Stroke = Brushes.Black;
-            _cercleRegardFond.StrokeThickness = 4;
+            _cercleRegardFond.StrokeThickness = Ecran.Unites(4);
             _cercleRegardFond.Opacity = 0.6;
             _cercleRegardFond.Visibility = Visibility.Collapsed;
             _cercleRegard = new Ellipse();
             _cercleRegard.Stroke = Brushes.LimeGreen;
-            _cercleRegard.StrokeThickness = 2;
+            _cercleRegard.StrokeThickness = Ecran.Unites(2);
             _cercleRegard.Visibility = Visibility.Collapsed;
             ecran.Children.Add(_cercleRegardFond);
             ecran.Children.Add(_cercleRegard);
@@ -486,7 +492,7 @@ namespace GazeBar
 
             OverlayWindow calque = Gestionnaire.Calque;
             Point centre = calque.VersWpf(_lisse.X, _lisse.Y);
-            double rayon = calque.LongueurVersWpf(DiametreCercleRegard / 2);
+            double rayon = calque.LongueurVersWpf(Ecran.Px(DiametreCercleRegard) / 2);
             PlacerEllipse(_cercleRegardFond, centre, rayon);
             PlacerEllipse(_cercleRegard, centre, rayon);
         }

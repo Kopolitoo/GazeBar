@@ -58,5 +58,18 @@ namespace GazeBar
         public virtual void Quitter()
         {
         }
+
+        /// <summary>
+        /// Appelée quand la résolution, la mise à l'échelle ou la taille du texte de Windows
+        /// a changé pendant ce mode (étape 11, voir Ecran.cs).
+        /// Renvoie vrai si le mode s'est adapté lui-même (par exemple le mode mouvement, qui
+        /// redessine tout à chaque tic avec les nouvelles tailles). Renvoie faux (par défaut)
+        /// si le mode ne peut pas continuer : ses boutons et sa photo ont été placés pour
+        /// l'ancien écran. Le gestionnaire revient alors au mode mouvement.
+        /// </summary>
+        public virtual bool AdapterEcran()
+        {
+            return false;
+        }
     }
 }

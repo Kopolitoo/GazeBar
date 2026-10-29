@@ -54,6 +54,15 @@ namespace GazeBar
             get { return "Calibration"; }
         }
 
+        /// <summary>
+        /// L'écran a changé (étape 11) : ce mode continue, car la calibration de Tobii ne doit pas être
+        /// interrompue.
+        /// </summary>
+        public override bool AdapterEcran()
+        {
+            return true;
+        }
+
         public override void Entrer(EtatRegard regard)
         {
             Gestionnaire.Calque.MasquerTout();

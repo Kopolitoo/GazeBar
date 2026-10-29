@@ -46,6 +46,10 @@ namespace GazeBar
     /// Les positions sont données en PIXELS D'ÉCRAN, comme le regard ; la conversion en unités
     /// WPF est faite ici, avec l'aide du calque.
     ///
+    /// Étape 11 : les épaisseurs, coins arrondis, marges et la police du libellé sont des
+    /// constantes en unités de l'écran de référence, converties avec Ecran.Unites et
+    /// Ecran.Police au moment de Placer (voir Ecran.cs).
+    ///
     /// Depuis l'étape 7, il « implémente » ICibleRegard : ViseurBoutons sait ainsi viser aussi
     /// bien un BoutonRegard qu'une cible du mode paramètres (CibleParametre).
     /// </summary>
@@ -143,12 +147,12 @@ namespace GazeBar
             _signeConfig.HorizontalAlignment = HorizontalAlignment.Center;
             _signeConfig.VerticalAlignment = VerticalAlignment.Center;
             // Le signe est un peu trop bas dans sa ligne de texte : on le remonte légèrement.
-            _signeConfig.Margin = new Thickness(0, 0, 0, 4);
+            _signeConfig.Margin = new Thickness(0, 0, 0, Ecran.Unites(4));
 
             _pastilleConfig = new Border();
             _pastilleConfig.Background = plus ? Vert : Rouge;
             _pastilleConfig.BorderBrush = Blanc;
-            _pastilleConfig.BorderThickness = new Thickness(2);
+            _pastilleConfig.BorderThickness = new Thickness(Ecran.Unites(2));
             _pastilleConfig.Child = _signeConfig;
         }
 
@@ -176,7 +180,7 @@ namespace GazeBar
             _pastille.FontWeight = FontWeights.Bold;
             _pastille.HorizontalAlignment = HorizontalAlignment.Right;
             _pastille.VerticalAlignment = VerticalAlignment.Bottom;
-            _pastille.Margin = new Thickness(0, 0, 8, 4);
+            _pastille.Margin = new Thickness(0, 0, Ecran.Unites(8), Ecran.Unites(4));
             _pastille.Visibility = pastille == null ? Visibility.Collapsed : Visibility.Visible;
 
             // Une grille permet de superposer le symbole (au centre) et la pastille (dans le coin).
@@ -187,13 +191,13 @@ namespace GazeBar
             _fond = new Border();
             _fond.Background = FondNormal;
             _fond.BorderBrush = Blanc;
-            _fond.BorderThickness = new Thickness(2);
-            _fond.CornerRadius = new CornerRadius(12);
+            _fond.BorderThickness = new Thickness(Ecran.Unites(2));
+            _fond.CornerRadius = new CornerRadius(Ecran.Unites(12));
             _fond.Child = contenu;
 
             _anneau = new Path();
             _anneau.Stroke = Vert;
-            _anneau.StrokeThickness = 6;
+            _anneau.StrokeThickness = Ecran.Unites(6);
             _anneau.StrokeStartLineCap = PenLineCap.Round;
             _anneau.StrokeEndLineCap = PenLineCap.Round;
             _anneau.Visibility = Visibility.Collapsed;
@@ -201,11 +205,12 @@ namespace GazeBar
             TextBlock texte = new TextBlock();
             texte.Text = libelle;
             texte.Foreground = Blanc;
-            texte.FontSize = 20;
+            // La police du libellé suit aussi la taille du texte de Windows (étape 11).
+            texte.FontSize = Ecran.Police(20);
             _libelle = new Border();
             _libelle.Background = FondNormal;
-            _libelle.CornerRadius = new CornerRadius(6);
-            _libelle.Padding = new Thickness(8, 2, 8, 2);
+            _libelle.CornerRadius = new CornerRadius(Ecran.Unites(6));
+            _libelle.Padding = new Thickness(Ecran.Unites(8), Ecran.Unites(2), Ecran.Unites(8), Ecran.Unites(2));
             _libelle.Child = texte;
             _libelle.Visibility = Visibility.Collapsed;
         }
@@ -226,7 +231,7 @@ namespace GazeBar
             if (Actif)
             {
                 _fond.BorderBrush = allume ? Vert : Blanc;
-                _fond.BorderThickness = new Thickness(allume ? 5 : 2);
+                _fond.BorderThickness = new Thickness(Ecran.Unites(allume ? 5 : 2));
             }
         }
 
@@ -269,7 +274,7 @@ namespace GazeBar
             // Sa forme change à chaque tic (Dessiner) ; il est placé en (0, 0) de la surface.
             Canvas.SetLeft(_anneau, 0);
             Canvas.SetTop(_anneau, 0);
-            _rayonAnneau = cote / 2 * Math.Sqrt(2) + 4;
+            _rayonAnneau = cote / 2 * Math.Sqrt(2) + Ecran.Unites(4);
             _centreWpf = centre;
 
             // Le libellé est centré sous le bouton (ou au-dessus, si demandé).
@@ -277,11 +282,11 @@ namespace GazeBar
             Canvas.SetLeft(_libelle, centre.X - _libelle.DesiredSize.Width / 2);
             if (libelleAuDessus)
             {
-                Canvas.SetTop(_libelle, centre.Y - cote / 2 - 12 - _libelle.DesiredSize.Height);
+                Canvas.SetTop(_libelle, centre.Y - cote / 2 - Ecran.Unites(12) - _libelle.DesiredSize.Height);
             }
             else
             {
-                Canvas.SetTop(_libelle, centre.Y + cote / 2 + 12);
+                Canvas.SetTop(_libelle, centre.Y + cote / 2 + Ecran.Unites(12));
             }
 
             surface.Children.Add(_fond);

@@ -120,6 +120,16 @@ namespace GazeBar
             DeplacerCercleRegard(regard, p);
         }
 
+        /// <summary>
+        /// L'écran a changé (étape 11) : on reste ici, et tout l'écran est redessiné au
+        /// prochain tic avec les nouvelles tailles (la liste reste ouverte si elle l'était).
+        /// </summary>
+        public override bool AdapterEcran()
+        {
+            _aConstruire = true;
+            return true;
+        }
+
         public override void Quitter()
         {
             Gestionnaire.Calque.MasquerEcranChoix();
@@ -198,10 +208,10 @@ namespace GazeBar
             Parametres p = Parametres.Courants;
             double largeur = Gestionnaire.LargeurEcran;
             double hauteur = Gestionnaire.HauteurEcran;
-            double taille = p.TailleIcones;
+            double taille = p.TailleIconesPx;
 
             // La photo du choix d'action a le même côté : 2 × [RayonCercle], au plus l'écran.
-            double cotePhoto = Math.Min(Math.Round(2 * p.RayonCercle), Math.Min(largeur, hauteur));
+            double cotePhoto = Math.Min(Math.Round(2 * p.RayonCerclePx), Math.Min(largeur, hauteur));
             DispositionChoixAction mise = new DispositionChoixAction(largeur, hauteur, taille, cotePhoto);
 
             calque.PreparerEcranChoix();
@@ -252,12 +262,12 @@ namespace GazeBar
             // Le petit cercle du regard, ajouté EN DERNIER pour être par-dessus tout.
             _cercleRegardFond = new Ellipse();
             _cercleRegardFond.Stroke = Brushes.Black;
-            _cercleRegardFond.StrokeThickness = 4;
+            _cercleRegardFond.StrokeThickness = Ecran.Unites(4);
             _cercleRegardFond.Opacity = 0.6;
             _cercleRegardFond.Visibility = Visibility.Collapsed;
             _cercleRegard = new Ellipse();
             _cercleRegard.Stroke = Brushes.LimeGreen;
-            _cercleRegard.StrokeThickness = 2;
+            _cercleRegard.StrokeThickness = Ecran.Unites(2);
             _cercleRegard.Visibility = Visibility.Collapsed;
             ecran.Children.Add(_cercleRegardFond);
             ecran.Children.Add(_cercleRegard);
@@ -295,7 +305,7 @@ namespace GazeBar
             cadre.Height = coteWpf;
             cadre.Background = FondApercu;
             cadre.BorderBrush = Brushes.Gray;
-            cadre.BorderThickness = new Thickness(2);
+            cadre.BorderThickness = new Thickness(Ecran.Unites(2));
             cadre.Child = textes;
             Canvas.SetLeft(cadre, coin.X);
             Canvas.SetTop(cadre, coin.Y);
@@ -333,19 +343,20 @@ namespace GazeBar
             cadre.CornerRadius = new CornerRadius(calque.LongueurVersWpf(taille * 0.3));
             cadre.Background = FondListe;
             cadre.BorderBrush = Brushes.White;
-            cadre.BorderThickness = new Thickness(2);
+            cadre.BorderThickness = new Thickness(Ecran.Unites(2));
             Canvas.SetLeft(cadre, coin.X);
             Canvas.SetTop(cadre, coin.Y);
             ecran.Children.Add(cadre);
 
             // ── Le titre, en haut du rectangle.
-            double policeTitre = taille * 0.3;
+            // Les textes de la liste suivent aussi la taille du texte de Windows (étape 11).
+            double policeTitre = taille * 0.3 * Ecran.TexteWindows;
             AjouterTexteCentre(calque, ecran, "Choisir l'action à placer", mise.CentreX, haut + taille * 0.35,
                                l, policeTitre, Brushes.White, true);
 
             // ── « Annuler », en bas du rectangle, avec son nom en dessous.
             //    E711 = croix (annuler).
-            double policeNom = taille * 0.2;
+            double policeNom = taille * 0.2 * Ecran.TexteWindows;
             double yAnnuler = haut + h - taille / 2 - policeNom * 2.5;
             AjouterBouton(calque, ecran, new BoutonRegard("", null, "Annuler"), FermerListe,
                           mise.CentreX, yAnnuler, taille, true);
@@ -471,7 +482,7 @@ namespace GazeBar
 
             OverlayWindow calque = Gestionnaire.Calque;
             Point centre = calque.VersWpf(_lisse.X, _lisse.Y);
-            double rayon = calque.LongueurVersWpf(p.RayonCercle / 2);
+            double rayon = calque.LongueurVersWpf(p.RayonCerclePx / 2);
             PlacerEllipse(_cercleRegardFond, centre, rayon);
             PlacerEllipse(_cercleRegard, centre, rayon);
         }

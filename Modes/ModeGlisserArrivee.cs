@@ -38,7 +38,7 @@ namespace GazeBar
     /// </summary>
     internal sealed class ModeGlisserArrivee : Mode
     {
-        /// <summary>Rayon du point qui marque le départ, en pixels.</summary>
+        /// <summary>Rayon du point qui marque le départ, en pixels de l'écran 4K (converti avec Ecran.Px, étape 11).</summary>
         private const double RayonPointDepart = 6;
 
         private readonly Glissement _glissement;
@@ -141,7 +141,7 @@ namespace GazeBar
                     _zoneY = regard.Y;
                     _zoneIgnoreeConnue = true;
                 }
-                else if (_zoneIgnoree && Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCercle)
+                else if (_zoneIgnoree && Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCerclePx)
                 {
                     _zoneIgnoree = false;
                 }
@@ -167,7 +167,7 @@ namespace GazeBar
             // 5. Le dessin : le cercle et la ligne du trajet.
             if (_place)
             {
-                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
+                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCerclePx, false);
                 PlacerLigne(_lisse.X, _lisse.Y);
             }
         }
@@ -191,17 +191,17 @@ namespace GazeBar
             OverlayWindow calque = Gestionnaire.Calque;
             calque.PreparerSurfaceGlisser();
             Canvas surface = calque.SurfaceGlisser;
-            double taille = Parametres.Courants.TailleIcones;
+            double taille = Parametres.Courants.TailleIconesPx;
 
             // La ligne : elle partira du point de départ ; son autre bout suit le cercle.
             _ligneFond = new Line();
             _ligneFond.Stroke = Brushes.Black;
-            _ligneFond.StrokeThickness = 5;
+            _ligneFond.StrokeThickness = Ecran.Unites(5);
             _ligneFond.Opacity = 0.5;
             _ligneFond.Visibility = Visibility.Collapsed;
             _ligne = new Line();
             _ligne.Stroke = Brushes.White;
-            _ligne.StrokeThickness = 3;
+            _ligne.StrokeThickness = Ecran.Unites(3);
             // Pointillés : 3 épaisseurs de trait, puis 2 épaisseurs de vide, et ainsi de suite.
             _ligne.StrokeDashArray = new DoubleCollection(new double[] { 3, 2 });
             _ligne.Visibility = Visibility.Collapsed;
@@ -210,11 +210,11 @@ namespace GazeBar
 
             // Le point de départ : un petit disque blanc bordé de noir.
             Point depart = calque.VersWpf(_glissement.DepartX, _glissement.DepartY);
-            double r = calque.LongueurVersWpf(RayonPointDepart);
+            double r = calque.LongueurVersWpf(Ecran.Px(RayonPointDepart));
             Ellipse point = new Ellipse();
             point.Fill = Brushes.White;
             point.Stroke = Brushes.Black;
-            point.StrokeThickness = 2;
+            point.StrokeThickness = Ecran.Unites(2);
             point.Width = r * 2;
             point.Height = r * 2;
             Canvas.SetLeft(point, depart.X - r);
@@ -223,7 +223,7 @@ namespace GazeBar
 
             // Le bouton « retour », au bord droit de l'écran, centré verticalement.
             // Symbole E72B = flèche « retour » de la police Windows.
-            double xRetour = Gestionnaire.LargeurEcran - taille / 2 - 10;
+            double xRetour = Gestionnaire.LargeurEcran - taille / 2 - Ecran.Px(10);
             double yRetour = Gestionnaire.HauteurEcran / 2;
             BoutonRegard retour = new BoutonRegard("", null, "Annuler le glisser-déposer");
             retour.Placer(calque, surface, xRetour, yRetour, taille);

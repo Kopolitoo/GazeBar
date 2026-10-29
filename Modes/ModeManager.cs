@@ -60,6 +60,32 @@ namespace GazeBar
         {
             Regard = regard;
             Calque = calque;
+
+            // Étape 11 : l'écran peut changer pendant que GazeBar tourne.
+            Ecran.Change += OnEcranChange;
+        }
+
+        /// <summary>
+        /// La résolution, la mise à l'échelle ou la taille du texte de Windows a changé
+        /// (étape 11). Le mode courant s'adapte s'il le peut (Mode.AdapterEcran) ; sinon on
+        /// revient au mode mouvement, comme avec la touche Échap : boutons de la souris et
+        /// touches Ctrl, Maj, Alt relâchés par sécurité (un glisser-déposer est interrompu).
+        /// </summary>
+        private void OnEcranChange()
+        {
+            if (ModeCourant == null)
+            {
+                return;
+            }
+            if (ModeCourant.AdapterEcran())
+            {
+                App.Log("Écran changé : le mode " + ModeCourant.Nom + " continue avec les nouvelles tailles");
+                return;
+            }
+            App.Log("Écran changé : retour au mode mouvement (le mode " + ModeCourant.Nom + " était placé pour l'ancien écran)");
+            MouseInjector.ReleaseAll();
+            InjecteurClavier.RelacherTout();
+            ChangerMode(new ModeMouvement());
         }
 
         /// <summary>La source du regard Tobii.</summary>

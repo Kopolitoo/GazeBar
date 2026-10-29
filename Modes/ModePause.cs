@@ -27,6 +27,15 @@ namespace GazeBar
             get { return true; }
         }
 
+        /// <summary>
+        /// L'écran a changé (étape 11) : ce mode continue, car il ne dessine rien, et la pause ne doit pas
+        /// s'arrêter toute seule.
+        /// </summary>
+        public override bool AdapterEcran()
+        {
+            return true;
+        }
+
         public override void Entrer(EtatRegard regard)
         {
             Gestionnaire.Calque.MasquerTout();

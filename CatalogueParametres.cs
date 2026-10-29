@@ -219,7 +219,13 @@ namespace GazeBar
 
     /// <summary>
     /// LA LISTE DES ONGLETS ET DES RÉGLAGES du mode paramètres (étape 7), dans l'ordre
-    /// d'affichage. Regroupement validé par l'utilisateur le 26/10/2026 (six onglets ; « Défilement » ajouté à l'étape 8,
+    /// d'affichage.
+    ///
+    /// Étape 11 : les tailles (anti-tremblement, rayon de fixation, vitesse max, rayon du
+    /// cercle, taille des icônes) sont en % DE LA HAUTEUR DE L'ÉCRAN (voir Ecran.cs), et
+    /// l'onglet « Affichage » gagne « Taille de l'interface ».
+    ///
+    /// Regroupement validé par l'utilisateur le 26/10/2026 (six onglets ; « Défilement » ajouté à l'étape 8,
     /// « Jeu » à l'étape 9).
     ///
     /// Pour ajouter un réglage plus tard : l'ajouter dans Parametres.cs (avec sa valeur par
@@ -248,7 +254,7 @@ namespace GazeBar
             new Onglet("Regard", "",
                 Reglage.Nombre("Lissage", "Plus petit = plus calme, plus grand = plus réactif", "", 0.01,
                                p => p.Lissage, (p, v) => p.Lissage = v),
-                Reglage.Nombre("Anti-tremblement", "Le curseur ne bouge pas en dessous", " px", 1,
+                Reglage.Nombre("Anti-tremblement", "Le curseur ne bouge pas en dessous", " %", 0.1,
                                p => p.ZoneMorteCurseur, (p, v) => p.ZoneMorteCurseur = v),
                 Reglage.Nombre("Regard perdu après", "Sans nouvelle mesure depuis ce temps", " ms", 50,
                                p => p.AgeMaxMesure, (p, v) => p.AgeMaxMesure = v),
@@ -257,11 +263,11 @@ namespace GazeBar
 
             // E707 = épingle (« Fixation » : un point fixé)
             new Onglet("Fixation", "",
-                Reglage.Nombre("Rayon de fixation", "Le regard est immobile dans ce rayon", " px", 5,
+                Reglage.Nombre("Rayon de fixation", "Le regard est immobile dans ce rayon", " %", 0.1,
                                p => p.RayonFixation, (p, v) => p.RayonFixation = v),
                 Reglage.Nombre("Délai de fixation", "Avant de passer en regard fixe", " s", 0.1,
                                p => p.DelaiFixation, (p, v) => p.DelaiFixation = v),
-                Reglage.Nombre("Vitesse max", "Au-delà, l'œil saute ailleurs", " px/s", 50,
+                Reglage.Nombre("Vitesse max", "Au-delà, l'œil saute ailleurs", " %/s", 2,
                                p => p.VitesseMaxFixation, (p, v) => p.VitesseMaxFixation = v),
                 Reglage.OuiOuNon("Clic direct", "Clic gauche si la fixation se prolonge",
                                  p => p.ClicDirect, (p, v) => p.ClicDirect = v),
@@ -281,10 +287,12 @@ namespace GazeBar
 
             // E7F4 = écran (« Affichage »)
             new Onglet("Affichage", "",
-                Reglage.Nombre("Rayon du cercle", "Mode mouvement et zone de sortie", " px", 10,
+                Reglage.Nombre("Rayon du cercle", "Mode mouvement et zone de sortie", " %", 0.2,
                                p => p.RayonCercle, (p, v) => p.RayonCercle = v),
-                Reglage.Nombre("Taille des icônes", "Côté des boutons au regard", " px", 10,
+                Reglage.Nombre("Taille des icônes", "Côté des boutons au regard", " %", 0.2,
                                p => p.TailleIcones, (p, v) => p.TailleIcones = v),
+                Reglage.Nombre("Taille de l'interface", "75 petite, 100 normale, 125 grande, 150 très grande", " %", 25,
+                               p => p.TailleInterface, (p, v) => p.TailleInterface = v),
                 Reglage.OuiOuNon("Libellés", "Nom de l'action au survol d'une icône",
                                  p => p.AfficherLibelles, (p, v) => p.AfficherLibelles = v)),
 
