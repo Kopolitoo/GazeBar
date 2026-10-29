@@ -40,6 +40,12 @@
     <!-- Le « manifeste » : un petit fichier XML lu par Windows au lancement du programme.
          Il déclare GazeBar « sensible au DPI » : voir app.manifest. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- L'icône du programme : celle qu'affichent l'Explorateur Windows, la barre des tâches,
+         Alt+Tab et les raccourcis. Le fichier .ico contient la même image en plusieurs tailles
+         (16, 24, 32, 48, 64 et 256 pixels) : Windows choisit la plus adaptée à l'écran.
+         Les fenêtres WPF qui ne précisent pas d'icône reprennent automatiquement celle-ci. -->
+    <ApplicationIcon>Ressources\GazeBar.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
