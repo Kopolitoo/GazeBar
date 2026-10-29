@@ -29,7 +29,6 @@ namespace GazeBar
         private ModeManager _modes;
         private CrochetClavier _clavier;
         private DiagnosticWindow _diagnostic;
-        private ReveilCurseur _reveilCurseur;
 
         /// <summary>
         /// Le « verrou » d'instance unique (étape 7). Un Mutex est un objet de Windows qui porte
@@ -112,8 +111,7 @@ namespace GazeBar
 
             // Correction du 29/10/2026 : si Windows a caché le curseur (GazeBar lancé seul au
             // démarrage, sans souris physique), on le fait réapparaître (voir ReveilCurseur).
-            _reveilCurseur = new ReveilCurseur();
-            _reveilCurseur.Demarrer();
+            ReveilCurseur.Verifier();
 
             // La touche Échap de l'aidant : retour au mode mouvement, depuis n'importe quel mode.
             _clavier = new CrochetClavier();
@@ -185,10 +183,6 @@ namespace GazeBar
 
             MouseInjector.ReleaseAll();
             InjecteurClavier.RelacherTout();
-            if (_reveilCurseur != null)
-            {
-                _reveilCurseur.Arreter();
-            }
             if (_clavier != null)
             {
                 _clavier.Dispose();
