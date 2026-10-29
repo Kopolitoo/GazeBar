@@ -16,6 +16,17 @@ namespace GazeBar
         public double Y;
 
         /// <summary>
+        /// Position du regard RAMENÉE DANS L'ÉCRAN (chaque axe bloqué séparément aux bords).
+        /// Exemple : regard au-dessus de l'écran → YEcran = 0, mais XEcran suit toujours le
+        /// regard de gauche à droite. Sert à faire glisser les cercles du regard le long des
+        /// bords quand on regarde hors de l'écran (demande de l'utilisateur du 29/10/2026).
+        /// Ne sert JAMAIS à la fixation ni aux boutons : seul le dessin du cercle l'utilise.
+        /// Valable seulement si Disponible est vrai.
+        /// </summary>
+        public double XEcran;
+        public double YEcran;
+
+        /// <summary>
         /// Numéro de la mesure (augmente de 1 à chaque mesure reçue du PCEye). Si le numéro
         /// n'a pas changé depuis le tic précédent, c'est la même mesure : il n'y a rien de neuf.
         /// </summary>

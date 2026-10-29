@@ -450,22 +450,24 @@ namespace GazeBar
 
         /// <summary>
         /// Déplace le petit cercle du regard : il suit le regard en douceur ([Lissage]), comme
-        /// dans le choix d'action. Son rayon est la moitié de [RayonCercle]. Regard perdu ou
-        /// hors de l'écran : il reste où il est.
+        /// dans le choix d'action. Son rayon est la moitié de [RayonCercle]. Regard hors de
+        /// l'écran : il glisse le long du bord. Regard perdu : il reste où il est.
         /// </summary>
         private void DeplacerCercleRegard(EtatRegard regard, Parametres p)
         {
-            if (_cercleRegard == null || !regard.SurEcran)
+            if (_cercleRegard == null || !regard.Disponible)
             {
                 return;
             }
 
+            // Position ramenée dans l'écran : regard hors de l'écran → le cercle glisse le
+            // long du bord (voir EtatRegard.XEcran).
             if (!_cercleRegardPlace)
             {
-                _lisse.Placer(regard.X, regard.Y);
+                _lisse.Placer(regard.XEcran, regard.YEcran);
                 _cercleRegardPlace = true;
             }
-            _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
+            _lisse.Suivre(regard.XEcran, regard.YEcran, regard.MaintenantMs);
 
             OverlayWindow calque = Gestionnaire.Calque;
             Point centre = calque.VersWpf(_lisse.X, _lisse.Y);

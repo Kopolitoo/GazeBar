@@ -308,6 +308,11 @@ namespace GazeBar
             etat.InstantMesureMs = instantMs;
             etat.HorsEcran = GazeSource.IsOffScreen(x, y, largeur, hauteur);
             etat.EnBasHorsEcran = y >= hauteur;
+
+            // La même position, mais ramenée dans l'écran (de 0 à largeur − 1, de 0 à hauteur − 1).
+            // Math.Max / Math.Min « bloquent » la valeur entre deux bornes.
+            etat.XEcran = Math.Max(0, Math.Min(largeur - 1, x));
+            etat.YEcran = Math.Max(0, Math.Min(hauteur - 1, y));
             return etat;
         }
     }

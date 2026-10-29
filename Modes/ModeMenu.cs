@@ -187,18 +187,20 @@ namespace GazeBar
                 }
             }
 
-            // 3. Le cercle du regard (seulement quand le regard est sur l'écran).
-            //    Il est caché quand le regard est dans la zone de la barre (avec sa marge) : il
-            //    gênerait la lecture des boutons (demande de l'utilisateur du 28/10/2026). Sa
-            //    position continue d'être suivie : il réapparaît sans saut en sortant de la zone.
-            if (regard.SurEcran)
+            // 3. Le cercle du regard. Il suit la position ramenée dans l'écran : regard hors de
+            //    l'écran → il glisse le long du bord (demande de l'utilisateur du 29/10/2026).
+            //    Il est caché quand le regard est dans la zone de la barre (avec sa marge), ou en
+            //    bas hors de l'écran : il gênerait la lecture des boutons (demande du 28/10/2026).
+            //    Sa position continue d'être suivie : il réapparaît sans saut en sortant de la zone.
+            //    Regard perdu : il reste où il est.
+            if (regard.Disponible)
             {
                 if (!_cerclePlace)
                 {
-                    _lisse.Placer(regard.X, regard.Y);
+                    _lisse.Placer(regard.XEcran, regard.YEcran);
                     _cerclePlace = true;
                 }
-                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
+                _lisse.Suivre(regard.XEcran, regard.YEcran, regard.MaintenantMs);
                 if (DansLaBarre(regard))
                 {
                     Gestionnaire.Calque.MasquerCercle();
@@ -207,11 +209,6 @@ namespace GazeBar
                 {
                     Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCercle, false);
                 }
-            }
-            else if (regard.EnBasHorsEcran)
-            {
-                // En bas, hors de l'écran : c'est aussi « dans la barre ».
-                Gestionnaire.Calque.MasquerCercle();
             }
         }
 

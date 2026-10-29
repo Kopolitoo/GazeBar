@@ -96,9 +96,10 @@ namespace GazeBar
             _zoneX = regard.X;
             _zoneY = regard.Y;
 
-            // Le cercle part du regard (le choix d'action l'avait caché : pas de saut visible).
-            _place = regard.SurEcran;
-            _lisse.Placer(regard.X, regard.Y);
+            // Le cercle part du regard (le choix d'action l'avait caché : pas de saut visible),
+            // ramené dans l'écran s'il en sort.
+            _place = regard.Disponible;
+            _lisse.Placer(regard.XEcran, regard.YEcran);
 
             ConstruireSurface();
             App.Log("Glisser : choix de l'arrivée (" + _glissement.Nom + ", départ en (" +
@@ -119,17 +120,21 @@ namespace GazeBar
                 return;
             }
 
-            if (regard.SurEcran)
+            if (regard.Disponible)
             {
-                // 2. Le cercle se rapproche du regard, en douceur (voir Lisseur.cs).
+                // 2. Le cercle se rapproche du regard, en douceur (voir Lisseur.cs). Regard hors
+                //    de l'écran : il reste au bord et glisse le long de ce bord (EtatRegard.XEcran).
                 if (!_place)
                 {
-                    _lisse.Placer(regard.X, regard.Y);
+                    _lisse.Placer(regard.XEcran, regard.YEcran);
                     _place = true;
                 }
-                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
+                _lisse.Suivre(regard.XEcran, regard.YEcran, regard.MaintenantMs);
+            }
 
-                // 3. La zone ignorée : le regard en est-il sorti ?
+            if (regard.SurEcran)
+            {
+                // 3. La zone ignorée : le regard en est-il sorti ? (Vrai regard sur l'écran seulement.)
                 if (!_zoneIgnoreeConnue)
                 {
                     _zoneX = regard.X;

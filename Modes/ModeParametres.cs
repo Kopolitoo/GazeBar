@@ -144,15 +144,16 @@ namespace GazeBar
                 }
             }
 
-            // 4. Le petit cercle du regard (seulement quand le regard est sur l'écran).
-            if (regard.SurEcran)
+            // 4. Le petit cercle du regard. Regard hors de l'écran : il reste au bord et glisse
+            //    le long de ce bord (EtatRegard.XEcran). Regard perdu : il reste où il est.
+            if (regard.Disponible)
             {
                 if (!_cerclePlace)
                 {
-                    _lisse.Placer(regard.X, regard.Y);
+                    _lisse.Placer(regard.XEcran, regard.YEcran);
                     _cerclePlace = true;
                 }
-                _lisse.Suivre(regard.X, regard.Y, regard.MaintenantMs);
+                _lisse.Suivre(regard.XEcran, regard.YEcran, regard.MaintenantMs);
                 _fenetre.PlacerPointRegard(_fenetre.VersPage(_lisse.X, _lisse.Y));
             }
         }
