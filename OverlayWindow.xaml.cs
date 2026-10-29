@@ -160,7 +160,7 @@ namespace GazeBar
         /// <summary>
         /// Place la fenêtre sur tout l'écran principal.
         ///
-        /// GetSystemMetrics donne la taille de l'écran en pixels réels (GazeBar est déclaré
+        /// TailleEcranPrincipal donne la taille de l'écran en pixels réels (GazeBar est déclaré
         /// « sensible au DPI » dans app.manifest). TransformFromDevice est la conversion
         /// « pixels réels → unités WPF » fournie par WPF pour cette fenêtre.
         ///
@@ -177,8 +177,10 @@ namespace GazeBar
                 return;
             }
 
-            double largeurPixels = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN);
-            double hauteurPixels = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN);
+            // La vraie résolution, même après un changement (voir NativeMethods.TailleEcranPrincipal).
+            double largeurPixels;
+            double hauteurPixels;
+            NativeMethods.TailleEcranPrincipal(out largeurPixels, out hauteurPixels);
 
             if (largeurPixels <= 0 || hauteurPixels <= 0)
             {

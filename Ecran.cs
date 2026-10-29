@@ -156,8 +156,11 @@ namespace GazeBar
         /// </summary>
         public static bool Mesurer(double echelle)
         {
-            double largeur = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN);
-            double hauteur = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN);
+            // La vraie résolution (GetSystemMetrics ne voit pas toujours le changement : voir
+            // NativeMethods.TailleEcranPrincipal).
+            double largeur;
+            double hauteur;
+            NativeMethods.TailleEcranPrincipal(out largeur, out hauteur);
             if (largeur <= 0 || hauteur <= 0)
             {
                 return false;   // mesure impossible pour l'instant (écran en train de changer)

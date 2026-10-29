@@ -55,8 +55,7 @@ namespace GazeBar
             _gaze = gaze;
 
             // Taille de l'écran en pixels (même unité que la position du curseur).
-            _screenWidth = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN);
-            _screenHeight = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN);
+            NativeMethods.TailleEcranPrincipal(out _screenWidth, out _screenHeight);
             if (_screenWidth <= 0 || _screenHeight <= 0)
             {
                 _screenWidth = 1920;

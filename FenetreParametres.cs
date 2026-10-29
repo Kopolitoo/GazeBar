@@ -251,8 +251,9 @@ namespace GazeBar
             {
                 return;
             }
-            double largeurPixels = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN);
-            double hauteurPixels = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN);
+            double largeurPixels;
+            double hauteurPixels;
+            NativeMethods.TailleEcranPrincipal(out largeurPixels, out hauteurPixels);
             Point taille = source.CompositionTarget.TransformFromDevice.Transform(new Point(largeurPixels, hauteurPixels));
             Left = 0;
             Top = 0;

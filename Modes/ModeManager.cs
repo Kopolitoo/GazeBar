@@ -103,16 +103,20 @@ namespace GazeBar
         /// <summary>Déclenché après chaque changement de mode. L'interface peut s'en servir pour s'afficher à jour.</summary>
         public event Action<Mode> ModeChange;
 
-        /// <summary>Largeur de l'écran principal, en pixels réels.</summary>
+        /// <summary>
+        /// Largeur de l'écran principal, en pixels réels, mesurée par Ecran (étape 11 :
+        /// GetSystemMetrics ne voyait pas un changement de résolution fait pendant que GazeBar
+        /// tourne, voir NativeMethods.TailleEcranPrincipal).
+        /// </summary>
         public double LargeurEcran
         {
-            get { return NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN); }
+            get { return Ecran.LargeurPixels; }
         }
 
-        /// <summary>Hauteur de l'écran principal, en pixels réels.</summary>
+        /// <summary>Hauteur de l'écran principal, en pixels réels, mesurée par Ecran.</summary>
         public double HauteurEcran
         {
-            get { return NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN); }
+            get { return Ecran.HauteurPixels; }
         }
 
         // ───────────────────────── Commandes ─────────────────────────
