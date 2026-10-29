@@ -36,6 +36,35 @@ namespace GazeBar
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SetCursorPos(int x, int y);
 
+        /// <summary>
+        /// État du curseur (structure CURSORINFO de Windows). Correction du 29/10/2026 :
+        /// on lit surtout « flags », pour savoir si Windows a caché le curseur.
+        /// cbSize doit contenir la taille de la structure avant l'appel (Windows la vérifie).
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct CURSORINFO
+        {
+            public int cbSize;
+            public int flags;
+            public IntPtr hCursor;
+            public POINT ptScreenPos;
+        }
+
+        /// <summary>Lit l'état du curseur : visible, caché, « supprimé » par Windows…</summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool GetCursorInfo(ref CURSORINFO info);
+
+        /// <summary>
+        /// Drapeau de CURSORINFO.flags : Windows a « supprimé » le curseur (Windows 8 et plus).
+        /// Cela arrive quand Windows pense qu'il n'y a pas de souris : après un toucher sur un
+        /// écran tactile, ou au démarrage si aucune souris physique n'a encore bougé. Le
+        /// curseur reste alors invisible jusqu'au prochain mouvement d'une « vraie » souris.
+        /// À ne pas confondre avec un curseur caché volontairement par un logiciel (vidéo en
+        /// plein écran, jeu) : dans ce cas, ce drapeau n'est pas mis.
+        /// </summary>
+        internal const int CURSOR_SUPPRESSED = 0x00000002;
+
         /// <summary>Taille de l'écran principal (index 0 = largeur, 1 = hauteur), en pixels.</summary>
         [DllImport("user32.dll")]
         internal static extern int GetSystemMetrics(int index);

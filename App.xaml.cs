@@ -109,6 +109,10 @@ namespace GazeBar
             _calque.RemettreAuPremierPlan();
             _modes.Demarrer(new ModeMouvement());
 
+            // Correction du 29/10/2026 : si Windows a caché le curseur (GazeBar lancé seul au
+            // démarrage, sans souris physique), on le fait réapparaître (voir ReveilCurseur).
+            ReveilCurseur.Verifier();
+
             // La touche Échap de l'aidant : retour au mode mouvement, depuis n'importe quel mode.
             _clavier = new CrochetClavier();
             _clavier.EchapAppuye += OnEchap;
