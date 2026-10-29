@@ -7,7 +7,8 @@ namespace GazeBar
     /// <summary>
     /// MODE CALIBRATION (étape 4 du cahier des charges).
     ///
-    /// On y arrive depuis la barre de menu, une fois l'outil de calibration Tobii lancé (voir
+    /// On y arrive depuis l'onglet « Outils » des paramètres (avant le 29/10/2026 : depuis la
+    /// barre de menu), une fois l'outil de calibration Tobii lancé (voir
     /// CalibrationTobii.cs). Pendant la calibration, GazeBar ne doit rien faire : le calque
     /// est vide, rien ne suit le regard (sinon le cercle gênerait et une fixation sur un point
     /// de calibration pourrait déclencher une action).
@@ -41,8 +42,8 @@ namespace GazeBar
         private uint _monProcessus;
 
         /// <summary>
-        /// fenetreAvant : la fenêtre active juste AVANT le lancement de l'outil (notée par la
-        /// barre de menu). Ce n'est donc pas la fenêtre de l'outil.
+        /// fenetreAvant : la fenêtre active juste AVANT le lancement de l'outil (notée par
+        /// ModeParametres). Ce n'est donc pas la fenêtre de l'outil.
         /// </summary>
         public ModeCalibration(IntPtr fenetreAvant)
         {

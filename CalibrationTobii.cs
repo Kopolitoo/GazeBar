@@ -8,7 +8,7 @@ namespace GazeBar
 {
     /// <summary>
     /// MODÈLE : lance l'outil de calibration du moteur Tobii (étape 4, bouton « Calibration »
-    /// de la barre de menu).
+    /// de l'onglet « Outils » des paramètres ; avant le 29/10/2026, de la barre de menu).
     ///
     /// Le problème : le paquet Tobii.Interaction 0.7.3 n'a presque pas de documentation, et
     /// ce code n'a pas pu être compilé ni essayé sur le PCEye 5. D'après les exemples connus,

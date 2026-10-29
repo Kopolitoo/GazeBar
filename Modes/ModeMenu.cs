@@ -21,14 +21,15 @@ namespace GazeBar
     ///   Paramètres   ouvre le mode paramètres (étape 7) ;
     ///   Jeu          passe en mode jeu (étape 9). Si l'on vient du mode jeu, ce bouton devient
     ///                « Quitter le jeu » et ramène au mode mouvement ;
-    ///   Calibration  lance l'outil de calibration Tobii (mode calibration) ;
     ///   Clavier      ouvre le clavier visuel de Windows, puis ferme le menu ;
     ///   Pause        passe en mode pause ;
     ///   Suivi souris interrupteur : bord vert quand l'option est activée. Le menu reste
     ///                ouvert ; il faut quitter le bouton du regard pour pouvoir l'actionner
     ///                de nouveau ;
-    ///   Diagnostic   ouvre la fenêtre Diagnostic (ajout : elle était dans l'ancienne barre) ;
     ///   Quitter      demande une confirmation (« Oui, quitter » / « Non »), puis ferme GazeBar.
+    ///
+    /// Calibration et Diagnostic ne sont plus dans la barre (demande de l'utilisateur du
+    /// 29/10/2026) : ils sont dans l'onglet « Outils » des paramètres (voir FenetreParametres).
     ///
     /// Depuis le mode jeu, le bouton « Quitter le jeu » a un bord vert, comme un interrupteur
     /// allumé : il montre que le mode jeu est actif (demande de l'utilisateur du 28/10/2026).
@@ -55,12 +56,10 @@ namespace GazeBar
             Parametres,
             Jeu,
             QuitterJeu,
-            Calibration,
             Clavier,
             Pause,
             Reprendre,
             SuiviSouris,
-            Diagnostic,
             Quitter,
             ConfirmerQuitter,
             AnnulerQuitter
@@ -249,21 +248,6 @@ namespace GazeBar
                     Gestionnaire.ChangerMode(new ModeMouvement());
                     break;
 
-                case ActionMenu.Calibration:
-                    // On note la fenêtre active AVANT de lancer l'outil : le mode calibration
-                    // saura ainsi reconnaître la fenêtre de l'outil (voir ModeCalibration).
-                    IntPtr fenetreAvant = NativeMethods.GetForegroundWindow();
-                    string messageCalibration;
-                    if (CalibrationTobii.Lancer(Gestionnaire.Regard, out messageCalibration))
-                    {
-                        Gestionnaire.ChangerMode(new ModeCalibration(fenetreAvant));
-                    }
-                    else
-                    {
-                        AfficherMessage(messageCalibration);
-                    }
-                    break;
-
                 case ActionMenu.Clavier:
                     string messageClavier;
                     if (OuvrirClavierVisuel(out messageClavier))
@@ -293,11 +277,6 @@ namespace GazeBar
                     _boutons[numero].DefinirAllume(Parametres.Courants.SuiviSouris);
                     App.Log("Suivi souris : " + (Parametres.Courants.SuiviSouris ? "oui" : "non"));
                     _viseur.BloquerJusquASortie();
-                    break;
-
-                case ActionMenu.Diagnostic:
-                    ((App)Application.Current).OuvrirDiagnostic();
-                    Revenir();
                     break;
 
                 case ActionMenu.Quitter:
@@ -424,8 +403,8 @@ namespace GazeBar
             else
             {
                 // Symboles de la police Windows (Segoe MDL2 Assets / Segoe Fluent Icons) :
-                //   E713 engrenage, E7FC manette, E890 œil, E765 clavier, E769 pause,
-                //   E768 lecture, E962 souris, E9D9 diagnostic, E7E8 bouton marche/arrêt.
+                //   E713 engrenage, E7FC manette, E765 clavier, E769 pause,
+                //   E768 lecture, E962 souris, E7E8 bouton marche/arrêt.
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Paramètres"), ActionMenu.Parametres);
                 if (_retour is ModeJeu)
                 {
@@ -438,7 +417,6 @@ namespace GazeBar
                 {
                     Ajouter(boutons, actions, new BoutonRegard("\uE7FC", null, "Jeu"), ActionMenu.Jeu);
                 }
-                Ajouter(boutons, actions, new BoutonRegard("", null, "Calibration"), ActionMenu.Calibration);
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier visuel"), ActionMenu.Clavier);
                 // (Depuis la pause, seul « Reprendre » est affiché : ici, on n'est donc
                 // jamais en pause.)
@@ -446,7 +424,6 @@ namespace GazeBar
                 BoutonRegard suivi = new BoutonRegard("", null, "Suivi souris");
                 suivi.DefinirAllume(p.SuiviSouris);
                 Ajouter(boutons, actions, suivi, ActionMenu.SuiviSouris);
-                Ajouter(boutons, actions, new BoutonRegard("", null, "Diagnostic"), ActionMenu.Diagnostic);
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Quitter GazeBar"), ActionMenu.Quitter);
             }
 

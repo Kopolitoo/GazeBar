@@ -25,6 +25,11 @@ namespace GazeBar
     /// Étape 10 : un neuvième onglet, « Icônes », avec un seul gros bouton « Configurer les
     /// icônes » qui demande au mode d'ouvrir l'écran de configuration (ModeConfigIcones).
     ///
+    /// 29/10/2026 : un dixième onglet, « Outils », avec deux gros boutons « Calibration » et
+    /// « Diagnostic » (ils étaient avant dans la barre de menu). Comme pour « Configurer les
+    /// icônes », la fenêtre ne fait que PRÉVENIR le mode (événements CalibrationDemandee et
+    /// DiagnosticDemande) : c'est ModeParametres qui lance l'outil et change de mode.
+    ///
     /// POURQUOI UNE VRAIE FENÊTRE, et pas un dessin sur le calque comme les autres modes ?
     /// Le calque laisse passer les clics et ne prend jamais le clavier. Or l'aidant doit
     /// pouvoir cliquer à la souris et taper une valeur au clavier (ou la dicter). Cette
@@ -86,6 +91,10 @@ namespace GazeBar
         private int _onglet;
         private bool _confirmation;
 
+        // Un message affiché dans l'onglet « Outils » (par exemple « Calibration impossible… »),
+        // ou null. Effacé quand on change d'onglet.
+        private string _messageOutils;
+
         // La saisie au clavier en cours (null = aucune).
         private Reglage _reglageEdite;
         private TextBox _saisie;
@@ -142,6 +151,22 @@ namespace GazeBar
 
         /// <summary>Bouton « Configurer les icônes » de l'onglet « Icônes » (étape 10).</summary>
         public event Action ConfigurationIconesDemandee;
+
+        /// <summary>Bouton « Calibration » de l'onglet « Outils » (29/10/2026).</summary>
+        public event Action CalibrationDemandee;
+
+        /// <summary>Bouton « Diagnostic » de l'onglet « Outils » (29/10/2026).</summary>
+        public event Action DiagnosticDemande;
+
+        /// <summary>
+        /// Affiche un message dans l'onglet « Outils » (par exemple si la calibration n'a pas
+        /// pu être lancée). La page est reconstruite pour le montrer.
+        /// </summary>
+        public void AfficherMessageOutils(string message)
+        {
+            _messageOutils = message;
+            Construire();
+        }
 
         /// <summary>
         /// Les cibles du regard. La même liste est gardée d'un bout à l'autre : elle est
@@ -311,7 +336,8 @@ namespace GazeBar
 
             // ── Les onglets, à gauche. Six onglets tiennent avec leur hauteur maximale (140) ;
             //    à partir de sept (étape 8), ils se resserrent pour rester sur la page :
-            //    7 onglets → environ 123 de haut, 8 onglets → 105.
+            //    7 onglets → environ 123 de haut, 8 onglets → 105, 10 onglets (« Outils »,
+            //    29/10/2026) → 80.
             int nombreOnglets = CatalogueParametres.Onglets.Count;
             double pas = Math.Min(OngletHauteurMax + OngletEcart,
                                   (OngletsBas - OngletsHaut + OngletEcart) / Math.Max(1, nombreOnglets));
@@ -359,12 +385,22 @@ namespace GazeBar
                 {
                     ConstruireOngletIcones();
                 }
+                if (onglet.Nom == CatalogueParametres.NomOngletOutils)
+                {
+                    ConstruireOngletOutils();
+                }
             }
 
             // ── La colonne de droite : « Défaut » en haut, « Retour » au milieu du bord.
             //    E72C = flèches circulaires (remettre), E72B = flèche de retour.
-            AjouterCible(DroiteGauche, 60, DroiteCote, DroiteCote, SymboleEtMot("", "Défaut"),
-                         DemanderDefaut, false, false);
+            //    Pas de « Défaut » pour un onglet sans rien à remettre (« Outils ») : un bouton
+            //    qui ne fait rien serait déroutant.
+            bool aDesDefauts = onglet.Reglages.Count > 0 || onglet.Nom == CatalogueParametres.NomOngletIcones;
+            if (aDesDefauts)
+            {
+                AjouterCible(DroiteGauche, 60, DroiteCote, DroiteCote, SymboleEtMot("", "Défaut"),
+                             DemanderDefaut, false, false);
+            }
             AjouterCible(DroiteGauche, (HauteurPage - DroiteCote) / 2, DroiteCote, DroiteCote,
                          SymboleEtMot("", "Retour"), DemanderRetour, false, false);
 
@@ -506,6 +542,71 @@ namespace GazeBar
             AjouterCible(ContenuGauche + 170, 420, 800, 180, bouton, DemanderConfigurationIcones, false, false);
         }
 
+        /// <summary>
+        /// Onglet « Outils » (29/10/2026) : deux gros boutons l'un au-dessus de l'autre, avec un
+        /// grand écart entre eux pour ne pas activer l'un en visant l'autre.
+        ///   E890 = œil (Calibration), E9D9 = diagnostic (courbe).
+        /// Sous les boutons : le message éventuel (calibration impossible…).
+        /// </summary>
+        private void ConstruireOngletOutils()
+        {
+            StackPanel textes = new StackPanel();
+            textes.Children.Add(Texte("Outils", 36, Blanc, true));
+            TextBlock explication = Texte(
+                "Calibration : lance l'outil de calibration Tobii ; GazeBar revient en mode mouvement " +
+                "quand il se ferme. Diagnostic : ouvre la fenêtre qui suit le regard et le curseur.",
+                23, Doux, false);
+            explication.TextWrapping = TextWrapping.Wrap;
+            explication.Width = 1140;
+            explication.Margin = new Thickness(0, 6, 0, 0);
+            textes.Children.Add(explication);
+            Placer(textes, ContenuGauche, LigneHaut + 20);
+
+            AjouterCible(ContenuGauche + 170, 320, 800, 180, GrosBouton("\uE890", "Calibration"),
+                         () => Prevenir(CalibrationDemandee), false, false);
+            AjouterCible(ContenuGauche + 170, 620, 800, 180, GrosBouton("\uE9D9", "Diagnostic"),
+                         () => Prevenir(DiagnosticDemande), false, false);
+
+            if (!string.IsNullOrEmpty(_messageOutils))
+            {
+                TextBlock message = Texte(_messageOutils, 30, CibleParametre.Accent, true);
+                message.TextWrapping = TextWrapping.Wrap;
+                message.Width = 1140;
+                Placer(message, ContenuGauche, 870);
+            }
+        }
+
+        /// <summary>Le contenu d'un gros bouton : un symbole à gauche, puis un mot.</summary>
+        private static UIElement GrosBouton(string symbole, string mot)
+        {
+            StackPanel bouton = new StackPanel();
+            bouton.Orientation = Orientation.Horizontal;
+            bouton.HorizontalAlignment = HorizontalAlignment.Center;
+            bouton.VerticalAlignment = VerticalAlignment.Center;
+            TextBlock icone = Texte(symbole, 60, Blanc, false);
+            icone.FontFamily = new FontFamily(PoliceIcones);
+            icone.VerticalAlignment = VerticalAlignment.Center;
+            icone.Margin = new Thickness(0, 0, 30, 0);
+            bouton.Children.Add(icone);
+            TextBlock texte = Texte(mot, 42, Blanc, true);
+            texte.VerticalAlignment = VerticalAlignment.Center;
+            bouton.Children.Add(texte);
+            return bouton;
+        }
+
+        /// <summary>
+        /// Prévient le mode (déclenche l'événement donné, s'il a des abonnés). Une saisie en
+        /// cours est d'abord validée.
+        /// </summary>
+        private void Prevenir(Action evenement)
+        {
+            ValiderSaisie();
+            if (evenement != null)
+            {
+                evenement();
+            }
+        }
+
         private void DemanderConfigurationIcones()
         {
             ValiderSaisie();
@@ -541,6 +642,7 @@ namespace GazeBar
         {
             _onglet = numero;
             _confirmation = false;
+            _messageOutils = null;
             App.Log("Paramètres : onglet " + CatalogueParametres.Onglets[numero].Nom);
             Construire();
         }

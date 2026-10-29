@@ -47,7 +47,7 @@ La barre ne prend jamais le focus, pour ne pas perturber la fenêtre où l'on ag
 
 1. Lancer GazeBar. La barre apparaît en haut de l'écran avec « Curseur : X … Y … | N changements/s ».
    Regardez différentes zones de l'écran : les valeurs doivent suivre le regard, y compris dans les coins.
-2. Bouton **Diagnostic** → **Enregistrer 20 s** : parcourez les coins, les bords et le centre
+2. Bouton **Diagnostic** (onglet « Outils » des paramètres) → **Enregistrer 20 s** : parcourez les coins, les bords et le centre
    du regard, puis fixez le centre 3 secondes. Le fichier CSV est écrit dans
    `Documents\GazeBar\positions-….csv` : envoyez-le pour analyse.
 3. **Appui long** : cliquez le bouton (3 s de compte à rebours), regardez l'endroit voulu.
@@ -148,9 +148,9 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
 - `Modes/ModeMenu` (étape 4) : regarder en bas, hors de l'écran, pendant `DelaiMenu` (0,5 s)
   ouvre une barre centrée en bas de l'écran, uniquement depuis les modes mouvement et pause
   (et plus tard jeu, depuis l'étape 6 ; c'est le `ModeManager` qui surveille). La loupe, le
-  choix d'action et le glisser-déposer ont leur bouton « retour ». Boutons : Paramètres, Jeu (grisé, étape 10), Calibration, Clavier
+  choix d'action et le glisser-déposer ont leur bouton « retour ». Boutons : Paramètres, Jeu, Clavier
   visuel, Pause (ou Reprendre si l'on vient de la pause), Suivi souris (interrupteur, bord vert
-  quand il est activé), Diagnostic, Quitter GazeBar (avec confirmation « Oui » / « Non »).
+  quand il est activé), Quitter GazeBar (avec confirmation « Oui » / « Non »).
   Regarder hors de la barre pendant `DelaiFermetureMenu` (1 s) la ferme et ramène au mode
   d'avant. Un petit cercle montre où est le regard.
 - `Modes/ModeParametres` et `FenetreParametres` (étape 7) : bouton « Paramètres » du menu. Une
@@ -191,7 +191,9 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   fait rien. « Retour » ou Échap ramène à l'onglet « Icônes ». Liste des actions : `CatalogueActions`.
 - `Modes/ModePause` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
   (bouton « Reprendre »).
-- `Modes/ModeCalibration` et `CalibrationTobii` (étape 4) : lancent l'outil de calibration Tobii
+- `Modes/ModeCalibration` et `CalibrationTobii` (étape 4) : bouton « Calibration » de l'onglet
+  « Outils » des paramètres (avec « Diagnostic » ; tous deux étaient dans la barre de menu avant
+  le 29/10/2026). Lancent l'outil de calibration Tobii
   et attendent la fermeture de sa fenêtre pour revenir au mode mouvement. Le nom exact de la
   commande Tobii n'a pas pu être vérifié : le journal note ce qui a été trouvé et essayé.
 - `CrochetClavier` (étape 4) : la touche **Échap** ramène au mode mouvement depuis n'importe quel
