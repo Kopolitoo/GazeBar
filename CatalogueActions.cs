@@ -31,7 +31,13 @@ namespace GazeBar
         Copier,
         Couper,
         Coller,
-        Retour
+        Retour,
+
+        /// <summary>
+        /// Ouvre (ou ferme) le clavier au regard (étape 12, demande de l'utilisateur du
+        /// 01/11/2026). Ajouté à la fin : les noms déjà écrits dans parametres.json ne changent pas.
+        /// </summary>
+        Clavier
     }
 
     /// <summary>
@@ -48,7 +54,10 @@ namespace GazeBar
         /// <summary>Les trois emplacements collés au bord gauche (Ctrl, Maj, Alt).</summary>
         Modificateurs,
 
-        /// <summary>Les trois emplacements collés au bord haut (Copier, Couper, Coller).</summary>
+        /// <summary>
+        /// Les quatre emplacements collés au bord haut (Copier, Couper, Coller, Clavier).
+        /// Trois jusqu'à l'étape 12 : le quatrième a été ajouté pour le bouton Clavier.
+        /// </summary>
         Utilitaires
     }
 
@@ -65,7 +74,15 @@ namespace GazeBar
         /// <summary>Nombre d'emplacements de chaque groupe.</summary>
         public static int NombreEmplacements(GroupeIcones groupe)
         {
-            return groupe == GroupeIcones.Couronne ? 8 : 3;
+            switch (groupe)
+            {
+                case GroupeIcones.Couronne:
+                    return 8;
+                case GroupeIcones.Utilitaires:
+                    return 4;   // 3 jusqu'à l'étape 12, + le bouton Clavier
+                default:
+                    return 3;
+            }
         }
 
         /// <summary>
@@ -91,7 +108,7 @@ namespace GazeBar
                 case GroupeIcones.Modificateurs:
                     return new[] { ActionChoix.Ctrl, ActionChoix.Maj, ActionChoix.Alt };
                 default:
-                    return new[] { ActionChoix.Copier, ActionChoix.Couper, ActionChoix.Coller };
+                    return new[] { ActionChoix.Copier, ActionChoix.Couper, ActionChoix.Coller, ActionChoix.Clavier };
             }
         }
 
@@ -108,7 +125,7 @@ namespace GazeBar
         ///   6 : à gauche, en haut   → double clic
         ///   7 : en haut, à gauche   → clic gauche
         /// Modificateurs, de haut en bas : Ctrl, Maj, Alt.
-        /// Utilitaires, de gauche à droite : Copier, Couper, Coller.
+        /// Utilitaires, de gauche à droite : Copier, Couper, Coller, Clavier.
         /// </summary>
         public static ActionChoix[] DispositionParDefaut(GroupeIcones groupe)
         {
@@ -204,6 +221,7 @@ namespace GazeBar
                 case ActionChoix.Copier: return "Copier";
                 case ActionChoix.Couper: return "Couper";
                 case ActionChoix.Coller: return "Coller";
+                case ActionChoix.Clavier: return "Clavier";
                 default: return "Retour";
             }
         }
@@ -213,7 +231,8 @@ namespace GazeBar
         /// Symboles de la police Windows (Segoe MDL2 Assets / Segoe Fluent Icons) :
         ///   E962 = souris, E71E = loupe, E7C2 = déplacer (quatre flèches), E72B = flèche « retour »,
         ///   EC8F = défilement (flèches haut et bas ; symbole à vérifier à l'écran),
-        ///   E8C8 = copier, E8C6 = ciseaux (couper), E77F = presse-papiers (coller).
+        ///   E8C8 = copier, E8C6 = ciseaux (couper), E77F = presse-papiers (coller),
+        ///   E765 = clavier (étape 12).
         /// Les trois clics partagent le symbole de la souris, les trois glisser-déposer celui des
         /// quatre flèches ; la pastille les distingue (G = gauche, D = droit, A = android).
         /// Les modificateurs affichent simplement leur nom (« Ctrl », « Maj », « Alt »).
@@ -251,6 +270,9 @@ namespace GazeBar
                     return new BoutonRegard("", null, "Couper (Ctrl + X)");
                 case ActionChoix.Coller:
                     return new BoutonRegard("", null, "Coller ici (clic, puis Ctrl + V)");
+                case ActionChoix.Clavier:
+                    // Pastille vide : le même bouton ouvre le clavier, ou le ferme s'il est ouvert.
+                    return new BoutonRegard("\uE765", null, "Clavier (ouvrir / fermer)");
                 default:
                     return new BoutonRegard("", null, "Retour");
             }

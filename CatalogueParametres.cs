@@ -348,7 +348,10 @@ namespace GazeBar
                 Reglage.OuiOuNon("Majuscule automatique", "Après . ? ! suivi d'une espace",
                                  p => p.MajusculeAuto, (p, v) => p.MajusculeAuto = v),
                 Reglage.Nombre("Hauteur du clavier", "En pourcentage de la hauteur de l'écran", " %", 5,
-                               p => p.HauteurClavier, (p, v) => p.HauteurClavier = v)),
+                               p => p.HauteurClavier, (p, v) => p.HauteurClavier = v),
+                // 50, 75 ou 100 % (Corriger arrondit au quart) ; aussi dans la barre du clavier.
+                Reglage.Nombre("Taille du clavier", "Largeur et hauteur ensemble : 50, 75 ou 100 %", " %", 25,
+                               p => p.TailleClavier, (p, v) => p.TailleClavier = v)),
 
             // E713 = engrenage (« Général »)
             new Onglet("Général", "",

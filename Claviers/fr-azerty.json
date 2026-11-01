@@ -50,7 +50,7 @@
         {"ligne": 3, "col": 7, "libelle": "b", "texte": "b"},
         {"ligne": 3, "col": 8, "libelle": "n", "texte": "n"},
         {"ligne": 3, "col": 9, "libelle": "m", "texte": "m"},
-        {"ligne": 3, "col": 10, "libelle": "-", "texte": "-"},
+        {"ligne": 3, "col": 10, "libelle": ",", "texte": ","},
         {"ligne": 3, "col": 11, "libelle": "Enter", "largeur": 1, "touche": "Entree"}
       ]
     },

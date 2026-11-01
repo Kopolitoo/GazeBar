@@ -63,9 +63,12 @@ namespace GazeBar
         ///       sur l'écran 4K de l'utilisateur (2160 px de haut), sont converties une fois ;
         ///   8 : étape 12 — clavier au regard : DelaiTouche, RepetitionTouche, MajusculeAuto et
         ///       HauteurClavier. Rien à corriger : absents d'un fichier plus ancien, ils
-        ///       gardent leur valeur par défaut.
+        ///       gardent leur valeur par défaut ;
+        ///   9 : étape 12 (remarques de l'utilisateur du 01/11/2026) — TailleClavier et
+        ///       ClavierEnHaut, et un 4e bouton utilitaire du choix d'action, « Clavier » : il
+        ///       est ajouté une fois dans un fichier plus ancien si cette 4e place est libre.
         /// </summary>
-        public const int VersionActuelle = 8;
+        public const int VersionActuelle = 9;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -338,7 +341,10 @@ namespace GazeBar
         [DataMember(Order = 101)]
         public string[] IconesModificateurs { get; set; }
 
-        /// <summary>Les trois emplacements du bord haut, de gauche à droite ("Copier", "Couper", "Coller" ou "").</summary>
+        /// <summary>
+        /// Les quatre emplacements du bord haut, de gauche à droite ("Copier", "Couper",
+        /// "Coller", "Clavier" ou ""). Trois jusqu'à la version 8 du fichier.
+        /// </summary>
         [DataMember(Order = 102)]
         public string[] IconesUtilitaires { get; set; }
 
@@ -365,6 +371,23 @@ namespace GazeBar
         /// <summary>Hauteur du clavier au regard, en % de la hauteur de l'écran.</summary>
         [DataMember(Order = 113)]
         public double HauteurClavier { get; set; }
+
+        /// <summary>
+        /// Taille du clavier au regard, en % : 100, 75 ou 50 (demande de l'utilisateur du
+        /// 01/11/2026). Largeur ET hauteur sont réduites ensemble : à 50 %, le clavier fait la
+        /// moitié de la largeur de l'écran et la moitié de [HauteurClavier], centré.
+        /// Se règle aussi avec le bouton « Taille » de la barre de menu du clavier.
+        /// </summary>
+        [DataMember(Order = 114)]
+        public double TailleClavier { get; set; }
+
+        /// <summary>
+        /// Vrai : le clavier est en haut de l'écran ; faux : en bas. Changé par le bouton
+        /// « Haut / bas » de la barre de menu du clavier, et retenu pour la prochaine ouverture
+        /// (demande de l'utilisateur du 01/11/2026).
+        /// </summary>
+        [DataMember(Order = 115)]
+        public bool ClavierEnHaut { get; set; }
 
         /// <summary>
         /// La disposition d'un groupe, lue dans les listes ci-dessus : un tableau avec une
@@ -536,6 +559,8 @@ namespace GazeBar
             RepetitionTouche = true;
             MajusculeAuto = true;
             HauteurClavier = 50;
+            TailleClavier = 100;
+            ClavierEnHaut = false;
 
             IconesParDefaut();
         }
@@ -597,6 +622,8 @@ namespace GazeBar
 
             DelaiTouche = Borner(DelaiTouche, 0.1, 5);
             HauteurClavier = Borner(HauteurClavier, 25, 75);
+            // Seulement 50, 75 ou 100 : une autre valeur va à la plus proche (60 → 50, 90 → 100).
+            TailleClavier = Math.Round(Borner(TailleClavier, 50, 100) / 25) * 25;
 
             CorrigerIcones(GroupeIcones.Couronne);
             CorrigerIcones(GroupeIcones.Modificateurs);
@@ -682,6 +709,21 @@ namespace GazeBar
                 // Rien à corriger : les réglages du clavier absents du fichier ont gardé leur
                 // valeur par défaut (voir AvantLecture). Réenregistrer le fichier les ajoute.
                 App.Log("Paramètres : mise à jour en version 8 (réglages du clavier au regard)");
+            }
+
+            if (VersionFichier < 9)
+            {
+                // Les boutons utilitaires passent de 3 à 4 : la 4e place, absente d'un fichier
+                // plus ancien, est lue vide. On y met le bouton « Clavier » (une seule fois :
+                // si l'utilisateur la vide ensuite, elle reste vide). TailleClavier et
+                // ClavierEnHaut ont déjà leur valeur par défaut (voir AvantLecture).
+                ActionChoix?[] utilitaires = Disposition(GroupeIcones.Utilitaires);
+                if (utilitaires.Length >= 4 && !utilitaires[3].HasValue)
+                {
+                    utilitaires[3] = ActionChoix.Clavier;
+                    EcrireDisposition(GroupeIcones.Utilitaires, utilitaires);
+                }
+                App.Log("Paramètres : mise à jour en version 9 (bouton Clavier du choix d'action, taille et position du clavier)");
             }
             VersionFichier = VersionActuelle;
             return true;

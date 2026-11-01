@@ -44,9 +44,16 @@ namespace GazeBar
     ///
     /// BARRE DE MENU DU CLAVIER (étape 12, choix de l'utilisateur du 31/10/2026) : quand le
     /// clavier au regard est affiché, regarder sous l'écran n'ouvre PAS la barre classique,
-    /// mais celle du clavier (MenuClavier = vrai). Pour l'instant, elle n'a qu'un bouton :
-    /// « Fermer le clavier ». Les autres (langue, haut/bas, zone de saisie, taille, mes mots)
-    /// viendront à l'étape 14. Le clavier reste affiché sous la barre.
+    /// mais celle du clavier (MenuClavier = vrai). Depuis le 01/11/2026 (remarques de
+    /// l'utilisateur), de gauche à droite :
+    ///   Haut / bas   met le clavier en haut de l'écran, ou le ramène en bas (retenu) ;
+    ///   Taille       100 % → 75 % → 50 % → 100 %… (le bouton affiche la taille actuelle) ;
+    ///   Pause        passe en mode pause (le clavier est caché, et revient à la reprise) ;
+    ///   Fermer       ferme le clavier.
+    /// Haut / bas et Taille laissent le menu ouvert, comme « Suivi souris ». Les autres
+    /// boutons (langue, zone de saisie, mes mots) viendront à l'étape 14. Le clavier reste
+    /// affiché, et s'il est en bas il REMONTE au-dessus de la barre au lieu d'être recouvert
+    /// (ClavierRegard.DefinirReserveBas) ; il redescend à la fermeture du menu.
     ///
     /// Sortie : quand le regard quitte la barre pendant [DelaiFermetureMenu], elle disparaît
     /// et on revient au mode précédent. Le regard en bas, hors de l'écran, compte comme
@@ -63,6 +70,8 @@ namespace GazeBar
             QuitterJeu,
             Clavier,
             FermerClavier,
+            PositionClavier,
+            TailleClavier,
             Pause,
             Reprendre,
             SuiviSouris,
@@ -245,6 +254,12 @@ namespace GazeBar
             Gestionnaire.Calque.MasquerBarreMenu(true);
             _boutons.Clear();
             _actions.Clear();
+
+            // Barre du clavier : le clavier peut redescendre (il était remonté au-dessus d'elle).
+            if (MenuClavier)
+            {
+                Gestionnaire.Clavier.DefinirReserveBas(0);
+            }
         }
 
         // ───────────────────────── Les actions ─────────────────────────
@@ -293,6 +308,18 @@ namespace GazeBar
                 case ActionMenu.FermerClavier:
                     Gestionnaire.Clavier.Fermer();
                     Gestionnaire.ChangerMode(new ModeMouvement());
+                    break;
+
+                case ActionMenu.PositionClavier:
+                    // Le menu reste ouvert ; la barre est reconstruite (le symbole change) et le
+                    // bouton attend que le regard le quitte avant de pouvoir resservir.
+                    Gestionnaire.Clavier.BasculerPosition();
+                    Construire();
+                    break;
+
+                case ActionMenu.TailleClavier:
+                    Gestionnaire.Clavier.ChangerTaille();
+                    Construire();
                     break;
 
                 case ActionMenu.Pause:
@@ -385,8 +412,21 @@ namespace GazeBar
             }
             else if (MenuClavier && !_confirmation)
             {
-                // Barre de menu du clavier (étape 12) : pour l'instant, seulement « Fermer le
-                // clavier » (E765 = clavier, avec une petite croix « × » en pastille).
+                // Barre de menu du clavier (étape 12, voir le commentaire de la classe).
+                //   E70E / E70D = chevron vers le haut / vers le bas, E769 = pause,
+                //   E765 = clavier (avec une petite croix « × » en pastille pour « Fermer »).
+                if (p.ClavierEnHaut)
+                {
+                    Ajouter(boutons, actions, new BoutonRegard("\uE70D", null, "Clavier en bas de l'écran"), ActionMenu.PositionClavier);
+                }
+                else
+                {
+                    Ajouter(boutons, actions, new BoutonRegard("\uE70E", null, "Clavier en haut de l'écran"), ActionMenu.PositionClavier);
+                }
+                Ajouter(boutons, actions,
+                        BoutonRegard.Texte(p.TailleClavier.ToString("F0") + " %", "Taille du clavier (100, 75, 50 %)"),
+                        ActionMenu.TailleClavier);
+                Ajouter(boutons, actions, new BoutonRegard("\uE769", null, "Pause"), ActionMenu.Pause);
                 Ajouter(boutons, actions, new BoutonRegard("\uE765", "\u00D7", "Fermer le clavier"), ActionMenu.FermerClavier);
             }
             else if (_confirmation)
@@ -495,6 +535,13 @@ namespace GazeBar
             _zoneGauche = gauche - margeZone;
             _zoneDroite = gauche + largeurBarre + margeZone;
             _zoneHaut = hautZone - margeZone;
+
+            // Barre du clavier : le clavier (s'il est en bas) remonte au-dessus de la barre et
+            // de son message éventuel, avec un petit espace (demande du 01/11/2026).
+            if (MenuClavier)
+            {
+                Gestionnaire.Clavier.DefinirReserveBas(hauteur - hautZone + Ecran.Px(20));
+            }
 
             // Les boutons ont changé : on repart de zéro, et le bouton éventuellement sous le
             // regard ne s'active pas tant que le regard ne l'a pas quitté.

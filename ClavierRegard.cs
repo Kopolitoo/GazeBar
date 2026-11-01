@@ -26,11 +26,14 @@ namespace GazeBar
     ///
     /// Il est dessiné sur le calque (surface SurfaceClavier), en bas de l'écran, sur toute la
     /// largeur, par-dessus tout et SANS réserver de place : les autres fenêtres gardent leur
-    /// taille. Le calque ne prend jamais le focus : l'application où l'on écrit garde son
+    /// taille. Depuis le 01/11/2026 (remarques de l'utilisateur), la barre de menu du clavier
+    /// propose aussi : le mettre en haut de l'écran (position retenue, [ClavierEnHaut]), et
+    /// le réduire à 75 % ou 50 % ([TailleClavier], centré). Quand cette barre est ouverte, le
+    /// clavier remonte au-dessus d'elle (DefinirReserveBas). Le calque ne prend jamais le focus : l'application où l'on écrit garde son
     /// curseur de texte, et les touches simulées lui arrivent bien.
     ///
-    /// Un bouton « Fermer le clavier » est placé au-dessus du clavier, à droite, contre le bord
-    /// de l'écran. On peut aussi le fermer depuis la barre de menu du clavier (regard sous
+    /// Un bouton « Fermer le clavier » est placé au-dessus du clavier, à droite (en dessous
+    /// quand le clavier est en haut). On peut aussi le fermer depuis la barre de menu du clavier (regard sous
     /// l'écran), ou avec la touche Échap d'un vrai clavier (pour l'aidant).
     ///
     /// Les touches viennent d'un fichier de disposition (DispositionClavier, relu à chaque
@@ -44,7 +47,9 @@ namespace GazeBar
         // Distances en pixels de l'écran 4K, converties pour l'écran actuel (Ecran.Px).
         private const double Marge4K = 16;          // entre le bord du clavier et les touches
         private const double EcartTouches4K = 12;   // espace entre deux touches
-        private const double EcartFermer4K = 24;    // entre le bouton Fermer et le clavier
+        // Entre le bouton Fermer et le clavier : 24 px au début, 60 px depuis le 01/11/2026
+        // (demande de l'utilisateur : bouton trop près des touches).
+        private const double EcartFermer4K = 60;
 
         /// <summary>Zone d'activation du bouton Fermer : 20 % plus grande que son dessin.</summary>
         private const double FacteurZoneFermer = 1.2;
@@ -64,6 +69,10 @@ namespace GazeBar
 
         // Vrai quand le clavier est réellement dessiné à l'écran.
         private bool _visible;
+
+        // Place gardée libre en bas de l'écran, en pixels : la hauteur de la barre de menu du
+        // clavier quand elle est ouverte (voir DefinirReserveBas), 0 sinon.
+        private double _reserveBas;
 
         // Le rectangle du clavier, en pixels d'écran.
         private double _gauche;
@@ -176,6 +185,57 @@ namespace GazeBar
         /// <summary>L'écran a changé (étape 11) : le clavier est redessiné aux nouvelles tailles.</summary>
         public void AdapterEcran()
         {
+            if (_visible)
+            {
+                Construire();
+            }
+        }
+
+        /// <summary>
+        /// La barre de menu du clavier s'ouvre (pixels = sa hauteur, depuis le bas de l'écran)
+        /// ou se ferme (0). Le clavier, s'il est en bas, remonte au-dessus d'elle au lieu
+        /// d'être recouvert (demande de l'utilisateur du 01/11/2026). En haut, rien ne change.
+        /// </summary>
+        public void DefinirReserveBas(double pixels)
+        {
+            pixels = Math.Max(0, pixels);
+            if (Math.Abs(pixels - _reserveBas) < 0.5)
+            {
+                return;
+            }
+            _reserveBas = pixels;
+            if (_visible && !Parametres.Courants.ClavierEnHaut)
+            {
+                Construire();
+            }
+        }
+
+        /// <summary>
+        /// Bouton « Haut / bas » de la barre du clavier : le clavier passe en haut de l'écran
+        /// (ou revient en bas). La position est enregistrée : le clavier se rouvre au même endroit.
+        /// </summary>
+        public void BasculerPosition()
+        {
+            Parametres p = Parametres.Courants;
+            p.ClavierEnHaut = !p.ClavierEnHaut;
+            p.Enregistrer();
+            App.Log("Clavier : " + (p.ClavierEnHaut ? "en haut" : "en bas") + " de l'écran");
+            if (_visible)
+            {
+                Construire();
+            }
+        }
+
+        /// <summary>
+        /// Bouton « Taille » de la barre du clavier : 100 % → 75 % → 50 % → 100 %… (le même
+        /// réglage que « Taille du clavier » dans l'onglet Clavier des paramètres). Enregistré.
+        /// </summary>
+        public void ChangerTaille()
+        {
+            Parametres p = Parametres.Courants;
+            p.TailleClavier = p.TailleClavier > 75 ? 75 : p.TailleClavier > 50 ? 50 : 100;
+            p.Enregistrer();
+            App.Log("Clavier : taille " + p.TailleClavier + " %");
             if (_visible)
             {
                 Construire();
@@ -638,12 +698,27 @@ namespace GazeBar
             Parametres p = Parametres.Courants;
             double largeur = Ecran.LargeurPixels;
             double hauteur = Ecran.HauteurPixels;
-            double hauteurClavier = hauteur * p.HauteurClavier / 100.0;
 
-            _gauche = 0;
-            _droite = largeur;
-            _bas = hauteur;
-            _haut = hauteur - hauteurClavier;
+            // Taille (01/11/2026) : à 75 % ou 50 %, largeur ET hauteur sont réduites ensemble,
+            // les touches gardent donc leur forme ; le clavier est centré horizontalement.
+            double taillePourcent = p.TailleClavier / 100.0;
+            double largeurClavier = largeur * taillePourcent;
+            double hauteurClavier = hauteur * p.HauteurClavier / 100.0 * taillePourcent;
+
+            _gauche = (largeur - largeurClavier) / 2;
+            _droite = _gauche + largeurClavier;
+            if (p.ClavierEnHaut)
+            {
+                // En haut de l'écran (bouton « Haut / bas » de la barre du clavier).
+                _haut = 0;
+                _bas = hauteurClavier;
+            }
+            else
+            {
+                // En bas, au-dessus de la barre de menu du clavier si elle est ouverte.
+                _bas = Math.Max(hauteurClavier, hauteur - _reserveBas);
+                _haut = _bas - hauteurClavier;
+            }
 
             _calque.PreparerSurfaceClavier();
             Canvas surface = _calque.SurfaceClavier;
@@ -651,7 +726,7 @@ namespace GazeBar
             // ── Le fond : un rectangle presque noir, comme sur les captures de l'utilisateur.
             Border fond = new Border();
             fond.Background = new SolidColorBrush(Color.FromArgb(0xF5, 0x12, 0x12, 0x12));
-            fond.Width = _calque.LongueurVersWpf(largeur);
+            fond.Width = _calque.LongueurVersWpf(largeurClavier);
             fond.Height = _calque.LongueurVersWpf(hauteurClavier);
             Point coin = _calque.VersWpf(_gauche, _haut);
             Canvas.SetLeft(fond, coin.X);
@@ -660,7 +735,7 @@ namespace GazeBar
 
             // ── La grille des touches.
             double marge = Ecran.Px(Marge4K);
-            double largeurCase = (largeur - 2 * marge) / _disposition.Colonnes;
+            double largeurCase = (largeurClavier - 2 * marge) / _disposition.Colonnes;
             double hauteurCase = (hauteurClavier - 2 * marge) / _disposition.Lignes;
             double ecart = Math.Min(Ecran.Px(EcartTouches4K), Math.Min(largeurCase, hauteurCase) * 0.15);
 
@@ -668,7 +743,7 @@ namespace GazeBar
             {
                 ToucheClavier touche = new ToucheClavier(d);
                 touche.Placer(_calque, surface,
-                              marge + d.Col * largeurCase,
+                              _gauche + marge + d.Col * largeurCase,
                               _haut + marge + d.Ligne * hauteurCase,
                               d.LargeurCases * largeurCase,
                               hauteurCase,
@@ -677,15 +752,21 @@ namespace GazeBar
                 _cibles.Add(touche);
             }
 
-            // ── Le bouton Fermer : au-dessus du clavier, à droite, contre le bord de l'écran.
-            //    (E711 = croix « annuler » de la police Windows.)
+            // ── Le bouton Fermer : à droite, AU-DESSUS du clavier quand il est en bas, EN
+            //    DESSOUS quand il est en haut (son libellé est alors sous le bouton). Il reste
+            //    sur l'écran même si le clavier est très haut. (E711 = croix « annuler ».)
             double taille = p.TailleIconesPx;
+            double ecartFermer = Ecran.Px(EcartFermer4K);
+            double yFermer = p.ClavierEnHaut
+                ? _bas + ecartFermer + taille / 2
+                : _haut - ecartFermer - taille / 2;
+            yFermer = Math.Max(taille / 2 + marge, Math.Min(hauteur - taille / 2 - marge, yFermer));
             _fermer = new BoutonRegard("", null, "Fermer le clavier");
             _fermer.FacteurZone = FacteurZoneFermer;
             _fermer.Placer(_calque, surface,
-                           largeur - marge - taille / 2,
-                           _haut - Ecran.Px(EcartFermer4K) - taille / 2,
-                           taille, true);
+                           _droite - marge - taille / 2,
+                           yFermer,
+                           taille, !p.ClavierEnHaut);
             _cibles.Add(_fermer);
 
             // Les touches ont changé : celle qui serait sous le regard ne s'active pas tant

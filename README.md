@@ -201,7 +201,8 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   en mode mouvement, elle ferme le clavier au regard ; la touche « Esc » du clavier au regard,
   simulée par GazeBar, est ignorée par le crochet (elle va seulement à l'application).
 - Clavier au regard (étape 12, `ClavierRegard`, `ToucheClavier`, `DispositionClavier`) : bouton
-  « Clavier » du menu. Un clavier sur la moitié basse de l'écran (`HauteurClavier`), par-dessus
+  « Clavier » du menu, ou 4e bouton du bord haut du choix d'action (après Copier, Couper,
+  Coller ; il ouvre le clavier, ou le ferme s'il est ouvert). Un clavier sur la moitié basse de l'écran (`HauteurClavier`), par-dessus
   tout, sans réserver de place ni prendre le focus. Ses cinq pages (lettres AZERTY, accents,
   123.!, symboles et navigation, F1 à F12) viennent du fichier `Claviers/fr-azerty.json`, relu à
   chaque ouverture : on peut changer une touche sans recompiler (format expliqué dans
@@ -213,10 +214,15 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   que soit la disposition de Windows), touches spéciales et raccourcis en vraies touches. Maj
   (une lettre), Caps Lock, Ctrl, Alt, Win (pour la touche suivante) ; majuscule automatique après
   « . », « ? », « ! » (`MajusculeAuto`). « ⌫ ABC » efface le mot en cours (ou Ctrl + Retour
-  arrière). Fermeture : bouton au-dessus du clavier à droite, barre de menu du clavier (regard
-  sous l'écran, qui remplace alors la barre classique), ou Échap. Les trois cases de proposition
+  arrière). Barre de menu du clavier (regard sous l'écran, qui remplace alors la barre
+  classique) : Haut / bas (clavier en haut de l'écran, position retenue : `ClavierEnHaut`),
+  Taille (100, 75 ou 50 %, largeur et hauteur ensemble, clavier centré : `TailleClavier`, aussi
+  dans les paramètres), Pause, Fermer. Quand elle s'ouvre, le clavier en bas remonte au-dessus
+  d'elle. Fermeture : bouton à droite au-dessus du clavier (en dessous s'il est en haut), barre
+  du clavier, ou Échap. Tab est une vraie tabulation : sa largeur (2 ou 4 espaces) se règle
+  dans le logiciel où l'on écrit. Les trois cases de proposition
   de mots restent vides jusqu'à l'étape 13. Le texte tapé n'est jamais écrit dans le journal.
-  Réglages : onglet « Clavier » des paramètres (`parametres.json` version 8).
+  Réglages : onglet « Clavier » des paramètres (`parametres.json` version 9).
 - Le calque se remet au-dessus de toutes les fenêtres deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
@@ -278,7 +284,9 @@ dans la loupe : le fichier est déplacé. Le bouton « retour » à droite annul
 Test de l'étape 12 : dans le Bloc-notes, on ouvre le menu, « Clavier » : le clavier apparaît en
 bas. On regarde des touches : elles s'éclaircissent, flashent et le texte s'écrit (« é » depuis
 la page « À,È,Ê »). On regarde au-dessus du clavier : le cercle revient et le regard fixe marche.
-On regarde sous l'écran : la barre du clavier propose « Fermer le clavier ».
+On regarde sous l'écran : la barre du clavier s'ouvre et le clavier remonte au-dessus d'elle ;
+« Haut / bas » le met en haut (il s'y rouvre la fois suivante), « Taille » passe à 75 % puis 50 %,
+« Pause » le cache jusqu'à la reprise. Dans le choix d'action, le 4e bouton du haut ouvre le clavier.
 
 ## Limites connues
 

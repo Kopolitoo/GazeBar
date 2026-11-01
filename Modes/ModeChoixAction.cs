@@ -54,6 +54,9 @@ namespace GazeBar
     /// envoient Ctrl + C, Ctrl + X et Ctrl + V à la fenêtre active ; « Coller » fait d'abord
     /// un clic gauche sur P, pour placer le point d'insertion là où l'on regardait.
     ///
+    /// Étape 12 : l'action « Clavier » (4e bouton du bord haut, demande du 01/11/2026) ouvre
+    /// le clavier au regard, ou le ferme s'il est déjà ouvert.
+    ///
     /// Étape 8 : l'action « Défilement » (emplacement 0 depuis le 28/10/2026) ouvre le mode défilement, centré sur P.
     ///
     /// Étape 10 : la disposition des icônes (couronne, modificateurs, boutons utilitaires)
@@ -256,6 +259,26 @@ namespace GazeBar
                 // Le défilement se fait autour de P, sur l'écran réel (l'écran noir sera caché
                 // par Quitter, juste avant).
                 Gestionnaire.ChangerMode(new ModeDefilement(_px, _py));
+                return;
+            }
+
+            if (action == ActionChoix.Clavier)
+            {
+                // Le clavier au regard (étape 12, demande de l'utilisateur du 01/11/2026) :
+                // fermé, il s'ouvre ; déjà ouvert (caché pendant ce choix), il se ferme. Il
+                // apparaît au retour en mode mouvement (ClavierRegard.SurChangementMode).
+                // Fichier de disposition absent ou incorrect : rien ne s'ouvre, l'erreur est
+                // notée dans le journal (et affichée si l'on passe par la barre de menu).
+                if (Gestionnaire.Clavier.Ouvert)
+                {
+                    Gestionnaire.Clavier.Fermer();
+                }
+                else
+                {
+                    string message;
+                    Gestionnaire.Clavier.Ouvrir(out message);
+                }
+                Gestionnaire.ChangerMode(new ModeMouvement());
                 return;
             }
 
