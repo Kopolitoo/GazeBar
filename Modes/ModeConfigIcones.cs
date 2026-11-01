@@ -16,9 +16,9 @@ namespace GazeBar
     ///
     /// Mise en page (demande de l'utilisateur du 28/10/2026) : LA MÊME que le choix d'action
     /// (DispositionChoixAction), sur le même écran noir du calque. À la place de la photo, un
-    /// cadre gris qui explique l'écran. Les quinze emplacements sont dessinés : les huit de la
-    /// couronne, les trois modificateurs (bord gauche) et les quatre boutons utilitaires (bord
-    /// haut ; trois jusqu'à l'étape 12, le 4e est le bouton Clavier). Chacun porte une pastille ronde en haut à droite :
+    /// cadre gris qui explique l'écran. Les quatorze emplacements sont dessinés : les huit de la
+    /// couronne, les trois modificateurs (bord gauche) et les trois boutons utilitaires (bord
+    /// haut). Chacun porte une pastille ronde en haut à droite :
     ///   - « − » rouge : une action est assignée. Regarder l'icône RETIRE l'action ;
     ///     l'emplacement devient vide (pastille « + ») ;
     ///   - « + » verte : l'emplacement est vide. Regarder l'icône ouvre LA LISTE.

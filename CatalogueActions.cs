@@ -54,10 +54,7 @@ namespace GazeBar
         /// <summary>Les trois emplacements collés au bord gauche (Ctrl, Maj, Alt).</summary>
         Modificateurs,
 
-        /// <summary>
-        /// Les quatre emplacements collés au bord haut (Copier, Couper, Coller, Clavier).
-        /// Trois jusqu'à l'étape 12 : le quatrième a été ajouté pour le bouton Clavier.
-        /// </summary>
+        /// <summary>Les trois emplacements collés au bord haut (Copier, Couper, Coller).</summary>
         Utilitaires
     }
 
@@ -74,15 +71,7 @@ namespace GazeBar
         /// <summary>Nombre d'emplacements de chaque groupe.</summary>
         public static int NombreEmplacements(GroupeIcones groupe)
         {
-            switch (groupe)
-            {
-                case GroupeIcones.Couronne:
-                    return 8;
-                case GroupeIcones.Utilitaires:
-                    return 4;   // 3 jusqu'à l'étape 12, + le bouton Clavier
-                default:
-                    return 3;
-            }
+            return groupe == GroupeIcones.Couronne ? 8 : 3;
         }
 
         /// <summary>
@@ -103,12 +92,15 @@ namespace GazeBar
                         ActionChoix.GlisserGauche,
                         ActionChoix.GlisserDroit,
                         ActionChoix.GlisserAndroid,
-                        ActionChoix.Defilement
+                        ActionChoix.Defilement,
+                        // Étape 12 (01/11/2026) : proposé dans la liste de l'écran de
+                        // configuration, mais pas placé par défaut (les huit places sont prises).
+                        ActionChoix.Clavier
                     };
                 case GroupeIcones.Modificateurs:
                     return new[] { ActionChoix.Ctrl, ActionChoix.Maj, ActionChoix.Alt };
                 default:
-                    return new[] { ActionChoix.Copier, ActionChoix.Couper, ActionChoix.Coller, ActionChoix.Clavier };
+                    return new[] { ActionChoix.Copier, ActionChoix.Couper, ActionChoix.Coller };
             }
         }
 
@@ -125,7 +117,9 @@ namespace GazeBar
         ///   6 : à gauche, en haut   → double clic
         ///   7 : en haut, à gauche   → clic gauche
         /// Modificateurs, de haut en bas : Ctrl, Maj, Alt.
-        /// Utilitaires, de gauche à droite : Copier, Couper, Coller, Clavier.
+        /// Utilitaires, de gauche à droite : Copier, Couper, Coller.
+        /// L'action Clavier (étape 12) n'est pas placée par défaut : on l'ajoute soi-même à la
+        /// place d'une autre, dans l'écran de configuration des icônes.
         /// </summary>
         public static ActionChoix[] DispositionParDefaut(GroupeIcones groupe)
         {

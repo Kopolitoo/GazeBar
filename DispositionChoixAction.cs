@@ -5,8 +5,8 @@ namespace GazeBar
 {
     /// <summary>
     /// LA MISE EN PAGE de l'écran du choix d'action (étape 10) : où se trouvent la photo, les
-    /// huit emplacements de la couronne, les trois modificateurs, les quatre boutons
-    /// utilitaires (trois jusqu'à l'étape 12) et l'icône « retour ».
+    /// huit emplacements de la couronne, les trois modificateurs, les trois boutons
+    /// utilitaires et l'icône « retour ».
     ///
     /// Ces calculs étaient faits dans ModeChoixAction. L'écran de configuration des icônes
     /// (ModeConfigIcones) doit montrer EXACTEMENT la même mise en page (demande de
@@ -78,10 +78,9 @@ namespace GazeBar
                 Couronne[i] = PlaceCouronne(i, cx, cy, distanceX, distanceY, decalage);
             }
 
-            // ── Les boutons utilitaires (Copier, Couper, Coller, Clavier) : une ligne collée au
-            //    bord haut de l'écran, centrée, répartie sur la largeur comme les modificateurs
-            //    sur la hauteur (demande du 28/10/2026). Chaque bouton est au milieu d'un quart
-            //    de la largeur : sur un écran 1920 × 1080, x = 240, 720, 1200 et 1680.
+            // ── Les boutons utilitaires (Copier, Couper, Coller) : une ligne collée au bord
+            //    haut de l'écran, centrée, répartie sur la largeur comme les modificateurs sur la
+            //    hauteur (demande du 28/10/2026). Sur un écran 1920 × 1080 : x = 440, 960 et 1480.
             int nombreUtilitaires = CatalogueActions.NombreEmplacements(GroupeIcones.Utilitaires);
             double ecartUtilitaires = (largeur - taille * nombreUtilitaires) / nombreUtilitaires;
             double yUtilitaires = taille / 2 + MargeBord;
@@ -129,7 +128,7 @@ namespace GazeBar
         /// <summary>Les trois modificateurs, de haut en bas.</summary>
         public Point[] Modificateurs { get; private set; }
 
-        /// <summary>Les quatre boutons utilitaires, de gauche à droite.</summary>
+        /// <summary>Les trois boutons utilitaires, de gauche à droite.</summary>
         public Point[] Utilitaires { get; private set; }
 
         /// <summary>L'icône « retour ».</summary>

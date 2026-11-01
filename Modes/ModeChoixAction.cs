@@ -54,8 +54,9 @@ namespace GazeBar
     /// envoient Ctrl + C, Ctrl + X et Ctrl + V à la fenêtre active ; « Coller » fait d'abord
     /// un clic gauche sur P, pour placer le point d'insertion là où l'on regardait.
     ///
-    /// Étape 12 : l'action « Clavier » (4e bouton du bord haut, demande du 01/11/2026) ouvre
-    /// le clavier au regard, ou le ferme s'il est déjà ouvert.
+    /// Étape 12 : l'action « Clavier » (de la couronne, à placer soi-même dans l'écran de
+    /// configuration des icônes, demande du 01/11/2026) ouvre le clavier au regard, ou le
+    /// ferme s'il est déjà ouvert.
     ///
     /// Étape 8 : l'action « Défilement » (emplacement 0 depuis le 28/10/2026) ouvre le mode défilement, centré sur P.
     ///

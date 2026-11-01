@@ -65,8 +65,8 @@ namespace GazeBar
         ///       HauteurClavier. Rien à corriger : absents d'un fichier plus ancien, ils
         ///       gardent leur valeur par défaut ;
         ///   9 : étape 12 (remarques de l'utilisateur du 01/11/2026) — TailleClavier et
-        ///       ClavierEnHaut, et un 4e bouton utilitaire du choix d'action, « Clavier » : il
-        ///       est ajouté une fois dans un fichier plus ancien si cette 4e place est libre.
+        ///       ClavierEnHaut. Rien à corriger : absents d'un fichier plus ancien, ils
+        ///       gardent leur valeur par défaut.
         /// </summary>
         public const int VersionActuelle = 9;
 
@@ -341,10 +341,7 @@ namespace GazeBar
         [DataMember(Order = 101)]
         public string[] IconesModificateurs { get; set; }
 
-        /// <summary>
-        /// Les quatre emplacements du bord haut, de gauche à droite ("Copier", "Couper",
-        /// "Coller", "Clavier" ou ""). Trois jusqu'à la version 8 du fichier.
-        /// </summary>
+        /// <summary>Les trois emplacements du bord haut, de gauche à droite ("Copier", "Couper", "Coller" ou "").</summary>
         [DataMember(Order = 102)]
         public string[] IconesUtilitaires { get; set; }
 
@@ -713,17 +710,9 @@ namespace GazeBar
 
             if (VersionFichier < 9)
             {
-                // Les boutons utilitaires passent de 3 à 4 : la 4e place, absente d'un fichier
-                // plus ancien, est lue vide. On y met le bouton « Clavier » (une seule fois :
-                // si l'utilisateur la vide ensuite, elle reste vide). TailleClavier et
-                // ClavierEnHaut ont déjà leur valeur par défaut (voir AvantLecture).
-                ActionChoix?[] utilitaires = Disposition(GroupeIcones.Utilitaires);
-                if (utilitaires.Length >= 4 && !utilitaires[3].HasValue)
-                {
-                    utilitaires[3] = ActionChoix.Clavier;
-                    EcrireDisposition(GroupeIcones.Utilitaires, utilitaires);
-                }
-                App.Log("Paramètres : mise à jour en version 9 (bouton Clavier du choix d'action, taille et position du clavier)");
+                // Rien à corriger : TailleClavier et ClavierEnHaut, absents du fichier, ont
+                // gardé leur valeur par défaut (voir AvantLecture).
+                App.Log("Paramètres : mise à jour en version 9 (taille et position du clavier)");
             }
             VersionFichier = VersionActuelle;
             return true;

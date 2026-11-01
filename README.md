@@ -201,8 +201,8 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   en mode mouvement, elle ferme le clavier au regard ; la touche « Esc » du clavier au regard,
   simulée par GazeBar, est ignorée par le crochet (elle va seulement à l'application).
 - Clavier au regard (étape 12, `ClavierRegard`, `ToucheClavier`, `DispositionClavier`) : bouton
-  « Clavier » du menu, ou 4e bouton du bord haut du choix d'action (après Copier, Couper,
-  Coller ; il ouvre le clavier, ou le ferme s'il est ouvert). Un clavier sur la moitié basse de l'écran (`HauteurClavier`), par-dessus
+  « Clavier » du menu, ou action « Clavier » du choix d'action (ouvre / ferme le clavier ; pas
+  placée par défaut : on la met à la place d'une autre dans l'écran de configuration des icônes). Un clavier sur la moitié basse de l'écran (`HauteurClavier`), par-dessus
   tout, sans réserver de place ni prendre le focus. Ses cinq pages (lettres AZERTY, accents,
   123.!, symboles et navigation, F1 à F12) viennent du fichier `Claviers/fr-azerty.json`, relu à
   chaque ouverture : on peut changer une touche sans recompiler (format expliqué dans
@@ -286,7 +286,8 @@ bas. On regarde des touches : elles s'éclaircissent, flashent et le texte s'éc
 la page « À,È,Ê »). On regarde au-dessus du clavier : le cercle revient et le regard fixe marche.
 On regarde sous l'écran : la barre du clavier s'ouvre et le clavier remonte au-dessus d'elle ;
 « Haut / bas » le met en haut (il s'y rouvre la fois suivante), « Taille » passe à 75 % puis 50 %,
-« Pause » le cache jusqu'à la reprise. Dans le choix d'action, le 4e bouton du haut ouvre le clavier.
+« Pause » le cache jusqu'à la reprise. Dans la configuration des icônes, on place « Clavier » sur la couronne : dans le choix
+d'action, ce bouton ouvre le clavier.
 
 ## Limites connues
 
