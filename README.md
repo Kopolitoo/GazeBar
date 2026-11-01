@@ -149,7 +149,7 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   ouvre une barre centrée en bas de l'écran, uniquement depuis les modes mouvement et pause
   (et plus tard jeu, depuis l'étape 6 ; c'est le `ModeManager` qui surveille). La loupe, le
   choix d'action et le glisser-déposer ont leur bouton « retour ». Boutons : Paramètres, Jeu, Clavier
-  visuel, Pause (ou Reprendre si l'on vient de la pause), Suivi souris (interrupteur, bord vert
+  (le clavier au regard, étape 12), Pause (ou Reprendre si l'on vient de la pause), Suivi souris (interrupteur, bord vert
   quand il est activé), Quitter GazeBar (avec confirmation « Oui » / « Non »).
   Regarder hors de la barre pendant `DelaiFermetureMenu` (1 s) la ferme et ramène au mode
   d'avant. Un petit cercle montre où est le regard.
@@ -197,7 +197,26 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   et attendent la fermeture de sa fenêtre pour revenir au mode mouvement. Le nom exact de la
   commande Tobii n'a pas pu être vérifié : le journal note ce qui a été trouvé et essayé.
 - `CrochetClavier` (étape 4) : la touche **Échap** ramène au mode mouvement depuis n'importe quel
-  mode, pour l'aidant. La touche arrive aussi normalement au programme actif.
+  mode, pour l'aidant. La touche arrive aussi normalement au programme actif. Depuis l'étape 12,
+  en mode mouvement, elle ferme le clavier au regard ; la touche « Esc » du clavier au regard,
+  simulée par GazeBar, est ignorée par le crochet (elle va seulement à l'application).
+- Clavier au regard (étape 12, `ClavierRegard`, `ToucheClavier`, `DispositionClavier`) : bouton
+  « Clavier » du menu. Un clavier sur la moitié basse de l'écran (`HauteurClavier`), par-dessus
+  tout, sans réserver de place ni prendre le focus. Ses cinq pages (lettres AZERTY, accents,
+  123.!, symboles et navigation, F1 à F12) viennent du fichier `Claviers/fr-azerty.json`, relu à
+  chaque ouverture : on peut changer une touche sans recompiler (format expliqué dans
+  `DispositionClavier.cs`). Regard sur le clavier : le curseur ne bouge pas, le cercle est
+  masqué, la touche regardée s'éclaircit puis flashe en vert et agit après `DelaiTouche`
+  (0,6 s) ; en gardant le regard dessus, elle se retape (`RepetitionTouche`). Regard ailleurs :
+  mode mouvement normal ; le clavier est masqué pendant la loupe, le choix d'action, les
+  paramètres, la pause… et revient ensuite. Texte envoyé en Unicode (les accents marchent quelle
+  que soit la disposition de Windows), touches spéciales et raccourcis en vraies touches. Maj
+  (une lettre), Caps Lock, Ctrl, Alt, Win (pour la touche suivante) ; majuscule automatique après
+  « . », « ? », « ! » (`MajusculeAuto`). « ⌫ ABC » efface le mot en cours (ou Ctrl + Retour
+  arrière). Fermeture : bouton au-dessus du clavier à droite, barre de menu du clavier (regard
+  sous l'écran, qui remplace alors la barre classique), ou Échap. Les trois cases de proposition
+  de mots restent vides jusqu'à l'étape 13. Le texte tapé n'est jamais écrit dans le journal.
+  Réglages : onglet « Clavier » des paramètres (`parametres.json` version 8).
 - Le calque se remet au-dessus de toutes les fenêtres deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
@@ -256,10 +275,15 @@ sont sélectionnés. Puis on fixe un fichier, on choisit « glisser-déposer gau
 pastille G), on regarde le dossier d'arrivée (la ligne en pointillés suit), on le fixe, on affine
 dans la loupe : le fichier est déplacé. Le bouton « retour » à droite annule.
 
+Test de l'étape 12 : dans le Bloc-notes, on ouvre le menu, « Clavier » : le clavier apparaît en
+bas. On regarde des touches : elles s'éclaircissent, flashent et le texte s'écrit (« é » depuis
+la page « À,È,Ê »). On regarde au-dessus du clavier : le cercle revient et le regard fixe marche.
+On regarde sous l'écran : la barre du clavier propose « Fermer le clavier ».
+
 ## Limites connues
 
-- Une fenêtre lancée « en tant qu'administrateur » ignore les clics injectés, sauf si GazeBar
-  est lui aussi lancé en administrateur.
+- Une fenêtre lancée « en tant qu'administrateur » ignore les clics injectés et les touches du
+  clavier au regard, sauf si GazeBar est lui aussi lancé en administrateur.
 - Le mode jeu (regard vers déplacement relatif de la souris) n'est pas encore étudié.
 - Journal : `%LOCALAPPDATA%\GazeBar\gazebar.log`.
 

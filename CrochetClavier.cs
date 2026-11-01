@@ -77,7 +77,12 @@ namespace GazeBar
                 if (message == NativeMethods.WM_KEYDOWN || message == NativeMethods.WM_SYSKEYDOWN)
                 {
                     int touche = Marshal.ReadInt32(lParam);
-                    if (touche == NativeMethods.VK_ESCAPE)
+                    // Étape 12 : la touche Échap du clavier au regard est SIMULÉE par GazeBar.
+                    // Elle doit arriver à l'application, mais pas ramener au mode mouvement ni
+                    // fermer le clavier : on ne réagit qu'à un vrai clavier (celui de l'aidant).
+                    int drapeaux = Marshal.ReadInt32(lParam, NativeMethods.DecalageDrapeauxCrochet);
+                    bool simulee = (drapeaux & NativeMethods.LLKHF_INJECTED) != 0;
+                    if (touche == NativeMethods.VK_ESCAPE && !simulee)
                     {
                         Action abonnes = EchapAppuye;
                         if (abonnes != null)

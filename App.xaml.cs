@@ -122,13 +122,27 @@ namespace GazeBar
         /// <summary>
         /// Touche Échap (pour l'aidant) : on relâche les boutons de la souris et les touches
         /// modificatrices par sécurité (un glisser-déposer en cours est interrompu) et on
-        /// revient au mode mouvement, sauf si l'on y est déjà. La touche arrive aussi normalement
+        /// revient au mode mouvement, sauf si l'on y est déjà. Dans le mode mouvement, elle
+        /// ferme le clavier au regard (étape 12). La touche arrive aussi normalement
         /// au programme actif (elle n'est pas « mangée » par GazeBar).
         /// </summary>
         private void OnEchap()
         {
-            if (_modes == null || _modes.ModeCourant is ModeMouvement)
+            if (_modes == null)
             {
+                return;
+            }
+
+            // Étape 12 : en mode mouvement, Échap ferme le clavier au regard s'il est ouvert.
+            // (La touche Échap du clavier au regard, elle, est simulée : elle n'arrive pas ici,
+            // voir CrochetClavier.)
+            if (_modes.ModeCourant is ModeMouvement)
+            {
+                if (_modes.Clavier.Ouvert)
+                {
+                    App.Log("Touche Échap : fermeture du clavier au regard");
+                    _modes.Clavier.Fermer();
+                }
                 return;
             }
 

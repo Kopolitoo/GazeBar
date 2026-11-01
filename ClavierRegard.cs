@@ -1,0 +1,743 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+
+namespace GazeBar
+{
+    /// <summary>
+    /// LOGIQUE : le clavier au regard (étape 12, « clavier-base »).
+    ///
+    /// Ce n'est pas un mode : le clavier reste affiché PENDANT que GazeBar fonctionne
+    /// normalement au-dessus de lui (choix de l'utilisateur du 31/10/2026) :
+    ///   - regard EN DEHORS du clavier : le mode mouvement s'applique (regard fixe, choix
+    ///     d'action, loupe…) ;
+    ///   - regard SUR le clavier : le curseur de la souris ne bouge pas, le cercle du regard
+    ///     est masqué, et c'est ce clavier qui réagit : la touche regardée s'éclaircit, puis
+    ///     flashe et fait son action après [DelaiTouche] (pas d'anneau de progression).
+    /// C'est le mode mouvement qui lui passe le regard (ModeMouvement.Actualiser).
+    ///
+    /// Il est affiché dans les modes mouvement et regard fixe, et pendant la barre de menu du
+    /// clavier ; il est masqué dans tous les autres (loupe, choix d'action, paramètres, pause…)
+    /// puis réapparaît au retour (SurChangementMode, appelée par le ModeManager).
+    ///
+    /// Il est dessiné sur le calque (surface SurfaceClavier), en bas de l'écran, sur toute la
+    /// largeur, par-dessus tout et SANS réserver de place : les autres fenêtres gardent leur
+    /// taille. Le calque ne prend jamais le focus : l'application où l'on écrit garde son
+    /// curseur de texte, et les touches simulées lui arrivent bien.
+    ///
+    /// Un bouton « Fermer le clavier » est placé au-dessus du clavier, à droite, contre le bord
+    /// de l'écran. On peut aussi le fermer depuis la barre de menu du clavier (regard sous
+    /// l'écran), ou avec la touche Échap d'un vrai clavier (pour l'aidant).
+    ///
+    /// Les touches viennent d'un fichier de disposition (DispositionClavier, relu à chaque
+    /// ouverture). Le texte tapé n'est JAMAIS écrit dans le journal (vie privée) : seules les
+    /// ouvertures, fermetures et erreurs le sont.
+    ///
+    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// </summary>
+    internal sealed class ClavierRegard
+    {
+        // Distances en pixels de l'écran 4K, converties pour l'écran actuel (Ecran.Px).
+        private const double Marge4K = 16;          // entre le bord du clavier et les touches
+        private const double EcartTouches4K = 12;   // espace entre deux touches
+        private const double EcartFermer4K = 24;    // entre le bouton Fermer et le clavier
+
+        /// <summary>Zone d'activation du bouton Fermer : 20 % plus grande que son dessin.</summary>
+        private const double FacteurZoneFermer = 1.2;
+
+        private readonly OverlayWindow _calque;
+
+        // La disposition lue à l'ouverture, la page affichée et la page d'avant (touche « ↺ »).
+        private DispositionClavier _disposition;
+        private string _page;
+        private string _pagePrecedente;
+
+        // Les cibles visées au regard : les touches de la page, puis le bouton Fermer (le dernier).
+        private readonly List<ICibleRegard> _cibles = new List<ICibleRegard>();
+        private readonly List<ToucheClavier> _touches = new List<ToucheClavier>();
+        private BoutonRegard _fermer;
+        private readonly ViseurBoutons _viseur;
+
+        // Vrai quand le clavier est réellement dessiné à l'écran.
+        private bool _visible;
+
+        // Le rectangle du clavier, en pixels d'écran.
+        private double _gauche;
+        private double _haut;
+        private double _droite;
+        private double _bas;
+
+        // L'état des modificateurs du clavier. Ils sont à part de ceux du choix d'action
+        // (Modificateurs.cs), qui sont remis à zéro à chaque retour au mode mouvement.
+        private bool _maj;       // pour la prochaine touche seulement
+        private bool _verrMaj;   // Caps Lock : reste allumé
+        private bool _ctrl;
+        private bool _alt;
+        private bool _win;
+
+        // Le « mot en cours » : les lettres tapées depuis le dernier espace ou signe (voir
+        // Suivre). Sert à « Effacer le mot », et servira à la prédiction (étape 13).
+        private readonly StringBuilder _motEnCours = new StringBuilder();
+
+        // Les deux derniers caractères tapés, pour la majuscule automatique après « . ».
+        private string _fin = "";
+
+        public ClavierRegard(OverlayWindow calque)
+        {
+            _calque = calque;
+            _viseur = new ViseurBoutons(_cibles);
+        }
+
+        /// <summary>Vrai entre Ouvrir et Fermer (même quand le clavier est masqué par un autre mode).</summary>
+        public bool Ouvert { get; private set; }
+
+        /// <summary>Vrai quand le clavier est dessiné à l'écran.</summary>
+        public bool Visible
+        {
+            get { return _visible; }
+        }
+
+        // ───────────────────────── Ouverture, fermeture, affichage ─────────────────────────
+
+        /// <summary>
+        /// Ouvre le clavier : lit le fichier de disposition et part de sa page de départ.
+        /// Il apparaîtra au retour en mode mouvement (SurChangementMode).
+        /// Renvoie faux si le fichier est absent ou incorrect (message pour la barre de menu).
+        /// </summary>
+        public bool Ouvrir(out string message)
+        {
+            DispositionClavier disposition = DispositionClavier.Charger(DispositionClavier.NomParDefaut, out message);
+            if (disposition == null)
+            {
+                return false;
+            }
+
+            _disposition = disposition;
+            _page = disposition.PageDepart;
+            _pagePrecedente = null;
+            Ouvert = true;
+            OublierEtat();
+            App.Log("Clavier : ouvert");
+            return true;
+        }
+
+        /// <summary>Ferme le clavier (bouton Fermer, barre de menu du clavier, touche Échap).</summary>
+        public void Fermer()
+        {
+            if (!Ouvert)
+            {
+                return;
+            }
+            Ouvert = false;
+            Masquer();
+            OublierEtat();
+            App.Log("Clavier : fermé");
+        }
+
+        /// <summary>
+        /// Appelée par le ModeManager à chaque changement de mode, AVANT l'entrée dans le
+        /// nouveau mode : le clavier est affiché dans les modes mouvement et regard fixe, et
+        /// pendant la barre de menu du clavier ; il est masqué dans tous les autres.
+        /// (Avant l'entrée : la loupe fait une photo de l'écran dès son entrée, le clavier ne
+        /// doit pas y être.)
+        /// </summary>
+        public void SurChangementMode(Mode nouveau)
+        {
+            ModeMenu menu = nouveau as ModeMenu;
+            bool afficher = Ouvert &&
+                            (nouveau is ModeMouvement || nouveau is ModeRegardFixe ||
+                             (menu != null && menu.MenuClavier));
+
+            if (afficher && !_visible)
+            {
+                Construire();
+            }
+            else if (!afficher && _visible)
+            {
+                Masquer();
+                // On est parti faire autre chose (un clic ailleurs, les paramètres…) : le texte
+                // autour du curseur a pu changer, le mot en cours n'est plus sûr.
+                _motEnCours.Clear();
+                _fin = "";
+            }
+            else if (_visible)
+            {
+                // Toujours affiché (mouvement ↔ regard fixe, menu du clavier) : plus aucune
+                // touche n'est survolée, et celle qui serait sous le regard attend qu'il la quitte.
+                _viseur.ReinitialiserEtBloquer();
+                RedessinerSansSurvol();
+            }
+        }
+
+        /// <summary>L'écran a changé (étape 11) : le clavier est redessiné aux nouvelles tailles.</summary>
+        public void AdapterEcran()
+        {
+            if (_visible)
+            {
+                Construire();
+            }
+        }
+
+        /// <summary>
+        /// Vrai si le point du regard (pixels d'écran, VRAI regard et non ramené dans l'écran)
+        /// est sur le clavier ou sur son bouton Fermer. Faux si le clavier n'est pas affiché.
+        /// </summary>
+        public bool Contient(double x, double y)
+        {
+            if (!_visible)
+            {
+                return false;
+            }
+            if (x >= _gauche && x < _droite && y >= _haut && y < _bas)
+            {
+                return true;
+            }
+            return _fermer != null && _fermer.Contient(x, y);
+        }
+
+        private void Masquer()
+        {
+            _calque.MasquerSurfaceClavier();
+            _visible = false;
+        }
+
+        /// <summary>Remet à zéro les modificateurs, le mot en cours et la fin du texte.</summary>
+        private void OublierEtat()
+        {
+            _maj = false;
+            _verrMaj = false;
+            _ctrl = false;
+            _alt = false;
+            _win = false;
+            _motEnCours.Clear();
+            _fin = "";
+        }
+
+        // ───────────────────────── Le regard ─────────────────────────
+
+        /// <summary>
+        /// À appeler à chaque tic du mode mouvement, tant que le clavier est affiché : met à
+        /// jour la touche survolée et l'active si le regard y est resté [DelaiTouche].
+        /// </summary>
+        public void Actualiser(EtatRegard regard)
+        {
+            if (!_visible)
+            {
+                return;
+            }
+
+            Parametres p = Parametres.Courants;
+            int numero = _viseur.Actualiser(regard, p.DelaiTouche, p.AfficherLibelles);
+            if (numero < 0)
+            {
+                return;
+            }
+
+            if (numero >= _touches.Count)
+            {
+                // Le dernier de la liste : le bouton Fermer.
+                Fermer();
+                return;
+            }
+            Activer(_touches[numero]);
+        }
+
+        /// <summary>Fait l'action d'une touche.</summary>
+        private void Activer(ToucheClavier touche)
+        {
+            ToucheDisposition d = touche.Description;
+            touche.Flasher();
+
+            // Vrai pour une touche qu'on peut répéter en gardant le regard dessus
+            // ([RepetitionTouche]) : lettres, effacer, flèches… Pas pour un modificateur
+            // ou un raccourci : en continuant à regarder, on l'allumerait et l'éteindrait sans fin.
+            bool repetable = true;
+
+            if (d.Texte != null)
+            {
+                Ecrire(d);
+            }
+            else if (d.Touche != null)
+            {
+                AppuyerTouche(d.Touche);
+            }
+            else if (d.Raccourci != null)
+            {
+                Raccourci(d.Raccourci);
+                repetable = false;
+            }
+            else if (d.Page != null)
+            {
+                // La page change : les touches sont remplacées (voir Construire).
+                ChangerPage(d.Page);
+                return;
+            }
+            else if (d.Modificateur != null)
+            {
+                BasculerModificateur(d.Modificateur);
+                repetable = false;
+            }
+            else if (d.Commande == "EffacerLettre")
+            {
+                EffacerLettre();
+            }
+            else if (d.Commande == "EffacerMot")
+            {
+                EffacerMot();
+            }
+            else
+            {
+                App.Log("Clavier : touche « " + d.Libelle + " » sans action connue");
+            }
+
+            if (!repetable || !Parametres.Courants.RepetitionTouche)
+            {
+                _viseur.BloquerJusquASortie();
+            }
+            MettreAJourEtat();
+        }
+
+        // ───────────────────────── Les actions ─────────────────────────
+
+        /// <summary>Écrit le texte d'une touche, en majuscules si Maj ou Caps Lock (mais pas les deux).</summary>
+        private void Ecrire(ToucheDisposition d)
+        {
+            // Maj et Caps Lock ensemble donnent des minuscules, comme sur un vrai clavier.
+            bool majuscules = _maj ^ _verrMaj;
+            string texte = majuscules ? (d.TexteMaj ?? d.Texte.ToUpper(CultureInfo.CurrentCulture)) : d.Texte;
+
+            if ((_ctrl || _alt || _win) && texte.Length == 1)
+            {
+                // Avec Ctrl, Alt ou Win, il faut la VRAIE touche (Ctrl + c = copier) : on demande à
+                // Windows quelle touche produit ce caractère. Octet haut : 1 = il faut aussi Maj.
+                short resultat = NativeMethods.VkKeyScanW(texte[0]);
+                if (resultat != -1)
+                {
+                    ushort code = (ushort)(resultat & 0xFF);
+                    List<ushort> mods = ModificateursActifs(false);
+                    if (((resultat >> 8) & 1) != 0)
+                    {
+                        mods.Add(NativeMethods.VK_SHIFT);
+                    }
+                    InjecteurClavier.TaperTouche(code, false, mods);
+                    _ctrl = false;
+                    _alt = false;
+                    _win = false;
+                    _maj = false;
+                    // Un raccourci n'écrit pas de texte : le mot en cours n'est plus sûr.
+                    _motEnCours.Clear();
+                    _fin = "";
+                    return;
+                }
+            }
+
+            InjecteurClavier.TaperTexte(texte);
+            _ctrl = false;
+            _alt = false;
+            _win = false;
+            if (ContientUneLettre(texte))
+            {
+                _maj = false;   // Maj ne vaut que pour une lettre
+            }
+            Suivre(texte);
+        }
+
+        /// <summary>Appuie sur une vraie touche (Tab, Entree, flèches…), avec les modificateurs actifs.</summary>
+        private void AppuyerTouche(string nom)
+        {
+            ushort code;
+            bool etendue;
+            if (!CodeTouche(nom, out code, out etendue))
+            {
+                App.Log("Clavier : touche inconnue « " + nom + " » dans la disposition");
+                return;
+            }
+
+            // Ici, Maj compte (Maj + Tab, Maj + flèche pour sélectionner…).
+            InjecteurClavier.TaperTouche(code, etendue, ModificateursActifs(true));
+            _ctrl = false;
+            _alt = false;
+            _win = false;
+            _maj = false;
+
+            if (code == 0x0D)
+            {
+                Suivre("\n");   // Entrée : fin de ligne (compte pour la majuscule automatique)
+            }
+            else
+            {
+                // Tab, flèches, Début… : le curseur de texte a bougé, le mot en cours n'est plus sûr.
+                _motEnCours.Clear();
+                _fin = "";
+            }
+        }
+
+        /// <summary>
+        /// Un raccourci écrit dans la disposition, par exemple « Ctrl+F » : les mots avant la
+        /// dernière « + » sont les modificateurs (Ctrl, Alt, Maj, Win), le dernier est la touche.
+        /// </summary>
+        private void Raccourci(string raccourci)
+        {
+            string[] morceaux = raccourci.Split('+');
+            List<ushort> mods = new List<ushort>();
+            for (int i = 0; i < morceaux.Length - 1; i++)
+            {
+                switch (morceaux[i].Trim().ToLowerInvariant())
+                {
+                    case "ctrl":
+                        mods.Add(NativeMethods.VK_CONTROL);
+                        break;
+                    case "alt":
+                        mods.Add(NativeMethods.VK_MENU);
+                        break;
+                    case "maj":
+                    case "shift":
+                        mods.Add(NativeMethods.VK_SHIFT);
+                        break;
+                    case "win":
+                        mods.Add(NativeMethods.VK_LWIN);
+                        break;
+                    default:
+                        App.Log("Clavier : modificateur inconnu dans le raccourci « " + raccourci + " »");
+                        return;
+                }
+            }
+
+            ushort code;
+            bool etendue;
+            if (!CodeTouche(morceaux[morceaux.Length - 1].Trim(), out code, out etendue))
+            {
+                App.Log("Clavier : touche inconnue dans le raccourci « " + raccourci + " »");
+                return;
+            }
+            InjecteurClavier.TaperTouche(code, etendue, mods);
+            _motEnCours.Clear();
+            _fin = "";
+        }
+
+        /// <summary>Effacer une lettre : Retour arrière (avec Ctrl, Alt, Maj s'ils sont allumés).</summary>
+        private void EffacerLettre()
+        {
+            InjecteurClavier.TaperTouche(NativeMethods.VK_BACK, false, ModificateursActifs(true));
+            _ctrl = false;
+            _alt = false;
+            _win = false;
+            _maj = false;
+            if (_motEnCours.Length > 0)
+            {
+                _motEnCours.Length--;
+            }
+            _fin = _fin.Length > 0 ? _fin.Substring(0, _fin.Length - 1) : "";
+        }
+
+        /// <summary>
+        /// Effacer le mot : autant de Retour arrière que de lettres dans le mot en cours. Si le
+        /// clavier ne connaît pas le mot (juste après une espace, ou après un clic ailleurs), il
+        /// envoie Ctrl + Retour arrière, que la plupart des applications comprennent comme
+        /// « effacer le mot d'avant ».
+        /// </summary>
+        private void EffacerMot()
+        {
+            if (_motEnCours.Length > 0)
+            {
+                for (int i = 0; i < _motEnCours.Length; i++)
+                {
+                    InjecteurClavier.TaperTouche(NativeMethods.VK_BACK, false, null);
+                }
+                _motEnCours.Clear();
+            }
+            else
+            {
+                InjecteurClavier.TaperTouche(NativeMethods.VK_BACK, false, new List<ushort> { NativeMethods.VK_CONTROL });
+            }
+            _fin = "";
+        }
+
+        /// <summary>Allume ou éteint un modificateur (Maj, VerrMaj, Ctrl, Alt, Win).</summary>
+        private void BasculerModificateur(string nom)
+        {
+            switch (nom.Trim().ToLowerInvariant())
+            {
+                case "maj":
+                    _maj = !_maj;
+                    break;
+                case "verrmaj":
+                    _verrMaj = !_verrMaj;
+                    break;
+                case "ctrl":
+                    _ctrl = !_ctrl;
+                    break;
+                case "alt":
+                    _alt = !_alt;
+                    break;
+                case "win":
+                    _win = !_win;
+                    break;
+                default:
+                    App.Log("Clavier : modificateur inconnu « " + nom + " » dans la disposition");
+                    break;
+            }
+        }
+
+        /// <summary>Affiche une autre page du clavier (« retour » = la page d'avant).</summary>
+        private void ChangerPage(string nom)
+        {
+            if (string.Equals(nom, "retour", StringComparison.OrdinalIgnoreCase))
+            {
+                nom = _pagePrecedente ?? _disposition.PageDepart;
+            }
+            if (_disposition.Page(nom) == null)
+            {
+                App.Log("Clavier : page « " + nom + " » introuvable dans la disposition");
+                return;
+            }
+            _pagePrecedente = _page;
+            _page = nom;
+            Construire();
+        }
+
+        /// <summary>
+        /// Garde la trace de ce qui vient d'être écrit :
+        ///  - le mot en cours : lettres, chiffres et tiret (« peut-être ») ; tout autre caractère
+        ///    (espace, ponctuation, apostrophe, fin de ligne) termine le mot ;
+        ///  - les deux derniers caractères, pour la majuscule automatique : après « . », « ? »
+        ///    ou « ! » suivi d'une espace ou d'une fin de ligne, Maj s'allume tout seul pour la
+        ///    lettre suivante ([MajusculeAuto]). On voit Maj allumé : on peut l'éteindre.
+        /// </summary>
+        private void Suivre(string texte)
+        {
+            foreach (char c in texte)
+            {
+                if (char.IsLetterOrDigit(c) || c == '-')
+                {
+                    _motEnCours.Append(c);
+                }
+                else
+                {
+                    _motEnCours.Clear();
+                }
+            }
+
+            _fin += texte;
+            if (_fin.Length > 2)
+            {
+                _fin = _fin.Substring(_fin.Length - 2);
+            }
+
+            if (Parametres.Courants.MajusculeAuto && _fin.Length == 2 &&
+                (_fin[1] == ' ' || _fin[1] == '\n') && ".?!".IndexOf(_fin[0]) >= 0)
+            {
+                _maj = true;
+            }
+        }
+
+        // ───────────────────────── Petits outils ─────────────────────────
+
+        /// <summary>Les codes des modificateurs allumés (Maj seulement si avecMaj).</summary>
+        private List<ushort> ModificateursActifs(bool avecMaj)
+        {
+            List<ushort> mods = new List<ushort>();
+            if (_ctrl)
+            {
+                mods.Add(NativeMethods.VK_CONTROL);
+            }
+            if (_alt)
+            {
+                mods.Add(NativeMethods.VK_MENU);
+            }
+            if (_win)
+            {
+                mods.Add(NativeMethods.VK_LWIN);
+            }
+            if (avecMaj && _maj)
+            {
+                mods.Add(NativeMethods.VK_SHIFT);
+            }
+            return mods;
+        }
+
+        private static bool ContientUneLettre(string texte)
+        {
+            foreach (char c in texte)
+            {
+                if (char.IsLetter(c))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Le code Windows (« virtual-key code ») d'une touche nommée dans la disposition.
+        /// etendue : vrai pour les touches « étendues » (flèches, Début, Fin, Suppr, Page…).
+        /// Accepte aussi une lettre seule (A à Z) ou un chiffre seul, pour les raccourcis.
+        /// </summary>
+        private static bool CodeTouche(string nom, out ushort code, out bool etendue)
+        {
+            etendue = false;
+            code = 0;
+            switch (nom.Trim().ToLowerInvariant())
+            {
+                case "tab": code = 0x09; return true;
+                case "entree": code = 0x0D; return true;
+                case "echap": code = 0x1B; return true;
+                case "espace": code = 0x20; return true;
+                case "retourarriere": code = NativeMethods.VK_BACK; return true;
+                case "pagehaut": code = 0x21; etendue = true; return true;
+                case "pagebas": code = 0x22; etendue = true; return true;
+                case "fin": code = 0x23; etendue = true; return true;
+                case "debut": code = 0x24; etendue = true; return true;
+                case "gauche": code = 0x25; etendue = true; return true;
+                case "haut": code = 0x26; etendue = true; return true;
+                case "droite": code = 0x27; etendue = true; return true;
+                case "bas": code = 0x28; etendue = true; return true;
+                case "inser": code = 0x2D; etendue = true; return true;
+                case "suppr": code = 0x2E; etendue = true; return true;
+            }
+
+            string n = nom.Trim().ToUpperInvariant();
+            // F1 à F24 : codes 0x70 à 0x87.
+            int numero;
+            if (n.Length >= 2 && n[0] == 'F' && int.TryParse(n.Substring(1), out numero) && numero >= 1 && numero <= 24)
+            {
+                code = (ushort)(0x70 + numero - 1);
+                return true;
+            }
+            // Une lettre ou un chiffre seul : son code est celui du caractère en majuscule.
+            if (n.Length == 1 && ((n[0] >= 'A' && n[0] <= 'Z') || (n[0] >= '0' && n[0] <= '9')))
+            {
+                code = n[0];
+                return true;
+            }
+            return false;
+        }
+
+        // ───────────────────────── Le dessin ─────────────────────────
+
+        /// <summary>
+        /// (Re)dessine le clavier : fond, touches de la page affichée et bouton Fermer.
+        /// Toutes les positions sont en pixels d'écran, converties par le calque.
+        /// </summary>
+        private void Construire()
+        {
+            _cibles.Clear();
+            _touches.Clear();
+            _fermer = null;
+            if (!Ouvert || _disposition == null || !_calque.Pret)
+            {
+                Masquer();
+                return;
+            }
+            PageClavier page = _disposition.Page(_page) ?? _disposition.Page(_disposition.PageDepart);
+
+            Parametres p = Parametres.Courants;
+            double largeur = Ecran.LargeurPixels;
+            double hauteur = Ecran.HauteurPixels;
+            double hauteurClavier = hauteur * p.HauteurClavier / 100.0;
+
+            _gauche = 0;
+            _droite = largeur;
+            _bas = hauteur;
+            _haut = hauteur - hauteurClavier;
+
+            _calque.PreparerSurfaceClavier();
+            Canvas surface = _calque.SurfaceClavier;
+
+            // ── Le fond : un rectangle presque noir, comme sur les captures de l'utilisateur.
+            Border fond = new Border();
+            fond.Background = new SolidColorBrush(Color.FromArgb(0xF5, 0x12, 0x12, 0x12));
+            fond.Width = _calque.LongueurVersWpf(largeur);
+            fond.Height = _calque.LongueurVersWpf(hauteurClavier);
+            Point coin = _calque.VersWpf(_gauche, _haut);
+            Canvas.SetLeft(fond, coin.X);
+            Canvas.SetTop(fond, coin.Y);
+            surface.Children.Add(fond);
+
+            // ── La grille des touches.
+            double marge = Ecran.Px(Marge4K);
+            double largeurCase = (largeur - 2 * marge) / _disposition.Colonnes;
+            double hauteurCase = (hauteurClavier - 2 * marge) / _disposition.Lignes;
+            double ecart = Math.Min(Ecran.Px(EcartTouches4K), Math.Min(largeurCase, hauteurCase) * 0.15);
+
+            foreach (ToucheDisposition d in page.Touches)
+            {
+                ToucheClavier touche = new ToucheClavier(d);
+                touche.Placer(_calque, surface,
+                              marge + d.Col * largeurCase,
+                              _haut + marge + d.Ligne * hauteurCase,
+                              d.LargeurCases * largeurCase,
+                              hauteurCase,
+                              ecart);
+                _touches.Add(touche);
+                _cibles.Add(touche);
+            }
+
+            // ── Le bouton Fermer : au-dessus du clavier, à droite, contre le bord de l'écran.
+            //    (E711 = croix « annuler » de la police Windows.)
+            double taille = p.TailleIconesPx;
+            _fermer = new BoutonRegard("", null, "Fermer le clavier");
+            _fermer.FacteurZone = FacteurZoneFermer;
+            _fermer.Placer(_calque, surface,
+                           largeur - marge - taille / 2,
+                           _haut - Ecran.Px(EcartFermer4K) - taille / 2,
+                           taille, true);
+            _cibles.Add(_fermer);
+
+            // Les touches ont changé : celle qui serait sous le regard ne s'active pas tant
+            // que le regard ne l'a pas quittée (par exemple après un changement de page).
+            _viseur.ReinitialiserEtBloquer();
+            MettreAJourEtat();
+
+            _calque.AfficherSurfaceClavier();
+            _visible = true;
+        }
+
+        /// <summary>Met à jour les libellés (majuscules) et les bords verts des modificateurs.</summary>
+        private void MettreAJourEtat()
+        {
+            bool majuscules = _maj ^ _verrMaj;
+            foreach (ToucheClavier touche in _touches)
+            {
+                touche.AfficherMajuscules(majuscules);
+                string m = touche.Description.Modificateur;
+                if (m != null)
+                {
+                    touche.DefinirAllume(EstAllume(m));
+                }
+            }
+        }
+
+        private bool EstAllume(string modificateur)
+        {
+            switch (modificateur.Trim().ToLowerInvariant())
+            {
+                case "maj":
+                    return _maj;
+                case "verrmaj":
+                    return _verrMaj;
+                case "ctrl":
+                    return _ctrl;
+                case "alt":
+                    return _alt;
+                case "win":
+                    return _win;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>Dessine toutes les cibles sans survol (par exemple au passage en regard fixe).</summary>
+        private void RedessinerSansSurvol()
+        {
+            foreach (ICibleRegard cible in _cibles)
+            {
+                cible.Dessiner(0, false, false);
+            }
+        }
+    }
+}

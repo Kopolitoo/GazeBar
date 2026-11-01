@@ -376,6 +376,7 @@ namespace GazeBar
             MasquerEcranChoix();
             MasquerBarreMenu();
             MasquerSurfaceGlisser();
+            MasquerSurfaceClavier();
         }
 
         // ───────────────────────── Écran noir du choix d'action (étape 3) ─────────────────────────
@@ -590,6 +591,32 @@ namespace GazeBar
         public void MasquerSurfaceGlisser()
         {
             SurfaceGlisser.Visibility = Visibility.Collapsed;
+        }
+
+        // ───────────────────────── Surface du clavier au regard (étape 12) ─────────────────────────
+
+        /// <summary>
+        /// Vide la surface du clavier et lui donne la taille du calque.
+        /// Elle reste cachée : ClavierRegard la remplit, puis appelle AfficherSurfaceClavier.
+        /// </summary>
+        public void PreparerSurfaceClavier()
+        {
+            SurfaceClavier.Children.Clear();
+            SurfaceClavier.Width = ActualWidth;
+            SurfaceClavier.Height = ActualHeight;
+            Canvas.SetLeft(SurfaceClavier, 0);
+            Canvas.SetTop(SurfaceClavier, 0);
+        }
+
+        public void AfficherSurfaceClavier()
+        {
+            SurfaceClavier.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>Cache le clavier (son contenu est gardé jusqu'au prochain PreparerSurfaceClavier).</summary>
+        public void MasquerSurfaceClavier()
+        {
+            SurfaceClavier.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>

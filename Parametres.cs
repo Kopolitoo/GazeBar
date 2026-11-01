@@ -60,9 +60,12 @@ namespace GazeBar
         ///   7 : étape 11 — les tailles passent des pixels au POURCENTAGE DE LA HAUTEUR DE
         ///       L'ÉCRAN (ZoneMorteCurseur, RayonFixation, VitesseMaxFixation, RayonCercle,
         ///       TailleIcones), et nouveau réglage TailleInterface. Les anciennes valeurs, réglées
-        ///       sur l'écran 4K de l'utilisateur (2160 px de haut), sont converties une fois.
+        ///       sur l'écran 4K de l'utilisateur (2160 px de haut), sont converties une fois ;
+        ///   8 : étape 12 — clavier au regard : DelaiTouche, RepetitionTouche, MajusculeAuto et
+        ///       HauteurClavier. Rien à corriger : absents d'un fichier plus ancien, ils
+        ///       gardent leur valeur par défaut.
         /// </summary>
-        public const int VersionActuelle = 7;
+        public const int VersionActuelle = 8;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -339,6 +342,30 @@ namespace GazeBar
         [DataMember(Order = 102)]
         public string[] IconesUtilitaires { get; set; }
 
+        // ───────────────────────── Clavier au regard (étape 12) ─────────────────────────
+
+        /// <summary>
+        /// Durée du regard sur une touche du clavier avant qu'elle s'active, en secondes.
+        /// Séparée de [DelaiActivation] : on tape souvent plus vite qu'on ne clique.
+        /// </summary>
+        [DataMember(Order = 110)]
+        public double DelaiTouche { get; set; }
+
+        /// <summary>
+        /// En gardant le regard sur une touche, elle se retape après un nouveau [DelaiTouche]
+        /// (pour « ll », « ss »…). Non : il faut quitter la touche pour la retaper.
+        /// </summary>
+        [DataMember(Order = 111)]
+        public bool RepetitionTouche { get; set; }
+
+        /// <summary>Majuscule automatique après « . », « ? » ou « ! » suivi d'une espace.</summary>
+        [DataMember(Order = 112)]
+        public bool MajusculeAuto { get; set; }
+
+        /// <summary>Hauteur du clavier au regard, en % de la hauteur de l'écran.</summary>
+        [DataMember(Order = 113)]
+        public double HauteurClavier { get; set; }
+
         /// <summary>
         /// La disposition d'un groupe, lue dans les listes ci-dessus : un tableau avec une
         /// case par emplacement, null pour un emplacement vide. Pas enregistré tel quel.
@@ -505,6 +532,11 @@ namespace GazeBar
             SuiviSouris = false;
             DemarrerAvecWindows = false;
 
+            DelaiTouche = 0.6;
+            RepetitionTouche = true;
+            MajusculeAuto = true;
+            HauteurClavier = 50;
+
             IconesParDefaut();
         }
 
@@ -562,6 +594,9 @@ namespace GazeBar
             SourisJeu = souris == SourisRelativeTexte ? SourisRelativeTexte : SourisDirecteTexte;
             string relative = (RelativeJeu ?? "").Trim().ToLowerInvariant();
             RelativeJeu = relative == RelativeManetteTexte ? RelativeManetteTexte : RelativeSuiviTexte;
+
+            DelaiTouche = Borner(DelaiTouche, 0.1, 5);
+            HauteurClavier = Borner(HauteurClavier, 25, 75);
 
             CorrigerIcones(GroupeIcones.Couronne);
             CorrigerIcones(GroupeIcones.Modificateurs);
@@ -640,6 +675,13 @@ namespace GazeBar
                 RayonCercle = PixelsVersPourcent(RayonCercle, 1);
                 TailleIcones = PixelsVersPourcent(TailleIcones, 1);
                 App.Log("Paramètres : mise à jour en version 7 (tailles en % de la hauteur de l'écran)");
+            }
+
+            if (VersionFichier < 8)
+            {
+                // Rien à corriger : les réglages du clavier absents du fichier ont gardé leur
+                // valeur par défaut (voir AvantLecture). Réenregistrer le fichier les ajoute.
+                App.Log("Paramètres : mise à jour en version 8 (réglages du clavier au regard)");
             }
             VersionFichier = VersionActuelle;
             return true;
