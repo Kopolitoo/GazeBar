@@ -72,7 +72,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Glisser-déposer (arrivée)"; }
+            get { return "Drag and drop (end point)"; }
         }
 
         public override void Enter(GazeState gaze)
@@ -224,7 +224,7 @@ namespace GazeBar
             // Symbol E72B = "back" arrow of the Windows font.
             double xBack = Manager.ScreenWidth - size / 2 - ScreenMetrics.Px(10);
             double yBack = Manager.ScreenHeight / 2;
-            GazeButton back = new GazeButton("", null, "Annuler le glisser-déposer");
+            GazeButton back = new GazeButton("", null, Texts.Get("drag.cancel"));
             back.Place(layer, surface, xBack, yBack, size);
             _buttons.Add(back);
 

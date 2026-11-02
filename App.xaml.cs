@@ -84,6 +84,9 @@ namespace GazeBar
             // The settings first: everything else uses them.
             AppSettings.Initialize();
 
+            // The interface texts, in the chosen language (step langues-socle).
+            Texts.Load(AppSettings.Current.Language);
+
             // Start with Windows: the registry is made to match the settings file
             // (and the program path is updated if it was moved).
             WindowsStartup.Apply(AppSettings.Current.StartWithWindows);

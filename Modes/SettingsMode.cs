@@ -81,7 +81,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Paramètres"; }
+            get { return "Settings"; }
         }
 
         public override void Enter(GazeState gaze)

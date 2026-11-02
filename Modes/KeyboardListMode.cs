@@ -101,9 +101,9 @@ namespace GazeBar
             {
                 switch (_kind)
                 {
-                    case ListKind.Language: return "Langue du clavier";
-                    case ListKind.Profiles: return "Profils";
-                    default: return "Mes mots";
+                    case ListKind.Language: return Texts.Get("menu.keyboardLanguage");
+                    case ListKind.Profiles: return Texts.Get("tab.profiles");
+                    default: return Texts.Get("settings.myWords");
                 }
             }
         }
@@ -308,18 +308,18 @@ namespace GazeBar
             //    The texts follow the Windows text size (step 11).
             double titleFont = size * 0.3 * ScreenMetrics.WindowsText;
             double nameFont = size * 0.2 * ScreenMetrics.WindowsText;
-            string title = _kind == ListKind.Profiles ? "Charger un profil" : Name;
+            string title = _kind == ListKind.Profiles ? Texts.Get("settings.profiles.load") : Name;
             if (pages > 1)
             {
-                title += "  (page " + (_page + 1) + " sur " + pages + ")";
+                title += Texts.Format("list.pageOf", _page + 1, pages);
             }
             double yTitle = top + size * 0.35;
             AddCenteredText(layer, screen, title, centerX, yTitle, l, titleFont, Brushes.White, true);
             string explanation = _message ?? (_kind == ListKind.Language
-                ? "Regarde une disposition pour la choisir."
+                ? Texts.Get("list.layouts.help")
                 : _kind == ListKind.Profiles
-                ? "Regarde un profil pour le choisir (une confirmation suit)."
-                : "Regarde un mot pour le retirer de ton dictionnaire.");
+                ? Texts.Get("list.profiles.help")
+                : Texts.Get("list.words.help"));
             double yExplanation = yTitle + titleFont * 1.5;
             AddCenteredText(layer, screen, explanation, centerX, yExplanation, l, nameFont,
                                _message != null ? Brushes.Orange : Soft, false);
@@ -327,7 +327,7 @@ namespace GazeBar
             // ── "Back" (cross E711): on the right of the screen, vertically centered, OUTSIDE
             //    the list rectangle (in the middle of the right margin), so as not to aim at it
             //    while looking at a word (user request of 2026-11-02).
-            string backName = _kind == ListKind.Language ? "Retour au clavier" : "Retour aux paramètres";
+            string backName = _kind == ListKind.Language ? Texts.Get("list.backToKeyboard") : Texts.Get("list.backToSettings");
             double rightMargin = width - (left + l);
             double xBack = left + l + rightMargin / 2;
             double yBack = height / 2;
@@ -341,16 +341,16 @@ namespace GazeBar
             double bottomStep = size + 2 * space;
             if (_page > 0)
             {
-                AddButton(layer, screen, new GazeButton("", null, "Page précédente"), () => ChangePage(-1),
+                AddButton(layer, screen, new GazeButton("", null, Texts.Get("list.previousPage")), () => ChangePage(-1),
                               centerX - bottomStep * 1.5, yBottom, size);
-                AddCenteredText(layer, screen, "Page précédente", centerX - bottomStep * 1.5,
+                AddCenteredText(layer, screen, Texts.Get("list.previousPage"), centerX - bottomStep * 1.5,
                                    yBottom + size / 2 + nameFont * 0.4, bottomStep, nameFont, Soft, false);
             }
             if (_page < pages - 1)
             {
-                AddButton(layer, screen, new GazeButton("", null, "Page suivante"), () => ChangePage(1),
+                AddButton(layer, screen, new GazeButton("", null, Texts.Get("list.nextPage")), () => ChangePage(1),
                               centerX + bottomStep * 1.5, yBottom, size);
-                AddCenteredText(layer, screen, "Page suivante", centerX + bottomStep * 1.5,
+                AddCenteredText(layer, screen, Texts.Get("list.nextPage"), centerX + bottomStep * 1.5,
                                    yBottom + size / 2 + nameFont * 0.4, bottomStep, nameFont, Soft, false);
             }
 
@@ -363,10 +363,10 @@ namespace GazeBar
             if (inPage == 0)
             {
                 string empty = _kind == ListKind.Language
-                    ? "Aucune disposition trouvée dans le dossier Claviers."
+                    ? Texts.Get("list.layouts.empty")
                     : _kind == ListKind.Profiles
-                    ? "Aucun profil pour l'instant. Le bouton « Enregistrer les réglages actuels » en crée un."
-                    : "Aucun mot ajouté pour l'instant. Un mot inconnu s'ajoute avec la case « + » du clavier.";
+                    ? Texts.Get("list.profiles.empty")
+                    : Texts.Get("list.words.empty");
                 AddCenteredText(layer, screen, empty, centerX, (gridTop + gridBottom) / 2 - nameFont,
                                    l * 0.8, nameFont * 1.3, Soft, false);
             }
@@ -405,15 +405,15 @@ namespace GazeBar
                         FoundProfile profile = _profiles[isFirst + i];   // copy for the function below
                         // E77B = person; E7A7 = "undo" arrow for the automatic backup (going
                         // back to the settings from before the last load).
-                        button = new GazeButton(profile.IsBackup ? "\uE7A7" : "\uE77B", null, "Charger ce profil");
+                        button = new GazeButton(profile.IsBackup ? "\uE7A7" : "\uE77B", null, Texts.Get("list.loadProfile"));
                         action = () => ChooseProfile(profile);
-                        name = profile.Name;
+                        name = profile.DisplayName;
                     }
                     else
                     {
                         string word = _words[isFirst + i];   // copy for the function below
                         // E74D = trash can, with the red "−" badge of step 10.
-                        button = new GazeButton("", null, "Retirer ce mot");
+                        button = new GazeButton("", null, Texts.Get("list.removeWord"));
                         button.SetConfigBadge(false);
                         action = () => RemoveWord(word);
                         name = word;

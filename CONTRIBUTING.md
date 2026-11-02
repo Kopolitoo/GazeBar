@@ -6,8 +6,11 @@ Thank you for your interest in GazeBar, a Windows tool that controls the mouse w
 
 - **Code, names and comments are written in English**: classes, methods, fields, files,
   folders, log messages and code comments.
-- The user interface is still in French for now. Translating the interface (language files
-  and a language setting) is planned as a separate step.
+- Texts shown to the user are NOT written in the code: they live in the language files of the
+  `Languages` folder (`Languages/fr.json`…) and are read with `Texts.Get("key")` or
+  `Texts.Format("key", values)` (see `Texts.cs`). Log messages stay in the code, in English.
+- To add a language: copy `Languages/fr.json` to `Languages/xx.json` (ISO 639-1 code), translate
+  the values (never the keys) and keep the `{0}`, `{1}` placeholders.
 - The project owner discusses the project in French; issues and pull requests may be
   written in English or French.
 

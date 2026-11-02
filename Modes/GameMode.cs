@@ -73,7 +73,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Jeu (" + AppSettings.Current.GameMouse + ")"; }
+            get { return "Game (" + AppSettings.Current.GameMouse + ")"; }
         }
 
         /// <summary>The menu opens from the game: it is the gaze way out (choice of 2026-10-25).</summary>

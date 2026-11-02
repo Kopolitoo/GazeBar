@@ -39,14 +39,35 @@ namespace GazeBar
         {
         }
 
-        /// <summary>The displayed name (for example "Délai de fixation").</summary>
-        public string Name { get; private set; }
+        /// <summary>
+        /// The key of the setting's texts in the language files (for example
+        /// "setting.fixationDelay"): "&lt;key&gt;.name" is the displayed name, "&lt;key&gt;.help" the
+        /// explanation (see Texts.cs). Also used in the log.
+        /// </summary>
+        public string Key { get; private set; }
 
-        /// <summary>A short sentence, shown under the name.</summary>
-        public string Explanation { get; private set; }
+        /// <summary>The displayed name, in the current language (for example "Délai de fixation").</summary>
+        public string Name
+        {
+            get { return Texts.Get(Key + ".name"); }
+        }
 
-        /// <summary>The unit, with its leading space (for example " s", " px") or "" for none.</summary>
-        public string Unit { get; private set; }
+        /// <summary>A short sentence, shown under the name, in the current language.</summary>
+        public string Explanation
+        {
+            get { return Texts.Get(Key + ".help"); }
+        }
+
+        private string _unit;
+
+        /// <summary>
+        /// The unit, with its leading space (for example " s", " %") or "" for none. A unit
+        /// with words ("unit.…" key, for example " crans/s") is read from the language file.
+        /// </summary>
+        public string Unit
+        {
+            get { return _unit.StartsWith("unit.", StringComparison.Ordinal) ? Texts.Get(_unit) : _unit; }
+        }
 
         /// <summary>By how much "−" and "+" change the value.</summary>
         public double Step { get; private set; }
@@ -63,11 +84,20 @@ namespace GazeBar
         /// </summary>
         public bool Switch { get; private set; }
 
+        private string _wrongKey;
+        private string _rightKey;
+
         /// <summary>The word of the left button ("false" value): usually "Non".</summary>
-        public string WrongWord { get; private set; }
+        public string WrongWord
+        {
+            get { return Texts.Get(_wrongKey); }
+        }
 
         /// <summary>The word of the right button ("true" value): usually "Oui".</summary>
-        public string RightWord { get; private set; }
+        public string RightWord
+        {
+            get { return Texts.Get(_rightKey); }
+        }
 
         private Func<AppSettings, double> _readNumber;
         private Action<AppSettings, double> _writeNumber;
@@ -78,13 +108,12 @@ namespace GazeBar
         public Action<AppSettings> AfterChange { get; private set; }
 
         /// <summary>Creates a numeric setting.</summary>
-        public static Setting Number(string name, string explanation, string unit, double step,
+        public static Setting Number(string key, string unit, double step,
                                      Func<AppSettings, double> read, Action<AppSettings, double> write)
         {
             Setting r = new Setting();
-            r.Name = name;
-            r.Explanation = explanation;
-            r.Unit = unit;
+            r.Key = key;
+            r._unit = unit;
             r.Step = step;
             r.Decimals = CountDecimals(step);
             r._readNumber = read;
@@ -93,31 +122,32 @@ namespace GazeBar
         }
 
         /// <summary>Creates a yes / no setting. after: optional, called after each change.</summary>
-        public static Setting YesOrNo(string name, string explanation,
+        public static Setting YesOrNo(string key,
                                        Func<AppSettings, bool> read, Action<AppSettings, bool> write,
                                        Action<AppSettings> after = null)
         {
-            Setting r = TwoChoices(name, explanation, "Non", "Oui", read, write, after);
+            Setting r = TwoChoices(key, "common.no", "common.yes", read, write, after);
             r.Switch = true;   // shown as a switch (2026-11-02)
             return r;
         }
 
         /// <summary>
         /// Creates a choice between two words (step 9). The setting is stored like a yes / no:
-        /// "false" = wrongWord (left button), "true" = rightWord (right button).
-        /// Example: TwoChoices("Souris", "...", "Directe", "Relative", p => p.RelativeMouse, ...).
+        /// "false" = wrongKey (left button), "true" = rightKey (right button). The words are
+        /// keys of the language files.
+        /// Example: TwoChoices("setting.relativeMouse", "setting.relativeMouse.left",
+        /// "setting.relativeMouse.right", p => p.RelativeMouse, ...).
         /// </summary>
-        public static Setting TwoChoices(string name, string explanation, string wrongWord, string rightWord,
+        public static Setting TwoChoices(string key, string wrongKey, string rightKey,
                                         Func<AppSettings, bool> read, Action<AppSettings, bool> write,
                                         Action<AppSettings> after = null)
         {
             Setting r = new Setting();
-            r.Name = name;
-            r.Explanation = explanation;
-            r.Unit = "";
+            r.Key = key;
+            r._unit = "";
             r.YesNo = true;
-            r.WrongWord = wrongWord;
-            r.RightWord = rightWord;
+            r._wrongKey = wrongKey;
+            r._rightKey = rightKey;
             r._readYesNo = read;
             r._writeYesNo = write;
             r.AfterChange = after;
@@ -218,7 +248,14 @@ namespace GazeBar
             Settings = new List<Setting>(settingsList);
         }
 
+        /// <summary>The key of the tab ("tab.general"…): its identity, and its text key in the language files.</summary>
         public string Name { get; private set; }
+
+        /// <summary>The displayed name, in the current language.</summary>
+        public string Label
+        {
+            get { return Texts.Get(Name); }
+        }
 
         /// <summary>Symbol of the Windows icon font (Segoe Fluent Icons / Segoe MDL2 Assets).</summary>
         public string Symbol { get; private set; }
@@ -240,12 +277,19 @@ namespace GazeBar
             TabNames = new List<string>(tabNames);
         }
 
+        /// <summary>The key of the category ("category.gaze"…), also its text key in the language files.</summary>
         public string Name { get; private set; }
+
+        /// <summary>The displayed name, in the current language.</summary>
+        public string Label
+        {
+            get { return Texts.Get(Name); }
+        }
 
         /// <summary>Symbol of the Windows icon font (Segoe Fluent Icons / Segoe MDL2 Assets).</summary>
         public string Symbol { get; private set; }
 
-        /// <summary>The names of the tabs of the category, in display order.</summary>
+        /// <summary>The keys of the tabs of the category, in display order.</summary>
         public List<string> TabNames { get; private set; }
     }
 
@@ -282,7 +326,7 @@ namespace GazeBar
     internal static class SettingsCatalog
     {
         /// <summary>The name of the "Icons" tab (step 10), recognized by SettingsWindow.</summary>
-        public const string IconsTabName = "Icônes";
+        public const string IconsTabName = "tab.icons";
 
         /// <summary>The index of the "Icons" tab in the list (to come back to it after the configuration).</summary>
         public static int IconsTabIndex
@@ -294,7 +338,7 @@ namespace GazeBar
         /// The name of the "General" tab, recognized by SettingsWindow (which adds the "My
         /// words" button to it, step 14, user request of 2026-11-02).
         /// </summary>
-        public const string GeneralTabName = "Général";
+        public const string GeneralTabName = "tab.general";
 
         /// <summary>The index of the "General" tab (to come back to it after the "My words" list).</summary>
         public static int GeneralTabIndex
@@ -306,13 +350,13 @@ namespace GazeBar
         /// The name of the "Tools" tab (calibration and diagnostic, moved from the menu bar on
         /// 2026-10-29), recognized by SettingsWindow.
         /// </summary>
-        public const string ToolsTabName = "Outils";
+        public const string ToolsTabName = "tab.tools";
 
         /// <summary>
         /// The name of the "Profiles" tab (step 15), recognized by SettingsWindow, which puts two
         /// big buttons there: "Save the current settings" and "Load a profile".
         /// </summary>
-        public const string ProfilesTabName = "Profils";
+        public const string ProfilesTabName = "tab.profiles";
 
         /// <summary>The index of the "Profiles" tab (to come back to it after the list of profiles).</summary>
         public static int ProfilesTabIndex
@@ -329,10 +373,10 @@ namespace GazeBar
         /// </summary>
         public static readonly List<SettingsCategory> Categories = new List<SettingsCategory>
         {
-            new SettingsCategory("Regard", "\uE890", "Regard", "Fixation", "Délais"),
-            new SettingsCategory("Actions", "\uE7C9", "Loupe, glisser", "Défilement", IconsTabName),
-            new SettingsCategory("Affichage", "\uE7F4", "Affichage", "Clavier", "Jeu"),
-            new SettingsCategory("Système", "\uE770", GeneralTabName, ProfilesTabName, ToolsTabName)
+            new SettingsCategory("category.gaze", "\uE890", "tab.gaze", "tab.fixation", "tab.delays"),
+            new SettingsCategory("category.actions", "\uE7C9", "tab.magnifierDrag", "tab.scroll", IconsTabName),
+            new SettingsCategory("category.display", "\uE7F4", "tab.display", "tab.keyboard", "tab.game"),
+            new SettingsCategory("category.system", "\uE770", GeneralTabName, ProfilesTabName, ToolsTabName)
         };
 
         /// <summary>
@@ -370,82 +414,82 @@ namespace GazeBar
         public static readonly List<SettingsTab> Tabs = new List<SettingsTab>
         {
             // E7B3 = eye ("Gaze")
-            new SettingsTab("Regard", "",
-                Setting.Number("Lissage", "Plus petit = plus calme, plus grand = plus réactif", "", 0.01,
+            new SettingsTab("tab.gaze", "",
+                Setting.Number("setting.smoothing", "", 0.01,
                                p => p.Smoothing, (p, v) => p.Smoothing = v),
-                Setting.Number("Anti-tremblement", "Le curseur ne bouge pas en dessous", " %", 0.1,
+                Setting.Number("setting.cursorDeadZone", " %", 0.1,
                                p => p.CursorDeadZone, (p, v) => p.CursorDeadZone = v),
-                Setting.Number("Regard perdu après", "Sans nouvelle mesure depuis ce temps", " ms", 50,
+                Setting.Number("setting.maxMeasureAge", " ms", 50,
                                p => p.MaxMeasureAge, (p, v) => p.MaxMeasureAge = v),
-                Setting.YesOrNo("Suivi souris", "Le curseur suit le regard en mode mouvement",
+                Setting.YesOrNo("setting.mouseTracking",
                                  p => p.MouseTracking, (p, v) => p.MouseTracking = v)),
 
             // E707 = pin ("Fixation": a fixated point)
-            new SettingsTab("Fixation", "",
-                Setting.Number("Rayon de fixation", "Le regard est immobile dans ce rayon", " %", 0.1,
+            new SettingsTab("tab.fixation", "",
+                Setting.Number("setting.fixationRadius", " %", 0.1,
                                p => p.FixationRadius, (p, v) => p.FixationRadius = v),
-                Setting.Number("Délai de fixation", "Avant de passer en regard fixe", " s", 0.1,
+                Setting.Number("setting.fixationDelay", " s", 0.1,
                                p => p.FixationDelay, (p, v) => p.FixationDelay = v),
-                Setting.Number("Vitesse max", "Au-delà, l'œil saute ailleurs", " %/s", 2,
+                Setting.Number("setting.maxFixationSpeed", " %/s", 2,
                                p => p.MaxFixationSpeed, (p, v) => p.MaxFixationSpeed = v),
-                Setting.YesOrNo("Clic direct", "Clic gauche si la fixation se prolonge",
+                Setting.YesOrNo("setting.directClick",
                                  p => p.DirectClick, (p, v) => p.DirectClick = v),
-                Setting.Number("Délai du clic direct", "Après l'entrée en regard fixe", " s", 0.1,
+                Setting.Number("setting.directClickDelay", " s", 0.1,
                                p => p.DirectClickDelay, (p, v) => p.DirectClickDelay = v)),
 
             // E916 = stopwatch ("Delays")
-            new SettingsTab("Délais", "",
-                Setting.Number("Activation des boutons", "Regard sur une icône avant activation", " s", 0.1,
+            new SettingsTab("tab.delays", "",
+                Setting.Number("setting.activationDelay", " s", 0.1,
                                p => p.ActivationDelay, (p, v) => p.ActivationDelay = v),
-                Setting.Number("Icône d'options", "Regard fixe : icône vers le choix d'action", " s", 0.1,
+                Setting.Number("setting.optionsIconDelay", " s", 0.1,
                                p => p.OptionsIconDelay, (p, v) => p.OptionsIconDelay = v),
-                Setting.Number("Ouverture du menu", "Regard en bas, hors de l'écran", " s", 0.1,
+                Setting.Number("setting.menuDelay", " s", 0.1,
                                p => p.MenuDelay, (p, v) => p.MenuDelay = v),
-                Setting.Number("Fermeture du menu", "Regard hors de la barre", " s", 0.1,
+                Setting.Number("setting.menuCloseDelay", " s", 0.1,
                                p => p.MenuCloseDelay, (p, v) => p.MenuCloseDelay = v)),
 
             // E7F4 = screen ("Display")
-            new SettingsTab("Affichage", "",
-                Setting.Number("Rayon du cercle", "Mode mouvement et zone de sortie", " %", 0.2,
+            new SettingsTab("tab.display", "",
+                Setting.Number("setting.circleRadius", " %", 0.2,
                                p => p.CircleRadius, (p, v) => p.CircleRadius = v),
-                Setting.Number("Taille des icônes", "Côté des boutons au regard", " %", 0.2,
+                Setting.Number("setting.iconSize", " %", 0.2,
                                p => p.IconSize, (p, v) => p.IconSize = v),
-                Setting.Number("Taille de l'interface", "75 petite, 100 normale, 125 grande, 150 très grande", " %", 25,
+                Setting.Number("setting.interfaceSize", " %", 25,
                                p => p.InterfaceSize, (p, v) => p.InterfaceSize = v),
-                Setting.YesOrNo("Libellés", "Nom de l'action au survol d'une icône",
+                Setting.YesOrNo("setting.showLabels",
                                  p => p.ShowLabels, (p, v) => p.ShowLabels = v)),
 
             // E71E = magnifier ("Magnifier, drag")
-            new SettingsTab("Loupe, glisser", "",
-                Setting.YesOrNo("Loupe avant l'action", "Passer par la loupe avant le choix",
+            new SettingsTab("tab.magnifierDrag", "",
+                Setting.YesOrNo("setting.magnifierBeforeAction",
                                  p => p.MagnifierBeforeAction, (p, v) => p.MagnifierBeforeAction = v),
-                Setting.Number("Zoom de la loupe", "Agrandissement de la capture", " ×", 0.5,
+                Setting.Number("setting.magnifierZoom", " ×", 0.5,
                                p => p.MagnifierZoom, (p, v) => p.MagnifierZoom = v),
-                Setting.Number("Pause android", "Entre l'appui et le déplacement", " s", 0.1,
+                Setting.Number("setting.androidPauseDuration", " s", 0.1,
                                p => p.AndroidPauseDuration, (p, v) => p.AndroidPauseDuration = v),
-                Setting.Number("Durée du glisser", "Trajet du curseur, bouton enfoncé", " s", 0.05,
+                Setting.Number("setting.dragDuration", " s", 0.05,
                                p => p.DragDuration, (p, v) => p.DragDuration = v)),
 
             // EC8F = up and down arrows ("Scroll", step 8)
-            new SettingsTab("Défilement", "\uEC8F",
-                Setting.Number("Vitesse maximale", "Atteinte trois rayons de cercle au-delà du bord", " crans/s", 1,
+            new SettingsTab("tab.scroll", "\uEC8F",
+                Setting.Number("setting.maxScrollSpeed", "unit.notchesPerSecond", 1,
                                p => p.MaxScrollSpeed, (p, v) => p.MaxScrollSpeed = v),
                 // Windows setting, applied by WheelScroller (2026-11-02).
-                Setting.YesOrNo("Défiler les fenêtres inactives", "Réglage Windows : la molette va à la fenêtre sous le curseur",
+                Setting.YesOrNo("setting.scrollInactiveWindows",
                                  p => p.ScrollInactiveWindows, (p, v) => p.ScrollInactiveWindows = v,
                                  p => WheelScroller.Apply(p.ScrollInactiveWindows))),
 
             // E7FC = gamepad ("Game", step 9)
-            new SettingsTab("Jeu", "\uE7FC",
-                Setting.TwoChoices("Souris du jeu", "Directe pour Mindball, relative pour d'autres jeux",
-                                  "Directe", "Relative",
+            new SettingsTab("tab.game", "\uE7FC",
+                Setting.TwoChoices("setting.relativeMouse",
+                                  "setting.relativeMouse.left", "setting.relativeMouse.right",
                                   p => p.RelativeMouse, (p, v) => p.RelativeMouse = v),
-                Setting.TwoChoices("Souris relative", "Suivi : comme le regard. Manette : écart au centre",
-                                  "Suivi", "Manette",
+                Setting.TwoChoices("setting.gamepadRelative",
+                                  "setting.gamepadRelative.left", "setting.gamepadRelative.right",
                                   p => p.GamepadRelative, (p, v) => p.GamepadRelative = v),
-                Setting.Number("Lissage du jeu", "Plus petit = plus calme, plus grand = plus réactif", "", 0.01,
+                Setting.Number("setting.gameSmoothing", "", 0.01,
                                p => p.GameSmoothing, (p, v) => p.GameSmoothing = v),
-                Setting.Number("Sensibilité", "Souris relative : multiplie les déplacements", " ×", 0.1,
+                Setting.Number("setting.gameSensitivity", " ×", 0.1,
                                p => p.GameSensitivity, (p, v) => p.GameSensitivity = v)),
 
             // E71D = grid of squares ("Icons", step 10): no setting, a "Configure icons" button
@@ -453,22 +497,22 @@ namespace GazeBar
             new SettingsTab(IconsTabName, "\uE71D"),
 
             // E765 = keyboard ("Keyboard", step 12)
-            new SettingsTab("Clavier", "\uE765",
-                Setting.Number("Délai de frappe", "Regard sur une touche avant qu'elle s'active", " s", 0.1,
+            new SettingsTab("tab.keyboard", "\uE765",
+                Setting.Number("setting.keyDelay", " s", 0.1,
                                p => p.KeyDelay, (p, v) => p.KeyDelay = v),
-                Setting.YesOrNo("Répétition", "Garder le regard sur une touche la retape",
+                Setting.YesOrNo("setting.keyRepeat",
                                  p => p.KeyRepeat, (p, v) => p.KeyRepeat = v),
-                Setting.YesOrNo("Majuscule automatique", "Après . ? ! suivi d'une espace",
+                Setting.YesOrNo("setting.autoCapitalize",
                                  p => p.AutoCapitalize, (p, v) => p.AutoCapitalize = v),
-                Setting.Number("Hauteur du clavier", "En pourcentage de la hauteur de l'écran", " %", 5,
+                Setting.Number("setting.keyboardHeight", " %", 5,
                                p => p.KeyboardHeight, (p, v) => p.KeyboardHeight = v),
                 // 50, 75 or 100 % (Fix rounds to the quarter); also in the keyboard bar.
-                Setting.Number("Taille du clavier", "Largeur et hauteur ensemble : 50, 75 ou 100 %", " %", 25,
+                Setting.Number("setting.keyboardSize", " %", 25,
                                p => p.KeyboardSize, (p, v) => p.KeyboardSize = v)),
 
             // E713 = gear ("General")
             new SettingsTab(GeneralTabName, "",
-                Setting.YesOrNo("Démarrer avec Windows", "Lancer GazeBar à l'ouverture de session",
+                Setting.YesOrNo("setting.startWithWindows",
                                  p => p.StartWithWindows, (p, v) => p.StartWithWindows = v,
                                  p => WindowsStartup.Apply(p.StartWithWindows))),
 

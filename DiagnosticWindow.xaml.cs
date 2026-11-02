@@ -51,6 +51,12 @@ namespace GazeBar
         {
             InitializeComponent();
 
+            // The fixed texts, in the current language (step langues-socle).
+            Title = Texts.Get("diagnostic.title");
+            RecordButton.Content = Texts.Get("diagnostic.record");
+            CloseButton.Content = Texts.Get("diagnostic.close");
+            RecordText.Text = Texts.Get("diagnostic.recordHelp");
+
             _sampler = sampler;
             _gaze = gaze;
 
@@ -87,7 +93,7 @@ namespace GazeBar
             MapCanvas.Children.Add(_dot);
             MapCanvas.Children.Add(_gazeDot);
 
-            ScreenInfoText.Text = "Écran : " + _screenWidth + " x " + _screenHeight + " pixels";
+            ScreenInfoText.Text = Texts.Format("diagnostic.screen", _screenWidth, _screenHeight);
 
             // Refreshes the display 20 times per second.
             _timer = new DispatcherTimer();
@@ -129,16 +135,16 @@ namespace GazeBar
             PositionText.Text = "X = " + x + "   Y = " + y +
                                 "   (" + percentX.ToString("F0") + " %, " + percentY.ToString("F0") + " %)";
 
-            RateText.Text = "Changements de position : " + stats.ChangesPerSecond.ToString("F0") +
-                            " par seconde   (lectures : " + stats.PollsPerSecond.ToString("F0") + " par seconde)";
+            RateText.Text = Texts.Format("diagnostic.rate", stats.ChangesPerSecond.ToString("F0"),
+                                         stats.PollsPerSecond.ToString("F0"));
 
             if (!_gaze.IsRunning)
             {
-                GazeReadText.Text = "Regard de l'eyetracker indisponible : " + _gaze.ErrorMessage;
+                GazeReadText.Text = Texts.Format("diagnostic.gazeUnavailable", _gaze.ErrorMessage);
             }
             else if (!_gaze.HasData)
             {
-                GazeReadText.Text = "Regard de l'eyetracker : en attente de mesures…";
+                GazeReadText.Text = Texts.Get("diagnostic.gazeWaiting");
             }
             else
             {
@@ -146,15 +152,15 @@ namespace GazeBar
                 double gy;
                 _gaze.GetLatest(out gx, out gy);
                 bool outside = GazeSource.IsOffScreen(gx, gy, _screenWidth, _screenHeight);
-                GazeReadText.Text = "Regard : X = " + gx.ToString("F0") + "   Y = " + gy.ToString("F0") +
-                                    "   (" + _gaze.SamplesPerSecond.ToString("F0") + " mesures/s)" +
-                                    (outside ? "   HORS ÉCRAN" : "");
+                GazeReadText.Text = Texts.Format("diagnostic.gaze", gx.ToString("F0"), gy.ToString("F0"),
+                                                 _gaze.SamplesPerSecond.ToString("F0")) +
+                                    (outside ? Texts.Get("diagnostic.offScreen") : "");
             }
 
             double idle = _sampler.MsSinceLastChange;
             IdleText.Text = idle < 0
-                ? "Aucun mouvement détecté pour l'instant"
-                : "Dernier changement il y a " + idle.ToString("F0") + " ms";
+                ? Texts.Get("diagnostic.noMovement")
+                : Texts.Format("diagnostic.lastChange", idle.ToString("F0"));
         }
 
         private void UpdateMap()
@@ -205,8 +211,7 @@ namespace GazeBar
             _recordPhase = RecordPhase.Countdown;
             _recordClock.Restart();
             RecordButton.IsEnabled = false;
-            RecordText.Text = "Préparez-vous : début de l'enregistrement dans " +
-                              RecordCountdownSeconds.ToString("F0") + " s…";
+            RecordText.Text = Texts.Format("diagnostic.getReady", RecordCountdownSeconds.ToString("F0"));
         }
 
         /// <summary>Advances the recording (called 20 times per second).</summary>
@@ -223,8 +228,8 @@ namespace GazeBar
             {
                 if (elapsed < RecordCountdownSeconds)
                 {
-                    RecordText.Text = "Préparez-vous : début dans " +
-                                      Math.Ceiling(RecordCountdownSeconds - elapsed).ToString("F0") + " s…";
+                    RecordText.Text = Texts.Format("diagnostic.countdown",
+                                                   Math.Ceiling(RecordCountdownSeconds - elapsed).ToString("F0"));
                     return;
                 }
 
@@ -238,9 +243,8 @@ namespace GazeBar
             // Recording phase.
             if (elapsed < RecordSeconds)
             {
-                RecordText.Text = "Enregistrement en cours, encore " +
-                                  Math.Ceiling(RecordSeconds - elapsed).ToString("F0") +
-                                  " s : parcourez tout l'écran du regard, puis fixez le centre.";
+                RecordText.Text = Texts.Format("diagnostic.recording",
+                                               Math.Ceiling(RecordSeconds - elapsed).ToString("F0"));
                 return;
             }
 
@@ -251,12 +255,12 @@ namespace GazeBar
             try
             {
                 string file = _recorder.StopAndSave(_sampler, _screenWidth, _screenHeight);
-                RecordText.Text = "Enregistré dans : " + file;
+                RecordText.Text = Texts.Format("diagnostic.saved", file);
             }
             catch (Exception ex)
             {
                 App.Log("Recording failed: " + ex);
-                RecordText.Text = "Échec de l'enregistrement : " + ex.Message;
+                RecordText.Text = Texts.Format("diagnostic.saveFailed", ex.Message);
             }
         }
 

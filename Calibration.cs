@@ -38,7 +38,7 @@ namespace GazeBar
             object host = gaze == null ? null : gaze.Host;
             if (host == null)
             {
-                message = "Calibration impossible : le moteur de l'eyetracker n'est pas connecté.";
+                message = Texts.Get("calibration.notConnected");
                 App.Log(message);
                 return false;
             }
@@ -78,7 +78,7 @@ namespace GazeBar
                     {
                         if (method.Name == "LaunchConfigurationTool" && TryTool(target, method))
                         {
-                            message = "Calibration lancée.";
+                            message = Texts.Get("calibration.started");
                             return true;
                         }
                     }
@@ -93,19 +93,19 @@ namespace GazeBar
                             method.Name.StartsWith("Launch", StringComparison.OrdinalIgnoreCase) &&
                             Call(target, method, null))
                         {
-                            message = "Calibration lancée.";
+                            message = Texts.Get("calibration.started");
                             return true;
                         }
                     }
                 }
 
-                message = "Calibration : commande de calibration introuvable (voir le journal).";
+                message = Texts.Get("calibration.notFound");
                 App.Log(message);
                 return false;
             }
             catch (Exception ex)
             {
-                message = "Calibration : erreur (voir le journal).";
+                message = Texts.Get("calibration.error");
                 App.Log("Calibration: error: " + ex);
                 return false;
             }

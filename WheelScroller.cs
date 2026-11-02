@@ -53,13 +53,13 @@ namespace GazeBar
             uint? val = Read();
             if (val == null)
             {
-                return "inconnu";
+                return "unknown";
             }
             if (val.Value == UnderCursor)
             {
-                return "activé";
+                return "on";
             }
-            return "désactivé (" + val.Value + ")";
+            return "off (" + val.Value + ")";
         }
 
         /// <summary>

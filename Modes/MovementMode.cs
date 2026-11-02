@@ -70,7 +70,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Mouvement"; }
+            get { return "Movement"; }
         }
 
         /// <summary>The menu opens from movement mode (gaze down, below the screen).</summary>

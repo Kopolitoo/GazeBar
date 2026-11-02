@@ -342,7 +342,9 @@ namespace GazeBar
 
             if (showLabel)
             {
-                // The label follows the Windows text size (step 11, see ScreenMetrics.Font).
+                // The label follows the Windows text size (step 11, see ScreenMetrics.Font) and
+                // the interface language.
+                OptionsLabelText.Text = Texts.Get("overlay.options");
                 OptionsLabelText.FontSize = ScreenMetrics.Font(20);
                 OptionsLabel.CornerRadius = new CornerRadius(ScreenMetrics.Units(6));
                 OptionsLabel.Padding = new Thickness(ScreenMetrics.Units(8), ScreenMetrics.Units(2), ScreenMetrics.Units(8), ScreenMetrics.Units(2));

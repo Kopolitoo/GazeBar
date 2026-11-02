@@ -119,13 +119,13 @@ namespace GazeBar
             }
             if (Shift)
             {
-                text += (text.Length > 0 ? " + " : "") + "Maj";
+                text += (text.Length > 0 ? " + " : "") + "Shift";
             }
             if (Alt)
             {
                 text += (text.Length > 0 ? " + " : "") + "Alt";
             }
-            return text.Length > 0 ? text : "aucun";
+            return text.Length > 0 ? text : "none";
         }
     }
 }

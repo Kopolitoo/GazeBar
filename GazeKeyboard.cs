@@ -982,7 +982,7 @@ namespace GazeBar
             }
             if (_preview.Length == 0)
             {
-                _previewText.Text = "Les derniers mots tapés s'affichent ici";
+                _previewText.Text = Texts.Get("keyboard.inputBoxEmpty");
                 _previewText.Foreground = InputBoxEmptyText;
                 return;
             }
@@ -1250,7 +1250,7 @@ namespace GazeBar
                 ? _bottom + closeGap + size / 2
                 : _top - closeGap - size / 2;
             yClose = Math.Max(size / 2 + margin, Math.Min(height - size / 2 - margin, yClose));
-            _close = new GazeButton("", null, "Fermer le clavier");
+            _close = new GazeButton("", null, Texts.Get("keyboard.close"));
             _close.ZoneFactor = CloseZoneFactor;
             _close.Place(_layer, surface,
                            width - margin - size / 2,

@@ -109,7 +109,7 @@ namespace GazeBar
             message = null;
             if (!File.Exists(path))
             {
-                message = "Disposition du clavier introuvable : " + name + ".json";
+                message = Texts.Format("keyboard.layoutNotFound", name + ".json");
                 App.Log("Keyboard: file not found: " + path);
                 return null;
             }
@@ -126,7 +126,7 @@ namespace GazeBar
             catch (Exception ex)
             {
                 // A typo in the JSON (forgotten comma, quote...): say so.
-                message = "Disposition du clavier illisible : " + name + ".json (voir le journal)";
+                message = Texts.Format("keyboard.layoutUnreadable", name + ".json");
                 App.Log("Keyboard: unreadable file " + path + ": " + ex.Message);
                 return null;
             }
@@ -134,7 +134,7 @@ namespace GazeBar
             string error = layout.Check();
             if (error != null)
             {
-                message = "Disposition du clavier incorrecte (voir le journal)";
+                message = Texts.Get("keyboard.layoutInvalid");
                 App.Log("Keyboard: " + name + ".json: " + error);
                 return null;
             }

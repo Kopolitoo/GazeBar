@@ -71,7 +71,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Glisser-déposer (exécution)"; }
+            get { return "Drag and drop (execution)"; }
         }
 
         public override void Enter(GazeState gaze)

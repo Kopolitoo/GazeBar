@@ -175,7 +175,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Défilement"; }
+            get { return "Scroll"; }
         }
 
         public override void Enter(GazeState gaze)
@@ -462,7 +462,7 @@ namespace GazeBar
             // Symbol E72B = "back" arrow of the Windows font.
             double xBack = Manager.ScreenWidth - size / 2 - ScreenMetrics.Px(10);
             double yBack = Manager.ScreenHeight / 2;
-            GazeButton back = new GazeButton("", null, "Quitter le défilement");
+            GazeButton back = new GazeButton("", null, Texts.Get("scroll.quit"));
             back.Place(layer, surface, xBack, yBack, size);
             _buttons.Add(back);
 
