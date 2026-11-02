@@ -218,8 +218,35 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// LA LISTE DES ONGLETS ET DES RÉGLAGES du mode paramètres (étape 7), dans l'ordre
-    /// d'affichage.
+    /// Une CATÉGORIE de la colonne de gauche des paramètres (demande de l'utilisateur du
+    /// 02/11/2026 : « moins de boutons sur la gauche »). Une catégorie regroupe quelques
+    /// onglets ; seule la catégorie ouverte montre ses onglets, en dessous d'elle et en retrait
+    /// (« catégories dépliantes », choix de l'utilisateur du 02/11/2026).
+    /// </summary>
+    internal sealed class CategorieParametres
+    {
+        public CategorieParametres(string nom, string symbole, params string[] nomsOnglets)
+        {
+            Nom = nom;
+            Symbole = symbole;
+            NomsOnglets = new List<string>(nomsOnglets);
+        }
+
+        public string Nom { get; private set; }
+
+        /// <summary>Symbole de la police d'icônes de Windows (Segoe Fluent Icons / Segoe MDL2 Assets).</summary>
+        public string Symbole { get; private set; }
+
+        /// <summary>Les noms des onglets de la catégorie, dans l'ordre d'affichage.</summary>
+        public List<string> NomsOnglets { get; private set; }
+    }
+
+    /// <summary>
+    /// LA LISTE DES ONGLETS ET DES RÉGLAGES du mode paramètres (étape 7).
+    ///
+    /// Depuis le 02/11/2026, l'ordre d'affichage à gauche est celui des CATÉGORIES (voir
+    /// « Categories » plus bas) : la liste « Onglets » sert seulement à retrouver un onglet par
+    /// son numéro. Le premier onglet de la liste (« Regard ») est celui qui s'ouvre par défaut.
     ///
     /// Étape 11 : les tailles (anti-tremblement, rayon de fixation, vitesse max, rayon du
     /// cercle, taille des icônes) sont en % DE LA HAUTEUR DE L'ÉCRAN (voir Ecran.cs), et
@@ -269,6 +296,53 @@ namespace GazeBar
         /// menu le 29/10/2026), reconnu par FenetreParametres.
         /// </summary>
         public const string NomOngletOutils = "Outils";
+
+        /// <summary>
+        /// LES CATÉGORIES de la colonne de gauche (02/11/2026), dans l'ordre d'affichage, avec
+        /// les noms de leurs onglets. Chaque onglet de « Onglets » doit être dans une catégorie
+        /// et une seule (sinon il ne serait plus atteignable au regard).
+        /// Symboles : E890 = œil ouvert (« vue »), E7C9 = main qui touche (« actions »),
+        /// E7F4 = écran, E770 = ordinateur (« système »).
+        /// </summary>
+        public static readonly List<CategorieParametres> Categories = new List<CategorieParametres>
+        {
+            new CategorieParametres("Regard", "\uE890", "Regard", "Fixation", "Délais"),
+            new CategorieParametres("Actions", "\uE7C9", "Loupe, glisser", "Défilement", NomOngletIcones),
+            new CategorieParametres("Affichage", "\uE7F4", "Affichage", "Clavier", "Jeu"),
+            new CategorieParametres("Système", "\uE770", NomOngletGeneral, NomOngletOutils)
+        };
+
+        /// <summary>
+        /// Le numéro de la catégorie qui contient l'onglet numéro « onglet » (0 si aucune,
+        /// ce qui ne devrait pas arriver).
+        /// </summary>
+        public static int CategorieDe(int onglet)
+        {
+            if (onglet < 0 || onglet >= Onglets.Count)
+            {
+                return 0;
+            }
+            string nom = Onglets[onglet].Nom;
+            return Math.Max(0, Categories.FindIndex(c => c.NomsOnglets.Contains(nom)));
+        }
+
+        /// <summary>
+        /// Les numéros (dans « Onglets ») des onglets de la catégorie « categorie », dans
+        /// l'ordre d'affichage. Un nom introuvable est ignoré.
+        /// </summary>
+        public static List<int> OngletsDe(int categorie)
+        {
+            List<int> numeros = new List<int>();
+            foreach (string nom in Categories[categorie].NomsOnglets)
+            {
+                int numero = Onglets.FindIndex(o => o.Nom == nom);
+                if (numero >= 0)
+                {
+                    numeros.Add(numero);
+                }
+            }
+            return numeros;
+        }
 
         public static readonly List<Onglet> Onglets = new List<Onglet>
         {
