@@ -54,6 +54,13 @@ namespace GazeBar
     ///    bord), il n'y a pas de zone ignorée. C'est le cas quand l'icône d'options du regard
     ///    fixe se trouvait près du centre de l'écran : on regarde déjà le bon endroit, il
     ///    serait absurde d'obliger à bouger le regard pour valider la position ;
+    ///    LIMITE DANS LE TEMPS (02/11/2026, l'utilisateur devait encore parfois bouger le regard
+    ///    pour continuer) : la zone ignorée disparaît d'elle-même [DureeZoneIgnoreeMs] après
+    ///    l'affichage de la photo, même si le regard n'en est pas sorti. Sans cette limite, si
+    ///    l'endroit voulu tombait par malchance près de l'endroit où était l'icône (à moins de
+    ///    [RayonCercle]), aucune fixation n'était possible : il fallait regarder ailleurs puis
+    ///    revenir. Le but de la zone ignorée reste atteint : un regard qui s'attarde sur
+    ///    l'endroit de l'icône juste après l'ouverture ne déclenche rien tout de suite ;
     ///  - seule une fixation SUR la photo compte. Le regard posé sur l'icône « retour » ou sur
     ///    le fond noir ne place jamais le curseur.
     /// </summary>
@@ -77,6 +84,14 @@ namespace GazeBar
         /// charges : 50 px), converti avec Ecran.Px (étape 11).
         /// </summary>
         private const double DiametreCercleRegard = 50;
+
+        /// <summary>
+        /// Durée de vie de la zone ignorée, en millisecondes, comptée à partir de l'affichage de
+        /// la photo (voir le commentaire de la classe). Après ce délai, une fixation est reconnue
+        /// partout sur la photo. Avec un délai de fixation de 0,8 s, un regard resté sur
+        /// l'endroit de l'icône déclenche donc au plus tôt 0,5 + 0,8 = 1,3 s après l'ouverture.
+        /// </summary>
+        private const double DureeZoneIgnoreeMs = 500;
 
         // Le point visé P (position du curseur à l'entrée), en pixels d'écran.
         private readonly double _px;
@@ -205,6 +220,12 @@ namespace GazeBar
                         // Photo impossible : on ne reste pas bloqué devant un écran noir.
                         Gestionnaire.ChangerMode(new ModeMouvement());
                     }
+                    else
+                    {
+                        // La photo est affichée : on note l'instant, d'où se compte la durée de
+                        // vie de la zone ignorée (DureeZoneIgnoreeMs).
+                        _debutEtapeMs = regard.MaintenantMs;
+                    }
                 }
                 return;
             }
@@ -239,7 +260,14 @@ namespace GazeBar
             // b. Le petit cercle du regard.
             DeplacerCercleRegard(regard, p);
 
-            // c. La zone ignorée : le regard en est-il sorti ?
+            // c. La zone ignorée : le regard en est-il sorti ? Ou bien a-t-elle assez duré ?
+            //    (_debutEtapeMs = instant où la photo est apparue, voir Actualiser.)
+            if (_zoneIgnoree && regard.MaintenantMs - _debutEtapeMs >= DureeZoneIgnoreeMs)
+            {
+                _zoneIgnoree = false;
+                App.Log("Loupe : zone ignorée levée après " + DureeZoneIgnoreeMs.ToString("F0") +
+                        " ms (le regard n'en était pas sorti)");
+            }
             if (regard.SurEcran)
             {
                 if (!_zoneIgnoreeConnue)
@@ -252,6 +280,7 @@ namespace GazeBar
                 else if (_zoneIgnoree && Distance(regard.X, regard.Y, _zoneX, _zoneY) > p.RayonCerclePx)
                 {
                     _zoneIgnoree = false;
+                    App.Log("Loupe : zone ignorée levée (le regard en est sorti)");
                 }
             }
 
@@ -466,7 +495,11 @@ namespace GazeBar
             calque.AfficherEcranChoix();
             _etape = Etape.Visee;
             App.Log("Loupe : photo de " + cote + " × " + cote + " px en (" + _ox + ", " + _oy +
-                    "), agrandie ×" + _zoom.ToString("0.##"));
+                    "), agrandie ×" + _zoom.ToString("0.##") +
+                    (_zoneIgnoree && _zoneIgnoreeConnue ? ", zone ignorée autour de (" + _zoneX.ToString("F0") + ", " +
+                                    _zoneY.ToString("F0") + ")"
+                     : _zoneIgnoree ? ", zone ignorée (position du regard pas encore connue)"
+                     : ", sans zone ignorée"));
             return true;
         }
 
