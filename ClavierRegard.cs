@@ -33,8 +33,10 @@ namespace GazeBar
     /// curseur de texte, et les touches simulées lui arrivent bien.
     ///
     /// Un bouton « Fermer le clavier » est placé au-dessus du clavier, à droite (en dessous
-    /// quand le clavier est en haut). On peut aussi le fermer depuis la barre de menu du clavier (regard sous
-    /// l'écran), ou avec la touche Échap d'un vrai clavier (pour l'aidant).
+    /// quand le clavier est en haut). On peut aussi le fermer avec la touche Échap d'un vrai
+    /// clavier (pour l'aidant), ou avec le bouton « Clavier » de la barre classique s'il est
+    /// caché par le mode jeu. (Le bouton Fermer de la barre du clavier a été retiré à l'étape
+    /// 14 : il faisait double emploi.)
     ///
     /// Les touches viennent d'un fichier de disposition (DispositionClavier, relu à chaque
     /// ouverture). Le texte tapé n'est JAMAIS écrit dans le journal (vie privée) : seules les

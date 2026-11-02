@@ -220,7 +220,8 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   arrière). Barre de menu du clavier (regard sous l'écran, qui remplace alors la barre
   classique) : Haut / bas (clavier en haut de l'écran, position retenue : `ClavierEnHaut`),
   Taille (100, 75 ou 50 %, largeur et hauteur ensemble, clavier centré : `TailleClavier`, aussi
-  dans les paramètres), Pause, Fermer. Quand elle s'ouvre, le clavier en bas remonte au-dessus
+  dans les paramètres), Pause (le bouton Fermer de cette barre a été retiré à l'étape 14 : il
+  doublait celui au-dessus du clavier). Quand elle s'ouvre, le clavier en bas remonte au-dessus
   d'elle en glissant (et redescend de même). Fermeture : bouton à droite au-dessus du clavier (en dessous s'il est en haut), barre
   du clavier, ou Échap. Tab est une vraie tabulation : sa largeur (2 ou 4 espaces) se règle
   dans le logiciel où l'on écrit. Le texte tapé n'est jamais écrit dans le journal.

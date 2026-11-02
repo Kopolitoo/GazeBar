@@ -22,10 +22,10 @@ namespace GazeBar
     ///
     /// Mise en page : la même que la liste de la configuration des icônes (étape 10) : écran
     /// noir, rectangle aux bords arrondis sur les trois quarts de l'écran, titre en haut,
-    /// grille d'au plus 4 colonnes × 3 rangées (12 par page), et en bas « Retour » (au clavier
-    /// pour Langue, aux paramètres pour Mes mots),
-    /// entouré de « Page précédente » et « Page suivante » quand la liste ne tient pas sur une
-    /// page.
+    /// grille d'au plus 4 colonnes × 3 rangées (12 par page). « Retour » (au clavier pour
+    /// Langue, aux paramètres pour Mes mots) est à droite de l'écran, centré verticalement, hors
+    /// du rectangle (02/11/2026). En bas du rectangle : « Page précédente » et « Page
+    /// suivante » quand la liste ne tient pas sur une page.
     ///
     /// Le clavier est caché pendant ce mode (ce n'est ni le mode mouvement ni le regard fixe)
     /// et réapparaît au retour en mode mouvement. Le menu du bas ne s'ouvre pas ici ; la
@@ -286,15 +286,21 @@ namespace GazeBar
             AjouterTexteCentre(calque, ecran, explication, centreX, yExplication, l, policeNom,
                                _message != null ? Brushes.Orange : Doux, false);
 
-            // ── La rangée du bas : Page précédente · Retour au clavier · Page suivante.
-            //    E72B / E72A = flèches gauche / droite, E711 = croix (fermer).
+            // ── « Retour » (croix E711) : à droite de l'écran, centré verticalement, EN DEHORS
+            //    du rectangle de la liste (au milieu de la marge de droite), pour ne pas le viser
+            //    en regardant un mot (demande de l'utilisateur du 02/11/2026).
+            string nomRetour = _sorte == Sorte.MesMots ? "Retour aux paramètres" : "Retour au clavier";
+            double margeDroite = largeur - (gauche + l);
+            double xRetour = gauche + l + margeDroite / 2;
+            double yRetour = hauteur / 2;
+            AjouterBouton(calque, ecran, new BoutonRegard("", null, nomRetour), Retour,
+                          xRetour, yRetour, taille);
+            AjouterTexteCentre(calque, ecran, nomRetour, xRetour, yRetour + taille / 2 + policeNom * 0.4,
+                               margeDroite - espace / 2, policeNom, Doux, false);
+
+            // ── La rangée du bas : Page précédente · Page suivante (E72B / E72A = flèches).
             double yBas = haut + h - taille / 2 - policeNom * 2.5;
             double pasBas = taille + 2 * espace;
-            string nomRetour = _sorte == Sorte.MesMots ? "Retour aux paramètres" : "Retour au clavier";
-            AjouterBouton(calque, ecran, new BoutonRegard("", null, nomRetour), Retour,
-                          centreX, yBas, taille);
-            AjouterTexteCentre(calque, ecran, nomRetour, centreX, yBas + taille / 2 + policeNom * 0.4,
-                               pasBas, policeNom, Doux, false);
             if (_page > 0)
             {
                 AjouterBouton(calque, ecran, new BoutonRegard("", null, "Page précédente"), () => ChangerPage(-1),
