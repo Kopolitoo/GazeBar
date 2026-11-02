@@ -1,0 +1,27 @@
+Dictionnaires/fr.txt — liste de mots français et de leurs fréquences
+====================================================================
+
+Ce fichier est tiré de la base de données lexicale Lexique 3.83 :
+    http://www.lexique.org
+
+Auteurs de Lexique : Boris New, Christophe Pallier et collaborateurs.
+À citer :
+  - New, B., Pallier, C., Brysbaert, M., Ferrand, L. (2004). Lexique 2 : A New French
+    Lexical Database. Behavior Research Methods, Instruments, & Computers, 36(3), 516-524.
+  - New, B., Pallier, C., Ferrand, L., Matos, R. (2001). Une base de données lexicales du
+    français contemporain sur internet : LEXIQUE. L'Année Psychologique, 101, 447-462.
+
+Licence : Creative Commons Attribution - Partage dans les mêmes conditions 4.0 International
+(CC BY-SA 4.0) : https://creativecommons.org/licenses/by-sa/4.0/deed.fr
+
+Modifications faites pour GazeBar (le 02/11/2026) :
+  - seule la colonne « ortho » (le mot écrit) est gardée ;
+  - fréquence = freqfilms2 + freqlivres (nombre d'occurrences par million de mots, dans des
+    sous-titres de films et dans des livres) ;
+  - les lignes d'un même mot écrit (homographes : « a » nom et « a » verbe…) sont fusionnées,
+    leurs fréquences additionnées ;
+  - les expressions de plusieurs mots séparés par une espace sont retirées ;
+  - format : une ligne par mot, « mot<Tabulation>fréquence » (point décimal), triée.
+
+Le fichier fr.txt, œuvre dérivée, est distribué sous la même licence CC BY-SA 4.0.
+Le reste de GazeBar reste sous licence MIT (voir LICENSE.txt à la racine du dépôt).

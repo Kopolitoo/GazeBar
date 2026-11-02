@@ -30,3 +30,6 @@ dictionnaire-perso*
 
 # Paquets NuGet téléchargés
 packages/
+
+# Dictionnaire personnel du clavier (normalement dans %APPDATA%\GazeBar, jamais dans le dépôt)
+dictionnaire-perso.json

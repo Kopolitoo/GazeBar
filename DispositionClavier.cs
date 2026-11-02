@@ -27,7 +27,7 @@ namespace GazeBar
     ///   "raccourci": "Ctrl+F"  un raccourci (Ctrl, Alt, Maj ou Win + une touche) ;
     ///   "page": "accents"      affiche une autre page ("retour" = la page d'avant) ;
     ///   "modificateur": "Maj"  Maj, VerrMaj (Caps Lock), Ctrl, Alt ou Win ;
-    ///   "prediction": 1        case de proposition de mot n° 1, 2 ou 3 (étape 13 : vides pour l'instant) ;
+    ///   "prediction": 1        case de proposition de mot n° 1, 2 ou 3 (remplie par la prédiction, étape 13) ;
     ///   "commande": "EffacerMot"  EffacerMot ou EffacerLettre.
     /// Et pour l'aspect :
     ///   "libelle"   le texte affiché sur la touche ;

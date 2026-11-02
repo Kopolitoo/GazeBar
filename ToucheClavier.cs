@@ -50,6 +50,9 @@ namespace GazeBar
         private static readonly Brush Blanc = Figer(Colors.White);
         private static readonly Brush Gris = Figer(Color.FromArgb(0xFF, 0x90, 0x90, 0x90));
         private static readonly Brush Vert = Figer(Color.FromArgb(0xFF, 0x00, 0xC8, 0x53));
+        // Étape 13 : couleur du texte de la case « + monmot » (mot inconnu à ajouter), pour la
+        // distinguer d'une proposition ordinaire (ambre).
+        private static readonly Brush Ambre = Figer(Color.FromArgb(0xFF, 0xFF, 0xC8, 0x57));
 
         private readonly Border _fond;
         private readonly TextBlock _texte;
@@ -75,12 +78,18 @@ namespace GazeBar
         private double _droite;
         private double _bas;
 
+        // Taille du dessin de la touche, en unités WPF (retenue par Placer) : sert à choisir la
+        // taille du texte d'une proposition, qui change à chaque lettre tapée (étape 13).
+        private double _largeurWpf;
+        private double _hauteurCaseWpf;
+
         /// <summary>Crée la touche décrite par le fichier de disposition.</summary>
         public ToucheClavier(ToucheDisposition description)
         {
             Description = description;
 
-            // Une case de proposition (étape 13) ne s'active pas encore : elle est vide.
+            // Une case de proposition (étape 13) est vide, donc inactive, tant qu'elle ne
+            // montre pas de mot (voir AfficherProposition).
             Actif = !description.Prediction.HasValue;
 
             string style = (description.Style ?? "").Trim().ToLowerInvariant();
@@ -100,7 +109,9 @@ namespace GazeBar
             // (⌫, ⇧, ␣, ↺…).
             _texte.FontFamily = new FontFamily("Segoe UI, Segoe UI Symbol");
             _texte.TextAlignment = TextAlignment.Center;
-            _texte.TextWrapping = TextWrapping.Wrap;
+            // Une proposition reste sur une ligne (un long mot est écrit plus petit, voir
+            // AfficherProposition) ; les autres libellés peuvent tenir sur deux lignes.
+            _texte.TextWrapping = description.Prediction.HasValue ? TextWrapping.NoWrap : TextWrapping.Wrap;
             _texte.HorizontalAlignment = HorizontalAlignment.Center;
             _texte.VerticalAlignment = VerticalAlignment.Center;
 
@@ -117,7 +128,7 @@ namespace GazeBar
         /// <summary>Ce que dit le fichier de disposition pour cette touche.</summary>
         public ToucheDisposition Description { get; private set; }
 
-        /// <summary>Faux pour une case de proposition (vide jusqu'à l'étape 13).</summary>
+        /// <summary>Faux pour une case de proposition vide (aucun mot à proposer).</summary>
         public bool Actif { get; private set; }
 
         /// <summary>
@@ -147,6 +158,12 @@ namespace GazeBar
             double hauteurCase = calque.LongueurVersWpf(hauteur);
             _texte.FontSize = Math.Max(1, hauteurCase * (libelle.Length <= 2 ? 0.30 : 0.20));
             _texte.Margin = new Thickness(Ecran.Unites(4));
+            _largeurWpf = l;
+            _hauteurCaseWpf = hauteurCase;
+            if (Description.Prediction.HasValue)
+            {
+                AjusterTaillePolice();
+            }
 
             surface.Children.Add(_fond);
         }
@@ -157,12 +174,51 @@ namespace GazeBar
         /// </summary>
         public void AfficherMajuscules(bool majuscules)
         {
+            if (Description.Prediction.HasValue)
+            {
+                return;   // une case de proposition a son propre texte (AfficherProposition)
+            }
             string libelle = Description.Libelle ?? "";
             if (majuscules && Description.Texte != null)
             {
                 libelle = Description.TexteMaj ?? libelle.ToUpper(CultureInfo.CurrentCulture);
             }
             _texte.Text = libelle;
+        }
+
+        /// <summary>
+        /// Étape 13 : le mot montré dans une case de proposition. null = case vide (elle ne
+        /// s'active pas). nouveau = vrai pour la case « + monmot » (mot inconnu à ajouter au
+        /// dictionnaire personnel), écrite en ambre.
+        /// </summary>
+        public void AfficherProposition(string texte, bool nouveau)
+        {
+            if (!Description.Prediction.HasValue)
+            {
+                return;
+            }
+            Actif = !string.IsNullOrEmpty(texte);
+            _texte.Text = texte ?? "";
+            _texte.Foreground = nouveau ? Ambre : Blanc;
+            AjusterTaillePolice();
+        }
+
+        /// <summary>
+        /// Taille du texte d'une proposition : comme un mot sur une touche (20 % de la hauteur
+        /// de la case… un peu plus : 24 %), mais plus petite si le mot est trop long pour la
+        /// largeur. Une lettre de Segoe UI fait en moyenne un peu plus de la moitié de la taille
+        /// du texte en largeur : on compte 0,55.
+        /// </summary>
+        private void AjusterTaillePolice()
+        {
+            if (_hauteurCaseWpf <= 0)
+            {
+                return;   // pas encore placée : Placer s'en chargera
+            }
+            int nombre = Math.Max(1, (_texte.Text ?? "").Length);
+            double largeurUtile = Math.Max(1, _largeurWpf - 2 * Ecran.Unites(8));
+            double taille = Math.Min(_hauteurCaseWpf * 0.24, largeurUtile / (0.55 * nombre));
+            _texte.FontSize = Math.Max(1, taille);
         }
 
         /// <summary>Bord vert pour un modificateur actif (Maj, Caps Lock, Ctrl, Alt, Win).</summary>
