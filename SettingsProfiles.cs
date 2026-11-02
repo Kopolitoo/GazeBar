@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace GazeBar
 {
@@ -38,8 +39,8 @@ namespace GazeBar
     ///
     /// What this class does (design validated by the user on 2026-11-02):
     ///   - List: the .json files of the folder, the most recent first;
-    ///   - SaveCurrent: writes the current settings under an automatically dated name.
-    ///     To give it a real name, the caregiver renames the file in Explorer;
+    ///   - Save: writes the current settings under the name typed with the gaze keyboard
+    ///     (request of 2026-11-02; the dated name SuggestedName is offered by default);
     ///   - Load: reads a profile (a file from an older version is converted, like
     ///     settings.json at startup), first keeps the current settings in the "automatic
     ///     backup" profile (replaced on each load: this way one can go back with the gaze),
@@ -50,6 +51,8 @@ namespace GazeBar
     /// file: it does not change either.
     ///
     /// No deleting or renaming with the gaze: the caregiver does it in Explorer.
+    ///
+    /// Profile names are typed by the user: they are not written to the log.
     /// </summary>
     internal static class SettingsProfiles
     {
@@ -102,25 +105,105 @@ namespace GazeBar
             return profiles;
         }
 
-        /// <summary>
-        /// "Save the current settings" button: writes AppSettings.Current into a new profile
-        /// named with the date and time, for example "Réglages 2026-11-02 16h45". If this name
-        /// already exists (two saves in the same minute), "(2)", "(3)"... is added.
-        /// Returns true on success; "message" is the sentence to show in the tab.
-        /// </summary>
-        public static bool SaveCurrent(out string message)
-        {
-            string name = Texts.Format("profiles.fileName", DateTime.Now.ToString("yyyy-MM-dd HH'h'mm"));
-            string path = Path.Combine(Folder, name + ".json");
-            for (int num = 2; File.Exists(path); num++)
-            {
-                path = Path.Combine(Folder, name + " (" + num + ").json");
-            }
-            name = Path.GetFileNameWithoutExtension(path);
+        /// <summary>Longest profile name that can be typed (characters).</summary>
+        public const int NameMaxLength = 60;
 
+        /// <summary>
+        /// The name suggested when saving: the date and time, for example
+        /// "Réglages 2026-11-02 16h45" (in the interface language). The user can keep it or
+        /// type another one (request of 2026-11-02).
+        /// </summary>
+        public static string SuggestedName()
+        {
+            return Texts.Format("profiles.fileName", DateTime.Now.ToString("yyyy-MM-dd HH'h'mm"));
+        }
+
+        /// <summary>
+        /// Turns the typed text into a usable file name: the characters Windows refuses in a
+        /// file name (\ / : * ? " &lt; &gt; | and line ends) are removed, spaces are
+        /// gathered, and spaces and dots at the ends are removed (Windows drops them).
+        /// Returns "" if nothing is left. "error" is the sentence to show when the name cannot
+        /// be used (empty, too long, reserved), otherwise null.
+        /// </summary>
+        public static string CleanName(string typed, out string error)
+        {
+            error = null;
+            StringBuilder clean = new StringBuilder();
+            char[] invalid = Path.GetInvalidFileNameChars();
+            foreach (char c in typed ?? "")
+            {
+                if (char.IsWhiteSpace(c))
+                {
+                    // One space only, never at the start.
+                    if (clean.Length > 0 && clean[clean.Length - 1] != ' ')
+                    {
+                        clean.Append(' ');
+                    }
+                }
+                else if (Array.IndexOf(invalid, c) < 0)
+                {
+                    clean.Append(c);
+                }
+            }
+            string name = clean.ToString().Trim(' ', '.');
+
+            if (name.Length == 0)
+            {
+                error = Texts.Get("profiles.nameEmpty");
+            }
+            else if (name.Length > NameMaxLength)
+            {
+                error = Texts.Format("profiles.nameTooLong", NameMaxLength);
+            }
+            else if (IsReserved(name))
+            {
+                error = Texts.Format("profiles.nameReserved", name);
+            }
+            return name;
+        }
+
+        /// <summary>
+        /// True for a name that cannot be used: the automatic backup (it is replaced at each
+        /// load) and the names Windows keeps for devices (CON, PRN, AUX, NUL, COM1…, LPT1…).
+        /// </summary>
+        private static bool IsReserved(string name)
+        {
+            string upper = name.ToUpperInvariant();
+            if (upper == BackupName.ToUpperInvariant() ||
+                upper == "CON" || upper == "PRN" || upper == "AUX" || upper == "NUL")
+            {
+                return true;
+            }
+            return upper.Length == 4 && (upper.StartsWith("COM") || upper.StartsWith("LPT")) &&
+                   upper[3] >= '1' && upper[3] <= '9';
+        }
+
+        /// <summary>True if a profile with this name (already cleaned) exists.</summary>
+        public static bool Exists(string name)
+        {
+            try
+            {
+                return File.Exists(Path.Combine(Folder, name + ".json"));
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Writes AppSettings.Current into the profile "name" (already cleaned with CleanName).
+        /// An existing profile with this name is replaced: the settings window asks first.
+        /// Returns true on success; "message" is the sentence to show in the tab.
+        /// The name is typed by the user: it is NOT written to the log (typed text is never
+        /// logged).
+        /// </summary>
+        public static bool Save(string name, out string message)
+        {
+            string path = Path.Combine(Folder, name + ".json");
             if (AppSettings.Current.SaveTo(path))
             {
-                App.Log("Profiles: current settings saved in \"" + name + "\"");
+                App.Log("Profiles: current settings saved in a profile");
                 message = Texts.Format("profiles.saved", name);
                 return true;
             }
@@ -155,19 +238,19 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("Profiles: \"" + name + "\" unreadable: " + ex.Message);
+                App.Log("Profiles: profile unreadable: " + ex.Message);
                 message = Texts.Format("profiles.unreadable", name);
                 return false;
             }
             if (updated)
             {
-                App.Log("Profiles: \"" + name + "\" came from an older version, converted");
+                App.Log("Profiles: profile from an older version, converted");
             }
             else if (newItems.FileVersion > AppSettings.CurrentVersion)
             {
                 // Profile written by a newer version of GazeBar: the settings unknown to this
                 // version are simply ignored.
-                App.Log("Profiles: \"" + name + "\" comes from a newer version (" + newItems.FileVersion + ")");
+                App.Log("Profiles: profile from a newer version (" + newItems.FileVersion + ")");
             }
 
             // 2. Keep the current settings.
@@ -190,7 +273,7 @@ namespace GazeBar
             newItems.Save();
             WheelScroller.Apply(newItems.ScrollInactiveWindows);
 
-            App.Log("Profiles: profile \"" + name + "\" loaded");
+            App.Log(name == BackupName ? "Profiles: automatic backup loaded" : "Profiles: profile loaded");
             message = Texts.Format("profiles.loaded", name == BackupName ? Texts.Get("profiles.backupName") : name,
                                    Texts.Get("profiles.backupName"));
             return true;

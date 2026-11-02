@@ -30,8 +30,13 @@ namespace GazeBar
     /// starts the tool and changes mode.
     ///
     /// Step 15: a "Profils" tab (Système category), with two big buttons:
-    ///   - "Enregistrer les réglages actuels": done right here (SettingsProfiles), a
-    ///     message gives the name of the created profile;
+    ///   - "Enregistrer les réglages actuels": opens the NAME page (request of
+    ///     2026-11-02): a text box, filled with the dated name, where the user types the
+    ///     profile name with the gaze keyboard (the mode shows it: NamingStarted /
+    ///     NamingEnded), then "Enregistrer" or "Annuler". The page sits in the part of the
+    ///     screen the keyboard leaves free (SetKeyboardZone). If the name already exists, a
+    ///     "Oui / Non" question asks before replacing it. Then a message gives the name of
+    ///     the saved profile;
     ///   - "Charger un profil": notifies the mode (ProfileListRequested), which opens the
     ///     full-screen profile list. The chosen profile comes back here as a "Oui / Non"
     ///     confirmation (constructor, "profileToConfirm"); "Oui" notifies the mode
@@ -112,6 +117,22 @@ namespace GazeBar
         // profil … ? Oui / Non"), or null.
         private FoundProfile _profileToConfirm;
 
+        // Profile name page (2026-11-02): open or not, its text box, the typed text (kept
+        // when the page is rebuilt), "select all" at the first showing (the first letter typed
+        // replaces the suggested name), the name waiting for "replace it?" (or null), and the
+        // sentence under the box (error, or null for the help).
+        private bool _naming;
+        private TextBox _nameBox;
+        private string _nameText;
+        private bool _selectName;
+        private string _nameToReplace;
+        private string _nameError;
+
+        // The part of the page left free by the gaze keyboard, in page units (whole page
+        // below the title when the keyboard is not shown).
+        private double _freeTop = TopRow;
+        private double _freeBottom = PageHeight;
+
         // The keyboard input in progress (null = none).
         private Setting _editedSetting;
         private TextBox _input;
@@ -187,6 +208,42 @@ namespace GazeBar
         /// <summary>"Oui" to the question "Charger le profil … ?" (step 15): the profile to load.</summary>
         public event Action<FoundProfile> ProfileLoadRequested;
 
+        /// <summary>The profile name page opens: the mode shows the gaze keyboard (2026-11-02).</summary>
+        public event Action NamingStarted;
+
+        /// <summary>The profile name page closes: the mode hides the gaze keyboard.</summary>
+        public event Action NamingEnded;
+
+        /// <summary>
+        /// The gaze keyboard is shown between "top" and "bottom" (page units, see ToPage), or
+        /// not shown (top = bottom). The name page goes into the larger free part, above or
+        /// below the keyboard, and is rebuilt.
+        /// </summary>
+        public void SetKeyboardZone(double top, double bottom)
+        {
+            top = Math.Max(0, Math.Min(PageHeight, top));
+            bottom = Math.Max(0, Math.Min(PageHeight, bottom));
+            if (bottom - top < 1)
+            {
+                _freeTop = TopRow;
+                _freeBottom = PageHeight;
+            }
+            else if (top - TopRow >= PageHeight - bottom)
+            {
+                _freeTop = TopRow;          // keyboard at the bottom: the page above it
+                _freeBottom = top;
+            }
+            else
+            {
+                _freeTop = bottom;          // keyboard at the top: the page below it
+                _freeBottom = PageHeight;
+            }
+            if (_naming)
+            {
+                Build();
+            }
+        }
+
         /// <summary>
         /// Shows a message in the open tab ("Outils": calibration could not be started;
         /// "Profils": the profile is loaded…). The page is rebuilt to show it.
@@ -254,6 +311,19 @@ namespace GazeBar
         /// </summary>
         public bool CancelInput()
         {
+            // Profile name page: Escape answers "Non" to "replace it?", otherwise cancels.
+            if (_naming)
+            {
+                if (_nameToReplace != null)
+                {
+                    CancelReplace();
+                }
+                else
+                {
+                    CancelNaming();
+                }
+                return true;
+            }
             if (_editedSetting == null)
             {
                 return false;
@@ -371,7 +441,11 @@ namespace GazeBar
 
             // ── The content: the settings, or the "Défaut" confirmation, or the profile
             //    load confirmation (step 15).
-            if (_confirmation)
+            if (_naming)
+            {
+                BuildNamingPage();
+            }
+            else if (_confirmation)
             {
                 BuildConfirmation(tab);
             }
@@ -764,13 +838,208 @@ namespace GazeBar
             AddTarget(1040, 480, 300, SideButton, Word(Texts.Get("common.no"), 42), CancelProfile, false, false);
         }
 
-        /// <summary>"Enregistrer les réglages actuels" button: a new dated profile.</summary>
+        /// <summary>
+        /// "Enregistrer les réglages actuels" button: opens the name page, with the dated
+        /// name already written (it can be kept as it is). The mode shows the keyboard.
+        /// </summary>
         private void SaveProfile()
         {
             ConfirmInput();
+            App.Log("Profiles: name page opened");
+            _naming = true;
+            _nameText = SettingsProfiles.SuggestedName();
+            _selectName = true;
+            _nameToReplace = null;
+            _nameError = null;
+            _message = null;
+            Build();
+            Notify(NamingStarted);
+        }
+
+        /// <summary>
+        /// The profile name page, in the part of the page left free by the keyboard:
+        ///   - its title;
+        ///   - the text box, then "Enregistrer" (E74E = floppy disk) and "Annuler" (E711 =
+        ///     cross) on the same row, so that everything fits even above a tall keyboard;
+        ///   - below: the help, or the error (empty name…).
+        /// Or, when the name already exists, the question "Le remplacer ?" with "Oui / Non".
+        /// The box has the keyboard focus: the keys of the gaze keyboard (and of a real
+        /// keyboard) reach it. Enter saves.
+        /// </summary>
+        private void BuildNamingPage()
+        {
+            _nameBox = null;
+            if (_nameToReplace != null)
+            {
+                const double QuestionHeight = 270;
+                double yq = NamingTop(QuestionHeight);
+                TextBlock question = Text(Texts.Format("settings.profiles.replaceQuestion", _nameToReplace), 40, White, true);
+                question.TextWrapping = TextWrapping.Wrap;
+                question.Width = 1140;
+                Place(question, LeftContent, yq);
+                AddTarget(640, yq + 140, 300, SideButton, Word(Texts.Get("common.yes"), 42), ConfirmReplace, false, false);
+                AddTarget(1040, yq + 140, 300, SideButton, Word(Texts.Get("common.no"), 42), CancelReplace, false, false);
+                return;
+            }
+
+            const double ContentHeight = 260;
+            const double RowHeight = 130;
+            const double BoxWidth = 680;
+            const double ButtonWidth = 240;
+            double y = NamingTop(ContentHeight);
+
+            Place(Text(Texts.Get("settings.profiles.nameTitle"), 36, White, true), LeftContent, y);
+
+            TextBox box = new TextBox();
+            box.Text = _nameText ?? "";
+            box.MaxLength = SettingsProfiles.NameMaxLength;
+            box.FontSize = 46;
+            box.FontFamily = new FontFamily("Segoe UI");
+            box.Width = BoxWidth;
+            box.Height = RowHeight;
+            box.VerticalContentAlignment = VerticalAlignment.Center;
+            box.Padding = new Thickness(16, 0, 16, 0);
+            box.TextChanged += (s, e) => _nameText = box.Text;
+            box.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    e.Handled = true;
+                    ConfirmName();
+                }
+            };
+            // The focus once the box is really shown (and again if Windows gave it back late).
+            box.Loaded += (s, e) => FocusNameBox(box);
+            Place(box, LeftContent, y + 60);
+            _nameBox = box;
+
+            AddTarget(LeftContent + BoxWidth + 20, y + 60, ButtonWidth, RowHeight,
+                         SymbolAndWord("\uE74E", Texts.Get("settings.profiles.nameSave")), ConfirmName, false, false);
+            AddTarget(LeftContent + BoxWidth + ButtonWidth + 40, y + 60, ButtonWidth, RowHeight,
+                         SymbolAndWord("\uE711", Texts.Get("common.cancel")), CancelNaming, false, false);
+
+            TextBlock below = _nameError == null
+                ? Text(Texts.Get("settings.profiles.nameHelp"), 23, Soft, false)
+                : Text(_nameError, 28, SettingTarget.Accent, true);
+            below.TextWrapping = TextWrapping.Wrap;
+            below.Width = 1180;
+            Place(below, LeftContent, y + 60 + RowHeight + 14);
+        }
+
+        /// <summary>
+        /// Top of the name page: centred in the free part of the page, but never above it
+        /// (if the keyboard is very tall, the page starts at the top of the free part).
+        /// </summary>
+        private double NamingTop(double height)
+        {
+            double free = _freeBottom - _freeTop;
+            return _freeTop + Math.Max(10, (free - height) / 2);
+        }
+
+        /// <summary>
+        /// Gives the keyboard focus to the name box: the window is activated first, otherwise
+        /// the simulated keys would go to another window. At the first showing, the whole
+        /// suggested name is selected (the first letter typed replaces it); otherwise the text
+        /// cursor goes to the end.
+        /// </summary>
+        private void FocusNameBox(TextBox box)
+        {
+            if (box != _nameBox)
+            {
+                return;   // the page was rebuilt in the meantime
+            }
+            Activate();
+            box.Focus();
+            Keyboard.Focus(box);
+            if (_selectName)
+            {
+                box.SelectAll();
+                _selectName = false;
+            }
+            else
+            {
+                box.CaretIndex = box.Text.Length;
+            }
+        }
+
+        /// <summary>
+        /// "Enregistrer" (or Enter): the typed name is cleaned (characters Windows refuses
+        /// are removed). Empty or reserved name: the error is shown under the box. Name already
+        /// used: the question "Le remplacer ?". Otherwise the profile is saved.
+        /// </summary>
+        private void ConfirmName()
+        {
+            if (!_naming || _nameToReplace != null)
+            {
+                return;
+            }
+            string error;
+            string name = SettingsProfiles.CleanName(_nameText, out error);
+            if (error != null)
+            {
+                _nameError = error;
+                Build();
+                return;
+            }
+            if (SettingsProfiles.Exists(name))
+            {
+                App.Log("Profiles: name already used, asking before replacing");
+                _nameToReplace = name;
+                Build();
+                return;
+            }
+            SaveNamedProfile(name);
+        }
+
+        /// <summary>"Oui" to "Le remplacer ?": the existing profile is replaced.</summary>
+        private void ConfirmReplace()
+        {
+            string name = _nameToReplace;
+            _nameToReplace = null;
+            if (name != null)
+            {
+                SaveNamedProfile(name);
+            }
+        }
+
+        /// <summary>"Non" to "Le remplacer ?": back to the name box, the typed text is kept.</summary>
+        private void CancelReplace()
+        {
+            _nameToReplace = null;
+            _nameError = null;
+            Build();
+        }
+
+        /// <summary>Saves the profile, closes the name page and shows the result.</summary>
+        private void SaveNamedProfile(string name)
+        {
             string message;
-            SettingsProfiles.SaveCurrent(out message);
-            ShowMessage(message);
+            SettingsProfiles.Save(name, out message);
+            EndNaming(message);
+        }
+
+        /// <summary>"Annuler": nothing is saved, back to the "Profils" tab.</summary>
+        private void CancelNaming()
+        {
+            App.Log("Profiles: save cancelled");
+            EndNaming(null);
+        }
+
+        /// <summary>Closes the name page: the mode hides the keyboard, the tab is shown again.</summary>
+        private void EndNaming(string message)
+        {
+            bool wasNaming = _naming;
+            _naming = false;
+            _nameBox = null;
+            _nameText = null;
+            _nameToReplace = null;
+            _nameError = null;
+            _message = message;
+            if (wasNaming)
+            {
+                Notify(NamingEnded);
+            }
+            Build();
         }
 
         /// <summary>"Oui": the mode loads the profile (then shows the message here).</summary>
@@ -906,6 +1175,15 @@ namespace GazeBar
 
         private void ChooseTab(int num)
         {
+            if (_naming)
+            {
+                // Another tab (with the mouse, the categories being under the keyboard): the
+                // name page is left without saving.
+                _naming = false;
+                _nameBox = null;
+                _nameToReplace = null;
+                Notify(NamingEnded);
+            }
             _tab = num;
             _confirmation = false;
             _profileToConfirm = null;

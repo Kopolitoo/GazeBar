@@ -94,6 +94,12 @@ namespace GazeBar
         // True when the keyboard is really drawn on screen.
         private bool _visible;
 
+        // Profile name (2026-11-02): true while the keyboard is shown in the settings to type
+        // a profile name (ShowForInput); _openedForInput: it was closed before and opened only
+        // for that, so it closes again afterwards (EndInput).
+        private bool _shownForInput;
+        private bool _openedForInput;
+
         // Room kept free at the bottom of the screen, in pixels: the height of the keyboard
         // menu bar when it is open (see SetBottomReserve), 0 otherwise.
         private double _bottomReserve;
@@ -217,6 +223,8 @@ namespace GazeBar
         /// <summary>Closes the keyboard (Close button, keyboard menu bar, Escape key).</summary>
         public void Close()
         {
+            _shownForInput = false;
+            _openedForInput = false;
             if (!IsOpen)
             {
                 return;
@@ -236,6 +244,10 @@ namespace GazeBar
         /// </summary>
         public void OnModeChange(Mode newVal)
         {
+            // A profile name input does not outlive the settings (SettingsMode.Quit already
+            // ends it: this is only a safety net).
+            EndInput();
+
             MenuMode menu = newVal as MenuMode;
             bool show = IsOpen &&
                             (newVal is MovementMode || newVal is FixedGazeMode ||
@@ -258,6 +270,73 @@ namespace GazeBar
                 // more, and the one under the gaze waits for the gaze to leave it.
                 _aimer.ResetAndBlock();
                 RedrawWithoutHover();
+            }
+        }
+
+        /// <summary>
+        /// Profile name (request of 2026-11-02): shows the keyboard in the settings, so that
+        /// the user can type the name of the profile to save. The keys go, as always, to the
+        /// active window: here the settings window, whose text box has the focus.
+        /// If the keyboard was closed, it is opened for this input only (EndInput closes it
+        /// again). Returns false if it cannot be shown (missing layout…): the caregiver can
+        /// still type the name with a real keyboard.
+        /// The settings mode passes it the gaze (Update) while it is shown.
+        /// </summary>
+        public bool ShowForInput()
+        {
+            if (!_shownForInput)
+            {
+                _openedForInput = false;
+                if (!IsOpen)
+                {
+                    string message;
+                    if (!Open(out message))
+                    {
+                        App.Log("Keyboard: cannot open for the profile name (" + message + ")");
+                        return false;
+                    }
+                    _openedForInput = true;
+                }
+                _shownForInput = true;
+                ForgetState();   // a new text box: nothing typed yet, no modifier
+            }
+            Build();
+            // The settings window is "always on top" too: the overlay is put back above it.
+            _layer.BringToFront();
+            return _visible;
+        }
+
+        /// <summary>
+        /// End of the profile name input (saved, cancelled, or the settings are left): the
+        /// keyboard is hidden, and closed again if it was opened only for this input.
+        /// </summary>
+        public void EndInput()
+        {
+            if (!_shownForInput)
+            {
+                return;
+            }
+            bool close = _openedForInput;
+            _shownForInput = false;
+            _openedForInput = false;
+            Hide();
+            ForgetPosition();
+            if (close)
+            {
+                Close();
+            }
+        }
+
+        /// <summary>
+        /// The keyboard rectangle in screen pixels (without its Close button), or Rect.Empty
+        /// when it is not shown. Used by the settings window to place the profile name page
+        /// in the part of the screen the keyboard leaves free.
+        /// </summary>
+        public Rect ScreenBounds
+        {
+            get
+            {
+                return _visible ? new Rect(_left, _top, _right - _left, _bottom - _top) : Rect.Empty;
             }
         }
 

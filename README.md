@@ -114,9 +114,11 @@ that is drawn, except the gaze settings. The overlay texts also follow the Windo
 (Accessibility). Changes of resolution, scaling and text size are detected while GazeBar runs.
 
 **Settings profiles** (step 15, `SettingsProfiles.cs`): "Profiles" tab of the settings (System
-category). "Save the current settings" copies the settings to
-`Documents\GazeBar\Profiles\Settings YYYY-MM-DD HHhMM.json` (the file name is in the interface
-language); the caregiver can rename or delete these files in File Explorer. "Load a profile"
+category). "Save the current settings" opens a name page: a text box already holding a dated
+name (`Settings YYYY-MM-DD HHhMM`, in the interface language) that the user can keep or replace
+with the gaze keyboard, shown for this input; "Save" (or Enter) copies the settings to
+`Documents\GazeBar\Profiles\<name>.json` (if the name exists, a question asks before replacing
+it), "Cancel" saves nothing. The caregiver can rename or delete these files in File Explorer. "Load a profile"
 shows the `.json` files of this folder as large buttons (the most recent first, 12 per page);
 after "Yes", the current settings are kept in "Automatic backup" (file `auto-backup.json`,
 replaced at each load, to go back with the eyes), then the profile is applied at once and saved
@@ -404,8 +406,9 @@ English keyboard test: keyboard open, "Keyboard layout": the list shows "English
 "bonj" still suggests "bonjour". Settings, General, "Language" → English; back to the keyboard:
 "th" suggests "the", "that", "this" (or close), "don" and "don'" suggest "don't".
 
-Step 15 test: Settings, System, Profiles, "Save the current settings": the message gives the
-name of the profile, and the file appears in `Documents\GazeBar\Profiles`. Change the circle
+Step 15 test: Settings, System, Profiles, "Save the current settings": the gaze keyboard
+appears with the name page; type "Evening", look at "Save": the message gives the name of the
+profile, and the file appears in `Documents\GazeBar\Profiles`. Change the circle
 radius (Display). Profiles, "Load a profile": the list shows the profile; look at it: "Load the
 profile …?"; "No" changes nothing; "Yes" restores the old radius and creates "Automatic backup".
 Loading "Automatic backup" restores the changed radius.

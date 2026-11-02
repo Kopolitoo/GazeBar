@@ -37,6 +37,10 @@ namespace GazeBar
     /// (KeyboardListMode, kind Profiles), which comes back here with the chosen profile: the
     /// window then asks for confirmation. "Yes": LoadProfile (below) applies the profile, then
     /// the keyboard reloads its layout (the language may have changed).
+    /// "Save the current settings" opens the profile NAME page (request of 2026-11-02): this
+    /// mode then shows the gaze keyboard (GazeKeyboard.ShowForInput) and gives it the gaze when
+    /// the gaze is on it; elsewhere, the window's targets react as usual. The keys go to the
+    /// window's text box, which has the keyboard focus.
     ///
     /// Exit: "Back" button (in the middle of the right edge) or the caregiver's Escape key,
     /// to movement mode. The bottom menu does not open here (Mode.MenuAllowed stays "no",
@@ -100,6 +104,8 @@ namespace GazeBar
             window.MyWordsRequested += OpenMyWords;
             window.ProfileListRequested += OpenProfileList;
             window.ProfileLoadRequested += LoadProfile;
+            window.NamingStarted += ShowKeyboard;
+            window.NamingEnded += HideKeyboard;
             _aimer = new ButtonAimer(window.Targets);
             _version = -1;
             _repeatedTarget = -1;
@@ -138,8 +144,26 @@ namespace GazeBar
 
             // 2. The gaze, converted to page coordinates. GazeState is a "struct": onPage is a
             //    copy, X and Y can be changed without touching the original.
+            //    Profile name page: when the gaze is on the gaze keyboard, the keys react and
+            //    the window's targets do not (the gaze is sent far away from them).
+            GazeKeyboard keyboard = Manager.Keyboard;
+            bool onKeyboard = gaze.OnScreen && keyboard.Contains(gaze.X, gaze.Y);
+            bool keyboardShown = keyboard.Visible;
+            keyboard.Update(gaze);
+            if (keyboardShown && !keyboard.Visible)
+            {
+                // Its "Close" button was looked at: the name page takes the whole height
+                // again (the name can still be typed with a real keyboard).
+                _window.SetKeyboardZone(0, 0);
+                return;
+            }
             GazeState onPage = gaze;
-            if (gaze.Available)
+            if (onKeyboard)
+            {
+                onPage.X = -10000;
+                onPage.Y = -10000;
+            }
+            else if (gaze.Available)
             {
                 Point point = _window.ToPage(gaze.X, gaze.Y);
                 onPage.X = point.X;
@@ -199,7 +223,12 @@ namespace GazeBar
                 window.MyWordsRequested -= OpenMyWords;
                 window.ProfileListRequested -= OpenProfileList;
                 window.ProfileLoadRequested -= LoadProfile;
+                window.NamingStarted -= ShowKeyboard;
+                window.NamingEnded -= HideKeyboard;
                 window.CloseSettings();
+                // A profile name being typed: the keyboard is hidden (and closed again if it
+                // was opened only for the name).
+                Manager.Keyboard.EndInput();
             }
         }
 
@@ -213,6 +242,12 @@ namespace GazeBar
             if (_window != null)
             {
                 _window.AdaptToScreen();
+                // The keyboard has been redrawn at the new sizes (ModeManager): the name page
+                // is placed again beside it.
+                if (Manager.Keyboard.Visible)
+                {
+                    SendKeyboardZone();
+                }
             }
             return true;
         }
@@ -270,6 +305,47 @@ namespace GazeBar
             {
                 _window.ShowMessage(message);
             }
+        }
+
+        /// <summary>
+        /// The profile name page opens (2026-11-02): the gaze keyboard is shown at its usual
+        /// place (bottom or top, usual size), and the window places the page in the free part.
+        /// If it cannot be shown, the page uses the whole height (real keyboard only).
+        /// </summary>
+        private void ShowKeyboard()
+        {
+            if (_window == null)
+            {
+                return;
+            }
+            if (Manager.Keyboard.ShowForInput())
+            {
+                SendKeyboardZone();
+            }
+            else
+            {
+                _window.SetKeyboardZone(0, 0);
+            }
+        }
+
+        /// <summary>Tells the window where the keyboard is, in page units.</summary>
+        private void SendKeyboardZone()
+        {
+            Rect bounds = Manager.Keyboard.ScreenBounds;
+            if (bounds.IsEmpty)
+            {
+                _window.SetKeyboardZone(0, 0);
+                return;
+            }
+            Point top = _window.ToPage(bounds.Left, bounds.Top);
+            Point bottom = _window.ToPage(bounds.Left, bounds.Bottom);
+            _window.SetKeyboardZone(top.Y, bottom.Y);
+        }
+
+        /// <summary>The profile name page closes: the keyboard is hidden again.</summary>
+        private void HideKeyboard()
+        {
+            Manager.Keyboard.EndInput();
         }
 
         /// <summary>
