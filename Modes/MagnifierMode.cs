@@ -293,16 +293,13 @@ namespace GazeBar
             {
                 // Drag and drop: (x, y) is the drop point. The cursor stays on the start point;
                 // the execution will take it there, button pressed.
-                App.Log("Magnifier: drag end point refined at (" + x.ToString("F0") + ", " +
-                        y.ToString("F0") + "), instead of (" + _px.ToString("F0") + ", " + _py.ToString("F0") + ")");
+                App.Log("Magnifier: drag end point refined");
                 Manager.ChangeMode(new DragExecutionMode(_drag, x, y));
                 return;
             }
 
             NativeMethods.SetCursorPos((int)Math.Round(x), (int)Math.Round(y));
-            App.Log("Magnifier: fixation at (" + fx.ToString("F0") + ", " + fy.ToString("F0") +
-                    ") on the photo → cursor at (" + x.ToString("F0") + ", " + y.ToString("F0") +
-                    "), instead of (" + _px.ToString("F0") + ", " + _py.ToString("F0") + ")");
+            App.Log("Magnifier: fixation on the photo, cursor placed");
 
             Manager.ChangeMode(new ActionChoiceMode(x, y));
         }

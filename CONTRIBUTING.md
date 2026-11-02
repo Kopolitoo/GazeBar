@@ -22,6 +22,8 @@ Thank you for your interest in GazeBar, a Windows tool that controls the mouse w
 - The personal dictionary (`%APPDATA%\GazeBar\personal-dictionary.json`) and any personal
   data stay out of the repository.
 - Typed text is never written to the log.
+- Gaze data is never saved (eyetracker licence): no positions file, no gaze coordinates in the
+  log. Showing them live on screen is fine.
 
 ## Testing
 

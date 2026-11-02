@@ -333,8 +333,7 @@ namespace GazeBar
             // ... and released just after. (Movement mode will then deactivate them.)
             Modifiers.ReleaseAll();
 
-            App.Log(_chosenAction + " at (" + _px.ToString("F0") + ", " + _py.ToString("F0") +
-                    "), modifiers: " + modifiers);
+            App.Log(_chosenAction + ", modifiers: " + modifiers);
 
             // Back to movement mode (user's choice). A new fixation at the same place is ignored
             // until the gaze has left it, as after a direct click.

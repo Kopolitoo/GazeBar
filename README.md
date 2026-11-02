@@ -80,9 +80,9 @@ The bar never takes the focus, so as not to disturb the window being used.
 
 1. Start GazeBar. The bar appears at the top of the screen with "Cursor: X … Y … | N changes/s".
    Look at different areas of the screen: the values must follow the gaze, corners included.
-2. **Diagnostic** button ("Tools" tab of the settings) → **Record 20 s**: look over the corners,
-   the edges and the centre, then stare at the centre for 3 seconds. The CSV file is written to
-   `Documents\GazeBar\positions-….csv`: send it for analysis.
+2. **Diagnostic** button ("Tools" tab of the settings): look over the corners, the edges and the
+   centre; the thumbnail shows the cursor and the gaze live. GazeBar never saves gaze data to
+   disk (the eyetracker licence forbids it): neither positions files nor coordinates in the log.
 3. **Long press**: click the button (3 s countdown), look at the wanted place. The left button
    is pressed at the end of the countdown, then released 1.5 s later.
 4. **Drag (right click)**: for example on a file in File Explorer, the move menu appears on

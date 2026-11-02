@@ -157,8 +157,7 @@ namespace GazeBar
 
             if (_fixation.Reached)
             {
-                App.Log("Drag: end point fixed at (" + _fixation.X.ToString("F0") + ", " +
-                        _fixation.Y.ToString("F0") + "), opening the magnifier");
+                App.Log("Drag: end point fixed, opening the magnifier");
                 Manager.ChangeMode(new MagnifierMode(_fixation.X, _fixation.Y, _drag));
                 return;
             }
