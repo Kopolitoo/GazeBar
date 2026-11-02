@@ -465,5 +465,15 @@ namespace GazeBar
         /// <summary>À appeler en fin d'utilisation, pour annuler timeBeginPeriod.</summary>
         [DllImport("winmm.dll")]
         internal static extern uint timeEndPeriod(uint milliseconds);
+
+        // ───────────────────────── Chargement d'une DLL native ─────────────────────────
+
+        /// <summary>
+        /// Charge une DLL native (écrite en C) à partir de son chemin complet. Sert à charger à
+        /// l'avance la DLL native de Tobii, qui n'est pas livrée avec GazeBar (voir
+        /// ChargeurTobii.cs). Renvoie IntPtr.Zero en cas d'échec (voir GetLastWin32Error).
+        /// </summary>
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern IntPtr LoadLibrary(string cheminDll);
     }
 }

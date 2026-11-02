@@ -32,6 +32,27 @@ modes (mouvement, regard fixe, choix d'action, menu…). Application WPF (.NET F
 Ce code n'a pas pu être compilé par son auteur : si Visual Studio signale une erreur,
 envoyez-en le texte, elle sera corrigée.
 
+### Les DLL de Tobii ne sont pas livrées avec GazeBar
+
+Le regard est lu par trois DLL de Tobii (`Tobii.Interaction.Net.dll`, `Tobii.Interaction.Model.dll`
+et `Tobii.EyeX.Client.dll`). C'est du code propriétaire de Tobii AB : GazeBar ne les contient pas
+et ne les distribue pas. Le paquet NuGet `Tobii.Interaction` sert seulement à compiler ; ses DLL
+ne sont pas copiées à côté de `GazeBar.exe` (et sont effacées du dossier de sortie si elles s'y
+trouvaient).
+
+Au démarrage, GazeBar les cherche lui-même sur le PC (`ChargeurTobii`), dans cet ordre :
+
+1. le sous-dossier `Tobii` à côté de `GazeBar.exe` ;
+2. les dossiers d'installation des logiciels Tobii (`Program Files\Tobii`, `Program Files\Tobii Dynavox`) ;
+3. le cache NuGet de Visual Studio (`%USERPROFILE%\.nuget\packages\tobii.interaction\0.7.3`) :
+   sur le PC où l'on compile GazeBar, il n'y a donc rien à faire.
+
+Sur un autre PC, si elles sont introuvables, la fenêtre Diagnostic l'indique. Il faut alors les
+récupérer soi-même, en acceptant la licence de Tobii : télécharger le paquet `Tobii.Interaction`
+version 0.7.3 sur nuget.org (« Download package »), renommer le fichier `.nupkg` en `.zip`,
+l'ouvrir, et copier dans le sous-dossier `Tobii` de GazeBar les deux DLL de `lib\net45` et
+celle de `build\x86`. Le journal (`gazebar.log`) note où chaque DLL a été trouvée.
+
 ## Principe
 
 Le regard réel est lu par le moteur Tobii (paquet NuGet Tobii.Interaction, classe GazeSource) :
@@ -212,6 +233,11 @@ personnel.
   fait rien. « Retour » ou Échap ramène à l'onglet « Icônes ». Liste des actions : `CatalogueActions`.
 - `Modes/ModePause` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
   (bouton « Reprendre »).
+- `ChargeurTobii` (02/11/2026) : trouve et charge au démarrage les DLL de Tobii, qui ne sont pas
+  livrées avec GazeBar (voir « Installation »). Les DLL .NET sont fournies à .NET par l'événement
+  `AssemblyResolve` ; la DLL native est chargée à l'avance par `LoadLibrary`, en 32 bits.
+  `GazeSource` n'utilise les types de Tobii que dans `ConnecterTobii`, pour que GazeBar démarre
+  même sans ces DLL.
 - `Modes/ModeCalibration` et `CalibrationTobii` (étape 4) : bouton « Calibration » de l'onglet
   « Outils » des paramètres (avec « Diagnostic » ; tous deux étaient dans la barre de menu avant
   le 29/10/2026). Lancent l'outil de calibration Tobii
@@ -381,3 +407,7 @@ Exception : le dictionnaire `Dictionnaires/fr.txt` est tiré de [Lexique 3.83](h
 
 Ce projet est un logiciel indépendant et open source. Il n'est ni affilié, ni approuvé, ni soutenu
 par Tobii Dynavox. TD Control, Tobii et Dynavox sont des marques déposées de Tobii AB.
+
+Les DLL de Tobii (Tobii Core SDK) ne font pas partie de GazeBar et ne sont pas distribuées avec
+lui ; elles restent la propriété de Tobii AB et sont soumises à leur propre licence (« Tobii Core
+SDK and Gaming SDK License Agreement »), que chacun accepte en les téléchargeant.

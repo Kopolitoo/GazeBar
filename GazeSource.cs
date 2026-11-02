@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Tobii.Interaction;
 
 namespace GazeBar
@@ -13,14 +14,24 @@ namespace GazeBar
     ///
     /// Si le moteur Tobii n'est pas disponible, le programme continue de fonctionner :
     /// IsRunning reste faux et ErrorMessage explique pourquoi.
+    ///
+    /// Depuis le 02/11/2026, les DLL de Tobii ne sont plus livrées avec GazeBar : elles sont
+    /// cherchées sur le PC au démarrage (voir ChargeurTobii.cs). Pour que GazeBar démarre
+    /// même quand elles sont introuvables, les types de Tobii (Host, GazePointDataStream)
+    /// n'apparaissent plus que dans la méthode ConnecterTobii : .NET ne cherche une DLL qu'au
+    /// moment où il prépare (« compile à la volée ») une méthode qui s'en sert. Si la DLL
+    /// manque, l'erreur arrive donc à l'appel de ConnecterTobii, à l'intérieur du try de Start,
+    /// au lieu de faire planter tout le programme.
     /// </summary>
     internal sealed class GazeSource : IDisposable
     {
         private readonly object _lock = new object();
         private readonly Stopwatch _clock = Stopwatch.StartNew();
 
-        private Host _host;
-        private GazePointDataStream _stream;
+        // L'objet Host et le flux de regard de Tobii. Volontairement rangés sous des types
+        // « neutres » (IDisposable, object) : voir le commentaire en tête de la classe.
+        private IDisposable _host;
+        private object _stream;
 
         private double _x;
         private double _y;
@@ -83,14 +94,18 @@ namespace GazeBar
         /// <summary>Se connecte au moteur Tobii et commence à recevoir le regard.</summary>
         public void Start()
         {
+            // Les DLL de Tobii ont-elles été trouvées sur le PC ? (voir ChargeurTobii.cs)
+            if (!ChargeurTobii.Disponible)
+            {
+                IsRunning = false;
+                ErrorMessage = ChargeurTobii.Message;
+                App.Log("Regard Tobii : pas de connexion : " + ErrorMessage);
+                return;
+            }
+
             try
             {
-                _host = new Host();
-                _stream = _host.Streams.CreateGazePointDataStream();
-
-                // Appelée par Tobii, sur l'un de ses threads, à chaque nouvelle mesure.
-                _stream.Next += (sender, mesure) => OnGaze(mesure.Data.X, mesure.Data.Y);
-
+                ConnecterTobii();
                 IsRunning = true;
                 App.Log("Regard Tobii : connecté");
             }
@@ -100,6 +115,23 @@ namespace GazeBar
                 ErrorMessage = ex.Message;
                 App.Log("Regard Tobii : échec de la connexion : " + ex);
             }
+        }
+
+        /// <summary>
+        /// Le seul endroit qui utilise directement les types de Tobii. « NoInlining » interdit
+        /// au compilateur de recopier cette méthode à l'intérieur de Start : sinon, une DLL
+        /// manquante ferait échouer Start elle-même, hors de son try.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ConnecterTobii()
+        {
+            Host hote = new Host();
+            _host = hote;
+            GazePointDataStream flux = hote.Streams.CreateGazePointDataStream();
+            _stream = flux;
+
+            // Appelée par Tobii, sur l'un de ses threads, à chaque nouvelle mesure.
+            flux.Next += (sender, mesure) => OnGaze(mesure.Data.X, mesure.Data.Y);
         }
 
         private void OnGaze(double x, double y)
