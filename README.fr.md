@@ -112,9 +112,12 @@ suivent aussi la taille du texte de Windows (Accessibilité). Les changements de
 mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tourne.
 
 **Profils de réglages** (étape 15, `SettingsProfiles.cs`) : onglet « Profils » des paramètres
-(catégorie Système). « Enregistrer les réglages actuels » copie les réglages dans
-`Documents\GazeBar\Profiles\Réglages AAAA-MM-JJ HHhMM.json` ; l'aidant peut renommer ou
-supprimer ces fichiers dans l'Explorateur. « Charger un profil » montre les fichiers `.json` de ce
+(catégorie Système). « Enregistrer les réglages actuels » ouvre une page Nom : une zone de texte
+contenant déjà un nom daté (`Réglages AAAA-MM-JJ HHhMM`) que l'on garde ou remplace avec le clavier
+du regard, affiché pour cette saisie ; « Enregistrer » (ou Entrée) copie les réglages dans
+`Documents\GazeBar\Profiles\<nom>.json` (si le nom existe, une question demande avant de le
+remplacer), « Annuler » n'enregistre rien. L'aidant peut renommer ou supprimer ces fichiers dans
+l'Explorateur. « Charger un profil » montre les fichiers `.json` de ce
 dossier en grands boutons (le plus récent en premier, 12 par page) ; après « Oui », les réglages
 actuels sont gardés dans « Sauvegarde automatique » (fichier `auto-backup.json`, remplacé à
 chaque chargement, pour revenir en arrière au regard), puis le profil est appliqué tout de suite et
@@ -414,6 +417,7 @@ avec l'interface en français, « bonj » propose toujours « bonjour ». Param�
 « don » et « don' » proposent « don't ».
 
 Test de l'étape 15 : Paramètres, Système, Profils, « Enregistrer les réglages actuels » : le
+clavier du regard apparaît avec la page Nom ; écrire « Soir », regarder « Enregistrer » : le
 message donne le nom du profil, et le fichier apparaît dans `Documents\GazeBar\Profiles`. On
 change le rayon du cercle (Affichage). Profils, « Charger un profil » : la liste montre le profil ;
 on le regarde : « Charger le profil … ? » ; « Non » ne change rien ; « Oui » remet l'ancien rayon et

@@ -226,7 +226,7 @@ namespace GazeBar
         /// </summary>
         private void ChooseProfile(FoundProfile profile)
         {
-            App.Log("Profiles: profile chosen \"" + profile.Name + "\", confirmation requested");
+            App.Log("Profiles: profile chosen, confirmation requested");
             Manager.ChangeMode(new SettingsMode(SettingsCatalog.ProfilesTabIndex, profile));
         }
 
