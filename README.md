@@ -193,7 +193,8 @@ personnel.
   Jeu) et Système (Général, Profils, Outils). Seule la catégorie ouverte montre ses onglets, en dessous d'elle
   et en retrait ; regarder une autre catégorie l'ouvre sur son premier onglet (liste dans
   `CatalogueParametres`). Chaque réglage : son nom, une
-  explication, puis « − », la valeur, « + » (ou « Non » / « Oui »). Garder le regard sur « − » ou
+  explication, puis « − », la valeur, « + » (ou un interrupteur arrondi pour un oui / non : le
+  regarder l'inverse). Garder le regard sur « − » ou
   « + » répète le changement toutes les 0,4 s. « Défaut » (en haut à droite) remet les valeurs de
   l'onglet affiché, après confirmation ; « Retour » (au milieu du bord droit) ou Échap ramène au
   mode mouvement. Les nombres s'affichent avec un point (0.16). L'aidant peut cliquer sur une
@@ -315,7 +316,7 @@ Le tout uniquement au regard. Échap ramène aussi au mode mouvement.
 
 Test de l'étape 7 : menu, « Paramètres » : l'écran noir s'ouvre sur l'onglet Regard. On garde
 le regard sur « + » du lissage : la valeur monte d'un pas toutes les 0,4 s. On regarde l'onglet
-Fixation, puis « Oui » pour le clic direct : il est encadré en bleu. « Défaut », puis « Oui » :
+Fixation, puis l'interrupteur du clic direct : il passe au bleu, rond à droite, « Oui ». « Défaut », puis « Oui » :
 les valeurs de l'onglet reviennent. L'aidant clique sur une valeur, tape 0,5 puis Entrée.
 « Retour » ramène au mode mouvement. Lancer GazeBar une deuxième fois ne fait rien (voir le
 journal).

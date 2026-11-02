@@ -18,7 +18,8 @@ namespace GazeBar
     ///     l'étape 8) ; un seul onglet affiché à la fois,
     ///     cinq réglages au plus, rien ne défile ;
     ///   - chaque réglage : son nom, une phrase d'explication, puis « − », la valeur, « + »
-    ///     (ou « Non » / « Oui ») ; la valeur par défaut est rappelée sous la valeur ;
+    ///     (ou un interrupteur pour un oui / non, voir plus bas) ; la valeur par défaut est
+    ///     rappelée sous la valeur ;
     ///   - à droite : « Défaut » en haut (remet les valeurs de l'onglet affiché, après
     ///     confirmation) et « Retour » au milieu du bord (retour au mode mouvement).
     ///
@@ -73,7 +74,15 @@ namespace GazeBar
         private const double Ecart = 18;
         private const double BoutonCote = 120;         // « − », « + », hauteur des boutons
         private const double ValeurLargeur = 290;
-        private const double ChoixLargeur = 260;       // « Non », « Oui »
+        private const double ChoixLargeur = 260;       // les deux boutons d'un choix entre deux mots
+
+        // ── L'interrupteur d'un réglage oui / non (02/11/2026, style Bootstrap « switch »).
+        //    La CIBLE du regard reste grande (toute la place des anciens boutons « Non » et
+        //    « Oui » : 2 × 260 + 18 = 538 × 120) ; l'interrupteur dessiné est dedans.
+        private const double InterrupteurLargeur = 150;   // la piste (la « pilule »)
+        private const double InterrupteurHauteur = 76;
+        private const double InterrupteurBouton = 60;     // le rond qui glisse
+        private static readonly Brush PisteActive = Figer(new SolidColorBrush(Color.FromRgb(0x0D, 0x6E, 0xFD)));   // le bleu de Bootstrap
         private const double DroiteGauche = 1700;      // colonne de droite (Défaut, Retour)
         private const double DroiteCote = 160;
         private const double DiametrePointRegard = 50;
@@ -519,8 +528,20 @@ namespace GazeBar
             double x = ContenuGauche + LibelleLargeur + Ecart;
             double y = haut + (LigneHauteur - BoutonCote) / 2;
 
+            if (reglage.Interrupteur)
+            {
+                // Un oui / non : une seule grande cible ; la regarder inverse la valeur.
+                // ModeParametres bloque la cible jusqu'à ce que le regard la quitte : rester
+                // dessus ne fait donc pas basculer l'interrupteur en boucle.
+                bool actuel = reglage.LireOuiNon(P);
+                AjouterCible(x, y, 2 * ChoixLargeur + Ecart, BoutonCote, DessinInterrupteur(actuel, actuel ? reglage.MotVrai : reglage.MotFaux),
+                             () => ChangerOuiNon(reglage, !actuel), false, false);
+                return;
+            }
+
             if (reglage.OuiNon)
             {
+                // Un choix entre deux mots (« Directe » / « Relative »…) : deux boutons.
                 bool valeur = reglage.LireOuiNon(P);
                 AjouterCible(x, y, ChoixLargeur, BoutonCote, Mot(reglage.MotFaux, 42), () => ChangerOuiNon(reglage, false), false, !valeur);
                 AjouterCible(x + ChoixLargeur + Ecart, y, ChoixLargeur, BoutonCote, Mot(reglage.MotVrai, 42), () => ChangerOuiNon(reglage, true), false, valeur);
@@ -894,7 +915,7 @@ namespace GazeBar
             }
             reglage.EcrireOuiNon(P, valeur);
             Enregistrer(reglage);
-            Construire();   // pour encadrer le nouveau choix
+            Construire();   // pour redessiner l'interrupteur (ou encadrer le nouveau choix)
         }
 
         private void DemanderDefaut()
@@ -1073,6 +1094,50 @@ namespace GazeBar
             bloc.HorizontalAlignment = HorizontalAlignment.Center;
             bloc.VerticalAlignment = VerticalAlignment.Center;
             return bloc;
+        }
+
+        /// <summary>
+        /// Le dessin d'un interrupteur (comme le « switch » de Bootstrap), suivi du mot
+        /// « Oui » ou « Non ». La piste est une Border aux bouts tout ronds (CornerRadius =
+        /// la moitié de la hauteur), le rond est une Ellipse posée à gauche ou à droite :
+        ///   - activé : piste bleue pleine, rond blanc à DROITE ;
+        ///   - désactivé : piste sombre bordée de gris, rond gris à GAUCHE.
+        /// Ce n'est qu'un dessin : c'est la cible qui le contient qui réagit au regard.
+        /// </summary>
+        private static UIElement DessinInterrupteur(bool active, string mot)
+        {
+            Border piste = new Border();
+            piste.Width = InterrupteurLargeur;
+            piste.Height = InterrupteurHauteur;
+            piste.CornerRadius = new CornerRadius(InterrupteurHauteur / 2);
+            piste.BorderThickness = new Thickness(3);
+            piste.BorderBrush = active ? PisteActive : Doux;
+            piste.Background = active ? PisteActive : FondValeur;
+            piste.VerticalAlignment = VerticalAlignment.Center;
+
+            // Le rond : marge pour qu'il ne touche pas le bord de la piste.
+            double marge = (InterrupteurHauteur - 6 - InterrupteurBouton) / 2;
+            Ellipse rond = new Ellipse();
+            rond.Width = InterrupteurBouton;
+            rond.Height = InterrupteurBouton;
+            rond.Fill = active ? Blanc : Doux;
+            rond.HorizontalAlignment = active ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+            rond.VerticalAlignment = VerticalAlignment.Center;
+            rond.Margin = new Thickness(marge);
+            piste.Child = rond;
+
+            TextBlock texte = Texte(mot, 42, active ? Blanc : Doux, true);
+            texte.VerticalAlignment = VerticalAlignment.Center;
+            texte.Margin = new Thickness(30, 0, 0, 0);
+            texte.MinWidth = 90;   // « Oui » et « Non » : l'interrupteur ne bouge pas
+
+            StackPanel ligne = new StackPanel();
+            ligne.Orientation = Orientation.Horizontal;
+            ligne.HorizontalAlignment = HorizontalAlignment.Center;
+            ligne.VerticalAlignment = VerticalAlignment.Center;
+            ligne.Children.Add(piste);
+            ligne.Children.Add(texte);
+            return ligne;
         }
 
         /// <summary>Un symbole de la police d'icônes au-dessus d'un mot (boutons Défaut et Retour).</summary>
