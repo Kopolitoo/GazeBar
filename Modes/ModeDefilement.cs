@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -43,6 +44,23 @@ namespace GazeBar
     ///     qui défile (réglage Windows « Faire défiler les fenêtres inactives lorsque je pointe
     ///     dessus », activé par défaut).
     ///
+    /// DÉFILEMENT FIN (demande de l'utilisateur du 02/11/2026 : « le défilement est très saccadé ») :
+    ///   - avant, la molette partait par quarts de cran (30 unités) : à vitesse lente, 3 ou 4
+    ///     petits sauts par seconde. Maintenant, elle part par toutes petites quantités, jusqu'à
+    ///     une fois par image (environ 60 fois par seconde), dès qu'on a [PasMinimal] unités.
+    ///     Les logiciels récents (navigateurs, Word, Explorateur) additionnent ces petites
+    ///     quantités et défilent presque en continu. Les très vieux logiciels, qui attendent un
+    ///     cran entier (120), restent par crans : on n'y peut rien de ce côté-là ;
+    ///   - la VITESSE elle-même est lissée ([ConstanteVitesseMs]) : elle monte et descend en
+    ///     douceur au lieu de changer d'un coup, à l'entrée et à la sortie de la zone morte
+    ///     comme à chaque petit tremblement du regard.
+    ///
+    /// FENÊTRE ACTIVE (même demande : « souvent il me faut cliquer avant de pouvoir faire
+    /// défiler ») : en entrant dans ce mode, GazeBar rend active la fenêtre qui est sous P, sans
+    /// cliquer (donc sans risque d'ouvrir un lien). Certains logiciels ignorent la molette tant
+    /// que leur fenêtre n'est pas active, et si le réglage Windows ci-dessus est désactivé, la
+    /// molette va toujours à la fenêtre active. Le journal note l'état de ce réglage.
+    ///
     /// Le regard utilisé est lissé ([Lissage]), comme le cercle du mode mouvement : sans cela,
     /// le petit tremblement naturel de l'œil ferait hésiter la vitesse et la direction.
     ///
@@ -69,11 +87,25 @@ namespace GazeBar
     internal sealed class ModeDefilement : Mode
     {
         /// <summary>
-        /// Taille d'un envoi de molette, en unités Windows (120 = un cran entier). Un quart de
-        /// cran donne un défilement plus doux. Si un logiciel défile beaucoup trop vite (certains
-        /// vieux logiciels comptent chaque envoi comme un cran entier), mettre 120 ici.
+        /// Plus petit envoi de molette, en unités Windows (120 = un cran entier) : 8 unités =
+        /// 1/15 de cran. Dès que la réserve atteint cette quantité, on envoie TOUT ce qu'elle
+        /// contient (en unités entières), à chaque image s'il le faut. Avant le 02/11/2026, on
+        /// envoyait par quarts de cran (30), ce qui faisait des sauts visibles à vitesse lente.
+        /// Si un logiciel défile beaucoup trop vite (certains vieux logiciels comptent chaque
+        /// envoi comme un cran entier), revenir à 120 ici.
         /// </summary>
-        private const int PasMolette = 30;
+        private const int PasMinimal = 8;
+
+        /// <summary>
+        /// Constante de temps du lissage de la vitesse, en millisecondes : en 150 ms, la vitesse
+        /// fait environ les deux tiers du chemin vers la vitesse voulue (même principe que
+        /// Lisseur.cs, à un seul étage). Plus grand = démarrages et arrêts plus doux mais plus
+        /// lents ; plus petit = plus vif.
+        /// </summary>
+        private const double ConstanteVitesseMs = 150;
+
+        /// <summary>Sous cette vitesse (crans par seconde), on la considère comme nulle.</summary>
+        private const double VitesseNegligeable = 0.05;
 
         /// <summary>Un cran de molette, en unités Windows (WHEEL_DELTA).</summary>
         private const int Cran = 120;
@@ -124,10 +156,13 @@ namespace GazeBar
 
         // Quantité de molette pas encore envoyée (en unités Windows). La vitesse donne, à chaque
         // tic, une petite quantité (par exemple 10 crans/s × 120 × 0,016 s = 19 unités) ; on
-        // l'ajoute ici, et on envoie dès qu'on a un [PasMolette] entier.
+        // l'ajoute ici, et on envoie dès qu'on a au moins [PasMinimal] unités.
         private double _reserve;
         private bool _reserveHorizontale;
         private int _reserveSens;
+
+        // La vitesse lissée, en crans par seconde (toujours positive ; le sens est _reserveSens).
+        private double _vitesse;
 
         private double _dernierTicMs = -1;
 
@@ -162,10 +197,14 @@ namespace GazeBar
             // Le curseur est remis sur P par sécurité : c'est la fenêtre sous lui qui défilera.
             NativeMethods.SetCursorPos((int)Math.Round(_px), (int)Math.Round(_py));
 
+            // Cette fenêtre devient la fenêtre active (voir le commentaire de la classe).
+            ActiverFenetreSousP();
+
             _place = Utilisable(regard);
             _lisse.Placer(regard.X, regard.Y);
             _arme = false;
             _reserve = 0;
+            _vitesse = 0;
             _dernierTicMs = regard.MaintenantMs;
 
             ConstruireSurface();
@@ -199,9 +238,11 @@ namespace GazeBar
             //    le bouton : rien ne défile. Un regard un peu hors de l'écran est utilisable.
             bool surRetour = regard.SurEcran && _boutons.Count > 0 && _boutons[0].Contient(regard.X, regard.Y);
             //    L'arc reste affiché à sa dernière place.
+            //    Arrêt immédiat (pas de ralentissement en douceur) : c'est une sécurité.
             if (!Utilisable(regard) || surRetour)
             {
                 _reserve = 0;
+                _vitesse = 0;
                 return;
             }
 
@@ -228,11 +269,9 @@ namespace GazeBar
 
             if (distance <= rayon)
             {
-                // Dans le cercle (la zone morte) : rien ne défile. Le défilement est désormais
-                // permis (voir les précautions).
+                // Dans le cercle (la zone morte) : la vitesse voulue est nulle. Le défilement est
+                // désormais permis (voir les précautions).
                 _arme = true;
-                _reserve = 0;
-                return;
             }
 
             if (!_arme)
@@ -240,29 +279,50 @@ namespace GazeBar
                 return;
             }
 
-            // 5. La direction (un seul axe : celui du plus grand écart) et la vitesse.
+            // 5. La vitesse voulue et, hors de la zone morte, la direction (un seul axe : celui
+            //    du plus grand écart).
             //    Vitesse : de 0 au bord de la zone morte à [VitesseMaxDefilement] trois
             //    [RayonCercle] entiers plus loin (voir le commentaire de la classe).
-            bool horizontale = Math.Abs(dx) > Math.Abs(dy);
-            // Molette : vers le haut et vers la droite = positif (voir MouseInjector.Molette).
-            int sens = horizontale ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
-            double fraction = Math.Min(1.0, (distance - rayon) / (RayonsVitesseMax * p.RayonCerclePx));
-            double cransParSeconde = fraction * p.VitesseMaxDefilement;
-
-            // 6. La réserve de molette : on repart de zéro si la direction a changé.
-            if (horizontale != _reserveHorizontale || sens != _reserveSens)
+            //    Dans la zone morte, on garde la direction précédente : la vitesse y redescend
+            //    en douceur vers 0, dans le même sens.
+            double vitesseVoulue = 0;
+            if (distance > rayon)
             {
-                _reserve = 0;
-                _reserveHorizontale = horizontale;
-                _reserveSens = sens;
+                bool horizontale = Math.Abs(dx) > Math.Abs(dy);
+                // Molette : vers le haut et vers la droite = positif (voir MouseInjector.Molette).
+                int sens = horizontale ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
+                double fraction = Math.Min(1.0, (distance - rayon) / (RayonsVitesseMax * p.RayonCerclePx));
+                vitesseVoulue = fraction * p.VitesseMaxDefilement;
+
+                // Changement de direction : on repart de zéro (vitesse et réserve), pour ne
+                // pas emporter dans le nouveau sens l'élan de l'ancien.
+                if (horizontale != _reserveHorizontale || sens != _reserveSens)
+                {
+                    _reserve = 0;
+                    _vitesse = 0;
+                    _reserveHorizontale = horizontale;
+                    _reserveSens = sens;
+                }
             }
-            _reserve += cransParSeconde * Cran * dt;
 
-            if (_reserve >= PasMolette)
+            // 6. La vitesse lissée se rapproche de la vitesse voulue, selon le temps écoulé
+            //    (même calcul que Lisseur.cs : la fraction parcourue est 1 − e^(−dt / τ)).
+            _vitesse += (vitesseVoulue - _vitesse) * (1 - Math.Exp(-dt * 1000 / ConstanteVitesseMs));
+            if (vitesseVoulue == 0 && _vitesse < VitesseNegligeable)
             {
-                int nombre = (int)(_reserve / PasMolette);
-                _reserve -= nombre * PasMolette;
-                Envoyer(sens * nombre * PasMolette, horizontale);
+                _vitesse = 0;
+                _reserve = 0;
+                return;
+            }
+
+            // 7. La réserve de molette : on y ajoute la quantité de ce tic, et on envoie tout ce
+            //    qu'elle contient (en unités entières) dès qu'elle atteint [PasMinimal].
+            _reserve += _vitesse * Cran * dt;
+            if (_reserve >= PasMinimal)
+            {
+                int quantite = (int)_reserve;
+                _reserve -= quantite;
+                Envoyer(_reserveSens * quantite, _reserveHorizontale);
             }
         }
 
@@ -290,6 +350,71 @@ namespace GazeBar
             double marge = Ecran.PxRegard(MargeHorsEcran4K);
             return regard.X >= -marge && regard.X < Gestionnaire.LargeurEcran + marge &&
                    regard.Y >= -marge && regard.Y < Gestionnaire.HauteurEcran + marge;
+        }
+
+        /// <summary>
+        /// Rend active la fenêtre qui est sous P (sans cliquer). Si elle l'est déjà, ou si c'est
+        /// une fenêtre de GazeBar, on ne fait rien. Le résultat est noté dans le journal.
+        ///
+        /// Windows n'autorise pas n'importe quel programme à changer la fenêtre active (pour
+        /// éviter qu'une fenêtre « vole » le clavier pendant qu'on tape). GazeBar n'est pas au
+        /// premier plan (son calque ne prend jamais le focus) : on « attache » donc un instant
+        /// GazeBar à la fenêtre active actuelle (AttachThreadInput), ce qui lui donne ce droit.
+        /// </summary>
+        private void ActiverFenetreSousP()
+        {
+            try
+            {
+                // À quelle fenêtre va la molette ? (réglage Windows, voir NativeMethods)
+                uint routage = 0;
+                bool routageLu = NativeMethods.SystemParametersInfo(NativeMethods.SPI_GETMOUSEWHEELROUTING, 0, ref routage, 0);
+                App.Log("Défilement : réglage Windows « défiler les fenêtres inactives » = " +
+                        (routageLu ? (routage == 2 ? "activé" : "désactivé (" + routage + ")") : "inconnu"));
+
+                NativeMethods.POINT point;
+                point.X = (int)Math.Round(_px);
+                point.Y = (int)Math.Round(_py);
+                IntPtr sousP = NativeMethods.WindowFromPoint(point);
+                IntPtr fenetre = sousP == IntPtr.Zero ? IntPtr.Zero : NativeMethods.GetAncestor(sousP, NativeMethods.GA_ROOT);
+                if (fenetre == IntPtr.Zero)
+                {
+                    App.Log("Défilement : aucune fenêtre sous le point visé");
+                    return;
+                }
+
+                // Une fenêtre de GazeBar lui-même (par exemple le clavier) : on n'y touche pas.
+                uint processus;
+                NativeMethods.GetWindowThreadProcessId(fenetre, out processus);
+                if (processus == (uint)Process.GetCurrentProcess().Id)
+                {
+                    return;
+                }
+
+                IntPtr active = NativeMethods.GetForegroundWindow();
+                if (active == fenetre)
+                {
+                    return;   // déjà active : rien à faire
+                }
+
+                uint filActif = active == IntPtr.Zero ? 0 : NativeMethods.GetWindowThreadProcessId(active, out processus);
+                uint filGazeBar = NativeMethods.GetCurrentThreadId();
+                bool attache = filActif != 0 && filActif != filGazeBar &&
+                               NativeMethods.AttachThreadInput(filGazeBar, filActif, true);
+                bool reussi = NativeMethods.SetForegroundWindow(fenetre);
+                if (attache)
+                {
+                    NativeMethods.AttachThreadInput(filGazeBar, filActif, false);
+                }
+
+                System.Text.StringBuilder titre = new System.Text.StringBuilder(128);
+                NativeMethods.GetWindowText(fenetre, titre, titre.Capacity);
+                App.Log("Défilement : fenêtre « " + titre + " » rendue active : " + (reussi ? "oui" : "non (refusé par Windows)"));
+            }
+            catch (Exception ex)
+            {
+                // Un échec ici n'empêche pas de défiler : on le note seulement.
+                App.Log("Défilement : impossible d'activer la fenêtre sous le point visé : " + ex.Message);
+            }
         }
 
         /// <summary>Envoie la molette, avec les modificateurs actifs enfoncés autour.</summary>

@@ -361,6 +361,55 @@ namespace GazeBar
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int GetWindowText(IntPtr window, System.Text.StringBuilder text, int maxCount);
 
+        // ───────────────────────── Fenêtre sous le curseur (défilement, 02/11/2026) ─────────────────────────
+        //
+        // En entrant dans le mode défilement, GazeBar rend active la fenêtre qui est sous le
+        // point visé : certains logiciels ignorent la molette tant que leur fenêtre n'est pas
+        // active (l'utilisateur devait cliquer avant de pouvoir défiler).
+
+        /// <summary>
+        /// La fenêtre (ou la partie de fenêtre) qui se trouve à ce point de l'écran. Les fenêtres
+        /// que la souris « traverse » (comme le calque de GazeBar) sont ignorées.
+        /// </summary>
+        [DllImport("user32.dll")]
+        internal static extern IntPtr WindowFromPoint(POINT point);
+
+        /// <summary>Remonte d'une partie de fenêtre à la fenêtre principale qui la contient.</summary>
+        [DllImport("user32.dll")]
+        internal static extern IntPtr GetAncestor(IntPtr window, uint flags);
+
+        internal const uint GA_ROOT = 2;   // GetAncestor : la fenêtre principale (tout en haut)
+
+        /// <summary>Rend une fenêtre active (elle reçoit le clavier et, selon les réglages, la molette).</summary>
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetForegroundWindow(IntPtr window);
+
+        /// <summary>
+        /// « Attache » temporairement deux fils d'exécution : ils partagent alors l'état du
+        /// clavier, ce qui autorise GazeBar à changer la fenêtre active. Windows refuse sinon
+        /// souvent SetForegroundWindow à un programme qui n'est pas lui-même au premier plan.
+        /// </summary>
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool AttachThreadInput(uint threadAttach, uint threadAttachTo, [MarshalAs(UnmanagedType.Bool)] bool attach);
+
+        /// <summary>Le numéro du fil d'exécution qui appelle (ici, celui de l'affichage de GazeBar).</summary>
+        [DllImport("kernel32.dll")]
+        internal static extern uint GetCurrentThreadId();
+
+        /// <summary>Lit un réglage de Windows (ici : à quelle fenêtre va la molette).</summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SystemParametersInfo(uint action, uint param, ref uint value, uint winIni);
+
+        /// <summary>
+        /// Réglage Windows 10/11 « Faire défiler les fenêtres inactives lorsque je pointe dessus » :
+        /// valeur 2 = la molette va à la fenêtre sous le curseur (activé), 0 = à la fenêtre active
+        /// (désactivé).
+        /// </summary>
+        internal const uint SPI_GETMOUSEWHEELROUTING = 0x201C;
+
         // ───────────────────────── Touche Échap de l'aidant (étape 4) ─────────────────────────
         //
         // Un « crochet clavier » (hook) permet d'être prévenu de chaque touche appuyée, dans
