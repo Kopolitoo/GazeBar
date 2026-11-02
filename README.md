@@ -207,7 +207,8 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   123.!, symboles et navigation, F1 à F12) viennent du fichier `Claviers/fr-azerty.json`, relu à
   chaque ouverture : on peut changer une touche sans recompiler (format expliqué dans
   `DispositionClavier.cs`). Regard sur le clavier : le curseur ne bouge pas, le cercle est
-  masqué, la touche regardée s'éclaircit puis flashe en vert et agit après `DelaiTouche`
+  masqué, la touche regardée s'éclaircit (avec un fin contour bleu clair qui apparaît en fondu ;
+  une seule mesure du regard suffit, contre deux pour les autres boutons) puis flashe en vert et agit après `DelaiTouche`
   (0,6 s) ; en gardant le regard dessus, elle se retape (`RepetitionTouche`). Regard ailleurs :
   mode mouvement normal ; le clavier est masqué pendant la loupe, le choix d'action, les
   paramètres, la pause… et revient ensuite. Texte envoyé en Unicode (les accents marchent quelle
@@ -218,7 +219,7 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   classique) : Haut / bas (clavier en haut de l'écran, position retenue : `ClavierEnHaut`),
   Taille (100, 75 ou 50 %, largeur et hauteur ensemble, clavier centré : `TailleClavier`, aussi
   dans les paramètres), Pause, Fermer. Quand elle s'ouvre, le clavier en bas remonte au-dessus
-  d'elle. Fermeture : bouton à droite au-dessus du clavier (en dessous s'il est en haut), barre
+  d'elle en glissant (et redescend de même). Fermeture : bouton à droite au-dessus du clavier (en dessous s'il est en haut), barre
   du clavier, ou Échap. Tab est une vraie tabulation : sa largeur (2 ou 4 espaces) se règle
   dans le logiciel où l'on écrit. Les trois cases de proposition
   de mots restent vides jusqu'à l'étape 13. Le texte tapé n'est jamais écrit dans le journal.

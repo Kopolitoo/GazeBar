@@ -98,7 +98,10 @@ namespace GazeBar
         public ClavierRegard(OverlayWindow calque)
         {
             _calque = calque;
-            _viseur = new ViseurBoutons(_cibles);
+            // « 1 » : une seule mesure du regard suffit pour qu'une touche s'éclaire (2 pour
+            // les autres boutons de GazeBar). Le survol réagit ainsi une mesure plus tôt
+            // (environ 30 ms) ; demande de l'utilisateur du 02/11/2026.
+            _viseur = new ViseurBoutons(_cibles, 1);
         }
 
         /// <summary>Vrai entre Ouvrir et Fermer (même quand le clavier est masqué par un autre mode).</summary>
@@ -206,7 +209,13 @@ namespace GazeBar
             _reserveBas = pixels;
             if (_visible && !Parametres.Courants.ClavierEnHaut)
             {
+                // Redessiné à sa nouvelle place, puis glissé depuis l'ancienne (02/11/2026).
+                double ancienHaut = _haut;
                 Construire();
+                if (_visible)
+                {
+                    _calque.AnimerSurfaceClavier(ancienHaut - _haut);
+                }
             }
         }
 

@@ -16,7 +16,9 @@ namespace GazeBar
     ///   - les chiffres, F1 à F12 et les flèches ont un fond plus clair (style « clair »).
     ///
     /// Ce qu'on voit quand on la regarde (choix de l'utilisateur du 31/10/2026) :
-    ///   - au survol, elle s'éclaircit légèrement : PAS d'anneau de progression ;
+    ///   - au survol, elle s'éclaircit légèrement : PAS d'anneau de progression. Depuis le
+    ///     02/11/2026 (demande de l'utilisateur), le fond de survol est un peu moins clair, et
+    ///     un fin contour bleu clair apparaît en fondu ([DureeContourMs]) ;
     ///   - quand elle s'active, elle « flashe » en vert un court instant (Flasher).
     /// Un modificateur actif (Maj, Caps Lock, Ctrl, Alt, Win) a un bord vert, comme les
     /// interrupteurs allumés de la barre de menu.
@@ -32,11 +34,18 @@ namespace GazeBar
         /// <summary>Durée du flash vert à l'activation, en millisecondes.</summary>
         private const int DureeFlashMs = 150;
 
+        /// <summary>Durée du fondu du contour de survol, en millisecondes.</summary>
+        private const int DureeContourMs = 200;
+
+        /// <summary>Opacité finale du contour de survol (« légèrement coloré »).</summary>
+        private const double OpaciteContour = 0.8;
+
         // Couleurs (figées une fois pour toutes, WPF les dessine alors plus vite).
         private static readonly Brush FondLettre = Figer(Color.FromArgb(0x00, 0x00, 0x00, 0x00));
         private static readonly Brush FondFonction = Figer(Color.FromArgb(0xFF, 0x26, 0x27, 0x2A));
         private static readonly Brush FondClair = Figer(Color.FromArgb(0xFF, 0x3A, 0x3B, 0x3E));
-        private static readonly Brush FondSurvol = Figer(Color.FromArgb(0xFF, 0x50, 0x53, 0x58));
+        // Fond de survol : #505358 au début, un peu moins clair depuis le 02/11/2026.
+        private static readonly Brush FondSurvol = Figer(Color.FromArgb(0xFF, 0x46, 0x48, 0x4D));
         private static readonly Brush FondFlash = Figer(Color.FromArgb(0xFF, 0x00, 0xC8, 0x53));
         private static readonly Brush Blanc = Figer(Colors.White);
         private static readonly Brush Gris = Figer(Color.FromArgb(0xFF, 0x90, 0x90, 0x90));
@@ -45,6 +54,15 @@ namespace GazeBar
         private readonly Border _fond;
         private readonly TextBlock _texte;
         private readonly Brush _fondNormal;
+
+        // Le contour de survol, bleu clair. Pas figé : son opacité change pendant le fondu.
+        private readonly SolidColorBrush _contour = new SolidColorBrush(Color.FromRgb(0x7F, 0xB8, 0xF0));
+
+        // Vrai pour un modificateur actif : son bord vert passe avant le contour de survol.
+        private bool _allume;
+
+        // Instant (Environment.TickCount) du début du survol ; null = pas survolée.
+        private int? _debutSurvol;
 
         // Instant (Environment.TickCount, en ms) où le flash se termine ; 0 = pas de flash.
         private int _finFlash;
@@ -150,7 +168,37 @@ namespace GazeBar
         /// <summary>Bord vert pour un modificateur actif (Maj, Caps Lock, Ctrl, Alt, Win).</summary>
         public void DefinirAllume(bool allume)
         {
-            _fond.BorderThickness = new Thickness(allume ? Ecran.Unites(3) : 0);
+            _allume = allume;
+            _debutSurvol = null;
+            AppliquerBord(false);
+        }
+
+        /// <summary>
+        /// Le bord de la touche : vert (épais) pour un modificateur actif ; sinon, au survol,
+        /// le contour bleu clair dont l'opacité monte de 0 à [OpaciteContour] en [DureeContourMs].
+        /// </summary>
+        private void AppliquerBord(bool survol)
+        {
+            if (_allume)
+            {
+                _fond.BorderBrush = Vert;
+                _fond.BorderThickness = new Thickness(Ecran.Unites(3));
+                return;
+            }
+            if (!survol)
+            {
+                _debutSurvol = null;
+                _fond.BorderThickness = new Thickness(0);
+                return;
+            }
+            if (!_debutSurvol.HasValue)
+            {
+                _debutSurvol = Environment.TickCount;
+            }
+            double ecoule = Environment.TickCount - _debutSurvol.Value;
+            _contour.Opacity = OpaciteContour * Math.Max(0, Math.Min(1, ecoule / DureeContourMs));
+            _fond.BorderBrush = _contour;
+            _fond.BorderThickness = new Thickness(Ecran.Unites(2));
         }
 
         /// <summary>Lance le flash vert de l'activation.</summary>
@@ -181,7 +229,9 @@ namespace GazeBar
                 return;
             }
             _finFlash = 0;
-            _fond.Background = survol && Actif ? FondSurvol : _fondNormal;
+            bool surligner = survol && Actif;
+            _fond.Background = surligner ? FondSurvol : _fondNormal;
+            AppliquerBord(surligner);
         }
 
         private static Brush Figer(Color couleur)
