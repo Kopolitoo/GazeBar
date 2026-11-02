@@ -18,8 +18,9 @@ namespace GazeBar
     ///  - in the circle: if [DirectClick] is on (off by default), the ring fills up during
     ///    [DirectClickDelay]; when full, a left click is made on P, then back to movement
     ///    mode. Looking at the icon resets this delay;
-    ///  - on the icon: its ring fills up during [OptionsIconDelay] (shorter than
-    ///    [ActivationDelay]); when full, the icon activates and opens action choice mode
+    ///  - on the icon: it lights up with a light green flash during [OptionsIconDelay]
+    ///    (shorter than [ActivationDelay]; no ring, user request of 2026-11-02); at the end,
+    ///    the icon activates and opens action choice mode
     ///    (step 3), or first magnifier mode (step 5) if [MagnifierBeforeAction] is on;
     ///  - outside the circle and the icon: circle and icon disappear, back to movement mode.
     ///

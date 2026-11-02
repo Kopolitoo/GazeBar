@@ -153,7 +153,7 @@ Pour ajouter une langue : copier `en.json` en `xx.json`, traduire les valeurs (j
   du centre de l'écran, et le curseur se place sur le point fixé. Si `DirectClick` est activé
   (non par défaut, à mettre à `true` dans `settings.json`), regarder dans le cercle pendant
   `DirectClickDelay` fait un clic gauche ; regarder l'icône pendant `OptionsIconDelay` (0,3 s,
-  plus court que les autres boutons) ouvre le choix d'action (ou d'abord la loupe si
+  plus court que les autres boutons ; l'icône s'allume d'un léger flash vert) ouvre le choix d'action (ou d'abord la loupe si
   `MagnifierBeforeAction` est à `true` dans `settings.json`) ; sortir du
   cercle et de l'icône ramène au mode mouvement. Après un clic, une nouvelle fixation au même
   endroit n'est pas reconnue tant que le regard n'en est pas sorti (pas de clics en rafale).

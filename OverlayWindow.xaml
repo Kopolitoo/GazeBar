@@ -28,7 +28,9 @@
                       clockwise, starting from the top;
     OptionsIcon       the options icon of fixed gaze mode: a dark square with rounded corners
                       containing a symbol of the Windows font ("...", code E712);
-    OptionsIconRing   the ring filling up around the icon when it is looked at;
+    OptionsIconFlash  the light flash of the icon when it is looked at: a green layer on the
+                      icon whose opacity follows the progress (replaces the ring that was
+                      drawn around the icon, user request of 2026-11-02);
     OptionsLabel      the "Options" text shown under the icon when it is looked at (if
                       ShowLabels is on).
   Element added in step 3 (action choice):
@@ -85,14 +87,17 @@
               StrokeEndLineCap="Round" Visibility="Collapsed" />
 
         <!-- Options icon of fixed gaze mode. Its size and position are set in code. -->
+        <!-- OptionsIconFlash: green layer under the symbol, invisible at rest (Opacity 0); it
+             lights up while the icon is looked at. Its corners are set in code. -->
         <Border x:Name="OptionsIcon" Background="#D0202124" BorderBrush="White" BorderThickness="2"
                 CornerRadius="12" Visibility="Collapsed">
-            <TextBlock x:Name="OptionsIconSymbol" Text="&#xE712;" Foreground="White"
-                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <Grid>
+                <Border x:Name="OptionsIconFlash" Background="#FF00C853" Opacity="0" />
+                <TextBlock x:Name="OptionsIconSymbol" Text="&#xE712;" Foreground="White"
+                           FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Grid>
         </Border>
-        <Path x:Name="OptionsIconRing" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"
-              StrokeEndLineCap="Round" Visibility="Collapsed" />
         <Border x:Name="OptionsLabel" Background="#E0202124" CornerRadius="6" Padding="8,2"
                 Visibility="Collapsed">
             <TextBlock x:Name="OptionsLabelText" Text="Options" Foreground="White" FontSize="20" />
