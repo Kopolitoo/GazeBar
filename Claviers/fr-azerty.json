@@ -220,6 +220,7 @@
         {"ligne": 2, "col": 11, "libelle": "F12", "touche": "F12", "style": "clair"},
         {"ligne": 3, "col": 1, "libelle": "Alt", "modificateur": "Alt"},
         {"ligne": 3, "col": 2, "libelle": "Win", "modificateur": "Win"},
+        {"ligne": 3, "col": 3, "libelle": "⊞", "touche": "Windows"},
         {"ligne": 3, "col": 5, "libelle": "␣", "largeur": 2, "texte": " "},
         {"ligne": 3, "col": 10, "libelle": "Enter", "largeur": 2, "touche": "Entree"}
       ]

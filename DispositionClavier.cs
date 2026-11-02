@@ -23,7 +23,8 @@ namespace GazeBar
     /// Ce qu'une touche fait (une seule de ces lignes par touche) :
     ///   "texte": "é"           écrit ce texte (en Unicode : voir InjecteurClavier.TaperTexte) ;
     ///   "touche": "Tab"        appuie sur une vraie touche (Tab, Entree, Echap, Suppr, Debut,
-    ///                          Fin, PageHaut, PageBas, Gauche, Droite, Haut, Bas, F1 à F12) ;
+    ///                          Fin, PageHaut, PageBas, Gauche, Droite, Haut, Bas, F1 à F12,
+    ///                          Windows = la touche Windows seule, qui ouvre le menu Démarrer) ;
     ///   "raccourci": "Ctrl+F"  un raccourci (Ctrl, Alt, Maj ou Win + une touche) ;
     ///   "page": "accents"      affiche une autre page ("retour" = la page d'avant) ;
     ///   "modificateur": "Maj"  Maj, VerrMaj (Caps Lock), Ctrl, Alt ou Win ;

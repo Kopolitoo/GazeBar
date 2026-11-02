@@ -853,6 +853,9 @@ namespace GazeBar
                 case "bas": code = 0x28; etendue = true; return true;
                 case "inser": code = 0x2D; etendue = true; return true;
                 case "suppr": code = 0x2E; etendue = true; return true;
+                // La touche Windows seule (02/11/2026) : ouvre ou ferme le menu Démarrer.
+                // C'est une touche « étendue » pour Windows.
+                case "windows": code = NativeMethods.VK_LWIN; etendue = true; return true;
             }
 
             string n = nom.Trim().ToUpperInvariant();

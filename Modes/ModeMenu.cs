@@ -21,10 +21,6 @@ namespace GazeBar
     ///                « Quitter le jeu » et ramène au mode mouvement ;
     ///   Clavier      ouvre le clavier au regard de GazeBar (étape 12, voir ClavierRegard),
     ///                puis ferme le menu. S'il est déjà ouvert (caché par le mode jeu), le ferme ;
-    ///   Démarrer     appuie sur la touche Windows : ouvre (ou ferme) le menu Démarrer, puis
-    ///                ferme la barre et revient au mode mouvement (demande de l'utilisateur
-    ///                du 02/11/2026). Le menu Démarrer passe au-dessus du cercle du regard :
-    ///                c'est une limite de Windows (voir l'étape « ui-access ») ;
     ///   Pause        passe en mode pause ;
     ///   Suivi souris interrupteur : bord vert quand l'option est activée. Le menu reste
     ///                ouvert ; il faut quitter le bouton du regard pour pouvoir l'actionner
@@ -73,7 +69,6 @@ namespace GazeBar
             Jeu,
             QuitterJeu,
             Clavier,
-            Demarrer,
             FermerClavier,
             PositionClavier,
             TailleClavier,
@@ -310,16 +305,6 @@ namespace GazeBar
                     }
                     break;
 
-                case ActionMenu.Demarrer:
-                    // La touche Windows (demande du 02/11/2026). On ferme d'abord la barre et
-                    // on revient au mode mouvement (même depuis le jeu : il faut le curseur
-                    // pour choisir dans le menu Démarrer), puis on envoie un appui complet
-                    // (appui + relâchement) de la touche Windows de gauche. C'est une touche
-                    // « étendue » pour Windows, d'où le « true ». Aucun modificateur.
-                    Gestionnaire.ChangerMode(new ModeMouvement());
-                    InjecteurClavier.TaperTouche(NativeMethods.VK_LWIN, true, null);
-                    break;
-
                 case ActionMenu.FermerClavier:
                     Gestionnaire.Clavier.Fermer();
                     Gestionnaire.ChangerMode(new ModeMouvement());
@@ -470,10 +455,6 @@ namespace GazeBar
                     Ajouter(boutons, actions, new BoutonRegard("\uE7FC", null, "Jeu"), ActionMenu.Jeu);
                 }
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier"), ActionMenu.Clavier);
-                // Touche Windows (02/11/2026). « ⊞ » (U+229E, carré avec une croix) ressemble au
-                // logo de Windows. Il n'est pas dans la police des icônes : WPF le prend
-                // automatiquement dans une autre police de Windows (Segoe UI Symbol).
-                Ajouter(boutons, actions, new BoutonRegard("\u229E", null, "Menu Démarrer (touche Windows)"), ActionMenu.Demarrer);
                 // (Depuis la pause, seul « Reprendre » est affiché : ici, on n'est donc
                 // jamais en pause.)
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Pause"), ActionMenu.Pause);
