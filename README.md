@@ -84,6 +84,17 @@ agrandit ou réduit tout ce qui est dessiné, sauf les réglages du regard. Les 
 suivent aussi la taille du texte de Windows (Accessibilité). Les changements de résolution, de
 mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tourne.
 
+**Profils de réglages** (étape 15, `ProfilsParametres.cs`) : onglet « Profils » des paramètres
+(catégorie Système). « Enregistrer les réglages actuels » copie les réglages dans
+`Documents\GazeBar\Profils\Réglages AAAA-MM-JJ HHhMM.json` ; l'aidant peut renommer ou
+supprimer ces fichiers dans l'Explorateur. « Charger un profil » montre les fichiers `.json` de ce
+dossier en grands boutons (le plus récent en premier, 12 par page) ; après « Oui », les réglages
+actuels sont gardés dans « Sauvegarde automatique » (remplacé à chaque chargement, pour revenir
+en arrière au regard), puis le profil est appliqué tout de suite et enregistré dans
+`parametres.json`. Un profil d'une ancienne version est converti comme `parametres.json` au
+démarrage. « Démarrer avec Windows » ne change pas (réglage de l'ordinateur), ni le dictionnaire
+personnel.
+
 ## Architecture des modes
 
 - `OverlayWindow` : le « calque », une fenêtre transparente qui couvre tout l'écran, toujours au
@@ -158,7 +169,7 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
 - `Modes/ModeParametres` et `FenetreParametres` (étape 7) : bouton « Paramètres » du menu. Une
   fenêtre plein écran, fond noir, avec à gauche quatre catégories dépliantes (02/11/2026) : Regard (Regard,
   Fixation, Délais), Actions (Loupe et glisser, Défilement, Icônes), Affichage (Affichage, Clavier,
-  Jeu) et Système (Général, Outils). Seule la catégorie ouverte montre ses onglets, en dessous d'elle
+  Jeu) et Système (Général, Profils, Outils). Seule la catégorie ouverte montre ses onglets, en dessous d'elle
   et en retrait ; regarder une autre catégorie l'ouvre sur son premier onglet (liste dans
   `CatalogueParametres`). Chaque réglage : son nom, une
   explication, puis « − », la valeur, « + » (ou « Non » / « Oui »). Garder le regard sur « − » ou
@@ -342,6 +353,12 @@ flèche la vide. « Langue » : la liste montre « Français AZERTY » avec un b
 clavier » ramène au clavier. Paramètres, onglet Général, « Mes mots » : « zorglub » (ajouté à
 l'étape 13) est dans la liste ; on le regarde : il disparaît ; « Retour aux paramètres » ramène à
 l'onglet Général. En tapant « zo », il n'est plus proposé.
+
+Test de l'étape 15 : Paramètres, Système, Profils, « Enregistrer les réglages actuels » : le
+message donne le nom du profil, et le fichier apparaît dans `Documents\GazeBar\Profils`. On
+change le rayon du cercle (Affichage). Profils, « Charger un profil » : la liste montre le profil ;
+on le regarde : « Charger le profil … ? » ; « Non » ne change rien ; « Oui » remet l'ancien rayon et
+crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet le rayon modifié.
 
 ## Limites connues
 

@@ -824,6 +824,50 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// Étape 15 (profils) : remplace d'un coup tous les réglages en cours par « nouveaux »
+        /// (un profil qu'on vient de lire). Rien dans le programme ne garde de copie de
+        /// l'ancien objet : chaque mode relit Parametres.Courants à chaque tic, donc tout
+        /// suit tout de suite. N'enregistre rien : c'est à l'appelant de le faire.
+        /// </summary>
+        public static void Remplacer(Parametres nouveaux)
+        {
+            if (nouveaux != null)
+            {
+                Courants = nouveaux;
+            }
+        }
+
+        /// <summary>
+        /// Lit un fichier de réglages, met à jour un fichier d'une ancienne version
+        /// (MettreAJour) puis ramène les valeurs dans leurs limites (Corriger).
+        ///
+        /// Utilisée au démarrage (parametres.json) et à l'étape 15 pour charger un profil.
+        /// « misAJour » dit si le fichier venait d'une version plus ancienne.
+        /// En cas de fichier absent ou illisible, une exception est LANCÉE (« throw ») :
+        /// l'appelant décide quoi faire (repartir des valeurs par défaut, afficher un message…).
+        /// </summary>
+        public static Parametres LireFichier(string chemin, out bool misAJour)
+        {
+            Parametres resultat;
+            DataContractJsonSerializer serialiseur = new DataContractJsonSerializer(typeof(Parametres));
+            using (FileStream fichier = File.OpenRead(chemin))
+            {
+                resultat = (Parametres)serialiseur.ReadObject(fichier);
+            }
+            if (resultat == null)
+            {
+                // Un fichier qui contient seulement « null » : on le traite comme illisible.
+                throw new InvalidDataException("le fichier ne contient pas de réglages");
+            }
+            // La mise à jour d'un ancien fichier passe AVANT Corriger (étape 11) : les
+            // anciennes tailles en pixels (190…) dépasseraient les nouvelles limites en %
+            // (23 au plus) et seraient abîmées avant d'être converties.
+            misAJour = resultat.MettreAJour();
+            resultat.Corriger();
+            return resultat;
+        }
+
+        /// <summary>
         /// Lit le fichier de réglages.
         ///  - S'il n'existe pas encore (premier lancement), on le crée avec les valeurs par défaut.
         ///  - S'il est illisible (fichier abîmé, faute de syntaxe), on le met de côté sous le nom
@@ -845,17 +889,9 @@ namespace GazeBar
 
             try
             {
-                DataContractJsonSerializer serialiseur = new DataContractJsonSerializer(typeof(Parametres));
-                using (FileStream fichier = File.OpenRead(chemin))
-                {
-                    resultat = (Parametres)serialiseur.ReadObject(fichier);
-                }
+                bool misAJour;
+                resultat = LireFichier(chemin, out misAJour);
                 App.Log("Paramètres : lus depuis " + chemin);
-                // La mise à jour d'un ancien fichier passe AVANT Corriger (étape 11) : les
-                // anciennes tailles en pixels (190…) dépasseraient les nouvelles limites en %
-                // (23 au plus) et seraient abîmées avant d'être converties.
-                bool misAJour = resultat.MettreAJour();
-                resultat.Corriger();
                 if (misAJour)
                 {
                     resultat.Enregistrer();
@@ -887,7 +923,16 @@ namespace GazeBar
         /// </summary>
         public void Enregistrer()
         {
-            string chemin = CheminFichier;
+            EnregistrerDans(CheminFichier);
+        }
+
+        /// <summary>
+        /// Enregistre les réglages dans le fichier « chemin » (étape 15 : sert aussi à écrire
+        /// un profil dans Documents\GazeBar\Profils). Le dossier est créé s'il n'existe pas.
+        /// Renvoie faux si l'écriture a échoué (disque plein, dossier protégé…).
+        /// </summary>
+        public bool EnregistrerDans(string chemin)
+        {
             string temporaire = chemin + ".tmp";
 
             try
@@ -913,11 +958,13 @@ namespace GazeBar
                 {
                     File.Move(temporaire, chemin);
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 // Ne jamais faire planter le programme pour un fichier de réglages.
-                App.Log("Paramètres : échec de l'enregistrement : " + ex.Message);
+                App.Log("Paramètres : échec de l'enregistrement de " + chemin + " : " + ex.Message);
+                return false;
             }
         }
     }
