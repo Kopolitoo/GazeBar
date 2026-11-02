@@ -20,7 +20,8 @@ namespace GazeBar
         /// Exemple : regard au-dessus de l'écran → YEcran = 0, mais XEcran suit toujours le
         /// regard de gauche à droite. Sert à faire glisser les cercles du regard le long des
         /// bords quand on regarde hors de l'écran (demande de l'utilisateur du 29/10/2026).
-        /// Ne sert JAMAIS à la fixation ni aux boutons : seul le dessin du cercle l'utilise.
+        /// Sert aussi à la fixation et au mode regard fixe, mais seulement quand le regard est
+        /// tout près de l'écran (voir PresDeLEcran) ; jamais aux boutons.
         /// Valable seulement si Disponible est vrai.
         /// </summary>
         public double XEcran;
@@ -47,6 +48,16 @@ namespace GazeBar
 
         /// <summary>Vrai si le regard est disponible et SOUS le bas de l'écran (utile pour ouvrir le menu, étape 4).</summary>
         public bool EnBasHorsEcran;
+
+        /// <summary>
+        /// Vrai si le regard est disponible et sur l'écran, OU juste à côté : à moins de
+        /// [MargeBords4K] pixels (mesurés sur l'écran 4K) de ses bords (demande de l'utilisateur
+        /// du 02/11/2026). Dans les coins, le PCEye est moins précis : en regardant le coin,
+        /// une partie des mesures tombe un peu hors de l'écran, ce qui remettait la fixation à
+        /// zéro sans arrêt. Dans cette bande, la fixation et le mode regard fixe utilisent la
+        /// position ramenée dans l'écran (XEcran, YEcran) au lieu de tout oublier.
+        /// </summary>
+        public bool PresDeLEcran;
 
         /// <summary>Vrai si le regard est disponible et sur l'écran : le cas « normal ».</summary>
         public bool SurEcran

@@ -351,6 +351,16 @@ namespace GazeBar
             }
         }
 
+        /// <summary>
+        /// Largeur de la bande, autour de l'écran, où un regard « juste à côté » compte encore
+        /// pour la fixation (voir EtatRegard.PresDeLEcran). En pixels de l'écran 4K (2160 px de
+        /// haut) : 120 px sur l'écran 4K, soit 60 px sur un écran de 1080 px.
+        /// Assez large pour les mesures qui débordent dans les coins, assez étroite pour qu'un
+        /// regard franchement hors de l'écran (pour ouvrir le menu, par exemple) ne déclenche
+        /// pas de regard fixe.
+        /// </summary>
+        private const double MargeBords4K = 120;
+
         /// <summary>Prépare la « photo » du regard pour le mode courant.</summary>
         private EtatRegard LireRegard()
         {
@@ -385,6 +395,11 @@ namespace GazeBar
             // Math.Max / Math.Min « bloquent » la valeur entre deux bornes.
             etat.XEcran = Math.Max(0, Math.Min(largeur - 1, x));
             etat.YEcran = Math.Max(0, Math.Min(hauteur - 1, y));
+
+            // Tout près de l'écran ? (Sur l'écran, ou hors de l'écran de moins de la marge.)
+            double marge = Ecran.PxRegard(MargeBords4K);
+            etat.PresDeLEcran = x >= -marge && y >= -marge &&
+                                x < largeur + marge && y < hauteur + marge;
             return etat;
         }
     }

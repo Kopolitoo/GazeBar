@@ -26,6 +26,10 @@ namespace GazeBar
     ///
     /// Une seule mesure isolée dans une autre zone est ignorée (même tolérance que pour la
     /// fixation) : il faut deux mesures de suite pour changer de zone.
+    ///
+    /// Regard juste à côté de l'écran (EtatRegard.PresDeLEcran, 02/11/2026) : il est ramené
+    /// au bord le plus proche au lieu de faire quitter ce mode. Plus loin hors de l'écran :
+    /// retour au mode mouvement, comme avant.
     /// </summary>
     internal sealed class ModeRegardFixe : Mode
     {
@@ -41,10 +45,12 @@ namespace GazeBar
         private const int MesuresPourChanger = 2;
 
         /// <summary>
-        /// Zone d'activation de l'icône d'options, par rapport à l'icône dessinée : 20 % plus
-        /// grande (demande de l'utilisateur du 28/10/2026). Le dessin, lui, ne change pas.
+        /// Zone d'activation de l'icône d'options, par rapport à l'icône dessinée : 50 % plus
+        /// grande (demandes de l'utilisateur du 28/10/2026, 1,2, puis du 02/11/2026, 1,5).
+        /// Le dessin, lui, ne change pas. La zone empiète un peu plus sur le cercle, du côté
+        /// de l'icône : là, c'est l'icône qui l'emporte (voir ZoneDe).
         /// </summary>
-        private const double FacteurZoneIcone = 1.2;
+        private const double FacteurZoneIcone = 1.5;
 
         // Le point fixé, en pixels d'écran.
         private readonly double _px;
@@ -105,8 +111,10 @@ namespace GazeBar
             Parametres p = Parametres.Courants;
             double maintenant = regard.MaintenantMs;
 
-            // Regard hors de l'écran : on est forcément sorti du cercle et de l'icône.
-            if (regard.Disponible && regard.HorsEcran)
+            // Regard franchement hors de l'écran : on est forcément sorti du cercle et de
+            // l'icône. Juste à côté de l'écran (EtatRegard.PresDeLEcran), on reste : dans un
+            // coin, quelques mesures qui débordent ne doivent pas tout annuler (02/11/2026).
+            if (regard.Disponible && !regard.PresDeLEcran)
             {
                 RevenirAuMouvement(false);
                 return;
@@ -123,7 +131,11 @@ namespace GazeBar
             {
                 // Nouvelle mesure : dans quelle zone est-elle ?
                 _dernierNumero = regard.Numero;
-                ChangerZoneSiBesoin(ZoneDe(regard.X, regard.Y, p));
+                // Position ramenée dans l'écran : identique au vrai regard sur l'écran ;
+                // juste à côté, c'est le point du bord le plus proche (même règle que la
+                // fixation, voir DetecteurFixation). Ainsi, une icône collée au bord de
+                // l'écran se vise aussi en regardant un peu au-delà du bord.
+                ChangerZoneSiBesoin(ZoneDe(regard.XEcran, regard.YEcran, p));
 
                 if (_zone == Zone.Dehors)
                 {
