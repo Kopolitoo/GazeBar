@@ -156,8 +156,11 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   Regarder hors de la barre pendant `DelaiFermetureMenu` (1 s) la ferme et ramène au mode
   d'avant. Un petit cercle montre où est le regard.
 - `Modes/ModeParametres` et `FenetreParametres` (étape 7) : bouton « Paramètres » du menu. Une
-  fenêtre plein écran, fond noir, avec sept onglets à gauche (Regard, Fixation, Délais, Affichage,
-  Loupe et glisser, Défilement, Général ; liste dans `CatalogueParametres`). Chaque réglage : son nom, une
+  fenêtre plein écran, fond noir, avec à gauche quatre catégories dépliantes (02/11/2026) : Regard (Regard,
+  Fixation, Délais), Actions (Loupe et glisser, Défilement, Icônes), Affichage (Affichage, Clavier,
+  Jeu) et Système (Général, Outils). Seule la catégorie ouverte montre ses onglets, en dessous d'elle
+  et en retrait ; regarder une autre catégorie l'ouvre sur son premier onglet (liste dans
+  `CatalogueParametres`). Chaque réglage : son nom, une
   explication, puis « − », la valeur, « + » (ou « Non » / « Oui »). Garder le regard sur « − » ou
   « + » répète le changement toutes les 0,4 s. « Défaut » (en haut à droite) remet les valeurs de
   l'onglet affiché, après confirmation ; « Retour » (au milieu du bord droit) ou Échap ramène au

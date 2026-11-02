@@ -56,6 +56,7 @@ namespace GazeBar
         private const double OngletEcart = 20;         // espace entre deux onglets
         private const double OngletsHaut = 60;         // haut du premier onglet
         private const double OngletsBas = 1040;        // le dernier onglet s'arrête avant cette ligne
+        private const double RetraitOnglet = 40;       // retrait des onglets sous leur catégorie (02/11/2026)
         private const double ContenuGauche = 460;
         private const double LigneHaut = 92;
         private const double LignePas = 184;           // d'une ligne de réglage à la suivante
@@ -337,33 +338,11 @@ namespace GazeBar
             TextBlock titre = Texte("Paramètres — " + onglet.Nom, 30, Doux, false);
             Placer(titre, ContenuGauche, 26);
 
-            // ── Les onglets, à gauche. Six onglets tiennent avec leur hauteur maximale (140) ;
-            //    à partir de sept (étape 8), ils se resserrent pour rester sur la page :
-            //    7 onglets → environ 123 de haut, 8 onglets → 105, 10 onglets (« Outils »,
-            //    29/10/2026) → 80.
-            int nombreOnglets = CatalogueParametres.Onglets.Count;
-            double pas = Math.Min(OngletHauteurMax + OngletEcart,
-                                  (OngletsBas - OngletsHaut + OngletEcart) / Math.Max(1, nombreOnglets));
-            for (int i = 0; i < CatalogueParametres.Onglets.Count; i++)
-            {
-                Onglet o = CatalogueParametres.Onglets[i];
-                StackPanel ligne = new StackPanel();
-                ligne.Orientation = Orientation.Horizontal;
-                ligne.VerticalAlignment = VerticalAlignment.Center;
-                ligne.Margin = new Thickness(28, 0, 0, 0);
-                TextBlock symbole = Texte(o.Symbole, 46, i == _onglet ? CibleParametre.Accent : Doux, false);
-                symbole.FontFamily = new FontFamily(PoliceIcones);
-                symbole.Width = 70;
-                symbole.VerticalAlignment = VerticalAlignment.Center;
-                ligne.Children.Add(symbole);
-                TextBlock nom = Texte(o.Nom, 36, Blanc, true);
-                nom.VerticalAlignment = VerticalAlignment.Center;
-                ligne.Children.Add(nom);
-
-                int numero = i;   // copie pour la fonction ci-dessous (sinon elle verrait le dernier i)
-                AjouterCible(OngletGauche, OngletsHaut + i * pas, OngletLargeur, pas - OngletEcart, ligne,
-                             () => ChoisirOnglet(numero), false, i == _onglet);
-            }
+            // ── La colonne de gauche : les CATÉGORIES « dépliantes » (02/11/2026, choix de
+            //    l'utilisateur). On voit les quatre catégories ; seule celle qui contient
+            //    l'onglet ouvert montre ses onglets, juste en dessous d'elle et en retrait.
+            //    Au plus 4 + 3 = 7 boutons (au lieu de 11 avant), donc des boutons plus hauts.
+            ConstruireColonneGauche();
 
             // ── Le contenu : les réglages, ou la confirmation de « Défaut ».
             if (_confirmation)
@@ -409,6 +388,81 @@ namespace GazeBar
                          SymboleEtMot("", "Retour"), DemanderRetour, false, false);
 
             Version++;
+        }
+
+        /// <summary>
+        /// La colonne de gauche : les catégories, et sous la catégorie ouverte ses onglets.
+        ///
+        /// Regarder une autre catégorie l'ouvre directement sur son premier onglet (un seul
+        /// regard, comme avant pour changer d'onglet). Regarder la catégorie déjà ouverte ne
+        /// fait rien. L'onglet ouvert est encadré comme avant ; la catégorie ouverte a son
+        /// symbole en couleur.
+        /// </summary>
+        private void ConstruireColonneGauche()
+        {
+            int categorieOuverte = CatalogueParametres.CategorieDe(_onglet);
+            List<int> ongletsOuverts = CatalogueParametres.OngletsDe(categorieOuverte);
+
+            // Le nombre de lignes de la colonne : toutes les catégories + les onglets de la
+            // catégorie ouverte. Les lignes se partagent la hauteur de la page, sans dépasser
+            // la hauteur maximale (140) : avec 7 lignes, chacune fait environ 120 de haut.
+            int nombreLignes = CatalogueParametres.Categories.Count + ongletsOuverts.Count;
+            double pas = Math.Min(OngletHauteurMax + OngletEcart,
+                                  (OngletsBas - OngletsHaut + OngletEcart) / Math.Max(1, nombreLignes));
+
+            double y = OngletsHaut;
+            for (int c = 0; c < CatalogueParametres.Categories.Count; c++)
+            {
+                CategorieParametres categorie = CatalogueParametres.Categories[c];
+                bool ouverte = c == categorieOuverte;
+
+                // La catégorie : symbole (en couleur si elle est ouverte) et nom.
+                UIElement ligneCategorie = LigneColonne(categorie.Symbole, categorie.Nom, ouverte, 46, 36, 24);
+                int numeroCategorie = c;   // copie pour la fonction ci-dessous
+                AjouterCible(OngletGauche, y, OngletLargeur, pas - OngletEcart, ligneCategorie,
+                             () => ChoisirCategorie(numeroCategorie), false, false);
+                y += pas;
+
+                if (!ouverte)
+                {
+                    continue;
+                }
+
+                // Les onglets de la catégorie ouverte, en retrait vers la droite (le retrait
+                // montre qu'ils « appartiennent » à la catégorie du dessus).
+                foreach (int numeroOnglet in ongletsOuverts)
+                {
+                    Onglet o = CatalogueParametres.Onglets[numeroOnglet];
+                    UIElement ligneOnglet = LigneColonne(o.Symbole, o.Nom, numeroOnglet == _onglet, 34, 30, 14);
+                    int numero = numeroOnglet;   // copie pour la fonction ci-dessous
+                    AjouterCible(OngletGauche + RetraitOnglet, y, OngletLargeur - RetraitOnglet, pas - OngletEcart,
+                                 ligneOnglet, () => ChoisirOnglet(numero), false, numeroOnglet == _onglet);
+                    y += pas;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Le contenu d'un bouton de la colonne de gauche : un symbole puis un nom. Les onglets
+        /// ont un texte un peu plus petit et une marge plus courte que les catégories, pour que
+        /// « Loupe, glisser » tienne dans le bouton en retrait.
+        /// </summary>
+        private static UIElement LigneColonne(string symbole, string nom, bool enCouleur,
+                                              double tailleSymbole, double tailleNom, double marge)
+        {
+            StackPanel ligne = new StackPanel();
+            ligne.Orientation = Orientation.Horizontal;
+            ligne.VerticalAlignment = VerticalAlignment.Center;
+            ligne.Margin = new Thickness(marge, 0, 0, 0);
+            TextBlock blocSymbole = Texte(symbole, tailleSymbole, enCouleur ? CibleParametre.Accent : Doux, false);
+            blocSymbole.FontFamily = new FontFamily(PoliceIcones);
+            blocSymbole.Width = tailleSymbole + 22;
+            blocSymbole.VerticalAlignment = VerticalAlignment.Center;
+            ligne.Children.Add(blocSymbole);
+            TextBlock blocNom = Texte(nom, tailleNom, Blanc, true);
+            blocNom.VerticalAlignment = VerticalAlignment.Center;
+            ligne.Children.Add(blocNom);
+            return ligne;
         }
 
         /// <summary>Une ligne de réglage : nom et explication, puis les boutons.</summary>
@@ -658,6 +712,25 @@ namespace GazeBar
         }
 
         // ───────────────────────── Les actions ─────────────────────────
+
+        /// <summary>
+        /// Regard sur une catégorie : si elle n'est pas déjà ouverte, elle s'ouvre sur son
+        /// premier onglet. Si elle est déjà ouverte, rien ne change (on ne quitte pas l'onglet
+        /// en cours par erreur).
+        /// </summary>
+        private void ChoisirCategorie(int categorie)
+        {
+            if (categorie == CatalogueParametres.CategorieDe(_onglet))
+            {
+                return;
+            }
+            List<int> onglets = CatalogueParametres.OngletsDe(categorie);
+            if (onglets.Count > 0)
+            {
+                App.Log("Paramètres : catégorie " + CatalogueParametres.Categories[categorie].Nom);
+                ChoisirOnglet(onglets[0]);
+            }
+        }
 
         private void ChoisirOnglet(int numero)
         {
