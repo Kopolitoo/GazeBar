@@ -4,403 +4,400 @@ using System.Windows.Media;
 namespace GazeBar
 {
     /// <summary>
-    /// LOGIQUE : le chef d'orchestre des modes.
+    /// LOGIC: the conductor of the modes.
     ///
-    /// Il connaît le mode courant et le mode précédent, et c'est lui seul qui fait passer
-    /// d'un mode à l'autre (méthode ChangerMode). Avoir un seul point de passage permet de
-    /// toujours ranger proprement l'ancien mode, de tout noter dans le journal, et plus tard
-    /// d'ajouter des animations de transition à un seul endroit.
+    /// It knows the current mode and the previous mode, and it alone switches from one mode
+    /// to another (ChangeMode method). Having a single crossing point makes it possible to
+    /// always tidy up the old mode properly, to log everything, and later to add transition
+    /// animations in one place.
     ///
-    /// Il possède aussi l'horloge commune : à chaque image dessinée par l'écran (en général
-    /// 60 fois par seconde), il lit le regard, prépare un EtatRegard et le donne au mode courant
-    /// (méthode Actualiser du mode).
+    /// It also owns the shared clock: on each frame drawn by the screen (usually 60 times per
+    /// second), it reads the gaze, prepares a GazeState and gives it to the current mode (the
+    /// mode's Update method).
     ///
-    /// Pourquoi « à chaque image » ? Avant, un minuteur (DispatcherTimer) tournait toutes les
-    /// 16 ms. Mais ce minuteur n'est pas précis sous Windows (il arrive souvent avec 15 ou 31 ms),
-    /// et il n'est pas synchronisé avec l'écran : certaines images montraient deux déplacements
-    /// du cercle, d'autres aucun. Résultat : un mouvement qui « accroche ». L'événement
-    /// CompositionTarget.Rendering de WPF est appelé juste avant que WPF dessine chaque image :
-    /// le cercle avance exactement une fois par image, régulièrement.
+    /// Why "on each frame"? Before, a timer (DispatcherTimer) ran every 16 ms. But this timer
+    /// is not precise on Windows (it often fires after 15 or 31 ms), and it is not synchronized
+    /// with the screen: some frames showed two circle moves, others none. Result: a movement
+    /// that "catches". WPF's CompositionTarget.Rendering event is called just before WPF draws
+    /// each frame: the circle moves exactly once per frame, regularly.
     ///
-    /// Les modes y trouvent tout ce dont ils ont besoin : le regard (Regard), le calque plein
-    /// écran (Calque) et la taille de l'écran.
+    /// The modes find everything they need there: the gaze (Gaze), the full-screen overlay
+    /// (Layer) and the screen size.
     ///
-    /// Le premier mode est en général le mode mouvement ; c'est lui qui passe la main au mode
-    /// regard fixe quand on fixe un point, et le mode regard fixe la lui rend.
+    /// The first mode is usually movement mode; it hands over to fixed gaze mode when a point
+    /// is fixated, and fixed gaze mode hands it back.
     ///
-    /// Étape 4 : c'est aussi lui qui ouvre le menu : quand le regard reste en bas, hors de
-    /// l'écran, pendant [DelaiMenu], on passe au mode menu. Depuis l'étape 6, seuls les modes
-    /// mouvement, pause et jeu (étape 9) l'autorisent (propriété Mode.MenuAutorise).
+    /// Step 4: it also opens the menu: when the gaze stays down, below the screen, for
+    /// [MenuDelay], we switch to menu mode. Since step 6, only movement, pause and game
+    /// (step 9) modes allow it (Mode.MenuAllowed property).
     /// </summary>
     internal sealed class ModeManager
     {
         /// <summary>
-        /// Intervalle habituel entre deux actualisations, en millisecondes (16 ms ≈ 60 images par
-        /// seconde, la cadence de la plupart des écrans). Ce n'est qu'un ordre de grandeur :
-        /// l'horloge suit l'écran, et les modes mesurent toujours le temps réel (MaintenantMs).
+        /// Usual interval between two updates, in milliseconds (16 ms ≈ 60 frames per second,
+        /// the rate of most screens). It is only an order of magnitude: the clock follows the
+        /// screen, and the modes always measure real time (NowMs).
         /// </summary>
-        public const int IntervalleMs = 16;
+        public const int IntervalMs = 16;
 
-        // Vrai entre Demarrer et Arreter (l'horloge est branchée sur CompositionTarget.Rendering).
-        private bool _enMarche;
+        // True between Start and Stop (the clock is hooked to CompositionTarget.Rendering).
+        private bool _running;
 
-        // Heure de l'image déjà traitée : WPF appelle parfois Rendering deux fois pour la même
-        // image ; on ne la traite qu'une fois.
-        private TimeSpan _derniereImage = TimeSpan.Zero;
+        // Time of the frame already handled: WPF sometimes calls Rendering twice for the same
+        // frame; it is handled only once.
+        private TimeSpan _lastImage = TimeSpan.Zero;
 
-        // Instant (ms) où le regard est passé en bas hors de l'écran ; -1 = il n'y est pas.
-        private double _debutEnBasMs = -1;
+        // Time (ms) when the gaze went down below the screen; -1 = it is not there.
+        private double _belowStartMs = -1;
 
-        // Pour le journal : où était le regard au tic précédent (voir NoterOuEstLeRegard).
-        private string _situationRegard = "";
-        private double _dernierX;
-        private double _dernierY;
+        // For the log: where the gaze was at the previous tick (see NoteGazePosition).
+        private string _gazeSituation = "";
+        private double _lastX;
+        private double _lastY;
 
-        public ModeManager(GazeSource regard, OverlayWindow calque)
+        public ModeManager(GazeSource gaze, OverlayWindow layer)
         {
-            Regard = regard;
-            Calque = calque;
-            Clavier = new ClavierRegard(calque);
+            Gaze = gaze;
+            Layer = layer;
+            Keyboard = new GazeKeyboard(layer);
 
-            // Étape 11 : l'écran peut changer pendant que GazeBar tourne.
-            Ecran.Change += OnEcranChange;
+            // Step 11: the screen may change while GazeBar runs.
+            ScreenMetrics.Change += OnScreenChanged;
         }
 
         /// <summary>
-        /// La résolution, la mise à l'échelle ou la taille du texte de Windows a changé
-        /// (étape 11). Le mode courant s'adapte s'il le peut (Mode.AdapterEcran) ; sinon on
-        /// revient au mode mouvement, comme avec la touche Échap : boutons de la souris et
-        /// touches Ctrl, Maj, Alt relâchés par sécurité (un glisser-déposer est interrompu).
+        /// The Windows resolution, scaling or text size changed (step 11). The current mode
+        /// adapts if it can (Mode.AdaptToScreen); otherwise we return to movement mode, as with
+        /// the Escape key: mouse buttons and Ctrl, Shift, Alt keys released for safety (a drag
+        /// and drop is interrupted).
         /// </summary>
-        private void OnEcranChange()
+        private void OnScreenChanged()
         {
-            if (ModeCourant == null)
+            if (CurrentMode == null)
             {
                 return;
             }
-            // Le clavier au regard (étape 12) se redessine aux nouvelles tailles.
-            Clavier.AdapterEcran();
-            if (ModeCourant.AdapterEcran())
+            // The gaze keyboard (step 12) redraws itself at the new sizes.
+            Keyboard.AdaptToScreen();
+            if (CurrentMode.AdaptToScreen())
             {
-                App.Log("Écran changé : le mode " + ModeCourant.Nom + " continue avec les nouvelles tailles");
+                App.Log("Screen changed: mode " + CurrentMode.Name + " goes on with the new sizes");
                 return;
             }
-            App.Log("Écran changé : retour au mode mouvement (le mode " + ModeCourant.Nom + " était placé pour l'ancien écran)");
+            App.Log("Screen changed: back to movement mode (mode " + CurrentMode.Name + " was laid out for the old screen)");
             MouseInjector.ReleaseAll();
-            InjecteurClavier.RelacherTout();
-            ChangerMode(new ModeMouvement());
+            KeyboardInjector.ReleaseAll();
+            ChangeMode(new MovementMode());
         }
 
-        /// <summary>La source du regard (eyetracker).</summary>
-        public GazeSource Regard { get; private set; }
+        /// <summary>The gaze source (eyetracker).</summary>
+        public GazeSource Gaze { get; private set; }
 
-        /// <summary>La fenêtre transparente plein écran où les modes dessinent.</summary>
-        public OverlayWindow Calque { get; private set; }
+        /// <summary>The transparent full-screen window where the modes draw.</summary>
+        public OverlayWindow Layer { get; private set; }
 
         /// <summary>
-        /// Le clavier au regard (étape 12). Ce n'est pas un mode : il reste affiché pendant les
-        /// modes mouvement et regard fixe (voir ClavierRegard).
+        /// The gaze keyboard (step 12). It is not a mode: it stays shown during movement and
+        /// fixed gaze modes (see GazeKeyboard).
         /// </summary>
-        public ClavierRegard Clavier { get; private set; }
+        public GazeKeyboard Keyboard { get; private set; }
 
-        /// <summary>Le mode en cours (null avant Demarrer).</summary>
-        public Mode ModeCourant { get; private set; }
+        /// <summary>The current mode (null before Start).</summary>
+        public Mode CurrentMode { get; private set; }
 
-        /// <summary>Le mode d'avant, pour pouvoir y revenir (par exemple en fermant le menu).</summary>
-        public Mode ModePrecedent { get; private set; }
+        /// <summary>The previous mode, to be able to go back to it (for example when closing the menu).</summary>
+        public Mode PreviousMode { get; private set; }
 
-        /// <summary>Déclenché après chaque changement de mode. L'interface peut s'en servir pour s'afficher à jour.</summary>
-        public event Action<Mode> ModeChange;
+        /// <summary>Raised after each mode change. The interface can use it to show itself up to date.</summary>
+        public event Action<Mode> ModeChanged;
 
         /// <summary>
-        /// Largeur de l'écran principal, en pixels réels, mesurée par Ecran (étape 11 :
-        /// GetSystemMetrics ne voyait pas un changement de résolution fait pendant que GazeBar
-        /// tourne, voir NativeMethods.TailleEcranPrincipal).
+        /// Width of the primary screen, in real pixels, measured by ScreenMetrics (step 11:
+        /// GetSystemMetrics did not see a resolution change made while GazeBar runs, see
+        /// NativeMethods.PrimaryScreenSize).
         /// </summary>
-        public double LargeurEcran
+        public double ScreenWidth
         {
-            get { return Ecran.LargeurPixels; }
+            get { return ScreenMetrics.WidthPixels; }
         }
 
-        /// <summary>Hauteur de l'écran principal, en pixels réels, mesurée par Ecran.</summary>
-        public double HauteurEcran
+        /// <summary>Height of the primary screen, in real pixels, measured by ScreenMetrics.</summary>
+        public double ScreenHeight
         {
-            get { return Ecran.HauteurPixels; }
+            get { return ScreenMetrics.HeightPixels; }
         }
 
-        // ───────────────────────── Commandes ─────────────────────────
+        // ───────────────────────── Commands ─────────────────────────
 
-        /// <summary>Entre dans le premier mode et lance l'horloge.</summary>
-        public void Demarrer(Mode premierMode)
+        /// <summary>Enters the first mode and starts the clock.</summary>
+        public void Start(Mode firstMode)
         {
-            ChangerMode(premierMode);
-            if (!_enMarche)
+            ChangeMode(firstMode);
+            if (!_running)
             {
                 CompositionTarget.Rendering += OnImage;
-                _enMarche = true;
+                _running = true;
             }
         }
 
-        /// <summary>Arrête l'horloge et quitte proprement le mode courant (à la fermeture du programme).</summary>
-        public void Arreter()
+        /// <summary>Stops the clock and cleanly quits the current mode (when the program closes).</summary>
+        public void Stop()
         {
-            if (_enMarche)
+            if (_running)
             {
                 CompositionTarget.Rendering -= OnImage;
-                _enMarche = false;
+                _running = false;
             }
-            if (ModeCourant != null)
+            if (CurrentMode != null)
             {
-                ModeCourant.Quitter();
-                ModeCourant = null;
+                CurrentMode.Quit();
+                CurrentMode = null;
             }
         }
 
         /// <summary>
-        /// Passe au mode indiqué : l'ancien mode est rangé (Quitter), puis le nouveau
-        /// commence (Entrer). Peut être appelée par un mode lui-même, depuis son Actualiser.
+        /// Switches to the given mode: the old mode is tidied up (Quit), then the new one starts
+        /// (Enter). Can be called by a mode itself, from its Update.
         /// </summary>
-        public void ChangerMode(Mode nouveau)
+        public void ChangeMode(Mode newVal)
         {
-            if (nouveau == null || nouveau == ModeCourant)
+            if (newVal == null || newVal == CurrentMode)
             {
                 return;
             }
 
-            Mode ancien = ModeCourant;
-            if (ancien != null)
+            Mode old = CurrentMode;
+            if (old != null)
             {
-                ancien.Quitter();
+                old.Quit();
             }
 
-            ModePrecedent = ancien;
-            ModeCourant = nouveau;
-            nouveau.Attacher(this);
+            PreviousMode = old;
+            CurrentMode = newVal;
+            newVal.Attach(this);
 
-            // Le clavier au regard s'affiche ou se cache selon le nouveau mode (étape 12).
-            // AVANT Entrer : la loupe photographie l'écran dès son entrée, sans le clavier.
-            Clavier.SurChangementMode(nouveau);
+            // The gaze keyboard is shown or hidden according to the new mode (step 12).
+            // BEFORE Enter: the magnifier takes its picture of the screen as soon as it enters, without the keyboard.
+            Keyboard.OnModeChange(newVal);
 
-            App.Log("Mode : " + (ancien == null ? "(aucun)" : ancien.Nom) + " → " + nouveau.Nom);
-            // Le nouveau mode reçoit la position actuelle du regard pour s'initialiser.
-            nouveau.Entrer(LireRegard());
+            App.Log("Mode: " + (old == null ? "(none)" : old.Name) + " → " + newVal.Name);
+            // The new mode receives the current gaze position to initialize itself.
+            newVal.Enter(ReadGaze());
 
-            Action<Mode> abonnes = ModeChange;
-            if (abonnes != null)
+            Action<Mode> subscribers = ModeChanged;
+            if (subscribers != null)
             {
-                abonnes(nouveau);
+                subscribers(newVal);
             }
         }
 
-        /// <summary>Revient au mode d'avant, s'il existe.</summary>
-        public void RevenirAuModePrecedent()
+        /// <summary>Goes back to the previous mode, if there is one.</summary>
+        public void ReturnToPreviousMode()
         {
-            if (ModePrecedent != null)
+            if (PreviousMode != null)
             {
-                ChangerMode(ModePrecedent);
+                ChangeMode(PreviousMode);
             }
         }
 
-        // ───────────────────────── Horloge ─────────────────────────
+        // ───────────────────────── Clock ─────────────────────────
 
         /// <summary>
-        /// Appelée par WPF juste avant de dessiner chaque image. On ne traite chaque image
-        /// qu'une seule fois (voir _derniereImage), puis on fait un tic.
+        /// Called by WPF just before drawing each frame. Each frame is handled only once (see
+        /// _lastImage), then a tick is made.
         /// </summary>
         private void OnImage(object sender, EventArgs e)
         {
             RenderingEventArgs image = e as RenderingEventArgs;
             if (image != null)
             {
-                if (image.RenderingTime == _derniereImage)
+                if (image.RenderingTime == _lastImage)
                 {
                     return;
                 }
-                _derniereImage = image.RenderingTime;
+                _lastImage = image.RenderingTime;
             }
             OnTick();
         }
 
         private void OnTick()
         {
-            if (ModeCourant == null)
+            if (CurrentMode == null)
             {
                 return;
             }
 
-            // Pas de tic À L'INTÉRIEUR d'un autre tic (bogue du 02/11/2026). Certaines
-            // opérations faites pendant un tic, comme l'ouverture de la fenêtre des paramètres
-            // (Show, Activate), laissent WPF traiter d'autres messages en attendant : l'image
-            // suivante pouvait alors arriver, et actualiser le nouveau mode avant la fin de son
-            // Entrer (ModeParametres : viseur encore vide → NullReferenceException).
-            if (_dansTic)
+            // No tick INSIDE another tick (bug of 2026-11-02). Some operations done during a
+            // tick, like opening the settings window (Show, Activate), let WPF process other
+            // messages meanwhile: the next frame could then arrive, and update the new mode
+            // before the end of its Enter (SettingsMode: aimer still empty →
+            // NullReferenceException).
+            if (_inTick)
             {
                 return;
             }
-            _dansTic = true;
+            _inTick = true;
             try
             {
-                Tic();
+                Tick();
             }
             finally
             {
-                _dansTic = false;
+                _inTick = false;
             }
         }
 
-        // Vrai pendant un tic (voir OnTick).
-        private bool _dansTic;
+        // True during a tick (see OnTick).
+        private bool _inTick;
 
-        private void Tic()
+        private void Tick()
         {
 
-            EtatRegard etat = LireRegard();
+            GazeState state = ReadGaze();
 
             try
             {
-                // Le menu s'ouvre-t-il ? Si oui, le mode courant n'est pas actualisé à ce tic.
-                if (SurveillerMenu(etat))
+                // Does the menu open? If so, the current mode is not updated on this tick.
+                if (WatchMenu(state))
                 {
                     return;
                 }
 
-                ModeCourant.Actualiser(etat);
+                CurrentMode.Update(state);
             }
             catch (Exception ex)
             {
-                // Une erreur dans un mode ne doit pas tout bloquer : on la note, on relâche
-                // les boutons de la souris et les touches du clavier par sécurité, et
-                // l'horloge continue.
+                // An error in a mode must not block everything: log it, release the mouse
+                // buttons and the keyboard keys for safety, and the clock goes on.
                 MouseInjector.ReleaseAll();
-                InjecteurClavier.RelacherTout();
-                App.Log("ERREUR dans le mode " + ModeCourant.Nom + " : " + ex);
+                KeyboardInjector.ReleaseAll();
+                App.Log("ERROR in mode " + CurrentMode.Name + ": " + ex);
             }
         }
 
         /// <summary>
-        /// Ouvre le menu quand le regard reste en bas, hors de l'écran, pendant [DelaiMenu].
-        /// Le minuteur repart de zéro dès que le regard est ailleurs, ou perdu : on ne compte
-        /// que ce qu'on voit vraiment. Renvoie vrai si le menu vient de s'ouvrir.
+        /// Opens the menu when the gaze stays down, below the screen, for [MenuDelay].
+        /// The timer starts again from zero as soon as the gaze is elsewhere, or lost: only
+        /// what is really seen counts. Returns true if the menu just opened.
         /// </summary>
-        private bool SurveillerMenu(EtatRegard etat)
+        private bool WatchMenu(GazeState state)
         {
-            NoterOuEstLeRegard(etat);
+            NoteGazePosition(state);
 
-            if (!etat.Disponible || !etat.EnBasHorsEcran)
+            if (!state.Available || !state.BelowScreen)
             {
-                _debutEnBasMs = -1;
+                _belowStartMs = -1;
                 return false;
             }
 
-            if (_debutEnBasMs < 0)
+            if (_belowStartMs < 0)
             {
-                _debutEnBasMs = etat.MaintenantMs;
+                _belowStartMs = state.NowMs;
                 return false;
             }
 
-            if (etat.MaintenantMs - _debutEnBasMs >= Parametres.Courants.DelaiMenu * 1000.0 &&
-                ModeCourant.MenuAutorise)
+            if (state.NowMs - _belowStartMs >= AppSettings.Current.MenuDelay * 1000.0 &&
+                CurrentMode.MenuAllowed)
             {
-                _debutEnBasMs = -1;
-                // Étape 12 : clavier affiché (donc mode mouvement) → la barre de menu du
-                // clavier, et non la barre classique (choix de l'utilisateur du 31/10/2026).
-                bool menuClavier = Clavier.Ouvert && ModeCourant is ModeMouvement;
-                ChangerMode(new ModeMenu(menuClavier));
+                _belowStartMs = -1;
+                // Step 12: keyboard shown (so movement mode) → the keyboard's menu bar, not the
+                // classic bar (user's choice of 2026-10-31).
+                bool keyboardMenu = Keyboard.IsOpen && CurrentMode is MovementMode;
+                ChangeMode(new MenuMode(keyboardMenu));
                 return true;
             }
             return false;
         }
 
         /// <summary>
-        /// Diagnostic du menu : note dans le journal chaque fois que le regard change de
-        /// situation (sur l'écran, sous l'écran, hors de l'écran ailleurs, perdu), avec sa
-        /// dernière position connue. Sert à vérifier que le PCEye 5 mesure bien le regard
-        /// SOUS l'écran (condition pour ouvrir le menu), au lieu de le perdre.
+        /// Menu diagnosis: writes to the log each time the gaze changes situation (on the
+        /// screen, below the screen, elsewhere off screen, lost), with its last known position.
+        /// Used to check that the PCEye 5 really measures the gaze BELOW the screen (the
+        /// condition to open the menu), instead of losing it.
         /// </summary>
-        private void NoterOuEstLeRegard(EtatRegard etat)
+        private void NoteGazePosition(GazeState state)
         {
             string situation;
-            if (!etat.Disponible)
+            if (!state.Available)
             {
-                situation = "perdu";
+                situation = "lost";
             }
-            else if (etat.EnBasHorsEcran)
+            else if (state.BelowScreen)
             {
-                situation = "sous l'écran";
+                situation = "below the screen";
             }
-            else if (etat.HorsEcran)
+            else if (state.OffScreen)
             {
-                situation = "hors de l'écran (pas en bas)";
+                situation = "off screen (not below)";
             }
             else
             {
-                situation = "sur l'écran";
+                situation = "on screen";
             }
 
-            if (etat.Disponible)
+            if (state.Available)
             {
-                _dernierX = etat.X;
-                _dernierY = etat.Y;
+                _lastX = state.X;
+                _lastY = state.Y;
             }
 
-            if (situation != _situationRegard)
+            if (situation != _gazeSituation)
             {
-                _situationRegard = situation;
-                App.Log("Regard : " + situation + " (dernière position X " + _dernierX.ToString("F0") +
-                        ", Y " + _dernierY.ToString("F0") + " ; écran " + LargeurEcran + " × " + HauteurEcran + ")");
+                _gazeSituation = situation;
+                App.Log("Gaze: " + situation + " (last position X " + _lastX.ToString("F0") +
+                        ", Y " + _lastY.ToString("F0") + "; screen " + ScreenWidth + " × " + ScreenHeight + ")");
             }
         }
 
         /// <summary>
-        /// Largeur de la bande, autour de l'écran, où un regard « juste à côté » compte encore
-        /// pour la fixation (voir EtatRegard.PresDeLEcran). En pixels de l'écran 4K (2160 px de
-        /// haut) : 120 px sur l'écran 4K, soit 60 px sur un écran de 1080 px.
-        /// Assez large pour les mesures qui débordent dans les coins, assez étroite pour qu'un
-        /// regard franchement hors de l'écran (pour ouvrir le menu, par exemple) ne déclenche
-        /// pas de regard fixe.
+        /// Width of the band, around the screen, where a gaze "right next to it" still counts
+        /// for the fixation (see GazeState.NearScreen). In 4K screen pixels (2160 px high):
+        /// 120 px on the 4K screen, i.e. 60 px on a 1080 px screen.
+        /// Wide enough for the measures overflowing in the corners, narrow enough so that a
+        /// gaze clearly off screen (to open the menu, for example) does not trigger fixed gaze.
         /// </summary>
-        private const double MargeBords4K = 120;
+        private const double EdgesMargin4K = 120;
 
-        /// <summary>Prépare la « photo » du regard pour le mode courant.</summary>
-        private EtatRegard LireRegard()
+        /// <summary>Prepares the gaze "snapshot" for the current mode.</summary>
+        private GazeState ReadGaze()
         {
-            EtatRegard etat = new EtatRegard();
-            etat.MaintenantMs = Regard.MaintenantMs;
+            GazeState state = new GazeState();
+            state.NowMs = Gaze.NowMs;
 
-            if (!Regard.IsRunning || !Regard.HasData ||
-                Regard.MsSinceLastSample > Parametres.Courants.AgeMaxMesure)
+            if (!Gaze.IsRunning || !Gaze.HasData ||
+                Gaze.MsSinceLastSample > AppSettings.Current.MaxMeasureAge)
             {
-                etat.Disponible = false;
-                return etat;
+                state.Available = false;
+                return state;
             }
 
             double x;
             double y;
-            long numero;
+            long num;
             double instantMs;
-            Regard.GetLatest(out x, out y, out numero, out instantMs);
+            Gaze.GetLatest(out x, out y, out num, out instantMs);
 
-            double largeur = LargeurEcran;
-            double hauteur = HauteurEcran;
+            double width = ScreenWidth;
+            double height = ScreenHeight;
 
-            etat.Disponible = true;
-            etat.X = x;
-            etat.Y = y;
-            etat.Numero = numero;
-            etat.InstantMesureMs = instantMs;
-            etat.HorsEcran = GazeSource.IsOffScreen(x, y, largeur, hauteur);
-            etat.EnBasHorsEcran = y >= hauteur;
+            state.Available = true;
+            state.X = x;
+            state.Y = y;
+            state.Number = num;
+            state.MeasureTimeMs = instantMs;
+            state.OffScreen = GazeSource.IsOffScreen(x, y, width, height);
+            state.BelowScreen = y >= height;
 
-            // La même position, mais ramenée dans l'écran (de 0 à largeur − 1, de 0 à hauteur − 1).
-            // Math.Max / Math.Min « bloquent » la valeur entre deux bornes.
-            etat.XEcran = Math.Max(0, Math.Min(largeur - 1, x));
-            etat.YEcran = Math.Max(0, Math.Min(hauteur - 1, y));
+            // The same position, but brought back into the screen (from 0 to width − 1, from 0
+            // to height − 1). Math.Max / Math.Min "clamp" the value between two bounds.
+            state.XScreen = Math.Max(0, Math.Min(width - 1, x));
+            state.YScreen = Math.Max(0, Math.Min(height - 1, y));
 
-            // Tout près de l'écran ? (Sur l'écran, ou hors de l'écran de moins de la marge.)
-            double marge = Ecran.PxRegard(MargeBords4K);
-            etat.PresDeLEcran = x >= -marge && y >= -marge &&
-                                x < largeur + marge && y < hauteur + marge;
-            return etat;
+            // Very close to the screen? (On the screen, or off screen by less than the margin.)
+            double margin = ScreenMetrics.GazePx(EdgesMargin4K);
+            state.NearScreen = x >= -margin && y >= -margin &&
+                                x < width + margin && y < height + margin;
+            return state;
         }
     }
 }

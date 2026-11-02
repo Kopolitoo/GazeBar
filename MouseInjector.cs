@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace GazeBar
 {
-    /// <summary>Quel bouton de la souris.</summary>
+    /// <summary>Which mouse button.</summary>
     internal enum MouseSide
     {
         Left,
@@ -11,24 +11,23 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// MODÈLE : simule l'appui et le relâchement des boutons de la souris, et (depuis
-    /// l'étape 6) le déplacement du curseur pendant un glisser-déposer.
+    /// MODEL: simulates pressing and releasing the mouse buttons, and (since step 6) moving
+    /// the cursor during a drag and drop.
     ///
-    /// Les clics sont faits à l'endroit où se trouve déjà le curseur (les modes le placent
-    /// avant avec SetCursorPos).
+    /// Clicks happen where the cursor already is (the modes place it beforehand with
+    /// SetCursorPos).
     ///
-    /// Pour le glisser-déposer (étape 6), le curseur est déplacé par DeplacerVers, qui passe
-    /// par SendInput comme une vraie souris : les applications reçoivent alors les mêmes
-    /// messages « la souris bouge » qu'avec une souris physique, ce qui est nécessaire pour
-    /// que l'Explorateur ou Paint reconnaissent un glisser.
+    /// For drag and drop (step 6), the cursor is moved by MoveTo, which goes through
+    /// SendInput like a real mouse: applications then receive the same "the mouse moves"
+    /// messages as with a physical mouse, which is needed for Explorer or Paint to
+    /// recognize a drag.
     ///
-    /// Sécurité : la classe se souvient des boutons qu'elle a enfoncés, pour pouvoir
-    /// les relâcher tous (ReleaseAll) à la fermeture ou en cas d'erreur. Un bouton
-    /// resté coincé serait très gênant.
+    /// Safety: the class remembers the buttons it pressed, so it can release them all
+    /// (ReleaseAll) when closing or on error. A stuck button would be very annoying.
     ///
-    /// Limite connue de Windows : un programme normal ne peut pas simuler la souris
-    /// au-dessus d'une fenêtre lancée « en administrateur ». Pour agir sur une telle
-    /// fenêtre, il faudrait lancer GazeBar lui aussi en administrateur.
+    /// Known Windows limit: a normal program cannot simulate the mouse over a window started
+    /// "as administrator". To act on such a window, GazeBar would also have to be started as
+    /// administrator.
     /// </summary>
     internal static class MouseInjector
     {
@@ -36,7 +35,7 @@ namespace GazeBar
         private static bool _leftDown;
         private static bool _rightDown;
 
-        /// <summary>Enfonce le bouton (s'il ne l'est pas déjà).</summary>
+        /// <summary>Presses the button (if it is not already pressed).</summary>
         public static void Press(MouseSide side)
         {
             lock (Lock)
@@ -57,7 +56,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Relâche le bouton (s'il est enfoncé).</summary>
+        /// <summary>Releases the button (if it is pressed).</summary>
         public static void Release(MouseSide side)
         {
             lock (Lock)
@@ -78,34 +77,34 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Un clic simple : appui puis relâchement, à l'endroit où est le curseur.</summary>
-        public static void Clic(MouseSide side)
+        /// <summary>A simple click: press then release, where the cursor is.</summary>
+        public static void Click(MouseSide side)
         {
             Press(side);
             Release(side);
         }
 
         /// <summary>
-        /// Un double clic gauche : deux clics envoyés aussitôt l'un après l'autre.
-        /// Windows les reconnaît comme un double clic s'ils arrivent dans le « délai de double
-        /// clic » réglé dans Windows (500 ms par défaut) et au même endroit : c'est le cas ici,
-        /// puisqu'ils partent à quelques microsecondes d'intervalle sans bouger le curseur.
+        /// A left double click: two clicks sent right after each other.
+        /// Windows recognizes them as a double click if they arrive within the "double-click
+        /// time" set in Windows (500 ms by default) and at the same place: this is the case
+        /// here, since they are a few microseconds apart without moving the cursor.
         /// </summary>
-        public static void DoubleClic()
+        public static void DoubleClick()
         {
-            Clic(MouseSide.Left);
-            Clic(MouseSide.Left);
+            Click(MouseSide.Left);
+            Click(MouseSide.Left);
         }
 
-        /// <summary>Relâche tous les boutons que nous avons enfoncés.</summary>
+        /// <summary>Releases all the buttons we pressed.</summary>
         public static void ReleaseAll()
         {
             Release(MouseSide.Left);
             Release(MouseSide.Right);
         }
 
-        /// <summary>Vrai si l'un des deux boutons est enfoncé par GazeBar.</summary>
-        public static bool AuMoinsUnEnfonce
+        /// <summary>True if one of the two buttons is pressed by GazeBar.</summary>
+        public static bool AnyPressed
         {
             get
             {
@@ -117,43 +116,43 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Déplace le curseur jusqu'au point (x, y), en pixels d'écran, comme le ferait une
-        /// vraie souris (étape 6, glisser-déposer).
+        /// Moves the cursor to the point (x, y), in screen pixels, as a real mouse would
+        /// (step 6, drag and drop).
         ///
-        /// Avec MOUSEEVENTF_ABSOLUTE, Windows n'attend pas des pixels mais une position entre
-        /// 0 et 65535 sur chaque axe (0 = bord gauche ou haut, 65535 = bord droit ou bas de
-        /// l'écran principal). On convertit donc : position = x × 65535 ÷ (largeur − 1).
-        /// L'arrondi peut décaler le curseur d'un pixel : à la fin d'un glisser, le mode
-        /// remet le curseur exactement en place avec SetCursorPos avant de relâcher.
+        /// With MOUSEEVENTF_ABSOLUTE, Windows does not expect pixels but a position between 0
+        /// and 65535 on each axis (0 = left or top edge, 65535 = right or bottom edge of the
+        /// primary screen). So we convert: position = x × 65535 ÷ (width − 1).
+        /// Rounding can shift the cursor by one pixel: at the end of a drag, the mode puts the
+        /// cursor back exactly in place with SetCursorPos before releasing.
         /// </summary>
-        public static void DeplacerVers(double x, double y)
+        public static void MoveTo(double x, double y)
         {
-            // Taille mesurée par Ecran (la vraie résolution, même après un changement, étape 11).
-            double largeur = Ecran.LargeurPixels;
-            double hauteur = Ecran.HauteurPixels;
-            if (largeur < 2 || hauteur < 2)
+            // Size measured by ScreenMetrics (the real resolution, even after a change, step 11).
+            double width = ScreenMetrics.WidthPixels;
+            double height = ScreenMetrics.HeightPixels;
+            if (width < 2 || height < 2)
             {
                 return;
             }
 
             NativeMethods.INPUT input = new NativeMethods.INPUT();
             input.type = NativeMethods.INPUT_MOUSE;
-            input.u.mi.dx = (int)Math.Round(x * 65535.0 / (largeur - 1));
-            input.u.mi.dy = (int)Math.Round(y * 65535.0 / (hauteur - 1));
-            input.u.mi.dwFlags = NativeMethods.MOUSEEVENTF_MOVE | NativeMethods.MOUSEEVENTF_ABSOLUTE;
-            Envoyer(input);
+            input.u.mid.dx = (int)Math.Round(x * 65535.0 / (width - 1));
+            input.u.mid.dy = (int)Math.Round(y * 65535.0 / (height - 1));
+            input.u.mid.dwFlags = NativeMethods.MOUSEEVENTF_MOVE | NativeMethods.MOUSEEVENTF_ABSOLUTE;
+            SendOne(input);
         }
 
         /// <summary>
-        /// Déplace le curseur de (dx, dy) pixels par rapport à sa place actuelle, comme une vraie
-        /// souris qu'on pousse (étape 9, mode jeu « relatif »).
+        /// Moves the cursor by (dx, dy) pixels from its current position, like a real mouse
+        /// being pushed (step 9, "relative" game mode).
         ///
-        /// Sans MOUSEEVENTF_ABSOLUTE, dx et dy sont un ÉCART et non une position. C'est ce que
-        /// lisent les jeux en « entrée brute ». Pour les autres logiciels, Windows peut appliquer
-        /// l'accélération de la souris (option « Améliorer la précision du pointeur ») : le
-        /// curseur peut alors aller un peu plus loin que l'écart demandé.
+        /// Without MOUSEEVENTF_ABSOLUTE, dx and dy are an OFFSET and not a position. This is
+        /// what games read as "raw input". For other software, Windows may apply mouse
+        /// acceleration (the "Enhance pointer precision" option): the cursor may then go a
+        /// little further than the requested offset.
         /// </summary>
-        public static void DeplacerDe(int dx, int dy)
+        public static void MoveBy(int dx, int dy)
         {
             if (dx == 0 && dy == 0)
             {
@@ -162,38 +161,38 @@ namespace GazeBar
 
             NativeMethods.INPUT input = new NativeMethods.INPUT();
             input.type = NativeMethods.INPUT_MOUSE;
-            input.u.mi.dx = dx;
-            input.u.mi.dy = dy;
-            input.u.mi.dwFlags = NativeMethods.MOUSEEVENTF_MOVE;
-            Envoyer(input);
+            input.u.mid.dx = dx;
+            input.u.mid.dy = dy;
+            input.u.mid.dwFlags = NativeMethods.MOUSEEVENTF_MOVE;
+            SendOne(input);
         }
 
         /// <summary>
-        /// Un mouvement de molette (étape 8, mode défilement), à l'endroit où est le curseur.
+        /// A wheel movement (step 8, scroll mode), where the cursor is.
         ///
-        /// quantite : en « unités de molette » de Windows. Un cran d'une vraie molette vaut 120
-        /// (WHEEL_DELTA) ; on peut envoyer moins (le mode défilement envoie dès 8 unités, voir
-        /// ModeDefilement.PasMinimal) pour un défilement plus doux : la plupart des logiciels récents (navigateurs, Word, Explorateur) additionnent
-        /// ces petites quantités.
-        /// Sens, comme une vraie molette :
-        ///   - verticale : positif = vers le haut, négatif = vers le bas ;
-        ///   - horizontale : positif = vers la droite, négatif = vers la gauche.
+        /// amount: in Windows "wheel units". One notch of a real wheel is 120 (WHEEL_DELTA);
+        /// less can be sent (scroll mode sends from 8 units, see ScrollMode.MinStep) for a
+        /// smoother scroll: most recent software (browsers, Word, Explorer) adds up these
+        /// small amounts.
+        /// Direction, like a real wheel:
+        ///   - vertical: positive = up, negative = down;
+        ///   - horizontal: positive = right, negative = left.
         ///
-        /// mouseData est déclaré « uint » (nombre sans signe) mais Windows le lit comme un
-        /// nombre signé : « unchecked » permet d'y ranger un nombre négatif tel quel.
+        /// mouseData is declared "uint" (unsigned number) but Windows reads it as a signed
+        /// number: "unchecked" lets us store a negative number in it as is.
         /// </summary>
-        public static void Molette(int quantite, bool horizontale)
+        public static void Wheel(int amount, bool horizontal)
         {
-            if (quantite == 0)
+            if (amount == 0)
             {
                 return;
             }
 
             NativeMethods.INPUT input = new NativeMethods.INPUT();
             input.type = NativeMethods.INPUT_MOUSE;
-            input.u.mi.mouseData = unchecked((uint)quantite);
-            input.u.mi.dwFlags = horizontale ? NativeMethods.MOUSEEVENTF_HWHEEL : NativeMethods.MOUSEEVENTF_WHEEL;
-            Envoyer(input);
+            input.u.mid.mouseData = unchecked((uint)amount);
+            input.u.mid.dwFlags = horizontal ? NativeMethods.MOUSEEVENTF_HWHEEL : NativeMethods.MOUSEEVENTF_WHEEL;
+            SendOne(input);
         }
 
         private static bool IsDown(MouseSide side)
@@ -213,24 +212,24 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Envoie une action de bouton à Windows. Renvoie true si Windows l'a acceptée.</summary>
+        /// <summary>Sends a button action to Windows. Returns true if Windows accepted it.</summary>
         private static bool Send(uint buttonFlag)
         {
             NativeMethods.INPUT input = new NativeMethods.INPUT();
             input.type = NativeMethods.INPUT_MOUSE;
-            input.u.mi.dwFlags = buttonFlag;   // les autres champs restent à 0 : pas de déplacement
-            return Envoyer(input);
+            input.u.mid.dwFlags = buttonFlag;   // the other fields stay at 0: no movement
+            return SendOne(input);
         }
 
-        /// <summary>Envoie une entrée simulée à Windows. Renvoie true si Windows l'a acceptée.</summary>
-        private static bool Envoyer(NativeMethods.INPUT input)
+        /// <summary>Sends a simulated input to Windows. Returns true if Windows accepted it.</summary>
+        private static bool SendOne(NativeMethods.INPUT input)
         {
             NativeMethods.INPUT[] inputs = new NativeMethods.INPUT[] { input };
             uint sent = NativeMethods.SendInput(1, inputs, Marshal.SizeOf(typeof(NativeMethods.INPUT)));
 
             if (sent == 0)
             {
-                App.Log("SendInput a échoué (erreur Windows " + Marshal.GetLastWin32Error() + ")");
+                App.Log("SendInput failed (Windows error " + Marshal.GetLastWin32Error() + ")");
                 return false;
             }
             return true;

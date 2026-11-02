@@ -10,113 +10,111 @@ using System.Windows.Threading;
 namespace GazeBar
 {
     /// <summary>
-    /// INTERFACE : le « calque » plein écran, transparent aux clics, toujours au premier plan.
+    /// INTERFACE: the full-screen "overlay", click-through, always on top.
     ///
-    /// Les modes (classes Mode…) n'y dessinent pas directement : ils appellent des méthodes
-    /// simples comme AfficherCercle ou MasquerCercle, en PIXELS D'ÉCRAN (les mêmes unités que
-    /// le regard de l'eyetracker et le curseur). C'est cette fenêtre qui fait la conversion vers les
-    /// unités de WPF.
+    /// Modes (the …Mode classes) do not draw on it directly: they call simple methods such
+    /// as ShowCircle or HideCircle, in SCREEN PIXELS (the same units as the eyetracker gaze
+    /// and the cursor). This window converts them to WPF units.
     ///
-    /// Pourquoi une conversion ? Quand Windows agrandit l'affichage (125 %, 150 %…), WPF ne
-    /// compte plus en pixels mais en « unités indépendantes » (1 unité = 1/96 de pouce).
-    /// À 150 %, 100 pixels réels ne valent que 66,7 unités WPF. Sans conversion, le cercle
-    /// serait décalé par rapport au regard, d'autant plus qu'on s'éloigne du coin en haut à gauche.
+    /// Why a conversion? When Windows scales the display (125 %, 150 %…), WPF no longer
+    /// counts in pixels but in "device-independent units" (1 unit = 1/96 inch).
+    /// At 150 %, 100 real pixels are only 66.7 WPF units. Without conversion, the circle
+    /// would be offset from the gaze, more and more away from the top-left corner.
     /// </summary>
     internal partial class OverlayWindow : Window
     {
-        private readonly DispatcherTimer _premierPlan;
+        private readonly DispatcherTimer _foreground;
 
         public OverlayWindow()
         {
             InitializeComponent();
 
-            // Plusieurs fenêtres peuvent être « toujours au premier plan » (la barre d'outils,
-            // la fenêtre Diagnostic, d'autres logiciels…). Entre elles, c'est la dernière
-            // affichée ou activée qui gagne. Pour que le calque reste AU-DESSUS DE TOUT, on le
-            // remet en haut de la pile deux fois par seconde.
+            // Several windows can be "always on top" (the taskbar, the Diagnostic window,
+            // other software…). Among them, the last one shown or activated wins. To keep the
+            // overlay ABOVE EVERYTHING, it is put back at the top of the stack twice a second.
             //
-            // Limite connue (29/10/2026) : le menu Démarrer, la recherche et le centre de
-            // notifications de Windows sont dans une « couche » réservée au système, plus haute
-            // que toutes les fenêtres « toujours au premier plan ». Le calque passe donc dessous
-            // malgré ce minuteur. Seul un programme déclaré « uiAccess » (manifeste), signé
-            // numériquement et installé dans C:\Program Files peut s'afficher au-dessus.
-            _premierPlan = new DispatcherTimer();
-            _premierPlan.Interval = TimeSpan.FromMilliseconds(500);
-            _premierPlan.Tick += (sender, e) => RemettreAuPremierPlan();
-            _premierPlan.Start();
+            // Known limit (2026-10-29): the Windows Start menu, search and notification
+            // centre live in a "band" reserved for the system, higher than every "always on
+            // top" window. The overlay therefore goes below them despite this timer. Only a
+            // program declared "uiAccess" (manifest), digitally signed and installed in
+            // C:\Program Files can be shown above them.
+            _foreground = new DispatcherTimer();
+            _foreground.Interval = TimeSpan.FromMilliseconds(500);
+            _foreground.Tick += (sender, e) => BringToFront();
+            _foreground.Start();
 
-            // Étape 11 : surveillance de l'écran (résolution, mise à l'échelle, taille du
-            // texte). Windows prévient le calque par des messages (voir Crochet), mais on
-            // vérifie aussi toutes les deux secondes : on ne sait pas encore si Windows envoie
-            // bien un message quand on change la taille du texte (à vérifier en essai).
-            _surveillanceEcran = new DispatcherTimer();
-            _surveillanceEcran.Interval = TimeSpan.FromSeconds(2);
-            _surveillanceEcran.Tick += (sender, e) => CouvrirEcran();
-            _surveillanceEcran.Start();
+            // Step 11: screen watch (resolution, scaling, text size). Windows notifies the
+            // overlay with messages (see Hook), but it is also checked every two seconds: it
+            // is not yet known whether Windows really sends a message when the text size
+            // changes (to check in testing).
+            _screenWatch = new DispatcherTimer();
+            _screenWatch.Interval = TimeSpan.FromSeconds(2);
+            _screenWatch.Tick += (sender, e) => CoverScreen();
+            _screenWatch.Start();
 
-            // Après un message de Windows, on attend une demi-seconde avant de mesurer :
-            // un changement de résolution envoie souvent plusieurs messages de suite, et
-            // l'écran met un instant à se stabiliser. Une seule mesure suffit.
-            _mesureDifferee = new DispatcherTimer();
-            _mesureDifferee.Interval = TimeSpan.FromMilliseconds(500);
-            _mesureDifferee.Tick += (sender, e) =>
+            // After a Windows message, wait half a second before measuring: a resolution
+            // change often sends several messages in a row, and the screen takes a moment to
+            // settle. A single measure is enough.
+            _deferredMeasure = new DispatcherTimer();
+            _deferredMeasure.Interval = TimeSpan.FromMilliseconds(500);
+            _deferredMeasure.Tick += (sender, e) =>
             {
-                _mesureDifferee.Stop();
-                CouvrirEcran();
+                _deferredMeasure.Stop();
+                CoverScreen();
             };
         }
 
-        private readonly DispatcherTimer _surveillanceEcran;
-        private readonly DispatcherTimer _mesureDifferee;
+        private readonly DispatcherTimer _screenWatch;
+        private readonly DispatcherTimer _deferredMeasure;
 
         /// <summary>
-        /// Demande une nouvelle mesure de l'écran dans une demi-seconde. Si une demande est déjà
-        /// en attente, le compte à rebours repart de zéro (Stop puis Start).
+        /// Requests a new screen measure in half a second. If a request is already pending,
+        /// the countdown restarts from zero (Stop then Start).
         /// </summary>
-        private void PlanifierMesure()
+        private void ScheduleMeasure()
         {
-            _mesureDifferee.Stop();
-            _mesureDifferee.Start();
+            _deferredMeasure.Stop();
+            _deferredMeasure.Start();
         }
 
         /// <summary>
-        /// Le « crochet » des messages de Windows adressés au calque (étape 11). On ne garde
-        /// que deux messages, envoyés à toutes les fenêtres :
-        ///   WM_DISPLAYCHANGE : la résolution de l'écran a changé ;
-        ///   WM_SETTINGCHANGE : un réglage de Windows a changé (peut-être la taille du texte).
-        /// handled reste faux : le message continue son chemin normal.
+        /// The "hook" for Windows messages sent to the overlay (step 11). Only two messages,
+        /// sent to every window, are kept:
+        ///   WM_DISPLAYCHANGE: the screen resolution changed;
+        ///   WM_SETTINGCHANGE: a Windows setting changed (maybe the text size).
+        /// handled stays false: the message goes on its normal way.
         /// </summary>
-        private IntPtr Crochet(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+        private IntPtr Hook(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
             if (message == NativeMethods.WM_DISPLAYCHANGE || message == NativeMethods.WM_SETTINGCHANGE)
             {
-                PlanifierMesure();
+                ScheduleMeasure();
             }
             return IntPtr.Zero;
         }
 
         /// <summary>
-        /// Place le calque tout en haut des fenêtres « toujours au premier plan », sans le
-        /// déplacer, sans changer sa taille et sans lui donner le focus.
+        /// Puts the overlay at the very top of the "always on top" windows, without moving
+        /// it, resizing it or giving it focus.
         /// </summary>
-        public void RemettreAuPremierPlan()
+        public void BringToFront()
         {
             IntPtr handle = new WindowInteropHelper(this).Handle;
             if (handle == IntPtr.Zero)
             {
-                return;   // fenêtre pas encore créée
+                return;   // window not created yet
             }
             NativeMethods.SetWindowPos(
                 handle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
                 NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
         }
 
-        // ───────────────────────── Fenêtre transparente aux clics ─────────────────────────
+        // ───────────────────────── Click-through window ─────────────────────────
 
         /// <summary>
-        /// Appelée quand Windows a créé la fenêtre « réelle » (son handle, HWND).
-        /// On lui ajoute les styles qui la rendent transparente aux clics et non activable,
-        /// puis on lui donne la taille exacte de l'écran.
+        /// Called when Windows has created the "real" window (its handle, HWND).
+        /// Adds the styles that make it click-through and non-activatable, then gives it the
+        /// exact size of the screen.
         /// </summary>
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -124,12 +122,12 @@ namespace GazeBar
 
             IntPtr handle = new WindowInteropHelper(this).Handle;
 
-            // Styles ajoutés (le « | » combine les options) :
-            //  - TRANSPARENT : les clics et la molette traversent la fenêtre et arrivent à
-            //    l'application qui est dessous ;
-            //  - LAYERED : nécessaire pour que TRANSPARENT fonctionne (WPF le met déjà) ;
-            //  - NOACTIVATE : la fenêtre ne prend jamais le focus ;
-            //  - TOOLWINDOW : elle n'apparaît pas dans Alt+Tab.
+            // Added styles (the "|" combines the options):
+            //  - TRANSPARENT: clicks and the wheel go through the window and reach the
+            //    application below;
+            //  - LAYERED: needed for TRANSPARENT to work (WPF already sets it);
+            //  - NOACTIVATE: the window never takes focus;
+            //  - TOOLWINDOW: it does not show in Alt+Tab.
             int style = NativeMethods.GetWindowLong(handle, NativeMethods.GWL_EXSTYLE);
             NativeMethods.SetWindowLong(
                 handle,
@@ -140,42 +138,42 @@ namespace GazeBar
                 | NativeMethods.WS_EX_NOACTIVATE
                 | NativeMethods.WS_EX_TOOLWINDOW);
 
-            // Étape 11 : on écoute les messages de Windows (voir Crochet).
+            // Step 11: listen to Windows messages (see Hook).
             HwndSource source = HwndSource.FromHwnd(handle);
             if (source != null)
             {
-                source.AddHook(Crochet);
+                source.AddHook(Hook);
             }
 
-            CouvrirEcran();
+            CoverScreen();
         }
 
         /// <summary>
-        /// Appelée par WPF si la mise à l'échelle de Windows change pendant que GazeBar tourne
-        /// (par exemple de 100 % à 125 % dans les paramètres d'affichage). On recalcule la
-        /// taille tout de suite, puis une deuxième fois une demi-seconde plus tard (étape 11) :
-        /// la résolution change souvent en même temps.
+        /// Called by WPF if the Windows scaling changes while GazeBar runs (for example from
+        /// 100 % to 125 % in the display settings). The size is recomputed at once, then a
+        /// second time half a second later (step 11): the resolution often changes at the
+        /// same time.
         /// </summary>
         protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
         {
             base.OnDpiChanged(oldDpi, newDpi);
-            CouvrirEcran();
-            PlanifierMesure();
+            CoverScreen();
+            ScheduleMeasure();
         }
 
         /// <summary>
-        /// Place la fenêtre sur tout l'écran principal.
+        /// Places the window over the whole primary screen.
         ///
-        /// TailleEcranPrincipal donne la taille de l'écran en pixels réels (GazeBar est déclaré
-        /// « sensible au DPI » dans app.manifest). TransformFromDevice est la conversion
-        /// « pixels réels → unités WPF » fournie par WPF pour cette fenêtre.
+        /// PrimaryScreenSize gives the screen size in real pixels (GazeBar is declared
+        /// "DPI aware" in app.manifest). TransformFromDevice is the "real pixels → WPF units"
+        /// conversion provided by WPF for this window.
         ///
-        /// Étape 11 : la mesure est aussi donnée à Ecran, qui prévient le reste du programme si
-        /// la résolution, la mise à l'échelle ou la taille du texte a changé. La taille de la
-        /// fenêtre n'est réécrite (et notée dans le journal) que si elle a changé, car cette
-        /// méthode est maintenant appelée toutes les deux secondes.
+        /// Step 11: the measure is also given to ScreenMetrics, which notifies the rest of
+        /// the program if the resolution, scaling or text size changed. The window size is
+        /// only rewritten (and logged) if it changed, because this method is now called
+        /// every two seconds.
         /// </summary>
-        private void CouvrirEcran()
+        private void CoverScreen()
         {
             HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
             if (source == null || source.CompositionTarget == null)
@@ -183,563 +181,563 @@ namespace GazeBar
                 return;
             }
 
-            // La vraie résolution, même après un changement (voir NativeMethods.TailleEcranPrincipal).
-            double largeurPixels;
-            double hauteurPixels;
-            NativeMethods.TailleEcranPrincipal(out largeurPixels, out hauteurPixels);
+            // The true resolution, even after a change (see NativeMethods.PrimaryScreenSize).
+            double widthPixels;
+            double heightPixels;
+            NativeMethods.PrimaryScreenSize(out widthPixels, out heightPixels);
 
-            if (largeurPixels <= 0 || hauteurPixels <= 0)
+            if (widthPixels <= 0 || heightPixels <= 0)
             {
-                return;   // écran en train de changer : on réessaiera plus tard
+                return;   // screen changing: try again later
             }
 
-            Matrix versWpf = source.CompositionTarget.TransformFromDevice;
-            Point taille = versWpf.Transform(new Point(largeurPixels, hauteurPixels));
+            Matrix toWpf = source.CompositionTarget.TransformFromDevice;
+            Point size = toWpf.Transform(new Point(widthPixels, heightPixels));
 
-            // (Une taille pas encore donnée vaut NaN, « pas un nombre » : on la donne alors.)
-            bool tailleChangee = double.IsNaN(Width) || double.IsNaN(Height) || Left != 0 || Top != 0 ||
-                                 Math.Abs(Width - taille.X) > 0.5 || Math.Abs(Height - taille.Y) > 0.5;
-            if (tailleChangee)
+            // (A size not set yet is NaN, "not a number": it is set then.)
+            bool sizeChanged = double.IsNaN(Width) || double.IsNaN(Height) || Left != 0 || Top != 0 ||
+                                 Math.Abs(Width - size.X) > 0.5 || Math.Abs(Height - size.Y) > 0.5;
+            if (sizeChanged)
             {
                 Left = 0;
                 Top = 0;
-                Width = taille.X;
-                Height = taille.Y;
+                Width = size.X;
+                Height = size.Y;
 
-                App.Log("Calque : écran " + largeurPixels + " × " + hauteurPixels + " pixels = " +
-                        taille.X.ToString("F0") + " × " + taille.Y.ToString("F0") + " unités WPF (échelle " +
-                        (largeurPixels / taille.X * 100).ToString("F0") + " %)");
+                App.Log("Overlay: screen " + widthPixels + " × " + heightPixels + " pixels = " +
+                        size.X.ToString("F0") + " × " + size.Y.ToString("F0") + " WPF units (scale " +
+                        (widthPixels / size.X * 100).ToString("F0") + " %)");
             }
 
-            // TransformToDevice : unités WPF → pixels réels. M22 = facteur vertical (1.25 à 125 %).
-            Ecran.Mesurer(source.CompositionTarget.TransformToDevice.M22);
+            // TransformToDevice: WPF units → real pixels. M22 = vertical factor (1.25 at 125 %).
+            ScreenMetrics.Measure(source.CompositionTarget.TransformToDevice.M22);
         }
 
-        // ───────────────────────── Dessin ─────────────────────────
+        // ───────────────────────── Drawing ─────────────────────────
 
-        // Couleurs du trait de dessus du cercle : vert discret en mouvement, blanc en regard fixe.
-        // « Freeze » fige le pinceau : WPF le dessine alors plus vite.
-        private static readonly SolidColorBrush PinceauMouvement = Figer(new SolidColorBrush(Colors.DarkGray));
-        private static readonly SolidColorBrush PinceauFixe = Figer(new SolidColorBrush(Colors.LightGray));
+        // Colours of the circle's top stroke: discreet in movement, lighter in fixed gaze.
+        // "Freeze" locks the brush: WPF then draws it faster.
+        private static readonly SolidColorBrush MovementBrush = Freeze(new SolidColorBrush(Colors.DarkGray));
+        private static readonly SolidColorBrush FixedBrush = Freeze(new SolidColorBrush(Colors.LightGray));
 
-        private static SolidColorBrush Figer(SolidColorBrush pinceau)
+        private static SolidColorBrush Freeze(SolidColorBrush brush)
         {
-            pinceau.Freeze();
-            return pinceau;
-        }
-
-        /// <summary>
-        /// Affiche le cercle du mode mouvement (vert, discret) centré sur (x, y).
-        /// Tout est en PIXELS D'ÉCRAN, comme le regard et le curseur.
-        /// </summary>
-        public void AfficherCercle(double xPixels, double yPixels, double rayonPixels)
-        {
-            AfficherCercle(xPixels, yPixels, rayonPixels, false);
+            brush.Freeze();
+            return brush;
         }
 
         /// <summary>
-        /// Affiche le cercle centré sur (x, y), avec le rayon donné.
-        /// fixe = vrai : cercle du mode regard fixe (trait blanc et opaque).
+        /// Shows the movement mode circle (discreet) centred on (x, y).
+        /// Everything is in SCREEN PIXELS, like the gaze and the cursor.
         /// </summary>
-        public void AfficherCercle(double xPixels, double yPixels, double rayonPixels, bool fixe)
+        public void ShowCircle(double xPixels, double yPixels, double radiusPixels)
         {
-            AfficherCercle(xPixels, yPixels, rayonPixels, fixe, 1.0);
+            ShowCircle(xPixels, yPixels, radiusPixels, false);
         }
 
         /// <summary>
-        /// Comme ci-dessus, avec une opacité réduite : attenuation = 1 → opacité habituelle,
-        /// 0.5 → deux fois plus transparent (mode défilement, demande du 28/10/2026).
+        /// Shows the circle centred on (x, y), with the given radius.
+        /// fixedValue = true: fixed gaze mode circle (lighter, more opaque stroke).
         /// </summary>
-        public void AfficherCercle(double xPixels, double yPixels, double rayonPixels, bool fixe,
-                                   double attenuation)
+        public void ShowCircle(double xPixels, double yPixels, double radiusPixels, bool fixedValue)
         {
-            CercleX = xPixels;
-            CercleY = yPixels;
-            CercleAffiche = true;
+            ShowCircle(xPixels, yPixels, radiusPixels, fixedValue, 1.0);
+        }
 
-            Cercle.Stroke = fixe ? PinceauFixe : PinceauMouvement;
-            // Épaisseurs en unités de l'écran de référence, converties (étape 11, voir Ecran.cs).
-            Cercle.StrokeThickness = Ecran.Unites(fixe ? 1.5 : 1);
-            Cercle.Opacity = (fixe ? 0.6 : 0.3) * attenuation;
-            CercleFond.StrokeThickness = Ecran.Unites(fixe ? 2.5 : 2);
-            CercleFond.Opacity = (fixe ? 0.7 : 0.5) * attenuation;
+        /// <summary>
+        /// Same as above, with reduced opacity: damping = 1 → usual opacity, 0.5 → twice as
+        /// transparent (scroll mode, request of 2026-10-28).
+        /// </summary>
+        public void ShowCircle(double xPixels, double yPixels, double radiusPixels, bool fixedValue,
+                                   double damping)
+        {
+            CircleX = xPixels;
+            CircleY = yPixels;
+            CircleShown = true;
 
-            // Pas encore affichée à l'écran : rien à dessiner (PointFromScreen échouerait).
+            Circle.Stroke = fixedValue ? FixedBrush : MovementBrush;
+            // Thicknesses in reference-screen units, converted (step 11, see ScreenMetrics.cs).
+            Circle.StrokeThickness = ScreenMetrics.Units(fixedValue ? 1.5 : 1);
+            Circle.Opacity = (fixedValue ? 0.6 : 0.3) * damping;
+            CircleBackground.StrokeThickness = ScreenMetrics.Units(fixedValue ? 2.5 : 2);
+            CircleBackground.Opacity = (fixedValue ? 0.7 : 0.5) * damping;
+
+            // Not shown on screen yet: nothing to draw (PointFromScreen would fail).
             if (PresentationSource.FromVisual(this) == null)
             {
                 return;
             }
 
-            // PointFromScreen convertit un point de l'écran (pixels réels) en position
-            // dans cette fenêtre (unités WPF). Il tient compte de la mise à l'échelle.
-            Point centre = PointFromScreen(new Point(xPixels, yPixels));
-            double rayon = PixelsVersWpf(rayonPixels);
+            // PointFromScreen converts a screen point (real pixels) to a position in this
+            // window (WPF units). It takes scaling into account.
+            Point center = PointFromScreen(new Point(xPixels, yPixels));
+            double radius = PixelsToWpf(radiusPixels);
 
-            PlacerEllipse(CercleFond, centre, PixelsVersWpf(rayonPixels + Ecran.Px(2)));
-            PlacerEllipse(Cercle, centre, rayon);
+            PlaceEllipse(CircleBackground, center, PixelsToWpf(radiusPixels + ScreenMetrics.Px(2)));
+            PlaceEllipse(Circle, center, radius);
         }
 
-        /// <summary>Centre du cercle tel qu'il est dessiné, en pixels d'écran (valable si CercleAffiche).</summary>
-        public double CercleX { get; private set; }
+        /// <summary>Centre of the circle as drawn, in screen pixels (valid if CircleShown).</summary>
+        public double CircleX { get; private set; }
 
-        public double CercleY { get; private set; }
+        public double CircleY { get; private set; }
 
         /// <summary>
-        /// Vrai si le cercle est visible. Un mode qui commence s'en sert pour reprendre le
-        /// cercle là où il est, au lieu de le faire sauter ailleurs.
+        /// True if the circle is visible. A starting mode uses it to take the circle where
+        /// it is, instead of making it jump elsewhere.
         /// </summary>
-        public bool CercleAffiche { get; private set; }
+        public bool CircleShown { get; private set; }
 
-        /// <summary>Cache le cercle.</summary>
-        public void MasquerCercle()
+        /// <summary>Hides the circle.</summary>
+        public void HideCircle()
         {
-            CercleAffiche = false;
-            CercleFond.Visibility = Visibility.Collapsed;
-            Cercle.Visibility = Visibility.Collapsed;
-        }
-
-        /// <summary>
-        /// Affiche l'anneau de progression sur le bord d'un cercle centré sur (x, y).
-        /// progression va de 0 (rien) à 1 (tour complet).
-        /// </summary>
-        public void AfficherAnneau(double xPixels, double yPixels, double rayonPixels, double progression)
-        {
-            Anneau.StrokeThickness = Ecran.Unites(6);
-            DessinerArc(Anneau, xPixels, yPixels, rayonPixels, progression);
-        }
-
-        public void MasquerAnneau()
-        {
-            Anneau.Visibility = Visibility.Collapsed;
+            CircleShown = false;
+            CircleBackground.Visibility = Visibility.Collapsed;
+            Circle.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>
-        /// Affiche l'icône d'options : un carré de côté [taille] centré sur (x, y), en pixels
-        /// d'écran. progression (0 à 1) remplit l'anneau autour d'elle ; à 0, pas d'anneau.
-        /// afficherLibelle : montre le texte « Options » sous l'icône.
+        /// Shows the progress ring on the edge of a circle centred on (x, y).
+        /// progress goes from 0 (nothing) to 1 (full turn).
         /// </summary>
-        public void AfficherIcone(double xPixels, double yPixels, double taillePixels,
-                                  double progression, bool afficherLibelle)
+        public void ShowRing(double xPixels, double yPixels, double radiusPixels, double progress)
+        {
+            Ring.StrokeThickness = ScreenMetrics.Units(6);
+            DrawArc(Ring, xPixels, yPixels, radiusPixels, progress);
+        }
+
+        public void HideRing()
+        {
+            Ring.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Shows the options icon: a square of side [size] centred on (x, y), in screen
+        /// pixels. progress (0 to 1) fills the ring around it; at 0, no ring.
+        /// showLabel: shows the "Options" text below the icon.
+        /// </summary>
+        public void ShowIcon(double xPixels, double yPixels, double sizePixels,
+                                  double progress, bool showLabel)
         {
             if (PresentationSource.FromVisual(this) == null)
             {
                 return;
             }
 
-            Point centre = PointFromScreen(new Point(xPixels, yPixels));
-            double cote = PixelsVersWpf(taillePixels);
+            Point center = PointFromScreen(new Point(xPixels, yPixels));
+            double side = PixelsToWpf(sizePixels);
 
-            Icone.Width = cote;
-            Icone.Height = cote;
-            Icone.BorderThickness = new Thickness(Ecran.Unites(2));
-            Icone.CornerRadius = new CornerRadius(Ecran.Unites(12));
-            IconeSymbole.FontSize = cote * 0.5;
-            AnneauIcone.StrokeThickness = Ecran.Unites(6);
-            Canvas.SetLeft(Icone, centre.X - cote / 2);
-            Canvas.SetTop(Icone, centre.Y - cote / 2);
-            Icone.Visibility = Visibility.Visible;
+            OptionsIcon.Width = side;
+            OptionsIcon.Height = side;
+            OptionsIcon.BorderThickness = new Thickness(ScreenMetrics.Units(2));
+            OptionsIcon.CornerRadius = new CornerRadius(ScreenMetrics.Units(12));
+            OptionsIconSymbol.FontSize = side * 0.5;
+            OptionsIconRing.StrokeThickness = ScreenMetrics.Units(6);
+            Canvas.SetLeft(OptionsIcon, center.X - side / 2);
+            Canvas.SetTop(OptionsIcon, center.Y - side / 2);
+            OptionsIcon.Visibility = Visibility.Visible;
 
-            // L'anneau entoure le carré : rayon = demi-diagonale du carré.
-            DessinerArc(AnneauIcone, xPixels, yPixels, taillePixels / 2 * Math.Sqrt(2) + Ecran.Px(4), progression);
+            // The ring surrounds the square: radius = half the square's diagonal.
+            DrawArc(OptionsIconRing, xPixels, yPixels, sizePixels / 2 * Math.Sqrt(2) + ScreenMetrics.Px(4), progress);
 
-            if (afficherLibelle)
+            if (showLabel)
             {
-                // Le libellé suit la taille du texte de Windows (étape 11, voir Ecran.Police).
-                LibelleTexte.FontSize = Ecran.Police(20);
-                Libelle.CornerRadius = new CornerRadius(Ecran.Unites(6));
-                Libelle.Padding = new Thickness(Ecran.Unites(8), Ecran.Unites(2), Ecran.Unites(8), Ecran.Unites(2));
-                // Mesure le libellé pour le centrer sous l'icône.
-                Libelle.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-                Canvas.SetLeft(Libelle, centre.X - Libelle.DesiredSize.Width / 2);
-                Canvas.SetTop(Libelle, centre.Y + cote / 2 + Ecran.Unites(12));
-                Libelle.Visibility = Visibility.Visible;
+                // The label follows the Windows text size (step 11, see ScreenMetrics.Font).
+                OptionsLabelText.FontSize = ScreenMetrics.Font(20);
+                OptionsLabel.CornerRadius = new CornerRadius(ScreenMetrics.Units(6));
+                OptionsLabel.Padding = new Thickness(ScreenMetrics.Units(8), ScreenMetrics.Units(2), ScreenMetrics.Units(8), ScreenMetrics.Units(2));
+                // Measure the label to centre it below the icon.
+                OptionsLabel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                Canvas.SetLeft(OptionsLabel, center.X - OptionsLabel.DesiredSize.Width / 2);
+                Canvas.SetTop(OptionsLabel, center.Y + side / 2 + ScreenMetrics.Units(12));
+                OptionsLabel.Visibility = Visibility.Visible;
             }
             else
             {
-                Libelle.Visibility = Visibility.Collapsed;
+                OptionsLabel.Visibility = Visibility.Collapsed;
             }
         }
 
-        public void MasquerIcone()
+        public void HideIcon()
         {
-            Icone.Visibility = Visibility.Collapsed;
-            AnneauIcone.Visibility = Visibility.Collapsed;
-            Libelle.Visibility = Visibility.Collapsed;
+            OptionsIcon.Visibility = Visibility.Collapsed;
+            OptionsIconRing.Visibility = Visibility.Collapsed;
+            OptionsLabel.Visibility = Visibility.Collapsed;
         }
 
-        /// <summary>Cache tout ce qui est dessiné sur le calque (écran noir compris).</summary>
-        public void MasquerTout()
+        /// <summary>Hides everything drawn on the overlay (black screen included).</summary>
+        public void HideAll()
         {
-            MasquerCercle();
-            MasquerAnneau();
-            MasquerIcone();
-            MasquerEcranChoix();
-            MasquerBarreMenu();
-            MasquerSurfaceGlisser();
-            MasquerSurfaceClavier();
+            HideCircle();
+            HideRing();
+            HideIcon();
+            HideChoiceScreen();
+            HideMenuBar();
+            HideDragSurface();
+            HideKeyboardSurface();
         }
 
-        // ───────────────────────── Écran noir du choix d'action (étape 3) ─────────────────────────
+        // ───────────────────────── Action choice black screen (step 3) ─────────────────────────
 
         /// <summary>
-        /// Vrai quand le calque est réellement affiché à l'écran. Avant, aucune conversion de
-        /// coordonnées n'est possible (PointFromScreen échouerait).
+        /// True when the overlay is really shown on screen. Before that, no coordinate
+        /// conversion is possible (PointFromScreen would fail).
         /// </summary>
-        public bool Pret
+        public bool Ready
         {
             get { return PresentationSource.FromVisual(this) != null; }
         }
 
         /// <summary>
-        /// Vide l'écran noir de son contenu précédent et lui donne la taille du calque.
-        /// Il reste caché : le mode le remplit, puis appelle AfficherEcranChoix.
+        /// Clears the black screen's previous content and gives it the overlay's size.
+        /// It stays hidden: the mode fills it, then calls ShowChoiceScreen.
         /// </summary>
-        public void PreparerEcranChoix()
+        public void PrepareChoiceScreen()
         {
-            EcranChoix.Children.Clear();
-            EcranChoix.Width = ActualWidth;
-            EcranChoix.Height = ActualHeight;
-            Canvas.SetLeft(EcranChoix, 0);
-            Canvas.SetTop(EcranChoix, 0);
+            ChoiceScreen.Children.Clear();
+            ChoiceScreen.Width = ActualWidth;
+            ChoiceScreen.Height = ActualHeight;
+            Canvas.SetLeft(ChoiceScreen, 0);
+            Canvas.SetTop(ChoiceScreen, 0);
         }
 
-        public void AfficherEcranChoix()
+        public void ShowChoiceScreen()
         {
-            EcranChoix.Visibility = Visibility.Visible;
+            ChoiceScreen.Visibility = Visibility.Visible;
         }
 
-        /// <summary>Cache l'écran noir (son contenu est gardé jusqu'au prochain PreparerEcranChoix).</summary>
-        public void MasquerEcranChoix()
+        /// <summary>Hides the black screen (its content is kept until the next PrepareChoiceScreen).</summary>
+        public void HideChoiceScreen()
         {
-            EcranChoix.Visibility = Visibility.Collapsed;
+            ChoiceScreen.Visibility = Visibility.Collapsed;
         }
 
-        // ───────────────────────── Barre de menu (étape 4) ─────────────────────────
+        // ───────────────────────── Menu bar (step 4) ─────────────────────────
 
         /// <summary>
-        /// Vide la surface de la barre de menu et lui donne la taille du calque.
-        /// Elle reste cachée : le mode menu la remplit, puis appelle AfficherBarreMenu.
+        /// Clears the menu bar surface and gives it the overlay's size.
+        /// It stays hidden: menu mode fills it, then calls ShowMenuBar.
         /// </summary>
-        public void PreparerBarreMenu()
+        public void PrepareMenuBar()
         {
-            BarreMenu.Children.Clear();
-            BarreMenu.Width = ActualWidth;
-            BarreMenu.Height = ActualHeight;
-            Canvas.SetLeft(BarreMenu, 0);
-            Canvas.SetTop(BarreMenu, 0);
+            MenuBar.Children.Clear();
+            MenuBar.Width = ActualWidth;
+            MenuBar.Height = ActualHeight;
+            Canvas.SetLeft(MenuBar, 0);
+            Canvas.SetTop(MenuBar, 0);
         }
 
-        /// <summary>Durée de l'animation d'apparition de la barre de menu, en millisecondes.</summary>
-        private const double DureeApparitionMenuMs = 250;
+        /// <summary>Duration of the menu bar appear animation, in milliseconds.</summary>
+        private const double MenuAppearDurationMs = 250;
 
         /// <summary>
-        /// Distance parcourue par la barre pendant l'apparition, en unités WPF : elle monte
-        /// depuis un peu plus bas que sa place finale.
+        /// Distance travelled by the bar while appearing, in WPF units: it rises from a
+        /// little below its final place.
         /// </summary>
-        private const double MonteeApparitionMenu = 80;
+        private const double MenuAppearRise = 80;
 
         /// <summary>
-        /// Affiche la barre de menu.
-        /// anime = vrai : petite animation d'apparition (demande de l'utilisateur du 28/10/2026) :
-        /// la barre monte de [MonteeApparitionMenu] unités jusqu'à sa place, en passant de
-        /// transparente à opaque, en [DureeApparitionMenuMs] ms. Elle ralentit à la fin
-        /// (« EaseOut »), ce qui paraît plus naturel qu'une vitesse constante.
-        /// Ce sont les animations intégrées à WPF : aucune dépendance en plus.
-        /// Les zones d'activation des boutons sont tout de suite à leur place finale : pendant
-        /// ce quart de seconde, seul le dessin bouge (le délai d'activation est bien plus long).
+        /// Shows the menu bar.
+        /// animate = true: small appear animation (user request of 2026-10-28): the bar
+        /// rises [MenuAppearRise] units to its place, going from transparent to opaque, in
+        /// [MenuAppearDurationMs] ms. It slows down at the end ("EaseOut"), which looks more
+        /// natural than a constant speed.
+        /// These are WPF's built-in animations: no extra dependency.
+        /// Button activation zones are at their final place at once: during this quarter
+        /// second, only the drawing moves (the activation delay is much longer).
         /// </summary>
-        public void AfficherBarreMenu(bool anime = false)
+        public void ShowMenuBar(bool animate = false)
         {
-            // Une fermeture animée encore en cours est annulée : sa fin ne doit pas cacher
-            // la barre qu'on est en train d'afficher.
-            _fermetureMenu = null;
-            BarreMenu.Visibility = Visibility.Visible;
+            // A closing animation still running is cancelled: its end must not hide the bar
+            // being shown.
+            _menuClosing = null;
+            MenuBar.Visibility = Visibility.Visible;
 
-            // Un TranslateTransform décale le dessin de la surface sans changer sa position.
-            TranslateTransform decalage = BarreMenu.RenderTransform as TranslateTransform;
-            if (decalage == null)
+            // A TranslateTransform shifts the surface's drawing without changing its position.
+            TranslateTransform offset = MenuBar.RenderTransform as TranslateTransform;
+            if (offset == null)
             {
-                decalage = new TranslateTransform();
-                BarreMenu.RenderTransform = decalage;
+                offset = new TranslateTransform();
+                MenuBar.RenderTransform = offset;
             }
 
-            if (!anime)
+            if (!animate)
             {
-                // Pas d'animation (par exemple la barre reconstruite pour « Oui / Non ») : si une
-                // apparition est encore en cours, on la laisse finir.
+                // No animation (for example the bar rebuilt for "Oui / Non"): if an appear
+                // animation is still running, let it finish.
                 return;
             }
 
-            Duration duree = new Duration(TimeSpan.FromMilliseconds(DureeApparitionMenuMs));
-            CubicEase ralenti = new CubicEase();
-            ralenti.EasingMode = EasingMode.EaseOut;
+            Duration duration = new Duration(TimeSpan.FromMilliseconds(MenuAppearDurationMs));
+            CubicEase slowed = new CubicEase();
+            slowed.EasingMode = EasingMode.EaseOut;
 
-            DoubleAnimation montee = new DoubleAnimation(Ecran.Unites(MonteeApparitionMenu), 0, duree);
-            montee.EasingFunction = ralenti;
-            DoubleAnimation fondu = new DoubleAnimation(0, 1, duree);
-            fondu.EasingFunction = ralenti;
+            DoubleAnimation rise = new DoubleAnimation(ScreenMetrics.Units(MenuAppearRise), 0, duration);
+            rise.EasingFunction = slowed;
+            DoubleAnimation fade = new DoubleAnimation(0, 1, duration);
+            fade.EasingFunction = slowed;
 
-            // BeginAnimation remplace une animation déjà en cours sur la même propriété.
-            decalage.BeginAnimation(TranslateTransform.YProperty, montee);
-            BarreMenu.BeginAnimation(OpacityProperty, fondu);
+            // BeginAnimation replaces an animation already running on the same property.
+            offset.BeginAnimation(TranslateTransform.YProperty, rise);
+            MenuBar.BeginAnimation(OpacityProperty, fade);
         }
 
-        /// <summary>Durée de l'animation de fermeture de la barre de menu, en millisecondes.</summary>
-        private const double DureeFermetureMenuMs = 200;
+        /// <summary>Duration of the menu bar closing animation, in milliseconds.</summary>
+        private const double MenuCloseDurationMs = 200;
 
-        // L'animation de fermeture en cours, ou null. Sert à reconnaître, quand une animation se
-        // termine, si c'est bien la dernière fermeture demandée (et pas une fermeture annulée
-        // parce que le menu a été rouvert entre-temps).
-        private DoubleAnimation _fermetureMenu;
+        // The closing animation in progress, or null. Used to tell, when an animation ends,
+        // whether it is really the last requested closing (and not one cancelled because the
+        // menu was reopened in the meantime).
+        private DoubleAnimation _menuClosing;
 
         /// <summary>
-        /// Cache la barre de menu (son contenu est gardé jusqu'au prochain PreparerBarreMenu).
-        /// anime = vrai : petite animation de fermeture (demande de l'utilisateur du 28/10/2026),
-        /// l'inverse de l'apparition : la barre redescend de [MonteeApparitionMenu] unités en
-        /// devenant transparente, en [DureeFermetureMenuMs] ms, en accélérant (« EaseIn »).
-        /// Les boutons ne réagissent déjà plus au regard : seul le dessin s'efface.
-        /// anime = faux (par défaut) : la barre disparaît tout de suite. C'est le cas de
-        /// MasquerTout, appelé par exemple avant une photo d'écran : là, il ne faut rien attendre.
+        /// Hides the menu bar (its content is kept until the next PrepareMenuBar).
+        /// animate = true: small closing animation (user request of 2026-10-28), the reverse
+        /// of appearing: the bar goes down [MenuAppearRise] units while becoming transparent,
+        /// in [MenuCloseDurationMs] ms, speeding up ("EaseIn").
+        /// Buttons already ignore the gaze: only the drawing fades.
+        /// animate = false (default): the bar disappears at once. This is the case of
+        /// HideAll, called for example before a screenshot: nothing must wait there.
         /// </summary>
-        public void MasquerBarreMenu(bool anime = false)
+        public void HideMenuBar(bool animate = false)
         {
-            if (!anime || BarreMenu.Visibility != Visibility.Visible)
+            if (!animate || MenuBar.Visibility != Visibility.Visible)
             {
-                _fermetureMenu = null;
-                BarreMenu.Visibility = Visibility.Collapsed;
-                RemettreBarreMenuEnPlace();
+                _menuClosing = null;
+                MenuBar.Visibility = Visibility.Collapsed;
+                RestoreMenuBar();
                 return;
             }
 
-            TranslateTransform decalage = BarreMenu.RenderTransform as TranslateTransform;
-            if (decalage == null)
+            TranslateTransform offset = MenuBar.RenderTransform as TranslateTransform;
+            if (offset == null)
             {
-                decalage = new TranslateTransform();
-                BarreMenu.RenderTransform = decalage;
+                offset = new TranslateTransform();
+                MenuBar.RenderTransform = offset;
             }
 
-            Duration duree = new Duration(TimeSpan.FromMilliseconds(DureeFermetureMenuMs));
-            CubicEase accelere = new CubicEase();
-            accelere.EasingMode = EasingMode.EaseIn;
+            Duration duration = new Duration(TimeSpan.FromMilliseconds(MenuCloseDurationMs));
+            CubicEase accelerated = new CubicEase();
+            accelerated.EasingMode = EasingMode.EaseIn;
 
-            // « null » comme point de départ : l'animation part de la valeur actuelle (utile si
-            // l'apparition n'était pas finie).
-            DoubleAnimation descente = new DoubleAnimation();
-            descente.To = Ecran.Unites(MonteeApparitionMenu);
-            descente.Duration = duree;
-            descente.EasingFunction = accelere;
-            DoubleAnimation fondu = new DoubleAnimation();
-            fondu.To = 0;
-            fondu.Duration = duree;
-            fondu.EasingFunction = accelere;
+            // "null" as start value: the animation starts from the current value (useful if
+            // the appear animation was not finished).
+            DoubleAnimation descent = new DoubleAnimation();
+            descent.To = ScreenMetrics.Units(MenuAppearRise);
+            descent.Duration = duration;
+            descent.EasingFunction = accelerated;
+            DoubleAnimation fade = new DoubleAnimation();
+            fade.To = 0;
+            fade.Duration = duration;
+            fade.EasingFunction = accelerated;
 
-            // À la fin du fondu : la barre est cachée pour de bon, sauf si le menu a été
-            // rouvert entre-temps (alors _fermetureMenu a changé).
-            _fermetureMenu = fondu;
-            fondu.Completed += (s, e) =>
+            // At the end of the fade: the bar is hidden for good, unless the menu was
+            // reopened in the meantime (then _menuClosing changed).
+            _menuClosing = fade;
+            fade.Completed += (s, e) =>
             {
-                if (_fermetureMenu == fondu)
+                if (_menuClosing == fade)
                 {
-                    _fermetureMenu = null;
-                    BarreMenu.Visibility = Visibility.Collapsed;
-                    RemettreBarreMenuEnPlace();
+                    _menuClosing = null;
+                    MenuBar.Visibility = Visibility.Collapsed;
+                    RestoreMenuBar();
                 }
             };
 
-            decalage.BeginAnimation(TranslateTransform.YProperty, descente);
-            BarreMenu.BeginAnimation(OpacityProperty, fondu);
+            offset.BeginAnimation(TranslateTransform.YProperty, descent);
+            MenuBar.BeginAnimation(OpacityProperty, fade);
         }
 
         /// <summary>
-        /// Arrête les animations de la barre et la remet à sa place, opaque. Sans cela, la fin
-        /// d'une animation « garde » sa dernière valeur (barre transparente et décalée).
-        /// BeginAnimation(…, null) retire l'animation : la propriété retrouve sa vraie valeur.
+        /// Stops the bar's animations and puts it back in place, opaque. Otherwise, the end
+        /// of an animation "holds" its last value (transparent, shifted bar).
+        /// BeginAnimation(…, null) removes the animation: the property gets its true value back.
         /// </summary>
-        private void RemettreBarreMenuEnPlace()
+        private void RestoreMenuBar()
         {
-            BarreMenu.BeginAnimation(OpacityProperty, null);
-            TranslateTransform decalage = BarreMenu.RenderTransform as TranslateTransform;
-            if (decalage != null)
+            MenuBar.BeginAnimation(OpacityProperty, null);
+            TranslateTransform offset = MenuBar.RenderTransform as TranslateTransform;
+            if (offset != null)
             {
-                decalage.BeginAnimation(TranslateTransform.YProperty, null);
-                decalage.Y = 0;
+                offset.BeginAnimation(TranslateTransform.YProperty, null);
+                offset.Y = 0;
             }
-            BarreMenu.Opacity = 1;
+            MenuBar.Opacity = 1;
         }
 
-        // ───────────────────────── Surface du glisser-déposer (étape 6) ─────────────────────────
+        // ───────────────────────── Drag-and-drop surface (step 6) ─────────────────────────
 
         /// <summary>
-        /// Vide la surface du glisser-déposer et lui donne la taille du calque.
-        /// Elle reste cachée : le mode la remplit, puis appelle AfficherSurfaceGlisser.
+        /// Clears the drag-and-drop surface and gives it the overlay's size.
+        /// It stays hidden: the mode fills it, then calls ShowDragSurface.
         /// </summary>
-        public void PreparerSurfaceGlisser()
+        public void PrepareDragSurface()
         {
-            SurfaceGlisser.Children.Clear();
-            SurfaceGlisser.Width = ActualWidth;
-            SurfaceGlisser.Height = ActualHeight;
-            Canvas.SetLeft(SurfaceGlisser, 0);
-            Canvas.SetTop(SurfaceGlisser, 0);
+            DragSurface.Children.Clear();
+            DragSurface.Width = ActualWidth;
+            DragSurface.Height = ActualHeight;
+            Canvas.SetLeft(DragSurface, 0);
+            Canvas.SetTop(DragSurface, 0);
         }
 
-        public void AfficherSurfaceGlisser()
+        public void ShowDragSurface()
         {
-            SurfaceGlisser.Visibility = Visibility.Visible;
+            DragSurface.Visibility = Visibility.Visible;
         }
 
-        /// <summary>Cache la surface du glisser-déposer (son contenu est gardé jusqu'au prochain PreparerSurfaceGlisser).</summary>
-        public void MasquerSurfaceGlisser()
+        /// <summary>Hides the drag-and-drop surface (its content is kept until the next PrepareDragSurface).</summary>
+        public void HideDragSurface()
         {
-            SurfaceGlisser.Visibility = Visibility.Collapsed;
+            DragSurface.Visibility = Visibility.Collapsed;
         }
 
-        // ───────────────────────── Surface du clavier au regard (étape 12) ─────────────────────────
+        // ───────────────────────── Gaze keyboard surface (step 12) ─────────────────────────
 
         /// <summary>
-        /// Vide la surface du clavier et lui donne la taille du calque.
-        /// Elle reste cachée : ClavierRegard la remplit, puis appelle AfficherSurfaceClavier.
+        /// Clears the keyboard surface and gives it the overlay's size.
+        /// It stays hidden: GazeKeyboard fills it, then calls ShowKeyboardSurface.
         /// </summary>
-        public void PreparerSurfaceClavier()
+        public void PrepareKeyboardSurface()
         {
-            SurfaceClavier.Children.Clear();
-            SurfaceClavier.Width = ActualWidth;
-            SurfaceClavier.Height = ActualHeight;
-            Canvas.SetLeft(SurfaceClavier, 0);
-            Canvas.SetTop(SurfaceClavier, 0);
+            KeyboardSurface.Children.Clear();
+            KeyboardSurface.Width = ActualWidth;
+            KeyboardSurface.Height = ActualHeight;
+            Canvas.SetLeft(KeyboardSurface, 0);
+            Canvas.SetTop(KeyboardSurface, 0);
         }
 
-        public void AfficherSurfaceClavier()
+        public void ShowKeyboardSurface()
         {
-            SurfaceClavier.Visibility = Visibility.Visible;
+            KeyboardSurface.Visibility = Visibility.Visible;
         }
 
         /// <summary>
-        /// Fait glisser le clavier jusqu'à sa nouvelle place (demande de l'utilisateur du
-        /// 02/11/2026) : il vient d'être redessiné à sa place finale, et on le décale d'abord
-        /// de « depuisPixels » (pixels d'écran, positif = plus bas), puis ce décalage revient à
-        /// zéro. Monter : à la vitesse de l'apparition de la barre de menu, en ralentissant à la
-        /// fin. Descendre : à la vitesse de sa fermeture, en accélérant. Comme pour la barre, un
-        /// TranslateTransform décale le dessin sans changer les positions calculées.
+        /// Slides the keyboard to its new place (user request of 2026-11-02): it has just been
+        /// redrawn at its final place, it is first shifted by "fromPixels" (screen pixels,
+        /// positive = lower), then this shift goes back to zero. Moving up: at the menu bar's
+        /// appear speed, slowing down at the end. Moving down: at its closing speed, speeding
+        /// up. As for the bar, a TranslateTransform shifts the drawing without changing the
+        /// computed positions.
         /// </summary>
-        public void AnimerSurfaceClavier(double depuisPixels)
+        public void AnimateKeyboardSurface(double fromPixels)
         {
-            TranslateTransform decalage = SurfaceClavier.RenderTransform as TranslateTransform;
-            if (decalage == null)
+            TranslateTransform offset = KeyboardSurface.RenderTransform as TranslateTransform;
+            if (offset == null)
             {
-                decalage = new TranslateTransform();
-                SurfaceClavier.RenderTransform = decalage;
+                offset = new TranslateTransform();
+                KeyboardSurface.RenderTransform = offset;
             }
 
-            bool monte = depuisPixels > 0;
-            Duration duree = new Duration(TimeSpan.FromMilliseconds(monte ? DureeApparitionMenuMs : DureeFermetureMenuMs));
-            CubicEase courbe = new CubicEase();
-            courbe.EasingMode = monte ? EasingMode.EaseOut : EasingMode.EaseIn;
+            bool rising = fromPixels > 0;
+            Duration duration = new Duration(TimeSpan.FromMilliseconds(rising ? MenuAppearDurationMs : MenuCloseDurationMs));
+            CubicEase curve = new CubicEase();
+            curve.EasingMode = rising ? EasingMode.EaseOut : EasingMode.EaseIn;
 
-            DoubleAnimation glissement = new DoubleAnimation(LongueurVersWpf(depuisPixels), 0, duree);
-            glissement.EasingFunction = courbe;
-            // BeginAnimation remplace une animation déjà en cours (barre rouverte très vite).
-            decalage.BeginAnimation(TranslateTransform.YProperty, glissement);
+            DoubleAnimation drag = new DoubleAnimation(LengthToWpf(fromPixels), 0, duration);
+            drag.EasingFunction = curve;
+            // BeginAnimation replaces an animation already running (bar reopened very fast).
+            offset.BeginAnimation(TranslateTransform.YProperty, drag);
         }
 
-        /// <summary>Cache le clavier (son contenu est gardé jusqu'au prochain PreparerSurfaceClavier).</summary>
-        public void MasquerSurfaceClavier()
+        /// <summary>Hides the keyboard (its content is kept until the next PrepareKeyboardSurface).</summary>
+        public void HideKeyboardSurface()
         {
-            SurfaceClavier.Visibility = Visibility.Collapsed;
+            KeyboardSurface.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>
-        /// Convertit un point de l'écran (pixels réels) en position dans le calque (unités WPF).
-        /// À n'utiliser que si Pret est vrai.
+        /// Converts a screen point (real pixels) to a position in the overlay (WPF units).
+        /// Use only if Ready is true.
         /// </summary>
-        public Point VersWpf(double xPixels, double yPixels)
+        public Point ToWpf(double xPixels, double yPixels)
         {
             return PointFromScreen(new Point(xPixels, yPixels));
         }
 
-        /// <summary>Convertit une longueur en pixels réels en longueur en unités WPF.</summary>
-        public double LongueurVersWpf(double pixels)
+        /// <summary>Converts a length in real pixels to a length in WPF units.</summary>
+        public double LengthToWpf(double pixels)
         {
-            return PixelsVersWpf(pixels);
+            return PixelsToWpf(pixels);
         }
 
         /// <summary>
-        /// Dessine dans « chemin » un arc de cercle : il part du haut et tourne dans le sens
-        /// des aiguilles d'une montre, sur une fraction « progression » du tour.
+        /// Draws an arc in "path": it starts at the top and turns clockwise, over a
+        /// "progress" fraction of the turn.
         ///
-        /// En WPF, un arc se décrit par un point de départ et un ArcSegment (point d'arrivée,
-        /// rayons, sens de rotation, et « grand arc » si l'on dépasse un demi-tour).
-        /// Un tour complet ne peut pas s'écrire avec un seul arc (départ = arrivée) : on dessine
-        /// alors simplement un cercle entier.
+        /// In WPF, an arc is described by a start point and an ArcSegment (end point, radii,
+        /// sweep direction, and "large arc" when beyond half a turn).
+        /// A full turn cannot be written as a single arc (start = end): a whole circle is
+        /// drawn instead.
         /// </summary>
-        private void DessinerArc(Path chemin, double xPixels, double yPixels, double rayonPixels, double progression)
+        private void DrawArc(Path path, double xPixels, double yPixels, double radiusPixels, double progress)
         {
-            if (progression <= 0 || PresentationSource.FromVisual(this) == null)
+            if (progress <= 0 || PresentationSource.FromVisual(this) == null)
             {
-                chemin.Visibility = Visibility.Collapsed;
+                path.Visibility = Visibility.Collapsed;
                 return;
             }
 
-            Point centre = PointFromScreen(new Point(xPixels, yPixels));
-            double rayon = PixelsVersWpf(rayonPixels);
+            Point center = PointFromScreen(new Point(xPixels, yPixels));
+            double radius = PixelsToWpf(radiusPixels);
 
-            chemin.Data = FormeArc(centre, rayon, progression);
-            chemin.Visibility = Visibility.Visible;
+            path.Data = ArcShape(center, radius, progress);
+            path.Visibility = Visibility.Visible;
         }
 
         /// <summary>
-        /// La forme d'un arc qui part du haut et tourne dans le sens des aiguilles d'une montre,
-        /// sur une fraction « progression » du tour (centre et rayon en unités WPF).
-        /// « static » et « internal » : les boutons du choix d'action (BoutonRegard) s'en
-        /// servent aussi pour leur anneau de progression.
+        /// The shape of an arc that starts at the top and turns clockwise, over a "progress"
+        /// fraction of the turn (centre and radius in WPF units).
+        /// "static" and "internal": the action choice buttons (GazeButton) also use it for
+        /// their progress ring.
         /// </summary>
-        internal static Geometry FormeArc(Point centre, double rayon, double progression)
+        internal static Geometry ArcShape(Point center, double radius, double progress)
         {
-            Geometry forme;
-            if (progression >= 0.999)
+            Geometry shape;
+            if (progress >= 0.999)
             {
-                forme = new EllipseGeometry(centre, rayon, rayon);
+                shape = new EllipseGeometry(center, radius, radius);
             }
             else
             {
-                double angle = progression * 2 * Math.PI;   // en radians, 0 = en haut
-                Point depart = new Point(centre.X, centre.Y - rayon);
-                Point arrivee = new Point(centre.X + rayon * Math.Sin(angle), centre.Y - rayon * Math.Cos(angle));
+                double angle = progress * 2 * Math.PI;   // in radians, 0 = top
+                Point startPoint = new Point(center.X, center.Y - radius);
+                Point arrival = new Point(center.X + radius * Math.Sin(angle), center.Y - radius * Math.Cos(angle));
 
                 PathFigure figure = new PathFigure();
-                figure.StartPoint = depart;
+                figure.StartPoint = startPoint;
                 figure.IsClosed = false;
                 figure.IsFilled = false;
                 figure.Segments.Add(new ArcSegment(
-                    arrivee, new Size(rayon, rayon), 0, angle > Math.PI, SweepDirection.Clockwise, true));
+                    arrival, new Size(radius, radius), 0, angle > Math.PI, SweepDirection.Clockwise, true));
 
-                PathGeometry chemins = new PathGeometry();
-                chemins.Figures.Add(figure);
-                forme = chemins;
+                PathGeometry paths = new PathGeometry();
+                paths.Figures.Add(figure);
+                shape = paths;
             }
 
-            forme.Freeze();
-            return forme;
+            shape.Freeze();
+            return shape;
         }
 
-        /// <summary>Positionne une ellipse : son coin en haut à gauche est à (centre − rayon).</summary>
-        private static void PlacerEllipse(Ellipse ellipse, Point centre, double rayon)
+        /// <summary>Places an ellipse: its top-left corner is at (centre − radius).</summary>
+        private static void PlaceEllipse(Ellipse ellipse, Point center, double radius)
         {
-            ellipse.Width = rayon * 2;
-            ellipse.Height = rayon * 2;
-            Canvas.SetLeft(ellipse, centre.X - rayon);
-            Canvas.SetTop(ellipse, centre.Y - rayon);
+            ellipse.Width = radius * 2;
+            ellipse.Height = radius * 2;
+            Canvas.SetLeft(ellipse, center.X - radius);
+            Canvas.SetTop(ellipse, center.Y - radius);
             ellipse.Visibility = Visibility.Visible;
         }
 
-        /// <summary>Convertit une longueur en pixels réels en longueur en unités WPF.</summary>
-        private double PixelsVersWpf(double pixels)
+        /// <summary>Converts a length in real pixels to a length in WPF units.</summary>
+        private double PixelsToWpf(double pixels)
         {
             HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
             if (source == null || source.CompositionTarget == null)
             {
                 return pixels;
             }
-            // M11 est le facteur de conversion horizontal (0,8 à 125 %, 0,667 à 150 %…).
+            // M11 is the horizontal conversion factor (0.8 at 125 %, 0.667 at 150 %…).
             return pixels * source.CompositionTarget.TransformFromDevice.M11;
         }
     }

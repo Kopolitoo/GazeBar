@@ -1,73 +1,73 @@
 namespace GazeBar
 {
     /// <summary>
-    /// Ce que tous les modes savent faire. C'est une classe « abstraite » : on ne crée jamais
-    /// un « Mode » tout court, mais un mode précis (ModeMouvement, ModeRegardFixe, plus tard
-    /// ModeMenu…) qui hérite de celle-ci et remplit les méthodes qui l'intéressent.
+    /// What every mode can do. This is an "abstract" class: we never create a plain "Mode",
+    /// but a specific mode (MovementMode, FixedGazeMode, MenuMode...) that inherits from it
+    /// and fills in the methods it cares about.
     ///
-    /// Le ModeManager appelle ces méthodes au bon moment :
-    ///   Entrer(regard)  une fois, quand le mode devient le mode courant. Il reçoit la
-    ///                   position actuelle du regard, pour s'initialiser au bon endroit
-    ///                   (et non à une place par défaut comme le centre de l'écran) ;
-    ///   Actualiser()    environ 60 fois par seconde, avec la dernière position du regard ;
-    ///   Quitter()       une fois, quand on passe à un autre mode (pour tout ranger).
+    /// The ModeManager calls these methods at the right time:
+    ///   Enter(gaze)     once, when the mode becomes the current mode. It receives the
+    ///                   current gaze position, to start at the right place (and not at a
+    ///                   default place such as the center of the screen);
+    ///   Update()        about 60 times per second, with the latest gaze position;
+    ///   Quit()          once, when switching to another mode (to tidy everything up).
     ///
-    /// Pour éviter un saut visuel d'un mode à l'autre, le cercle n'est PAS caché dans
-    /// Quitter : le mode suivant le reprend là où il est (Calque.CercleX, Calque.CercleY)
-    /// et le déplace en douceur. Un mode qui ne veut pas de cercle le cache dans son Entrer.
+    /// To avoid a visual jump from one mode to the next, the circle is NOT hidden in Quit:
+    /// the next mode takes it over where it is (Layer.CircleX, Layer.CircleY) and moves it
+    /// smoothly. A mode that does not want a circle hides it in its Enter.
     ///
-    /// « virtual » : la méthode a un comportement par défaut (ne rien faire), qu'un mode
-    /// peut remplacer avec « override ».
+    /// "virtual": the method has a default behaviour (do nothing), which a mode can
+    /// replace with "override".
     /// </summary>
     internal abstract class Mode
     {
-        /// <summary>Nom lisible du mode, pour le journal et l'affichage.</summary>
-        public abstract string Nom { get; }
+        /// <summary>Readable name of the mode, for the log and the display.</summary>
+        public abstract string Name { get; }
 
         /// <summary>
-        /// Vrai si le regard en bas hors de l'écran peut ouvrir le menu pendant ce mode.
+        /// True if looking down below the screen can open the menu during this mode.
         ///
-        /// Depuis l'étape 6 (choix de l'utilisateur du 25/10/2026), le menu ne s'ouvre QUE
-        /// depuis les modes mouvement, pause et jeu. Les autres modes ont leur propre
-        /// sortie : un bouton « retour » dans la loupe, le choix d'action et le glisser-déposer.
-        /// La réponse par défaut est donc « non » ; seuls ModeMouvement, ModePause et ModeJeu (étape 9) la
-        /// remplacent par « oui » (avec override).
+        /// Since step 6 (user's choice of 2026-10-25), the menu ONLY opens from movement,
+        /// pause and game modes. The other modes have their own way out: a "back" button in
+        /// the magnifier, the action choice and the drag and drop.
+        /// The default answer is therefore "no"; only MovementMode, PauseMode and GameMode
+        /// (step 9) replace it with "yes" (with override).
         /// </summary>
-        public virtual bool MenuAutorise
+        public virtual bool MenuAllowed
         {
             get { return false; }
         }
 
-        /// <summary>Le gestionnaire qui pilote ce mode. Donné par le ModeManager avant Entrer(regard).</summary>
-        protected ModeManager Gestionnaire { get; private set; }
+        /// <summary>The manager that drives this mode. Given by the ModeManager before Enter(gaze).</summary>
+        protected ModeManager Manager { get; private set; }
 
-        /// <summary>Appelée par le ModeManager uniquement (d'où « internal »).</summary>
-        internal void Attacher(ModeManager gestionnaire)
+        /// <summary>Called by the ModeManager only (hence "internal").</summary>
+        internal void Attach(ModeManager manager)
         {
-            Gestionnaire = gestionnaire;
+            Manager = manager;
         }
 
-        public virtual void Entrer(EtatRegard regard)
-        {
-        }
-
-        public virtual void Actualiser(EtatRegard regard)
+        public virtual void Enter(GazeState gaze)
         {
         }
 
-        public virtual void Quitter()
+        public virtual void Update(GazeState gaze)
+        {
+        }
+
+        public virtual void Quit()
         {
         }
 
         /// <summary>
-        /// Appelée quand la résolution, la mise à l'échelle ou la taille du texte de Windows
-        /// a changé pendant ce mode (étape 11, voir Ecran.cs).
-        /// Renvoie vrai si le mode s'est adapté lui-même (par exemple le mode mouvement, qui
-        /// redessine tout à chaque tic avec les nouvelles tailles). Renvoie faux (par défaut)
-        /// si le mode ne peut pas continuer : ses boutons et sa photo ont été placés pour
-        /// l'ancien écran. Le gestionnaire revient alors au mode mouvement.
+        /// Called when the Windows resolution, scaling or text size changed during this mode
+        /// (step 11, see ScreenMetrics.cs).
+        /// Returns true if the mode adapted itself (for example movement mode, which redraws
+        /// everything on each tick with the new sizes). Returns false (default) if the mode
+        /// cannot carry on: its buttons and its photo were placed for the old screen. The
+        /// manager then returns to movement mode.
         /// </summary>
-        public virtual bool AdapterEcran()
+        public virtual bool AdaptToScreen()
         {
             return false;
         }

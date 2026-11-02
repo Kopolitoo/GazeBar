@@ -5,55 +5,55 @@ using System.Threading;
 namespace GazeBar
 {
     /// <summary>
-    /// Une mesure : où était le curseur, et à quel moment.
+    /// One measure: where the cursor was, and when.
     ///
-    /// « struct » = petit paquet de valeurs (contrairement à une « class », il est copié
-    /// quand on le passe d'une méthode à l'autre).
+    /// "struct" = a small bundle of values (unlike a "class", it is copied when passed from
+    /// one method to another).
     /// </summary>
     internal struct CursorSample
     {
-        /// <summary>Millisecondes écoulées depuis le démarrage de l'échantillonneur.</summary>
+        /// <summary>Milliseconds elapsed since the sampler started.</summary>
         public double Ms;
 
-        /// <summary>Position horizontale, en pixels (0 = bord gauche de l'écran).</summary>
+        /// <summary>Horizontal position, in pixels (0 = left edge of the screen).</summary>
         public int X;
 
-        /// <summary>Position verticale, en pixels (0 = bord haut de l'écran).</summary>
+        /// <summary>Vertical position, in pixels (0 = top edge of the screen).</summary>
         public int Y;
     }
 
-    /// <summary>Statistiques calculées sur la dernière seconde écoulée.</summary>
+    /// <summary>Statistics computed over the last elapsed second.</summary>
     internal struct CursorStats
     {
-        /// <summary>Combien de fois par seconde on a LU le curseur (doit être bien supérieur au rythme du suivi oculaire).</summary>
+        /// <summary>How many times per second the cursor was READ (must be well above the eye tracking rate).</summary>
         public double PollsPerSecond;
 
-        /// <summary>Combien de fois par seconde la position a CHANGÉ : c'est la cadence réelle du « regard » obtenu par le curseur.</summary>
+        /// <summary>How many times per second the position CHANGED: the real rate of the "gaze" obtained through the cursor.</summary>
         public double ChangesPerSecond;
     }
 
     /// <summary>
-    /// MODÈLE : lit en permanence la position du curseur de la souris.
+    /// MODEL: continuously reads the mouse cursor position.
     ///
-    /// Rappel du principe : le logiciel de l'eyetracker déplace le curseur de Windows là où vous regardez.
-    /// Lire le curseur revient donc à lire un « regard » filtré par ce logiciel, sur tout
-    /// l'écran (contrairement à l'API UWP, limitée à sa propre fenêtre).
+    /// Reminder of the principle: the eyetracker software moves the Windows cursor to where
+    /// you look. So reading the cursor amounts to reading a "gaze" filtered by that software,
+    /// on the whole screen (unlike the UWP API, limited to its own window).
     ///
-    /// Fonctionnement : un fil d'exécution (« thread ») dédié interroge Windows environ
-    /// 500 à 1000 fois par seconde. Le thread de l'interface graphique n'est pas
-    /// ralenti, et on voit chaque changement de position avec son heure précise.
+    /// How it works: a dedicated "thread" queries Windows about 500 to 1000 times per
+    /// second. The user interface thread is not slowed down, and each position change is
+    /// seen with its precise time.
     /// </summary>
     internal sealed class CursorSampler : IDisposable
     {
-        /// <summary>Nombre de positions gardées en mémoire pour dessiner la trace du regard.</summary>
+        /// <summary>Number of positions kept in memory to draw the gaze trail.</summary>
         private const int TrailLength = 150;
 
-        // L'horloge : mesure le temps écoulé de façon précise et régulière.
+        // The clock: measures elapsed time precisely and steadily.
         private readonly Stopwatch _clock = Stopwatch.StartNew();
 
-        // Les données ci-dessous sont lues par l'interface ET écrites par le thread
-        // d'échantillonnage. Le « verrou » (lock) garantit qu'un seul des deux y touche
-        // à la fois, pour qu'on ne lise jamais une valeur à moitié écrite.
+        // The data below is read by the interface AND written by the sampling thread.
+        // The "lock" guarantees that only one of them touches it at a time, so that a
+        // half-written value is never read.
         private readonly object _lock = new object();
         private readonly CursorSample[] _trail = new CursorSample[TrailLength];
 
@@ -72,26 +72,26 @@ namespace GazeBar
         private CursorStats _stats;
 
         /// <summary>
-        /// Déclenché à CHAQUE changement de position du curseur.
-        /// ATTENTION : il est déclenché depuis le thread d'échantillonnage, pas depuis
-        /// celui de l'interface. Un abonné ne doit donc pas toucher directement aux
-        /// éléments d'écran (textes, boutons...).
+        /// Raised on EVERY cursor position change.
+        /// WARNING: it is raised from the sampling thread, not from the interface thread.
+        /// A subscriber must therefore not touch screen elements (texts, buttons...)
+        /// directly.
         /// </summary>
         public event Action<CursorSample> PositionChanged;
 
-        /// <summary>Heure actuelle de l'horloge de l'échantillonneur, en millisecondes.</summary>
+        /// <summary>Current time of the sampler's clock, in milliseconds.</summary>
         public double NowMs
         {
             get { return _clock.Elapsed.TotalMilliseconds; }
         }
 
-        /// <summary>Statistiques de la dernière seconde complète.</summary>
+        /// <summary>Statistics of the last complete second.</summary>
         public CursorStats Stats
         {
             get { lock (_lock) { return _stats; } }
         }
 
-        /// <summary>Temps écoulé depuis le dernier changement de position, en ms (-1 si aucune position n'a encore changé).</summary>
+        /// <summary>Time elapsed since the last position change, in ms (-1 if no position has changed yet).</summary>
         public double MsSinceLastChange
         {
             get
@@ -103,7 +103,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Démarre la surveillance du curseur.</summary>
+        /// <summary>Starts watching the cursor.</summary>
         public void Start()
         {
             if (_running)
@@ -114,12 +114,12 @@ namespace GazeBar
             _running = true;
             _thread = new Thread(Loop);
             _thread.Name = "CursorSampler";
-            _thread.IsBackground = true;                   // ne bloque pas la fermeture du programme
-            _thread.Priority = ThreadPriority.AboveNormal; // lectures régulières même si l'ordinateur est chargé
+            _thread.IsBackground = true;                   // does not block closing the program
+            _thread.Priority = ThreadPriority.AboveNormal; // regular reads even if the computer is busy
             _thread.Start();
         }
 
-        /// <summary>Position la plus récente. « out » : la méthode renvoie ses deux résultats par ces paramètres.</summary>
+        /// <summary>Most recent position. "out": the method returns its two results through these parameters.</summary>
         public void GetLatest(out int x, out int y)
         {
             lock (_lock)
@@ -129,7 +129,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Copie des dernières positions, de la plus ancienne à la plus récente (pour dessiner la trace).</summary>
+        /// <summary>Copy of the latest positions, from oldest to newest (to draw the trail).</summary>
         public CursorSample[] GetTrail()
         {
             lock (_lock)
@@ -144,10 +144,10 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Boucle du thread : lire le curseur, attendre 1 ms, recommencer.</summary>
+        /// <summary>Thread loop: read the cursor, wait 1 ms, start again.</summary>
         private void Loop()
         {
-            // Sans cet appel, Thread.Sleep(1) dormirait ~15 ms. Windows nous accorde ici 1 ms.
+            // Without this call, Thread.Sleep(1) would sleep ~15 ms. Here Windows grants us 1 ms.
             NativeMethods.timeBeginPeriod(1);
             try
             {
@@ -159,7 +159,7 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("CursorSampler : arrêt sur erreur : " + ex);
+                App.Log("CursorSampler: stopped on error: " + ex);
             }
             finally
             {
@@ -167,13 +167,13 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Une lecture du curseur : met à jour la position, la trace et les statistiques.</summary>
+        /// <summary>One cursor read: updates the position, the trail and the statistics.</summary>
         private void PollOnce()
         {
             NativeMethods.POINT point;
             if (!NativeMethods.GetCursorPos(out point))
             {
-                return; // lecture impossible à cet instant (rare) : on réessaiera
+                return; // cannot read at this moment (rare): we will try again
             }
 
             double now = NowMs;
@@ -197,7 +197,7 @@ namespace GazeBar
                     sample.X = point.X;
                     sample.Y = point.Y;
 
-                    // « Tampon circulaire » : quand il est plein, la nouvelle position remplace la plus ancienne.
+                    // "Circular buffer": when it is full, the new position replaces the oldest one.
                     _trail[_trailNext] = sample;
                     _trailNext = (_trailNext + 1) % TrailLength;
                     if (_trailCount < TrailLength)
@@ -206,7 +206,7 @@ namespace GazeBar
                     }
                 }
 
-                // Toutes les secondes : on fige les statistiques et on repart de zéro.
+                // Every second: freeze the statistics and start again from zero.
                 if (now - _windowStartMs >= 1000.0)
                 {
                     double seconds = (now - _windowStartMs) / 1000.0;
@@ -218,7 +218,7 @@ namespace GazeBar
                 }
             }
 
-            // On prévient les abonnés HORS du verrou, pour ne jamais le garder trop longtemps.
+            // Notify the subscribers OUTSIDE the lock, so as never to hold it too long.
             if (changed)
             {
                 Action<CursorSample> handler = PositionChanged;
@@ -230,13 +230,13 @@ namespace GazeBar
                     }
                     catch (Exception ex)
                     {
-                        App.Log("CursorSampler : erreur chez un abonné : " + ex);
+                        App.Log("CursorSampler: error in a subscriber: " + ex);
                     }
                 }
             }
         }
 
-        /// <summary>Arrête le thread.</summary>
+        /// <summary>Stops the thread.</summary>
         public void Dispose()
         {
             _running = false;

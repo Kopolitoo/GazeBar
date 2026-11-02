@@ -7,13 +7,12 @@ using System.Text;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : enregistre les positions du curseur pendant quelques secondes et les
-    /// écrit dans un fichier CSV (tableau lisible avec Excel ou un script).
+    /// MODEL: records the cursor positions for a few seconds and writes them to a CSV
+    /// file (a table readable with Excel or a script).
     ///
-    /// À quoi ça sert : mesurer objectivement la qualité du « regard » obtenu par le
-    /// curseur : cadence réelle, régularité, précision, zone couverte. Chaque ligne du
-    /// fichier est un changement de position (donc les écarts de temps entre lignes
-    /// donnent la cadence réelle).
+    /// What it is for: objectively measuring the quality of the "gaze" obtained through
+    /// the cursor: real rate, regularity, precision, covered area. Each line of the file
+    /// is a change of position (so the time gaps between lines give the real rate).
     /// </summary>
     internal sealed class CursorRecorder
     {
@@ -21,7 +20,7 @@ namespace GazeBar
         private readonly List<CursorSample> _samples = new List<CursorSample>();
         private bool _recording;
 
-        /// <summary>Commence l'enregistrement (la position actuelle est notée comme première ligne).</summary>
+        /// <summary>Starts recording (the current position is written as the first line).</summary>
         public void Start(CursorSampler sampler)
         {
             int x;
@@ -40,11 +39,11 @@ namespace GazeBar
                 _recording = true;
             }
 
-            // « += » : à chaque changement de position, la méthode OnPositionChanged sera appelée.
+            // "+=": on every position change, the OnPositionChanged method will be called.
             sampler.PositionChanged += OnPositionChanged;
         }
 
-        /// <summary>Appelée pour chaque changement de position (depuis le thread d'échantillonnage).</summary>
+        /// <summary>Called for each position change (from the sampling thread).</summary>
         private void OnPositionChanged(CursorSample sample)
         {
             lock (_lock)
@@ -56,7 +55,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Interrompt l'enregistrement sans rien sauvegarder.</summary>
+        /// <summary>Stops recording without saving anything.</summary>
         public void Cancel(CursorSampler sampler)
         {
             sampler.PositionChanged -= OnPositionChanged;
@@ -66,7 +65,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Termine l'enregistrement et écrit le fichier CSV. Renvoie le chemin du fichier.</summary>
+        /// <summary>Ends recording and writes the CSV file. Returns the file path.</summary>
         public string StopAndSave(CursorSampler sampler, double screenWidth, double screenHeight)
         {
             Cancel(sampler);
@@ -77,7 +76,7 @@ namespace GazeBar
                 copy = new List<CursorSample>(_samples);
             }
 
-            // Le dossier « Documents\GazeBar ».
+            // The "Documents\GazeBar" folder.
             string folder = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "GazeBar");
             Directory.CreateDirectory(folder);
@@ -85,8 +84,8 @@ namespace GazeBar
             string file = Path.Combine(
                 folder, "positions-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".csv");
 
-            // InvariantCulture : le séparateur décimal est toujours le point, quelle que soit
-            // la langue de Windows (sinon la virgule française casserait le format CSV).
+            // InvariantCulture: the decimal separator is always a point, whatever the
+            // Windows language (otherwise the French comma would break the CSV format).
             CultureInfo inv = CultureInfo.InvariantCulture;
 
             StringBuilder text = new StringBuilder();
@@ -103,7 +102,7 @@ namespace GazeBar
             }
 
             File.WriteAllText(file, text.ToString(), Encoding.UTF8);
-            App.Log("Enregistrement : " + copy.Count + " positions dans " + file);
+            App.Log("Recording: " + copy.Count + " positions in " + file);
             return file;
         }
     }

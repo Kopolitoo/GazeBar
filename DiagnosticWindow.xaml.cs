@@ -10,18 +10,18 @@ using System.Windows.Threading;
 namespace GazeBar
 {
     /// <summary>
-    /// INTERFACE : fenêtre de diagnostic. Affiche en direct ce que « voit » l'échantillonneur
-    /// de curseur, et permet d'enregistrer un fichier CSV pour analyser la qualité du signal.
+    /// INTERFACE: diagnostic window. Shows live what the cursor sampler "sees", and can
+    /// record a CSV file to analyze the signal quality.
     /// </summary>
     internal partial class DiagnosticWindow : Window
     {
-        /// <summary>Délai avant le début de l'enregistrement, pour avoir le temps de se préparer.</summary>
+        /// <summary>Delay before recording starts, to give time to get ready.</summary>
         private const double RecordCountdownSeconds = 3.0;
 
-        /// <summary>Durée de l'enregistrement.</summary>
+        /// <summary>Recording duration.</summary>
         private const double RecordSeconds = 20.0;
 
-        /// <summary>Largeur de la miniature de l'écran, en unités WPF.</summary>
+        /// <summary>Width of the screen thumbnail, in WPF units.</summary>
         private const double MapWidth = 680.0;
 
         private enum RecordPhase
@@ -37,9 +37,9 @@ namespace GazeBar
         private readonly DispatcherTimer _timer;
         private readonly Stopwatch _recordClock = new Stopwatch();
 
-        private readonly Polyline _trailLine;   // la trace des dernières positions
-        private readonly Ellipse _dot;          // le point = position actuelle du curseur
-        private readonly Ellipse _gazeDot;      // le point vert = position réelle du regard
+        private readonly Polyline _trailLine;   // the trail of the latest positions
+        private readonly Ellipse _dot;          // the dot = current cursor position
+        private readonly Ellipse _gazeDot;      // the green dot = real gaze position
 
         private readonly double _screenWidth;
         private readonly double _screenHeight;
@@ -54,15 +54,15 @@ namespace GazeBar
             _sampler = sampler;
             _gaze = gaze;
 
-            // Taille de l'écran en pixels (même unité que la position du curseur).
-            NativeMethods.TailleEcranPrincipal(out _screenWidth, out _screenHeight);
+            // Screen size in pixels (same unit as the cursor position).
+            NativeMethods.PrimaryScreenSize(out _screenWidth, out _screenHeight);
             if (_screenWidth <= 0 || _screenHeight <= 0)
             {
                 _screenWidth = 1920;
                 _screenHeight = 1080;
             }
 
-            // La miniature garde les proportions de l'écran.
+            // The thumbnail keeps the screen's proportions.
             _mapHeight = MapWidth * _screenHeight / _screenWidth;
             MapCanvas.Width = MapWidth;
             MapCanvas.Height = _mapHeight;
@@ -89,7 +89,7 @@ namespace GazeBar
 
             ScreenInfoText.Text = "Écran : " + _screenWidth + " x " + _screenHeight + " pixels";
 
-            // Rafraîchit l'affichage 20 fois par seconde.
+            // Refreshes the display 20 times per second.
             _timer = new DispatcherTimer();
             _timer.Interval = TimeSpan.FromMilliseconds(50);
             _timer.Tick += OnTick;
@@ -107,7 +107,7 @@ namespace GazeBar
             }
         }
 
-        // ───────────────────────── Affichage en direct ─────────────────────────
+        // ───────────────────────── Live display ─────────────────────────
 
         private void OnTick(object sender, EventArgs e)
         {
@@ -162,7 +162,7 @@ namespace GazeBar
             double scaleX = MapWidth / _screenWidth;
             double scaleY = _mapHeight / _screenHeight;
 
-            // La trace : on convertit chaque position d'écran en position dans la miniature.
+            // The trail: each screen position is converted to a position in the thumbnail.
             CursorSample[] trail = _sampler.GetTrail();
             PointCollection points = new PointCollection(trail.Length);
             foreach (CursorSample sample in trail)
@@ -171,14 +171,14 @@ namespace GazeBar
             }
             _trailLine.Points = points;
 
-            // Le point : on retire la moitié de sa taille pour que son CENTRE soit sur la position.
+            // The dot: subtract half its size so that its CENTER is on the position.
             int x;
             int y;
             _sampler.GetLatest(out x, out y);
             Canvas.SetLeft(_dot, x * scaleX - _dot.Width / 2);
             Canvas.SetTop(_dot, y * scaleY - _dot.Height / 2);
 
-            // Le regard réel : ramené dans la miniature (un point rouge sur le bord = hors écran).
+            // The real gaze: brought back into the thumbnail (a red dot on the edge = off screen).
             if (_gaze.HasData)
             {
                 double gx;
@@ -193,7 +193,7 @@ namespace GazeBar
             }
         }
 
-        // ───────────────────────── Enregistrement ─────────────────────────
+        // ───────────────────────── Recording ─────────────────────────
 
         private void OnRecordClick(object sender, RoutedEventArgs e)
         {
@@ -209,7 +209,7 @@ namespace GazeBar
                               RecordCountdownSeconds.ToString("F0") + " s…";
         }
 
-        /// <summary>Fait avancer l'enregistrement (appelée 20 fois par seconde).</summary>
+        /// <summary>Advances the recording (called 20 times per second).</summary>
         private void UpdateRecording()
         {
             if (_recordPhase == RecordPhase.None)
@@ -228,14 +228,14 @@ namespace GazeBar
                     return;
                 }
 
-                SystemSounds.Asterisk.Play();   // petit son : l'enregistrement commence
+                SystemSounds.Asterisk.Play();   // short sound: recording starts
                 _recorder.Start(_sampler);
                 _recordPhase = RecordPhase.Recording;
                 _recordClock.Restart();
                 return;
             }
 
-            // Phase d'enregistrement.
+            // Recording phase.
             if (elapsed < RecordSeconds)
             {
                 RecordText.Text = "Enregistrement en cours, encore " +
@@ -246,7 +246,7 @@ namespace GazeBar
 
             _recordPhase = RecordPhase.None;
             RecordButton.IsEnabled = true;
-            SystemSounds.Exclamation.Play();    // son différent : c'est terminé
+            SystemSounds.Exclamation.Play();    // different sound: it is finished
 
             try
             {
@@ -255,7 +255,7 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("Échec de l'enregistrement : " + ex);
+                App.Log("Recording failed: " + ex);
                 RecordText.Text = "Échec de l'enregistrement : " + ex.Message;
             }
         }
