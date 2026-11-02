@@ -12,79 +12,75 @@ using System.Xml;
 namespace GazeBar
 {
     /// <summary>
-    /// LOGIQUE : la prédiction de mots du clavier au regard (étape 13, « clavier-prediction »).
+    /// LOGIC: word prediction for the gaze keyboard (step 13, "clavier-prediction").
     ///
-    /// Elle répond à une seule question : « l'utilisateur a tapé ces lettres, quels sont les
-    /// 3 mots les plus probables qui commencent ainsi ? » (méthode Proposer).
+    /// It answers one question: "the user typed these letters, which are the 3 most likely
+    /// words that start this way?" (method Suggest).
     ///
-    /// Deux sources de mots :
-    ///   1. le DICTIONNAIRE PRINCIPAL, Dictionnaires/fr.txt (tiré de Lexique 3.83, licence
-    ///      CC BY-SA, voir Dictionnaires/LICENCE-Lexique.txt) : environ 125 000 mots, chacun
-    ///      avec sa fréquence (nombre d'apparitions par million de mots dans des films et des
-    ///      livres). Il est copié à côté de GazeBar.exe et lu une fois, au démarrage, en
-    ///      arrière-plan (environ une demi-seconde, sans bloquer le regard) ;
-    ///   2. le DICTIONNAIRE PERSONNEL, %APPDATA%\GazeBar\dictionnaire-perso.json, à côté de
-    ///      parametres.json. Il n'est JAMAIS dans le dépôt public : il contient les mots
-    ///      ajoutés par l'utilisateur et le nombre de fois où il a utilisé chaque mot
-    ///      (l'« apprentissage »).
+    /// Two word sources:
+    ///   1. the PRIMARY DICTIONARY, Dictionaries/fr.txt (taken from Lexique 3.83, CC BY-SA
+    ///      licence, see Dictionaries/LICENSE-Lexique.txt): about 125,000 words, each with its
+    ///      frequency (occurrences per million words in films and books). It is copied next to
+    ///      GazeBar.exe and read once, at startup, in the background (about half a second,
+    ///      without blocking the gaze);
+    ///   2. the PERSONAL DICTIONARY, %APPDATA%\GazeBar\personal-dictionary.json, next to
+    ///      settings.json. It is NEVER in the public repository: it holds the words added by
+    ///      the user and how many times each word was used (the "learning").
     ///
-    /// Classement d'un mot (cahier des charges, validé le 01/11/2026) :
-    ///     score = fréquence dans Lexique + [BonusUtilisation] × nombre d'utilisations
-    /// Les mots habituels remontent donc vite. Un mot ajouté (absent de Lexique) part de 0.
+    /// Ranking of a word (specification, validated on 2026-11-01):
+    ///     score = frequency in Lexique + [UsageBonus] × number of uses
+    /// Usual words therefore rise quickly. An added word (not in Lexique) starts at 0.
     ///
-    /// MOT SUIVANT (demande de l'utilisateur du 02/11/2026) : la prédiction retient aussi les
-    /// PAIRES de mots écrits l'un après l'autre (« je » → « suis », « l' » → « homme »), dans le
-    /// dictionnaire personnel. Juste après une espace, les 3 cases montrent les mots qui ont le
-    /// plus souvent suivi le mot précédent ; pendant la frappe, ces mots gagnent
-    /// [BonusSuite] par fois. Lexique ne contient pas de paires : au début, il n'y a donc rien
-    /// à proposer après une espace, la prédiction s'enrichit au fil des phrases écrites.
+    /// NEXT WORD (user request of 2026-11-02): the prediction also remembers PAIRS of words
+    /// written one after the other ("je" → "suis", "l'" → "homme"), in the personal
+    /// dictionary. Right after a space, the 3 boxes show the words that most often followed
+    /// the previous word; while typing, these words gain [FollowBonus] per occurrence.
+    /// Lexique holds no pairs: at first there is nothing to suggest after a space, the
+    /// prediction grows as sentences are written.
     ///
-    /// Recherche SANS tenir compte des accents ni des majuscules : chaque mot a une « clé »
-    /// (minuscules, sans accents, voir Cle) ; « ete » trouve « été ». Les clés sont rangées
-    /// dans l'ordre alphabétique : on trouve la première qui commence par ce qui est tapé par
-    /// DICHOTOMIE (on coupe la liste en deux, puis encore en deux… : 17 essais pour 125 000
-    /// mots), puis on lit les suivantes tant qu'elles commencent pareil.
+    /// Search IGNORES accents and case: each word has a "key" (lower case, no accents, see
+    /// Key); "ete" finds "été". Keys are sorted alphabetically: the first one starting with
+    /// what was typed is found by BINARY SEARCH (halve the list, then halve again…: 17 steps
+    /// for 125,000 words), then the following ones are read while they share the prefix.
     ///
-    /// Enregistrement du dictionnaire personnel : juste après chaque ajout de mot ; les
-    /// nombres d'utilisations, eux, une fois par minute s'ils ont changé, et à la fermeture
-    /// de GazeBar (pour ne pas écrire sur le disque à chaque mot).
+    /// Saving the personal dictionary: right after each added word; usage counts once a
+    /// minute if they changed, and when GazeBar closes (to avoid writing to disk on every
+    /// word).
     ///
-    /// Le texte tapé n'est jamais écrit dans le journal (vie privée).
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// Typed text is never written to the log (privacy).
     /// </summary>
     internal sealed class WordPredictor
     {
-        /// <summary>Nom du dossier des dictionnaires, à côté de GazeBar.exe.</summary>
+        /// <summary>Name of the dictionaries folder, next to GazeBar.exe.</summary>
         public const string FolderName = "Dictionaries";
 
         /// <summary>
-        /// Ce que vaut UNE utilisation, en « apparitions par million » de Lexique. Avec 20, un
-        /// mot rare utilisé 5 fois (score 100) passe devant la plupart des mots courants qui
-        /// commencent pareil, mais pas devant « de » (64 000) ou « pas » (27 000).
-        /// À ajuster après essai si les mots habituels montent trop vite ou trop lentement.
+        /// Value of ONE use, in Lexique "occurrences per million". With 20, a rare word used
+        /// 5 times (score 100) overtakes most common words with the same start, but not "de"
+        /// (64,000) or "pas" (27,000).
+        /// To tune after testing if usual words rise too fast or too slowly.
         /// </summary>
         private const double UsageBonus = 20;
 
         /// <summary>
-        /// Ce que vaut UNE fois où le mot a suivi le mot précédent, pendant la frappe : 10 fois
-        /// plus qu'une simple utilisation, car le mot d'avant en dit beaucoup. Exemple : après
-        /// « je », en tapant « s », « suis » déjà écrit 5 fois après « je » gagne 1 000.
-        /// À ajuster après essai.
+        /// Value of ONE time the word followed the previous word, while typing: 10 times a
+        /// plain use, because the previous word says a lot. Example: after "je", typing "s",
+        /// "suis" already written 5 times after "je" gains 1,000.
+        /// To tune after testing.
         /// </summary>
         private const double FollowBonus = 200;
 
-        /// <summary>Nombre de cases de proposition.</summary>
+        /// <summary>Number of suggestion boxes.</summary>
         public const int SuggestionCount = 3;
 
-        /// <summary>Délai entre deux enregistrements des nombres d'utilisations.</summary>
+        /// <summary>Delay between two saves of the usage counts.</summary>
         private static readonly TimeSpan SaveInterval = TimeSpan.FromMinutes(1);
 
-        // ── Le dictionnaire principal, rangé par clé. Les trois tableaux vont ensemble :
-        //    _cles[i] est la clé du mot _mots[i], dont la fréquence est _frequences[i].
-        //    « volatile » : ils sont remplis par un autre fil d'exécution (le chargement en
-        //    arrière-plan), puis lus par celui de l'interface. On remplace le tout d'un coup
-        //    (un seul objet Tableaux), pour ne jamais lire un mélange d'ancien et de nouveau.
+        // ── The primary dictionary, sorted by key. The three arrays go together:
+        //    Keys[i] is the key of word Words[i], whose frequency is Frequencies[i].
+        //    "volatile": they are filled by another thread (the background load), then read
+        //    by the UI thread. Everything is replaced at once (a single Tables object), so a
+        //    mix of old and new is never read.
         private sealed class Tables
         {
             public string[] Keys;
@@ -94,28 +90,28 @@ namespace GazeBar
 
         private volatile Tables _primary;
 
-        // La langue en cours de chargement (pour ne pas lancer deux fois le même chargement).
+        // The language being loaded (so the same load is not started twice).
         private string _requestedLanguage;
 
-        // ── Le dictionnaire personnel (utilisé seulement par le fil de l'interface).
-        //    Clé de ces dictionnaires : le mot exact tel qu'il est rangé (« bonjour », « Paris »).
+        // ── The personal dictionary (used only by the UI thread).
+        //    Key of these dictionaries: the exact word as stored ("bonjour", "Paris").
         private readonly Dictionary<string, int> _usages = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly List<string> _addedWords = new List<string>();
         private readonly List<string> _addedKeys = new List<string>();
 
-        // Les paires de mots : pour chaque mot (forme rangée), les mots écrits juste après lui
-        // et le nombre de fois. Exemple : _suites["je"]["suis"] = 12.
+        // Word pairs: for each word (stored form), the words written right after it and how
+        // many times. Example: _followers["je"]["suis"] = 12.
         private readonly Dictionary<string, Dictionary<string, int>> _followers =
             new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal);
 
-        // Vrai quand des nombres d'utilisations ont changé depuis le dernier enregistrement.
+        // True when usage counts changed since the last save.
         private bool _toSave;
 
         private readonly DispatcherTimer _saveTimer;
 
         /// <summary>
-        /// À créer depuis le fil de l'interface (le minuteur d'enregistrement en dépend).
-        /// Lit tout de suite le dictionnaire personnel (petit fichier).
+        /// Create from the UI thread (the save timer depends on it).
+        /// Reads the personal dictionary right away (small file).
         /// </summary>
         public WordPredictor()
         {
@@ -133,18 +129,18 @@ namespace GazeBar
             _saveTimer.Start();
         }
 
-        /// <summary>Vrai quand le dictionnaire principal est chargé (sinon, aucune proposition).</summary>
+        /// <summary>True when the primary dictionary is loaded (otherwise, no suggestion).</summary>
         public bool Ready
         {
             get { return _primary != null; }
         }
 
-        // ───────────────────────── Chargement du dictionnaire principal ─────────────────────────
+        // ───────────────────────── Loading the primary dictionary ─────────────────────────
 
         /// <summary>
-        /// Lance, en arrière-plan, la lecture du dictionnaire d'une langue (« fr » →
-        /// Dictionnaires/fr.txt). Ne fait rien si cette langue est déjà chargée ou en cours.
-        /// En attendant, Proposer ne propose rien.
+        /// Starts reading a language's dictionary in the background ("fr" →
+        /// Dictionaries/fr.txt). Does nothing if this language is already loaded or loading.
+        /// Meanwhile, Suggest suggests nothing.
         /// </summary>
         public void LoadLanguage(string language)
         {
@@ -153,9 +149,9 @@ namespace GazeBar
             {
                 return;
             }
-            // Changement de langue (étape 14, bouton « Langue ») : le dictionnaire de l'ancienne
-            // langue est oublié tout de suite. Sans cela, si le fichier de la nouvelle langue
-            // manquait, on continuerait à proposer des mots français.
+            // Language change (step 14, "Langue" button): the old language's dictionary is
+            // forgotten at once. Otherwise, if the new language's file were missing, French
+            // words would still be suggested.
             bool changement = _requestedLanguage != null;
             _requestedLanguage = language;
             if (changement)
@@ -164,13 +160,13 @@ namespace GazeBar
             }
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FolderName, language + ".txt");
 
-            // Task.Run : la lecture se fait sur un autre fil d'exécution, le regard continue
-            // d'être suivi pendant ce temps.
+            // Task.Run: reading happens on another thread, gaze tracking goes on in the
+            // meantime.
             Task.Run(() =>
             {
                 Tables t = ReadFile(path);
-                // On ne garde le résultat que si cette langue est toujours celle demandée (on a
-                // pu changer encore de langue pendant la lecture).
+                // The result is kept only if this language is still the requested one (the
+                // language may have changed again during the read).
                 if (t != null && _requestedLanguage == language)
                 {
                     _primary = t;
@@ -179,8 +175,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Lit un fichier « mot&lt;Tab&gt;fréquence » (une ligne par mot) et le range par clé.
-        /// Renvoie null (et l'écrit dans le journal) si le fichier est absent ou illisible.
+        /// Reads a "word&lt;Tab&gt;frequency" file (one line per word) and sorts it by key.
+        /// Returns null (and logs it) if the file is missing or unreadable.
         /// </summary>
         private static Tables ReadFile(string path)
         {
@@ -188,7 +184,7 @@ namespace GazeBar
             {
                 if (!File.Exists(path))
                 {
-                    App.Log("Prédiction : dictionnaire introuvable : " + path + " (pas de propositions)");
+                    App.Log("Prediction: dictionary not found: " + path + " (no suggestions)");
                     return null;
                 }
 
@@ -199,7 +195,7 @@ namespace GazeBar
                 {
                     if (row.Length == 0 || row[0] == '#')
                     {
-                        continue;   // ligne vide ou commentaire
+                        continue;   // empty line or comment
                     }
                     int tab = row.IndexOf('\t');
                     string word = (tab < 0 ? row : row.Substring(0, tab)).Trim();
@@ -210,8 +206,8 @@ namespace GazeBar
                     double frequency = 0;
                     if (tab >= 0)
                     {
-                        // InvariantCulture : le fichier écrit « 12.5 » avec un point, quelle que
-                        // soit la langue de Windows (en français, Windows attendrait « 12,5 »).
+                        // InvariantCulture: the file writes "12.5" with a point, whatever the
+                        // Windows language (in French, Windows would expect "12,5").
                         double.TryParse(row.Substring(tab + 1).Trim(), NumberStyles.Float,
                                         CultureInfo.InvariantCulture, out frequency);
                     }
@@ -219,7 +215,7 @@ namespace GazeBar
                     frequencies.Add(frequency);
                 }
 
-                // On calcule les clés, puis on range les trois tableaux ensemble par clé.
+                // Compute the keys, then sort the three arrays together by key.
                 Tables t = new Tables();
                 t.Words = words.ToArray();
                 t.Frequencies = frequencies.ToArray();
@@ -246,34 +242,34 @@ namespace GazeBar
                 t.Words = sortedWords;
                 t.Frequencies = sortedFrequencies;
 
-                App.Log("Prédiction : " + t.Words.Length + " mots lus depuis " + path + " en " +
+                App.Log("Prediction: " + t.Words.Length + " words read from " + path + " in " +
                         (int)(DateTime.Now - start).TotalMilliseconds + " ms");
                 return t;
             }
             catch (Exception ex)
             {
-                App.Log("Prédiction : dictionnaire illisible " + path + " : " + ex.Message);
+                App.Log("Prediction: unreadable dictionary " + path + ": " + ex.Message);
                 return null;
             }
         }
 
-        // ───────────────────────── Les propositions ─────────────────────────
+        // ───────────────────────── Suggestions ─────────────────────────
 
         /// <summary>
-        /// Les (au plus) 3 mots les plus probables qui commencent par « tape » (sans tenir
-        /// compte des accents ni des majuscules), du plus probable au moins probable.
-        /// Seuls les mots au moins aussi longs que ce qui est tapé sont proposés (« ete » propose
-        /// « été », règle validée le 02/11/2026). Si ce qui est tapé est lui-même un mot connu,
-        /// il est mis en 1re case (pour écrire l'espace après lui en le regardant). Les mots sont rendus tels qu'ils sont
-        /// rangés : c'est le clavier qui ajoute la majuscule si besoin.
+        /// The (at most) 3 most likely words starting with "typed" (ignoring accents and
+        /// case), from most to least likely.
+        /// Only words at least as long as what was typed are suggested ("ete" suggests "été",
+        /// rule validated on 2026-11-02). If what was typed is itself a known word, it goes in
+        /// the 1st box (so looking at it writes the space after it). Words are returned as
+        /// stored: the keyboard adds the capital letter if needed.
         ///
-        /// motInconnu : vrai si « tape » (2 lettres ou plus) ne correspond à aucun mot connu,
-        /// ni en entier ni en début de mot : le clavier propose alors de l'ajouter. Toujours
-        /// faux tant que le dictionnaire principal n'est pas chargé.
+        /// unknownWord: true if "typed" (2 letters or more) matches no known word, neither
+        /// whole nor as a word start: the keyboard then offers to add it. Always false while
+        /// the primary dictionary is not loaded.
         ///
-        /// precedent : le mot écrit juste avant (forme rangée, rendue par NoterUtilisation),
-        /// ou null (début de texte, après une ponctuation ou un déplacement du curseur). Avec
-        /// « tape » vide, les propositions sont les mots qui l'ont le plus souvent suivi.
+        /// previous: the word written just before (stored form, returned by RecordUsage), or
+        /// null (start of text, after punctuation or a cursor move). With an empty "typed",
+        /// the suggestions are the words that most often followed it.
         /// </summary>
         public List<string> Suggest(string typed, string previous, out bool unknownWord)
         {
@@ -288,7 +284,7 @@ namespace GazeBar
 
             if (string.IsNullOrEmpty(typed))
             {
-                // Mot suivant : rien de tapé, on propose ce qui a déjà suivi le mot précédent.
+                // Next word: nothing typed, suggest what already followed the previous word.
                 if (followers != null)
                 {
                     List<string> bestNext = new List<string>(SuggestionCount + 1);
@@ -312,13 +308,13 @@ namespace GazeBar
                 return result;
             }
 
-            // Les meilleurs candidats trouvés, rangés du meilleur au moins bon.
+            // The best candidates found, sorted from best to worst.
             List<string> best = new List<string>(SuggestionCount + 1);
             List<double> scores = new List<double>(SuggestionCount + 1);
             bool known = false;
 
-            // 1. Le dictionnaire principal : la première clé qui commence par le préfixe,
-            //    puis toutes les suivantes tant qu'elles commencent pareil.
+            // 1. The primary dictionary: the first key starting with the prefix, then all the
+            //    following ones while they share it.
             for (int i = FirstKey(t.Keys, prefix); i < t.Keys.Length; i++)
             {
                 if (!t.Keys[i].StartsWith(prefix, StringComparison.Ordinal))
@@ -329,7 +325,7 @@ namespace GazeBar
                 Remember(t.Words[i], t.Frequencies[i], typed, followers, best, scores);
             }
 
-            // 2. Les mots ajoutés par l'utilisateur (quelques dizaines au plus : on les lit tous).
+            // 2. Words added by the user (a few dozen at most: read them all).
             for (int i = 0; i < _addedWords.Count; i++)
             {
                 if (_addedKeys[i].StartsWith(prefix, StringComparison.Ordinal))
@@ -341,9 +337,9 @@ namespace GazeBar
 
             unknownWord = !known && prefix.Length >= 2;
 
-            // Demande de l'utilisateur du 02/11/2026 : si ce qui est tapé est déjà un mot connu,
-            // il vient EN PREMIER. Le regarder écrit simplement l'espace après lui (c'est plus
-            // rapide que de chercher la touche Espace). Les autres cases gardent les meilleurs.
+            // User request of 2026-11-02: if what was typed is already a known word, it comes
+            // FIRST. Looking at it simply writes the space after it (faster than looking for
+            // the Space key). The other boxes keep the best ones.
             string exactMatch = KnownShape(typed);
             if (exactMatch != null)
             {
@@ -360,17 +356,17 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Ajoute un candidat à la liste des meilleurs s'il y a sa place (score = fréquence +
-        /// bonus d'utilisation + bonus de suite si ce mot a déjà suivi le mot précédent). La
-        /// liste reste triée et ne dépasse pas 3 mots. suites : les mots qui ont suivi le mot
-        /// précédent (ou null).
+        /// Adds a candidate to the best list if it fits (score = frequency + usage bonus +
+        /// follow bonus if this word already followed the previous word). The list stays
+        /// sorted and holds at most 3 words. followers: the words that followed the previous
+        /// word (or null).
         /// </summary>
         private void Remember(string word, double frequency, string typed, Dictionary<string, int> followers,
                              List<string> best, List<double> scores)
         {
-            // Règle validée par l'utilisateur le 02/11/2026 : un mot AU MOINS AUSSI LONG que ce
-            // qui est tapé (« été » pour « ete »). Le mot déjà tapé en entier est écarté ici :
-            // Proposer le remet lui-même en 1re case.
+            // Rule validated by the user on 2026-11-02: a word AT LEAST AS LONG as what was
+            // typed ("été" for "ete"). The fully typed word is skipped here: Suggest puts it
+            // back in the 1st box itself.
             if (word.Length < typed.Length || string.Equals(word, typed, StringComparison.OrdinalIgnoreCase))
             {
                 return;
@@ -385,8 +381,8 @@ namespace GazeBar
                 score += FollowBonus * times;
             }
 
-            // On cherche sa place : avant le premier qui a un score plus petit. À score égal,
-            // le mot le plus court passe devant.
+            // Find its place: before the first one with a lower score. On equal scores, the
+            // shorter word comes first.
             int slot = scores.Count;
             for (int i = 0; i < scores.Count; i++)
             {
@@ -410,31 +406,31 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Dichotomie : l'indice de la première clé qui n'est pas avant « prefixe » dans
-        /// l'ordre alphabétique (donc la première qui peut commencer par lui).
+        /// Binary search: index of the first key that is not before "prefix" in alphabetical
+        /// order (so the first one that may start with it).
         /// </summary>
         private static int FirstKey(string[] keys, string prefix)
         {
             int bottom = 0;
-            int top = keys.Length;   // la réponse est entre bas et haut
+            int top = keys.Length;   // the answer is between low and high
             while (bottom < top)
             {
                 int middle = bottom + (top - bottom) / 2;
                 if (string.CompareOrdinal(keys[middle], prefix) < 0)
                 {
-                    bottom = middle + 1;   // trop tôt : la réponse est après le milieu
+                    bottom = middle + 1;   // too early: the answer is after the middle
                 }
                 else
                 {
-                    top = middle;      // le milieu convient peut-être : on cherche avant
+                    top = middle;      // the middle may fit: search before
                 }
             }
             return bottom;
         }
 
         /// <summary>
-        /// La « clé » de recherche d'un mot : en minuscules, sans accents (é → e, ç → c,
-        /// œ → oe, ’ → '). « Été » et « ete » ont la même clé « ete ».
+        /// The search "key" of a word: lower case, no accents (é → e, ç → c, œ → oe,
+        /// ’ → '). "Été" and "ete" share the key "ete".
         /// </summary>
         public static string Key(string word)
         {
@@ -442,8 +438,8 @@ namespace GazeBar
             {
                 return "";
             }
-            // FormD sépare chaque lettre accentuée en lettre + accent (é → e + ´) ; on garde
-            // seulement les lettres.
+            // FormD splits each accented letter into letter + accent (é → e + ´); only the
+            // letters are kept.
             string decomposed = word.ToLowerInvariant().Normalize(NormalizationForm.FormD);
             StringBuilder sb = new StringBuilder(decomposed.Length + 2);
             foreach (char c in decomposed)
@@ -463,18 +459,18 @@ namespace GazeBar
             return sb.ToString();
         }
 
-        // ───────────────────────── Apprentissage et mots ajoutés ─────────────────────────
+        // ───────────────────────── Learning and added words ─────────────────────────
 
         /// <summary>
-        /// Un mot vient d'être écrit en entier (choisi dans une case, ou tapé puis suivi d'une
-        /// espace, d'une ponctuation ou d'Entrée). S'il est connu, son nombre d'utilisations
-        /// augmente de 1 (enregistré dans la minute). Un mot inconnu n'est PAS retenu : seul le
-        /// choix de la case « + » ajoute un mot (cahier des charges).
+        /// A word has just been written in full (picked in a box, or typed then followed by a
+        /// space, punctuation or Enter). If known, its usage count goes up by 1 (saved within
+        /// the minute). An unknown word is NOT kept: only the "+" box adds a word
+        /// (specification).
         ///
-        /// precedent : le mot écrit juste avant (ce que rendait l'appel précédent), ou null.
-        /// Si les deux sont connus, la paire « precedent → mot » est retenue (mot suivant).
-        /// Renvoie la forme rangée du mot (« Bonjour » → « bonjour »), ou null s'il est
-        /// inconnu : c'est le « precedent » du prochain appel.
+        /// previous: the word written just before (what the previous call returned), or null.
+        /// If both are known, the pair "previous → word" is remembered (next word).
+        /// Returns the stored form of the word ("Bonjour" → "bonjour"), or null if unknown:
+        /// it is the "previous" of the next call.
         /// </summary>
         public string RecordUsage(string word, string previous)
         {
@@ -504,8 +500,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Ajoute un mot au dictionnaire personnel (case « + »), tel qu'il a été tapé, et
-        /// enregistre le fichier tout de suite. Ne fait rien s'il est déjà connu.
+        /// Adds a word to the personal dictionary ("+" box), as typed, and saves the file
+        /// right away. Does nothing if it is already known.
         /// </summary>
         public void Add(string word)
         {
@@ -515,13 +511,13 @@ namespace GazeBar
             }
             _addedWords.Add(word);
             _addedKeys.Add(Key(word));
-            App.Log("Prédiction : un mot ajouté au dictionnaire personnel (" + _addedWords.Count + " en tout)");
+            App.Log("Prediction: one word added to the personal dictionary (" + _addedWords.Count + " in total)");
             SavePersonal();
         }
 
         /// <summary>
-        /// Étape 14 (bouton « Mes mots ») : une copie de la liste des mots ajoutés par la case
-        /// « + », dans l'ordre alphabétique (sans tenir compte des accents ni des majuscules).
+        /// Step 14 ("Mes mots" button): a copy of the list of words added with the "+" box,
+        /// in alphabetical order (ignoring accents and case).
         /// </summary>
         public List<string> AddedWords()
         {
@@ -532,10 +528,10 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Étape 14 (bouton « Mes mots ») : retire un mot ajouté par erreur. On oublie aussi son
-        /// nombre d'utilisations et les paires où il apparaît (mot suivant), pour qu'il ne soit
-        /// plus jamais proposé. Le fichier est enregistré tout de suite. Ne touche pas aux mots
-        /// de Lexique. Le mot n'est pas écrit dans le journal (vie privée).
+        /// Step 14 ("Mes mots" button): removes a word added by mistake. Its usage count and
+        /// the pairs it appears in (next word) are forgotten too, so it is never suggested
+        /// again. The file is saved right away. Lexique words are untouched. The word is not
+        /// written to the log (privacy).
         /// </summary>
         public void Delete(string word)
         {
@@ -552,14 +548,13 @@ namespace GazeBar
             {
                 followers.Remove(word);
             }
-            App.Log("Prédiction : un mot retiré du dictionnaire personnel (" + _addedWords.Count + " restants)");
+            App.Log("Prediction: one word removed from the personal dictionary (" + _addedWords.Count + " left)");
             SavePersonal();
         }
 
         /// <summary>
-        /// La forme rangée d'un mot tapé (« Bonjour » → « bonjour »), en comparant sans tenir
-        /// compte des majuscules mais AVEC les accents ; null si le mot n'est dans aucun des
-        /// deux dictionnaires.
+        /// The stored form of a typed word ("Bonjour" → "bonjour"), compared ignoring case but
+        /// WITH accents; null if the word is in neither dictionary.
         /// </summary>
         private string KnownShape(string word)
         {
@@ -590,9 +585,9 @@ namespace GazeBar
             return null;
         }
 
-        // ───────────────────────── Le fichier du dictionnaire personnel ─────────────────────────
+        // ───────────────────────── The personal dictionary file ─────────────────────────
 
-        /// <summary>Chemin complet du dictionnaire personnel, à côté de parametres.json.</summary>
+        /// <summary>Full path of the personal dictionary, next to settings.json.</summary>
         public static string PersonalPath
         {
             get
@@ -601,7 +596,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>À appeler à la fermeture de GazeBar : enregistre les utilisations en attente.</summary>
+        /// <summary>Call when GazeBar closes: saves pending usages.</summary>
         public void Stop()
         {
             _saveTimer.Stop();
@@ -612,8 +607,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Lit le dictionnaire personnel. Absent : on part de zéro. Illisible : on le met de
-        /// côté (dictionnaire-perso.json.illisible) et on part de zéro, comme pour les réglages.
+        /// Reads the personal dictionary. Missing: start from scratch. Unreadable: set it
+        /// aside (personal-dictionary.json.unreadable) and start from scratch, as for settings.
         /// </summary>
         private void LoadPersonal()
         {
@@ -667,34 +662,34 @@ namespace GazeBar
                         followers[pair.After] = pair.Number;
                     }
                 }
-                App.Log("Prédiction : dictionnaire personnel lu (" + _addedWords.Count + " mots ajoutés, " +
-                        _usages.Count + " mots avec des utilisations, " + _followers.Count +
-                        " mots avec des suites)");
+                App.Log("Prediction: personal dictionary read (" + _addedWords.Count + " added words, " +
+                        _usages.Count + " words with usages, " + _followers.Count +
+                        " words with followers)");
             }
             catch (Exception ex)
             {
-                App.Log("Prédiction : dictionnaire personnel illisible, on repart de zéro. " + ex.Message);
+                App.Log("Prediction: unreadable personal dictionary, starting from scratch. " + ex.Message);
                 try
                 {
-                    File.Copy(path, path + ".illisible", true);
+                    File.Copy(path, path + ".unreadable", true);
                 }
                 catch
                 {
-                    // Tant pis pour la copie de secours.
+                    // Never mind the backup copy.
                 }
             }
         }
 
         /// <summary>
-        /// Enregistre le dictionnaire personnel : d'abord dans un fichier temporaire, puis mis
-        /// à la place de l'ancien (si l'ordinateur s'éteint en pleine écriture, l'ancien reste).
+        /// Saves the personal dictionary: first to a temporary file, then moved over the old
+        /// one (if the computer shuts down mid-write, the old one stays).
         /// </summary>
         private void SavePersonal()
         {
             _toSave = false;
             PersonalFile file = new PersonalFile();
-            // Version 2 (02/11/2026) : ajout des paires de mots (Suites). Un fichier de
-            // version 1 se lit sans rien faire : il n'a simplement pas de paires.
+            // Version 2 (2026-11-02): word pairs added (Followers). A version 1 file is read
+            // as is: it simply has no pairs.
             file.FileVersion = 2;
             file.Words = new List<PersonalWord>();
             foreach (string word in _addedWords)
@@ -744,25 +739,25 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                // Ne jamais faire planter le programme pour ce fichier.
-                App.Log("Prédiction : échec de l'enregistrement du dictionnaire personnel : " + ex.Message);
+                // Never crash the program because of this file.
+                App.Log("Prediction: failed to save the personal dictionary: " + ex.Message);
             }
         }
     }
 
     /// <summary>
-    /// Le contenu de dictionnaire-perso.json. Exemple :
+    /// Content of personal-dictionary.json. Example:
     /// {
-    ///   "VersionFichier": 1,
-    ///   "Mots": [
-    ///     { "Mot": "Kopolito", "Ajoute": true, "Utilisations": 4 },
-    ///     { "Mot": "bonjour", "Ajoute": false, "Utilisations": 12 }
+    ///   "FileVersion": 2,
+    ///   "Words": [
+    ///     { "Word": "Kopolito", "Added": true, "Usages": 4 },
+    ///     { "Word": "bonjour", "Added": false, "Usages": 12 }
     ///   ],
-    ///   "Suites": [
-    ///     { "Avant": "je", "Apres": "suis", "Nombre": 7 }
+    ///   "Followers": [
+    ///     { "Before": "je", "After": "suis", "Number": 7 }
     ///   ]
     /// }
-    /// « Ajoute » : vrai pour un mot ajouté par la case « + » (absent de Lexique).
+    /// "Added": true for a word added with the "+" box (not in Lexique).
     /// </summary>
     [DataContract]
     internal sealed class PersonalFile
@@ -773,12 +768,12 @@ namespace GazeBar
         [DataMember(Order = 2)]
         public List<PersonalWord> Words { get; set; }
 
-        /// <summary>Les paires de mots (mot suivant), depuis la version 2.</summary>
+        /// <summary>Word pairs (next word), since version 2.</summary>
         [DataMember(Order = 3)]
         public List<WordPair> Followers { get; set; }
     }
 
-    /// <summary>Une paire de mots : « Apres » a été écrit juste après « Avant », « Nombre » fois.</summary>
+    /// <summary>A word pair: "After" was written right after "Before", "Number" times.</summary>
     [DataContract]
     internal sealed class WordPair
     {
@@ -792,7 +787,7 @@ namespace GazeBar
         public int Number { get; set; }
     }
 
-    /// <summary>Un mot du dictionnaire personnel.</summary>
+    /// <summary>A word of the personal dictionary.</summary>
     [DataContract]
     internal sealed class PersonalWord
     {

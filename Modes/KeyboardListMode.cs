@@ -8,43 +8,41 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// MODE LISTE DU CLAVIER (étape 14, « clavier-options »).
+    /// KEYBOARD LIST MODE (step 14, "clavier-options").
     ///
-    /// Deux listes : « Langue » s'ouvre depuis la barre de menu du clavier au regard, « Mes
-    /// mots » depuis l'onglet Général des paramètres (demande de l'utilisateur du 02/11/2026) :
-    ///   - LANGUE : les dispositions trouvées dans le dossier Claviers (une par fichier JSON).
-    ///     Celle qu'on utilise a un bord vert. En regarder une autre la choisit (retenu dans
-    ///     parametres.json), puis on revient au clavier ;
-    ///   - MES MOTS : les mots ajoutés au dictionnaire personnel avec la case « + », dans
-    ///     l'ordre alphabétique. Chaque mot a une pastille rouge « − » : le regarder le RETIRE
-    ///     tout de suite (comme pour retirer une icône à l'étape 10), et on reste dans la liste
-    ///     pour pouvoir en retirer d'autres. Les mots de Lexique ne sont jamais concernés.
+    /// Two lists: "Language" opens from the menu bar of the gaze keyboard, "My words" from
+    /// the General tab of the settings (user request of 2026-11-02):
+    ///   - LANGUAGE: the layouts found in the Keyboards folder (one per JSON file). The one in
+    ///     use has a green border. Looking at another one chooses it (saved in settings.json),
+    ///     then we go back to the keyboard;
+    ///   - MY WORDS: the words added to the personal dictionary with the "+" cell, in
+    ///     alphabetical order. Each word has a red "−" badge: looking at it REMOVES it at once
+    ///     (as for removing an icon in step 10), and we stay in the list to be able to remove
+    ///     others. Lexique words are never affected.
     ///
-    /// Étape 15 (« profils-parametres ») : une troisième liste, qui n'a rien à voir avec le
-    /// clavier mais réutilise la même mise en page :
-    ///   - PROFILS : les profils de réglages du dossier Documents\GazeBar\Profils, le plus
-    ///     récent en premier (voir ProfilsParametres). En regarder un revient aux paramètres,
-    ///     onglet Profils, avec la question « Charger le profil … ? » : rien ne change sans
-    ///     ce « Oui ». « Retour aux paramètres » revient au même onglet sans rien changer.
+    /// Step 15 ("profils-parametres"): a third list, which has nothing to do with the
+    /// keyboard but reuses the same layout:
+    ///   - PROFILES: the settings profiles of the Documents\GazeBar\Profiles folder, the most
+    ///     recent first (see SettingsProfiles). Looking at one returns to the settings,
+    ///     Profiles tab, with the question "Load profile ...?": nothing changes without this
+    ///     "Yes". "Back to settings" returns to the same tab without changing anything.
     ///
-    /// Mise en page : la même que la liste de la configuration des icônes (étape 10) : écran
-    /// noir, rectangle aux bords arrondis sur les trois quarts de l'écran, titre en haut,
-    /// grille d'au plus 4 colonnes × 3 rangées (12 par page). « Retour » (au clavier pour
-    /// Langue, aux paramètres pour Mes mots) est à droite de l'écran, centré verticalement, hors
-    /// du rectangle (02/11/2026). En bas du rectangle : « Page précédente » et « Page
-    /// suivante » quand la liste ne tient pas sur une page.
+    /// Layout: the same as the list of the icon configuration (step 10): black screen,
+    /// rounded rectangle over three quarters of the screen, title at the top, grid of at most
+    /// 4 columns × 3 rows (12 per page). "Back" (to the keyboard for Language, to the settings
+    /// for My words) is on the right of the screen, vertically centered, outside the rectangle
+    /// (2026-11-02). At the bottom of the rectangle: "Previous page" and "Next page" when the
+    /// list does not fit on one page.
     ///
-    /// Le clavier est caché pendant ce mode (ce n'est ni le mode mouvement ni le regard fixe)
-    /// et réapparaît au retour en mode mouvement. Le menu du bas ne s'ouvre pas ici ; la
-    /// touche Échap de l'aidant fait comme « Retour » (App.OnEchap).
+    /// The keyboard is hidden during this mode (it is neither movement mode nor fixed gaze)
+    /// and reappears when back in movement mode. The bottom menu does not open here; the
+    /// caregiver's Escape key acts like "Back" (App.OnEscape).
     ///
-    /// Les mots sont affichés à l'écran mais jamais écrits dans le journal (vie privée).
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// The words are shown on the screen but never written to the log (privacy).
     /// </summary>
     internal sealed class KeyboardListMode : Mode
     {
-        /// <summary>Les deux listes possibles.</summary>
+        /// <summary>The possible lists.</summary>
         public enum ListKind
         {
             Language,
@@ -52,40 +50,40 @@ namespace GazeBar
             Profiles
         }
 
-        /// <summary>Proportion de l'écran occupée par la liste (comme à l'étape 10).</summary>
+        /// <summary>Proportion of the screen taken by the list (as in step 10).</summary>
         private const double ListRatio = 0.75;
 
-        /// <summary>Grille d'une page : 4 colonnes × 3 rangées.</summary>
+        /// <summary>Grid of a page: 4 columns × 3 rows.</summary>
         private const int Columns = 4;
         private const int Rows = 3;
         private const int PerPage = Columns * Rows;
 
-        // Couleurs (les mêmes que la liste de la configuration des icônes).
+        // Colors (the same as the list of the icon configuration).
         private static readonly Brush ListBackground = Freeze(new SolidColorBrush(Color.FromRgb(0x1E, 0x21, 0x26)));
         private static readonly Brush Soft = Freeze(new SolidColorBrush(Color.FromRgb(0x9A, 0xA3, 0xAD)));
 
         private readonly ListKind _kind;
 
-        // Les boutons affichés et ce que fait chacun (même ordre).
+        // The buttons shown and what each one does (same order).
         private readonly List<GazeButton> _buttons = new List<GazeButton>();
         private readonly List<Action> _actions = new List<Action>();
         private readonly ButtonAimer _aimer;
 
-        // Le contenu de la liste : les dispositions (Langue) ou les mots (Mes mots).
+        // The content of the list: the layouts (Language) or the words (My words).
         private List<FoundLayout> _layouts = new List<FoundLayout>();
         private List<string> _words = new List<string>();
         private List<FoundProfile> _profiles = new List<FoundProfile>();
 
-        // La page affichée (0 = la première).
+        // The page shown (0 = the first).
         private int _page;
 
-        // Un message affiché sous le titre (erreur), ou null.
+        // A message shown under the title (error), or null.
         private string _message;
 
-        // Vrai tant que l'écran n'a pas pu être construit (calque pas encore prêt).
+        // True as long as the screen could not be built (overlay not ready yet).
         private bool _toBuild;
 
-        // Le petit cercle qui montre le regard (comme dans le choix d'action).
+        // The small circle showing the gaze (as in the action choice).
         private Ellipse _gazeCircleBackground;
         private Ellipse _gazeCircle;
         private readonly Smoother _smoothed = new Smoother();
@@ -121,7 +119,7 @@ namespace GazeBar
             if (_kind == ListKind.Language)
             {
                 _layouts = KeyboardLayout.List();
-                // On commence à la page de la disposition utilisée.
+                // Start at the page of the layout in use.
                 int currentOne = CurrentLayoutIndex();
                 _page = currentOne < 0 ? 0 : currentOne / PerPage;
             }
@@ -147,8 +145,8 @@ namespace GazeBar
             }
 
             AppSettings p = AppSettings.Current;
-            // Chaque élément a déjà son nom écrit en dessous : pas de libellé au survol, il se
-            // superposerait à ce nom (comme dans la liste de l'étape 10).
+            // Each item already has its name written underneath: no hover label, it would
+            // overlap this name (as in the list of step 10).
             int active = _aimer.Update(gaze, p.ActivationDelay, false);
             if (active >= 0)
             {
@@ -159,7 +157,7 @@ namespace GazeBar
             MoveGazeCircle(gaze, p);
         }
 
-        /// <summary>L'écran a changé (étape 11) : on reste ici, tout est redessiné au prochain tic.</summary>
+        /// <summary>The screen changed (step 11): we stay here, everything is redrawn on the next tick.</summary>
         public override bool AdaptToScreen()
         {
             _toBuild = true;
@@ -176,16 +174,16 @@ namespace GazeBar
             _gazeCircleBackground = null;
         }
 
-        // ───────────────────────── Les actions ─────────────────────────
+        // ───────────────────────── Actions ─────────────────────────
 
         /// <summary>
-        /// Bouton « Retour » ou touche Échap (appelée aussi par App) : Langue → le mode
-        /// mouvement, où le clavier réapparaît ; Mes mots → les paramètres, onglet Général ;
-        /// Profils → les paramètres, onglet Profils.
+        /// "Back" button or Escape key (also called by App): Language → movement mode, where
+        /// the keyboard reappears; My words → the settings, General tab; Profiles → the
+        /// settings, Profiles tab.
         /// </summary>
         public void Back()
         {
-            App.Log(Name + " : retour");
+            App.Log(Name + ": back");
             if (_kind == ListKind.MyWords)
             {
                 Manager.ChangeMode(new SettingsMode(SettingsCatalog.GeneralTabIndex));
@@ -206,7 +204,7 @@ namespace GazeBar
             Build();
         }
 
-        /// <summary>Langue : une disposition est choisie ; on revient au clavier si elle se lit bien.</summary>
+        /// <summary>Language: a layout is chosen; we go back to the keyboard if it reads correctly.</summary>
         private void ChooseLayout(FoundLayout layout)
         {
             string message;
@@ -216,23 +214,23 @@ namespace GazeBar
             }
             else
             {
-                // Le fichier a pu être modifié depuis l'ouverture de la liste : on le dit.
+                // The file may have changed since the list was opened: say so.
                 _message = message;
                 Build();
             }
         }
 
         /// <summary>
-        /// Profils : un profil est choisi. On revient aux paramètres, onglet Profils, qui
-        /// demande confirmation avant de le charger.
+        /// Profiles: a profile is chosen. We go back to the settings, Profiles tab, which asks
+        /// for confirmation before loading it.
         /// </summary>
         private void ChooseProfile(FoundProfile profile)
         {
-            App.Log("Profils : profil choisi « " + profile.Name + " », confirmation demandée");
+            App.Log("Profiles: profile chosen \"" + profile.Name + "\", confirmation requested");
             Manager.ChangeMode(new SettingsMode(SettingsCatalog.ProfilesTabIndex, profile));
         }
 
-        /// <summary>Mes mots : le mot est retiré du dictionnaire personnel, la liste est redessinée.</summary>
+        /// <summary>My words: the word is removed from the personal dictionary, the list is redrawn.</summary>
         private void RemoveWord(string word)
         {
             Manager.Keyboard.Predictor.Delete(word);
@@ -253,18 +251,18 @@ namespace GazeBar
             return -1;
         }
 
-        // ───────────────────────── Construction de l'écran ─────────────────────────
+        // ───────────────────────── Building the screen ─────────────────────────
 
         /// <summary>
-        /// (Re)dessine tout l'écran. Toutes les positions sont calculées en pixels d'écran,
-        /// puis converties par le calque.
+        /// (Re)draws the whole screen. All positions are computed in screen pixels, then
+        /// converted by the overlay.
         /// </summary>
         private void Build()
         {
             OverlayWindow layer = Manager.Layer;
             if (!layer.Ready)
             {
-                _toBuild = true;   // on réessaiera au prochain tic
+                _toBuild = true;   // we will try again on the next tick
                 return;
             }
             _toBuild = false;
@@ -280,7 +278,7 @@ namespace GazeBar
             _buttons.Clear();
             _actions.Clear();
 
-            // ── Le rectangle aux bords arrondis, centré.
+            // ── The rounded rectangle, centered.
             double l = width * ListRatio;
             double h = height * ListRatio;
             double left = (width - l) / 2;
@@ -298,16 +296,16 @@ namespace GazeBar
             Canvas.SetTop(frame, corner.Y);
             screen.Children.Add(frame);
 
-            // ── Le nombre d'éléments et de pages.
+            // ── The number of items and pages.
             int number = _kind == ListKind.Language ? _layouts.Count
                        : _kind == ListKind.Profiles ? _profiles.Count
                        : _words.Count;
             int pages = Math.Max(1, (number + PerPage - 1) / PerPage);
-            // Après une suppression, la dernière page peut être vide : on recule.
+            // After a removal, the last page may be empty: go back one.
             _page = Math.Max(0, Math.Min(_page, pages - 1));
 
-            // ── Le titre, et sous lui une explication (ou le message d'erreur).
-            //    Les textes suivent la taille du texte de Windows (étape 11).
+            // ── The title, and under it an explanation (or the error message).
+            //    The texts follow the Windows text size (step 11).
             double titleFont = size * 0.3 * ScreenMetrics.WindowsText;
             double nameFont = size * 0.2 * ScreenMetrics.WindowsText;
             string title = _kind == ListKind.Profiles ? "Charger un profil" : Name;
@@ -326,9 +324,9 @@ namespace GazeBar
             AddCenteredText(layer, screen, explanation, centerX, yExplanation, l, nameFont,
                                _message != null ? Brushes.Orange : Soft, false);
 
-            // ── « Retour » (croix E711) : à droite de l'écran, centré verticalement, EN DEHORS
-            //    du rectangle de la liste (au milieu de la marge de droite), pour ne pas le viser
-            //    en regardant un mot (demande de l'utilisateur du 02/11/2026).
+            // ── "Back" (cross E711): on the right of the screen, vertically centered, OUTSIDE
+            //    the list rectangle (in the middle of the right margin), so as not to aim at it
+            //    while looking at a word (user request of 2026-11-02).
             string backName = _kind == ListKind.Language ? "Retour au clavier" : "Retour aux paramètres";
             double rightMargin = width - (left + l);
             double xBack = left + l + rightMargin / 2;
@@ -338,7 +336,7 @@ namespace GazeBar
             AddCenteredText(layer, screen, backName, xBack, yBack + size / 2 + nameFont * 0.4,
                                rightMargin - space / 2, nameFont, Soft, false);
 
-            // ── La rangée du bas : Page précédente · Page suivante (E72B / E72A = flèches).
+            // ── The bottom row: Previous page · Next page (E72B / E72A = arrows).
             double yBottom = top + h - size / 2 - nameFont * 2.5;
             double bottomStep = size + 2 * space;
             if (_page > 0)
@@ -356,7 +354,7 @@ namespace GazeBar
                                    yBottom + size / 2 + nameFont * 0.4, bottomStep, nameFont, Soft, false);
             }
 
-            // ── La grille de la page : entre l'explication et la rangée du bas.
+            // ── The grid of the page: between the explanation and the bottom row.
             double gridTop = yExplanation + nameFont * 2.5;
             double gridBottom = yBottom - size / 2 - space / 2;
             int isFirst = _page * PerPage;
@@ -376,8 +374,8 @@ namespace GazeBar
             {
                 int columns = Math.Min(inPage, Columns);
                 int rows = (inPage + columns - 1) / columns;
-                // Comme à l'étape 10 : chaque élément reçoit une case, et l'icône avec son nom
-                // dessous sont centrés dans la case.
+                // As in step 10: each item gets a cell, and the icon with its name underneath
+                // are centered in the cell.
                 double stepX = l / columns;
                 double stepY = Math.Max((gridBottom - gridTop) / rows, size + nameFont * 2 + space * 0.5);
                 double yFirst = (gridTop + gridBottom) / 2 - (rows - 1) * stepY / 2 - nameFont;
@@ -395,8 +393,8 @@ namespace GazeBar
                     string name;
                     if (_kind == ListKind.Language)
                     {
-                        FoundLayout d = _layouts[isFirst + i];   // copie pour la fonction ci-dessous
-                        // Le bouton montre le code de la langue (« FR ») ; la disposition utilisée a un bord vert.
+                        FoundLayout d = _layouts[isFirst + i];   // copy for the function below
+                        // The button shows the language code ("FR"); the layout in use has a green border.
                         button = GazeButton.Text(d.Language.ToUpperInvariant(), d.Name);
                         button.SetLit(isFirst + i == CurrentLayoutIndex());
                         action = () => ChooseLayout(d);
@@ -404,17 +402,17 @@ namespace GazeBar
                     }
                     else if (_kind == ListKind.Profiles)
                     {
-                        FoundProfile profile = _profiles[isFirst + i];   // copie pour la fonction ci-dessous
-                        // E77B = personne ; E7A7 = flèche « annuler » pour la sauvegarde
-                        // automatique (revenir aux réglages d'avant le dernier chargement).
+                        FoundProfile profile = _profiles[isFirst + i];   // copy for the function below
+                        // E77B = person; E7A7 = "undo" arrow for the automatic backup (going
+                        // back to the settings from before the last load).
                         button = new GazeButton(profile.IsBackup ? "\uE7A7" : "\uE77B", null, "Charger ce profil");
                         action = () => ChooseProfile(profile);
                         name = profile.Name;
                     }
                     else
                     {
-                        string word = _words[isFirst + i];   // copie pour la fonction ci-dessous
-                        // E74D = corbeille, avec la pastille rouge « − » de l'étape 10.
+                        string word = _words[isFirst + i];   // copy for the function below
+                        // E74D = trash can, with the red "−" badge of step 10.
                         button = new GazeButton("", null, "Retirer ce mot");
                         button.SetConfigBadge(false);
                         action = () => RemoveWord(word);
@@ -426,7 +424,7 @@ namespace GazeBar
                 }
             }
 
-            // Le petit cercle du regard, ajouté EN DERNIER pour être par-dessus tout.
+            // The small gaze circle, added LAST to be on top of everything.
             _gazeCircleBackground = new Ellipse();
             _gazeCircleBackground.Stroke = Brushes.Black;
             _gazeCircleBackground.StrokeThickness = ScreenMetrics.Units(4);
@@ -441,15 +439,15 @@ namespace GazeBar
 
             layer.ShowChoiceScreen();
 
-            // Les boutons viennent d'être remplacés : celui qui est sous le regard ne s'active
-            // pas tant que le regard ne l'a pas quitté (sinon, après avoir retiré un mot, on
-            // retirerait aussitôt celui qui prend sa place).
+            // The buttons were just replaced: the one under the gaze does not activate until
+            // the gaze has left it (otherwise, after removing a word, the one taking its place
+            // would be removed at once).
             _aimer.ResetAndBlock();
         }
 
-        // ───────────────────────── Petits outils ─────────────────────────
+        // ───────────────────────── Small tools ─────────────────────────
 
-        /// <summary>Place un bouton (centré sur x, y en pixels d'écran) que le regard peut activer.</summary>
+        /// <summary>Places a button (centered on x, y in screen pixels) that the gaze can activate.</summary>
         private void AddButton(OverlayWindow layer, Canvas screen, GazeButton button, Action action,
                                    double x, double y, double size)
         {
@@ -460,8 +458,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Écrit un texte centré horizontalement sur x, son haut en y (pixels d'écran), sur une
-        /// largeur de « largeur » pixels (le texte passe à la ligne au-delà).
+        /// Writes a text horizontally centered on x, its top at y (screen pixels), over a width
+        /// of "width" pixels (the text wraps beyond).
         /// </summary>
         private static void AddCenteredText(OverlayWindow layer, Canvas screen, string text, double x, double y,
                                                double width, double fontPixels, Brush color, bool bold)
@@ -485,9 +483,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Déplace le petit cercle du regard, comme dans la configuration des icônes : il suit
-        /// le regard en douceur, son rayon est la moitié de [RayonCercle]. Regard hors de
-        /// l'écran : il glisse le long du bord. Regard perdu : il reste où il est.
+        /// Moves the small gaze circle, as in the icon configuration: it follows the gaze
+        /// smoothly, its radius is half of [CircleRadius]. Gaze off screen: it slides along the
+        /// edge. Gaze lost: it stays where it is.
         /// </summary>
         private void MoveGazeCircle(GazeState gaze, AppSettings p)
         {

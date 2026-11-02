@@ -5,33 +5,33 @@ using System.Globalization;
 namespace GazeBar
 {
     /// <summary>
-    /// Un réglage tel qu'il est AFFICHÉ dans le mode paramètres (étape 7) : son nom en
-    /// français, une phrase d'explication, son unité, le pas des boutons « − » et « + »,
-    /// et la façon de le lire et de l'écrire dans Parametres.
+    /// A setting as it is SHOWN in settings mode (step 7): its displayed name, an explanation
+    /// sentence, its unit, the step of the "−" and "+" buttons, and the way to read and write
+    /// it in AppSettings.
     ///
-    /// Deux sortes de réglages :
-    ///   - un NOMBRE (Lissage, DelaiFixation…) : boutons « − », valeur, « + » ;
-    ///   - un OUI / NON (ClicDirect, SuiviSouris…) : un INTERRUPTEUR arrondi, comme ceux de
-    ///     Bootstrap (02/11/2026, remplace les deux boutons « Non » et « Oui »).
-    ///     Variante (étape 9) : un choix entre deux mots, par exemple « directe » ou
-    ///     « relative » pour SourisJeu. Là, un interrupteur ne dirait pas ce que chaque côté
-    ///     veut dire : on garde les deux boutons, un par mot (voir DeuxChoix).
+    /// Two kinds of settings:
+    ///   - a NUMBER (Smoothing, FixationDelay...): "−" button, value, "+" button;
+    ///   - a YES / NO (DirectClick, MouseTracking...): a rounded SWITCH, like Bootstrap's
+    ///     (2026-11-02, replaces the two "No" and "Yes" buttons).
+    ///     Variant (step 9): a choice between two words, for example "direct" or "relative"
+    ///     for GameMouse. There, a switch would not say what each side means: the two
+    ///     buttons are kept, one per word (see TwoChoices).
     ///
-    /// Lire et Ecrire sont des « fonctions rangées dans une variable » (délégués). Par exemple
-    ///     p => p.Lissage                 lit le lissage d'un objet Parametres p ;
-    ///     (p, v) => p.Lissage = v        écrit la valeur v dans le lissage de p.
-    /// Ainsi, une seule classe sait afficher et modifier n'importe quel réglage.
+    /// Read and Write are "functions stored in a variable" (delegates). For example
+    ///     p => p.Smoothing                 reads the smoothing of an AppSettings object p;
+    ///     (p, v) => p.Smoothing = v        writes the value v into the smoothing of p.
+    /// This way, a single class can show and change any setting.
     ///
-    /// Les limites (minimum, maximum) ne sont PAS répétées ici : après chaque changement,
-    /// Parametres.Corriger() ramène la valeur dans ses limites. Elles restent écrites à un
-    /// seul endroit.
+    /// The limits (minimum, maximum) are NOT repeated here: after each change,
+    /// AppSettings.Fix() brings the value back within its limits. They stay written in a
+    /// single place.
     /// </summary>
     internal sealed class Setting
     {
         /// <summary>
-        /// Les nombres sont affichés avec un POINT (0.16), comme dans parametres.json
-        /// (demande de l'utilisateur du 26/10/2026). CultureInfo.InvariantCulture est la
-        /// présentation « neutre » de .NET, qui utilise le point.
+        /// Numbers are shown with a POINT (0.16), as in settings.json (user request of
+        /// 2026-10-26). CultureInfo.InvariantCulture is the "neutral" .NET formatting, which
+        /// uses the point.
         /// </summary>
         private static readonly CultureInfo Format = CultureInfo.InvariantCulture;
 
@@ -39,34 +39,34 @@ namespace GazeBar
         {
         }
 
-        /// <summary>Le nom affiché (par exemple « Délai de fixation »).</summary>
+        /// <summary>The displayed name (for example "Délai de fixation").</summary>
         public string Name { get; private set; }
 
-        /// <summary>Une phrase courte, affichée sous le nom.</summary>
+        /// <summary>A short sentence, shown under the name.</summary>
         public string Explanation { get; private set; }
 
-        /// <summary>L'unité, avec son espace devant (par exemple " s", " px") ou "" pour aucune.</summary>
+        /// <summary>The unit, with its leading space (for example " s", " px") or "" for none.</summary>
         public string Unit { get; private set; }
 
-        /// <summary>De combien « − » et « + » changent la valeur.</summary>
+        /// <summary>By how much "−" and "+" change the value.</summary>
         public double Step { get; private set; }
 
-        /// <summary>Nombre de chiffres après le point, déduit du pas (0.05 → 2 chiffres).</summary>
+        /// <summary>Number of digits after the point, deduced from the step (0.05 → 2 digits).</summary>
         public int Decimals { get; private set; }
 
-        /// <summary>Vrai pour un réglage oui / non (ou un choix entre deux mots).</summary>
+        /// <summary>True for a yes / no setting (or a choice between two words).</summary>
         public bool YesNo { get; private set; }
 
         /// <summary>
-        /// Vrai pour un vrai oui / non (créé par OuiOuNon) : il s'affiche en interrupteur.
-        /// Faux pour un choix entre deux autres mots (DeuxChoix) : deux boutons.
+        /// True for a real yes / no (created by YesOrNo): it is shown as a switch.
+        /// False for a choice between two other words (TwoChoices): two buttons.
         /// </summary>
         public bool Switch { get; private set; }
 
-        /// <summary>Le mot du bouton de gauche (valeur « faux ») : « Non » d'habitude.</summary>
+        /// <summary>The word of the left button ("false" value): usually "Non".</summary>
         public string WrongWord { get; private set; }
 
-        /// <summary>Le mot du bouton de droite (valeur « vrai ») : « Oui » d'habitude.</summary>
+        /// <summary>The word of the right button ("true" value): usually "Oui".</summary>
         public string RightWord { get; private set; }
 
         private Func<AppSettings, double> _readNumber;
@@ -74,10 +74,10 @@ namespace GazeBar
         private Func<AppSettings, bool> _readYesNo;
         private Action<AppSettings, bool> _writeYesNo;
 
-        /// <summary>Appelée après chaque changement (null = rien de spécial à faire).</summary>
+        /// <summary>Called after each change (null = nothing special to do).</summary>
         public Action<AppSettings> AfterChange { get; private set; }
 
-        /// <summary>Crée un réglage numérique.</summary>
+        /// <summary>Creates a numeric setting.</summary>
         public static Setting Number(string name, string explanation, string unit, double step,
                                      Func<AppSettings, double> read, Action<AppSettings, double> write)
         {
@@ -92,20 +92,20 @@ namespace GazeBar
             return r;
         }
 
-        /// <summary>Crée un réglage oui / non. apres : facultatif, appelé après chaque changement.</summary>
+        /// <summary>Creates a yes / no setting. after: optional, called after each change.</summary>
         public static Setting YesOrNo(string name, string explanation,
                                        Func<AppSettings, bool> read, Action<AppSettings, bool> write,
                                        Action<AppSettings> after = null)
         {
             Setting r = TwoChoices(name, explanation, "Non", "Oui", read, write, after);
-            r.Switch = true;   // affiché en interrupteur (02/11/2026)
+            r.Switch = true;   // shown as a switch (2026-11-02)
             return r;
         }
 
         /// <summary>
-        /// Crée un choix entre deux mots (étape 9). Le réglage est rangé comme un oui / non :
-        /// « faux » = motFaux (bouton de gauche), « vrai » = motVrai (bouton de droite).
-        /// Exemple : DeuxChoix("Souris", "…", "Directe", "Relative", p => p.SourisRelative, …).
+        /// Creates a choice between two words (step 9). The setting is stored like a yes / no:
+        /// "false" = wrongWord (left button), "true" = rightWord (right button).
+        /// Example: TwoChoices("Souris", "...", "Directe", "Relative", p => p.RelativeMouse, ...).
         /// </summary>
         public static Setting TwoChoices(string name, string explanation, string wrongWord, string rightWord,
                                         Func<AppSettings, bool> read, Action<AppSettings, bool> write,
@@ -135,8 +135,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Écrit une nouvelle valeur, la ramène dans ses limites (Corriger) et l'arrondit au
-        /// nombre de décimales affiché (pour éviter 0.30000000000000004 après plusieurs « + »).
+        /// Writes a new value, brings it back within its limits (Fix) and rounds it to the
+        /// number of decimals shown (to avoid 0.30000000000000004 after several "+").
         /// </summary>
         public void WriteNumber(AppSettings p, double val)
         {
@@ -149,13 +149,13 @@ namespace GazeBar
             _writeYesNo(p, val);
         }
 
-        /// <summary>« − » (sens = -1) ou « + » (sens = +1) : un pas de plus ou de moins.</summary>
+        /// <summary>"−" (direction = -1) or "+" (direction = +1): one step more or less.</summary>
         public void Change(AppSettings p, int direction)
         {
             WriteNumber(p, ReadNumber(p) + direction * Step);
         }
 
-        /// <summary>Copie la valeur de « source » dans « cible » (pour le bouton « Défaut » d'un onglet).</summary>
+        /// <summary>Copies the value of "source" into "target" (for the "Default" button of a tab).</summary>
         public void Copy(AppSettings source, AppSettings target)
         {
             if (YesNo)
@@ -168,7 +168,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>La valeur prête à afficher, avec son unité : « 0.16 », « 0.8 s », « oui », « directe ».</summary>
+        /// <summary>The value ready to show, with its unit: "0.16", "0.8 s", "oui", "directe".</summary>
         public string Text(AppSettings p)
         {
             if (YesNo)
@@ -178,20 +178,20 @@ namespace GazeBar
             return NumberText(ReadNumber(p)) + Unit;
         }
 
-        /// <summary>Le nombre seul, avec un point et le bon nombre de décimales (pour la saisie).</summary>
+        /// <summary>The number alone, with a point and the right number of decimals (for input).</summary>
         public string NumberText(double val)
         {
             return val.ToString("F" + Decimals, Format);
         }
 
         /// <summary>
-        /// Lit un nombre tapé par l'aidant. Accepte le point ET la virgule (0.16 ou 0,16),
-        /// et ignore l'unité si elle a été tapée (« 0.8 s »). Renvoie faux si ce n'est pas un nombre.
+        /// Reads a number typed by the caregiver. Accepts the point AND the comma (0.16 or 0,16),
+        /// and ignores the unit if it was typed ("0.8 s"). Returns false if it is not a number.
         /// </summary>
         public static bool ReadInput(string text, out double val)
         {
             string own = (text ?? "").Trim().Replace(',', '.');
-            // On ne garde que le début : chiffres, signe moins et point.
+            // Keep only the beginning: digits, minus sign and point.
             int end = 0;
             while (end < own.Length && ("0123456789.-".IndexOf(own[end]) >= 0))
             {
@@ -208,7 +208,7 @@ namespace GazeBar
         }
     }
 
-    /// <summary>Un onglet du mode paramètres : son nom, son symbole et ses réglages (cinq au plus).</summary>
+    /// <summary>A tab of settings mode: its name, its symbol and its settings (five at most).</summary>
     internal sealed class SettingsTab
     {
         public SettingsTab(string name, string symbol, params Setting[] settingsList)
@@ -220,17 +220,16 @@ namespace GazeBar
 
         public string Name { get; private set; }
 
-        /// <summary>Symbole de la police d'icônes de Windows (Segoe Fluent Icons / Segoe MDL2 Assets).</summary>
+        /// <summary>Symbol of the Windows icon font (Segoe Fluent Icons / Segoe MDL2 Assets).</summary>
         public string Symbol { get; private set; }
 
         public List<Setting> Settings { get; private set; }
     }
 
     /// <summary>
-    /// Une CATÉGORIE de la colonne de gauche des paramètres (demande de l'utilisateur du
-    /// 02/11/2026 : « moins de boutons sur la gauche »). Une catégorie regroupe quelques
-    /// onglets ; seule la catégorie ouverte montre ses onglets, en dessous d'elle et en retrait
-    /// (« catégories dépliantes », choix de l'utilisateur du 02/11/2026).
+    /// A CATEGORY of the left column of the settings (user request of 2026-11-02: "fewer
+    /// buttons on the left"). A category groups a few tabs; only the open category shows its
+    /// tabs, below it and indented ("collapsible categories", user's choice of 2026-11-02).
     /// </summary>
     internal sealed class SettingsCategory
     {
@@ -243,90 +242,90 @@ namespace GazeBar
 
         public string Name { get; private set; }
 
-        /// <summary>Symbole de la police d'icônes de Windows (Segoe Fluent Icons / Segoe MDL2 Assets).</summary>
+        /// <summary>Symbol of the Windows icon font (Segoe Fluent Icons / Segoe MDL2 Assets).</summary>
         public string Symbol { get; private set; }
 
-        /// <summary>Les noms des onglets de la catégorie, dans l'ordre d'affichage.</summary>
+        /// <summary>The names of the tabs of the category, in display order.</summary>
         public List<string> TabNames { get; private set; }
     }
 
     /// <summary>
-    /// LA LISTE DES ONGLETS ET DES RÉGLAGES du mode paramètres (étape 7).
+    /// THE LIST OF TABS AND SETTINGS of settings mode (step 7).
     ///
-    /// Depuis le 02/11/2026, l'ordre d'affichage à gauche est celui des CATÉGORIES (voir
-    /// « Categories » plus bas) : la liste « Onglets » sert seulement à retrouver un onglet par
-    /// son numéro. Le premier onglet de la liste (« Regard ») est celui qui s'ouvre par défaut.
+    /// Since 2026-11-02, the display order on the left is the one of the CATEGORIES (see
+    /// "Categories" below): the "Tabs" list is only used to find a tab by its index. The first
+    /// tab of the list ("Regard") is the one that opens by default.
     ///
-    /// Étape 11 : les tailles (anti-tremblement, rayon de fixation, vitesse max, rayon du
-    /// cercle, taille des icônes) sont en % DE LA HAUTEUR DE L'ÉCRAN (voir Ecran.cs), et
-    /// l'onglet « Affichage » gagne « Taille de l'interface ».
+    /// Step 11: the sizes (anti-jitter, fixation radius, max speed, circle radius, icon size)
+    /// are in % OF THE SCREEN HEIGHT (see ScreenMetrics.cs), and the "Display" tab gets
+    /// "Interface size".
     ///
-    /// Regroupement validé par l'utilisateur le 26/10/2026 (six onglets ; « Défilement » ajouté à l'étape 8,
-    /// « Jeu » à l'étape 9).
+    /// Grouping validated by the user on 2026-10-26 (six tabs; "Scroll" added in step 8,
+    /// "Game" in step 9).
     ///
-    /// Pour ajouter un réglage plus tard : l'ajouter dans Parametres.cs (avec sa valeur par
-    /// défaut et ses limites dans Corriger), puis ici, dans l'onglet voulu (cinq au plus par
-    /// onglet, pour que rien ne défile). L'onglet « Défilement » est ajouté à l'étape 8,
-    /// l'onglet « Jeu » à l'étape 9, l'onglet « Icônes » à l'étape 10, l'onglet « Clavier » à l'étape 12.
+    /// To add a setting later: add it to AppSettings.cs (with its default value and its limits
+    /// in Fix), then here, in the wanted tab (five at most per tab, so that nothing scrolls).
+    /// The "Scroll" tab was added in step 8, the "Game" tab in step 9, the "Icons" tab in
+    /// step 10, the "Keyboard" tab in step 12.
     ///
-    /// L'onglet « Icônes » est particulier : il n'a pas de réglage « − / + », mais un gros
-    /// bouton qui ouvre l'écran de configuration des icônes du choix d'action
-    /// (ModeConfigIcones). Son bouton « Défaut » remet la disposition d'origine des icônes.
+    /// The "Icons" tab is special: it has no "− / +" setting, but a big button that opens the
+    /// icon configuration screen of the action choice (IconConfigMode). Its "Default" button
+    /// restores the original icon layout.
     ///
-    /// L'onglet « Outils » (dernier) n'a pas de réglage non plus : deux gros boutons,
-    /// « Calibration » et « Diagnostic », qui étaient avant dans la barre de menu. Il n'a pas
-    /// de bouton « Défaut » (il n'y a rien à remettre).
+    /// The "Tools" tab (last) has no setting either: two big buttons, "Calibration" and
+    /// "Diagnostic", which used to be in the menu bar. It has no "Default" button (there is
+    /// nothing to restore).
     ///
-    /// L'onglet « Profils » (étape 15, avant « Outils ») n'a pas de réglage ni de « Défaut » :
-    /// deux gros boutons pour enregistrer les réglages actuels et charger un profil.
+    /// The "Profiles" tab (step 15, before "Tools") has no setting nor "Default": two big
+    /// buttons to save the current settings and load a profile.
     /// </summary>
     internal static class SettingsCatalog
     {
-        /// <summary>Le nom de l'onglet « Icônes » (étape 10), reconnu par FenetreParametres.</summary>
+        /// <summary>The name of the "Icons" tab (step 10), recognized by SettingsWindow.</summary>
         public const string IconsTabName = "Icônes";
 
-        /// <summary>Le numéro de l'onglet « Icônes » dans la liste (pour y revenir après la configuration).</summary>
+        /// <summary>The index of the "Icons" tab in the list (to come back to it after the configuration).</summary>
         public static int IconsTabIndex
         {
             get { return Math.Max(0, Tabs.FindIndex(o => o.Name == IconsTabName)); }
         }
 
         /// <summary>
-        /// Le nom de l'onglet « Général », reconnu par FenetreParametres (qui y ajoute le bouton
-        /// « Mes mots », étape 14, demande de l'utilisateur du 02/11/2026).
+        /// The name of the "General" tab, recognized by SettingsWindow (which adds the "My
+        /// words" button to it, step 14, user request of 2026-11-02).
         /// </summary>
         public const string GeneralTabName = "Général";
 
-        /// <summary>Le numéro de l'onglet « Général » (pour y revenir après la liste « Mes mots »).</summary>
+        /// <summary>The index of the "General" tab (to come back to it after the "My words" list).</summary>
         public static int GeneralTabIndex
         {
             get { return Math.Max(0, Tabs.FindIndex(o => o.Name == GeneralTabName)); }
         }
 
         /// <summary>
-        /// Le nom de l'onglet « Outils » (calibration et diagnostic, déplacés de la barre de
-        /// menu le 29/10/2026), reconnu par FenetreParametres.
+        /// The name of the "Tools" tab (calibration and diagnostic, moved from the menu bar on
+        /// 2026-10-29), recognized by SettingsWindow.
         /// </summary>
         public const string ToolsTabName = "Outils";
 
         /// <summary>
-        /// Le nom de l'onglet « Profils » (étape 15), reconnu par FenetreParametres, qui y met
-        /// deux gros boutons : « Enregistrer les réglages actuels » et « Charger un profil ».
+        /// The name of the "Profiles" tab (step 15), recognized by SettingsWindow, which puts two
+        /// big buttons there: "Save the current settings" and "Load a profile".
         /// </summary>
         public const string ProfilesTabName = "Profils";
 
-        /// <summary>Le numéro de l'onglet « Profils » (pour y revenir après la liste des profils).</summary>
+        /// <summary>The index of the "Profiles" tab (to come back to it after the list of profiles).</summary>
         public static int ProfilesTabIndex
         {
             get { return Math.Max(0, Tabs.FindIndex(o => o.Name == ProfilesTabName)); }
         }
 
         /// <summary>
-        /// LES CATÉGORIES de la colonne de gauche (02/11/2026), dans l'ordre d'affichage, avec
-        /// les noms de leurs onglets. Chaque onglet de « Onglets » doit être dans une catégorie
-        /// et une seule (sinon il ne serait plus atteignable au regard).
-        /// Symboles : E890 = œil ouvert (« vue »), E7C9 = main qui touche (« actions »),
-        /// E7F4 = écran, E770 = ordinateur (« système »).
+        /// THE CATEGORIES of the left column (2026-11-02), in display order, with the names of
+        /// their tabs. Each tab of "Tabs" must be in exactly one category (otherwise it could no
+        /// longer be reached with the gaze).
+        /// Symbols: E890 = open eye ("view"), E7C9 = touching hand ("actions"),
+        /// E7F4 = screen, E770 = computer ("system").
         /// </summary>
         public static readonly List<SettingsCategory> Categories = new List<SettingsCategory>
         {
@@ -337,8 +336,8 @@ namespace GazeBar
         };
 
         /// <summary>
-        /// Le numéro de la catégorie qui contient l'onglet numéro « onglet » (0 si aucune,
-        /// ce qui ne devrait pas arriver).
+        /// The index of the category containing tab number "tab" (0 if none, which should not
+        /// happen).
         /// </summary>
         public static int CategoryOf(int tab)
         {
@@ -351,8 +350,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Les numéros (dans « Onglets ») des onglets de la catégorie « categorie », dans
-        /// l'ordre d'affichage. Un nom introuvable est ignoré.
+        /// The indexes (in "Tabs") of the tabs of category "category", in display order. A name
+        /// that cannot be found is ignored.
         /// </summary>
         public static List<int> TabsOf(int category)
         {
@@ -370,7 +369,7 @@ namespace GazeBar
 
         public static readonly List<SettingsTab> Tabs = new List<SettingsTab>
         {
-            // E7B3 = œil (« Regard »)
+            // E7B3 = eye ("Gaze")
             new SettingsTab("Regard", "",
                 Setting.Number("Lissage", "Plus petit = plus calme, plus grand = plus réactif", "", 0.01,
                                p => p.Smoothing, (p, v) => p.Smoothing = v),
@@ -381,7 +380,7 @@ namespace GazeBar
                 Setting.YesOrNo("Suivi souris", "Le curseur suit le regard en mode mouvement",
                                  p => p.MouseTracking, (p, v) => p.MouseTracking = v)),
 
-            // E707 = épingle (« Fixation » : un point fixé)
+            // E707 = pin ("Fixation": a fixated point)
             new SettingsTab("Fixation", "",
                 Setting.Number("Rayon de fixation", "Le regard est immobile dans ce rayon", " %", 0.1,
                                p => p.FixationRadius, (p, v) => p.FixationRadius = v),
@@ -394,7 +393,7 @@ namespace GazeBar
                 Setting.Number("Délai du clic direct", "Après l'entrée en regard fixe", " s", 0.1,
                                p => p.DirectClickDelay, (p, v) => p.DirectClickDelay = v)),
 
-            // E916 = chronomètre (« Délais »)
+            // E916 = stopwatch ("Delays")
             new SettingsTab("Délais", "",
                 Setting.Number("Activation des boutons", "Regard sur une icône avant activation", " s", 0.1,
                                p => p.ActivationDelay, (p, v) => p.ActivationDelay = v),
@@ -405,7 +404,7 @@ namespace GazeBar
                 Setting.Number("Fermeture du menu", "Regard hors de la barre", " s", 0.1,
                                p => p.MenuCloseDelay, (p, v) => p.MenuCloseDelay = v)),
 
-            // E7F4 = écran (« Affichage »)
+            // E7F4 = screen ("Display")
             new SettingsTab("Affichage", "",
                 Setting.Number("Rayon du cercle", "Mode mouvement et zone de sortie", " %", 0.2,
                                p => p.CircleRadius, (p, v) => p.CircleRadius = v),
@@ -416,7 +415,7 @@ namespace GazeBar
                 Setting.YesOrNo("Libellés", "Nom de l'action au survol d'une icône",
                                  p => p.ShowLabels, (p, v) => p.ShowLabels = v)),
 
-            // E71E = loupe (« Loupe, glisser »)
+            // E71E = magnifier ("Magnifier, drag")
             new SettingsTab("Loupe, glisser", "",
                 Setting.YesOrNo("Loupe avant l'action", "Passer par la loupe avant le choix",
                                  p => p.MagnifierBeforeAction, (p, v) => p.MagnifierBeforeAction = v),
@@ -427,16 +426,16 @@ namespace GazeBar
                 Setting.Number("Durée du glisser", "Trajet du curseur, bouton enfoncé", " s", 0.05,
                                p => p.DragDuration, (p, v) => p.DragDuration = v)),
 
-            // EC8F = flèches haut et bas (« Défilement », étape 8)
+            // EC8F = up and down arrows ("Scroll", step 8)
             new SettingsTab("Défilement", "\uEC8F",
                 Setting.Number("Vitesse maximale", "Atteinte trois rayons de cercle au-delà du bord", " crans/s", 1,
                                p => p.MaxScrollSpeed, (p, v) => p.MaxScrollSpeed = v),
-                // Réglage de Windows, appliqué par MoletteWindows (02/11/2026).
+                // Windows setting, applied by WheelScroller (2026-11-02).
                 Setting.YesOrNo("Défiler les fenêtres inactives", "Réglage Windows : la molette va à la fenêtre sous le curseur",
                                  p => p.ScrollInactiveWindows, (p, v) => p.ScrollInactiveWindows = v,
                                  p => WheelScroller.Apply(p.ScrollInactiveWindows))),
 
-            // E7FC = manette (« Jeu », étape 9)
+            // E7FC = gamepad ("Game", step 9)
             new SettingsTab("Jeu", "\uE7FC",
                 Setting.TwoChoices("Souris du jeu", "Directe pour Mindball, relative pour d'autres jeux",
                                   "Directe", "Relative",
@@ -449,11 +448,11 @@ namespace GazeBar
                 Setting.Number("Sensibilité", "Souris relative : multiplie les déplacements", " ×", 0.1,
                                p => p.GameSensitivity, (p, v) => p.GameSensitivity = v)),
 
-            // E71D = grille de carrés (« Icônes », étape 10) : pas de réglage, un bouton
-            // « Configurer les icônes » (voir FenetreParametres.ConstruireOngletIcones).
+            // E71D = grid of squares ("Icons", step 10): no setting, a "Configure icons" button
+            // (see SettingsWindow.BuildIconsTab).
             new SettingsTab(IconsTabName, "\uE71D"),
 
-            // E765 = clavier (« Clavier », étape 12)
+            // E765 = keyboard ("Keyboard", step 12)
             new SettingsTab("Clavier", "\uE765",
                 Setting.Number("Délai de frappe", "Regard sur une touche avant qu'elle s'active", " s", 0.1,
                                p => p.KeyDelay, (p, v) => p.KeyDelay = v),
@@ -463,23 +462,22 @@ namespace GazeBar
                                  p => p.AutoCapitalize, (p, v) => p.AutoCapitalize = v),
                 Setting.Number("Hauteur du clavier", "En pourcentage de la hauteur de l'écran", " %", 5,
                                p => p.KeyboardHeight, (p, v) => p.KeyboardHeight = v),
-                // 50, 75 ou 100 % (Corriger arrondit au quart) ; aussi dans la barre du clavier.
+                // 50, 75 or 100 % (Fix rounds to the quarter); also in the keyboard bar.
                 Setting.Number("Taille du clavier", "Largeur et hauteur ensemble : 50, 75 ou 100 %", " %", 25,
                                p => p.KeyboardSize, (p, v) => p.KeyboardSize = v)),
 
-            // E713 = engrenage (« Général »)
+            // E713 = gear ("General")
             new SettingsTab(GeneralTabName, "",
                 Setting.YesOrNo("Démarrer avec Windows", "Lancer GazeBar à l'ouverture de session",
                                  p => p.StartWithWindows, (p, v) => p.StartWithWindows = v,
                                  p => WindowsStartup.Apply(p.StartWithWindows))),
 
-            // E77B = personne (« Profils », étape 15) : pas de réglage, deux gros boutons
-            // « Enregistrer les réglages actuels » et « Charger un profil » (voir
-            // FenetreParametres.ConstruireOngletProfils).
+            // E77B = person ("Profiles", step 15): no setting, two big buttons "Save the current
+            // settings" and "Load a profile" (see SettingsWindow.BuildProfilesTab).
             new SettingsTab(ProfilesTabName, "\uE77B"),
 
-            // E90F = clé à molette (« Outils », 29/10/2026) : pas de réglage, deux gros boutons
-            // « Calibration » et « Diagnostic » (voir FenetreParametres.ConstruireOngletOutils).
+            // E90F = wrench ("Tools", 2026-10-29): no setting, two big buttons "Calibration" and
+            // "Diagnostic" (see SettingsWindow.BuildToolsTab).
             new SettingsTab(ToolsTabName, "\uE90F")
         };
     }

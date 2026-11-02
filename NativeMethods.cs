@@ -4,21 +4,21 @@ using System.Runtime.InteropServices;
 namespace GazeBar
 {
     /// <summary>
-    /// Fonctions de Windows (écrites en C/C++) que l'on appelle depuis C#.
+    /// Windows functions (written in C/C++) called from C#.
     ///
-    /// Ce mécanisme s'appelle « P/Invoke » (Platform Invoke). On déclare la fonction avec
-    /// [DllImport("nom_de_la_bibliothèque.dll")] et le mot-clé « extern » : c'est alors
-    /// Windows qui fournit le code. La documentation de chaque fonction est sur le site
-    /// de Microsoft (chercher par exemple « GetCursorPos Win32 »).
+    /// This mechanism is called "P/Invoke" (Platform Invoke). The function is declared with
+    /// [DllImport("library_name.dll")] and the "extern" keyword: Windows then provides the
+    /// code. The documentation of each function is on Microsoft's website (search for
+    /// example "GetCursorPos Win32").
     ///
-    /// « internal » = visible seulement dans ce projet. « static » = on n'a pas besoin
-    /// de créer un objet NativeMethods pour s'en servir.
+    /// "internal" = visible only in this project. "static" = no NativeMethods object needs to
+    /// be created to use it.
     /// </summary>
     internal static class NativeMethods
     {
-        // ───────────────────────── Position du curseur ─────────────────────────
+        // ───────────────────────── Cursor position ─────────────────────────
 
-        /// <summary>Un point à l'écran, en pixels. Même disposition mémoire que la structure POINT de Windows.</summary>
+        /// <summary>A point on the screen, in pixels. Same memory layout as the Windows POINT structure.</summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct POINT
         {
@@ -26,20 +26,20 @@ namespace GazeBar
             public int Y;
         }
 
-        /// <summary>Lit la position actuelle du curseur de la souris (donc, ici, celle que le logiciel de l'eyetracker pilote avec le regard).</summary>
+        /// <summary>Reads the current mouse cursor position (here, the one the eyetracker software drives with the gaze).</summary>
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetCursorPos(out POINT point);
 
-        /// <summary>Déplace le curseur à la position donnée (en pixels d'écran).</summary>
+        /// <summary>Moves the cursor to the given position (in screen pixels).</summary>
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SetCursorPos(int x, int y);
 
         /// <summary>
-        /// État du curseur (structure CURSORINFO de Windows). Correction du 29/10/2026 :
-        /// on lit surtout « flags », pour savoir si Windows a caché le curseur.
-        /// cbSize doit contenir la taille de la structure avant l'appel (Windows la vérifie).
+        /// Cursor state (Windows CURSORINFO structure). Fix of 2026-10-29: mostly "flags" is
+        /// read, to know whether Windows hid the cursor.
+        /// cbSize must contain the size of the structure before the call (Windows checks it).
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct CURSORINFO
@@ -50,22 +50,22 @@ namespace GazeBar
             public POINT ptScreenPos;
         }
 
-        /// <summary>Lit l'état du curseur : visible, caché, « supprimé » par Windows…</summary>
+        /// <summary>Reads the cursor state: visible, hidden, "suppressed" by Windows...</summary>
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetCursorInfo(ref CURSORINFO info);
 
         /// <summary>
-        /// Drapeau de CURSORINFO.flags : Windows a « supprimé » le curseur (Windows 8 et plus).
-        /// Cela arrive quand Windows pense qu'il n'y a pas de souris : après un toucher sur un
-        /// écran tactile, ou au démarrage si aucune souris physique n'a encore bougé. Le
-        /// curseur reste alors invisible jusqu'au prochain mouvement d'une « vraie » souris.
-        /// À ne pas confondre avec un curseur caché volontairement par un logiciel (vidéo en
-        /// plein écran, jeu) : dans ce cas, ce drapeau n'est pas mis.
+        /// CURSORINFO.flags flag: Windows "suppressed" the cursor (Windows 8 and later).
+        /// This happens when Windows thinks there is no mouse: after a touch on a touch screen,
+        /// or at startup if no physical mouse has moved yet. The cursor then stays invisible
+        /// until the next movement of a "real" mouse.
+        /// Not to be confused with a cursor hidden on purpose by a program (full-screen video,
+        /// game): in that case, this flag is not set.
         /// </summary>
         internal const int CURSOR_SUPPRESSED = 0x00000002;
 
-        /// <summary>Taille de l'écran principal (index 0 = largeur, 1 = hauteur), en pixels.</summary>
+        /// <summary>Size of the primary screen (index 0 = width, 1 = height), in pixels.</summary>
         [DllImport("user32.dll")]
         internal static extern int GetSystemMetrics(int index);
 
@@ -73,24 +73,24 @@ namespace GazeBar
         internal const int SM_CYSCREEN = 1;
 
         /// <summary>
-        /// Taille RÉELLE de l'écran principal, en pixels (étape 11, correction du 29/10/2026).
+        /// REAL size of the primary screen, in pixels (step 11, fix of 2026-10-29).
         ///
-        /// Pourquoi pas GetSystemMetrics ? Essai de l'utilisateur : GazeBar lancé en
-        /// 1920 × 1080 à 100 %, puis écran passé en 3840 × 2160 à 200 % : GetSystemMetrics
-        /// continuait de répondre 1920 × 1080. Windows « fige » ses réponses à la mise à
-        /// l'échelle du démarrage du programme : 3840 pixels à 200 %, vus avec l'échelle du
-        /// démarrage (100 %), font 3840 × 100 ÷ 200 = 1920. Le changement n'était donc pas vu,
-        /// et le calque ne couvrait plus que le quart en haut à gauche de l'écran.
+        /// Why not GetSystemMetrics? The user's test: GazeBar started in 1920 × 1080 at 100 %,
+        /// then the screen switched to 3840 × 2160 at 200 %: GetSystemMetrics kept answering
+        /// 1920 × 1080. Windows "freezes" its answers to the scaling at the program's startup:
+        /// 3840 pixels at 200 %, seen with the startup scale (100 %), make 3840 × 100 ÷ 200 =
+        /// 1920. So the change was not seen, and the overlay only covered the top-left quarter
+        /// of the screen.
         ///
-        /// EnumDisplaySettings, lui, donne le « mode d'affichage » en cours de l'écran : sa vraie
-        /// résolution, quelle que soit la mise à l'échelle. En cas d'échec, on se rabat sur
+        /// EnumDisplaySettings, on the other hand, gives the current "display mode" of the
+        /// screen: its real resolution, whatever the scaling. On failure, we fall back to
         /// GetSystemMetrics.
         /// </summary>
         internal static void PrimaryScreenSize(out double width, out double height)
         {
             DEVMODE mode = new DEVMODE();
             mode.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
-            // null = l'écran principal ; ENUM_CURRENT_SETTINGS = le mode utilisé en ce moment.
+            // null = the primary screen; ENUM_CURRENT_SETTINGS = the mode currently used.
             if (EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref mode) &&
                 mode.dmPelsWidth > 0 && mode.dmPelsHeight > 0)
             {
@@ -105,9 +105,9 @@ namespace GazeBar
         private const int ENUM_CURRENT_SETTINGS = -1;
 
         /// <summary>
-        /// La mise à l'échelle « système » du programme, en points par pouce (96 = 100 %,
-        /// 144 = 150 %). Elle est fixée au démarrage du programme et ne change plus ensuite
-        /// (étape 11, voir Ecran.EchelleDemarrage). Windows 10 version 1607 et plus.
+        /// The program's "system" scaling, in dots per inch (96 = 100 %, 144 = 150 %). It is set
+        /// when the program starts and no longer changes afterwards (step 11, see
+        /// ScreenMetrics.StartupScale). Windows 10 version 1607 and later.
         /// </summary>
         [DllImport("user32.dll")]
         internal static extern uint GetDpiForSystem();
@@ -117,10 +117,10 @@ namespace GazeBar
         private static extern bool EnumDisplaySettings(string screenName, int modeNumber, ref DEVMODE mode);
 
         /// <summary>
-        /// Description d'un mode d'affichage (structure DEVMODE de Windows). Seuls dmSize (à
-        /// remplir avant l'appel), dmPelsWidth et dmPelsHeight (la résolution) servent ici ;
-        /// les autres champs doivent quand même être là, dans cet ordre, pour que la structure
-        /// ait exactement la taille attendue par Windows.
+        /// Description of a display mode (Windows DEVMODE structure). Only dmSize (to fill in
+        /// before the call), dmPelsWidth and dmPelsHeight (the resolution) are used here; the
+        /// other fields must still be there, in this order, so that the structure has exactly
+        /// the size Windows expects.
         /// </summary>
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct DEVMODE
@@ -159,39 +159,39 @@ namespace GazeBar
             public int dmPanningHeight;
         }
 
-        // ───────────────────────── Simulation de la souris et du clavier ─────────────────────────
+        // ───────────────────────── Mouse and keyboard simulation ─────────────────────────
 
-        /// <summary>Description d'une action de souris à simuler (structure MOUSEINPUT de Windows).</summary>
+        /// <summary>Description of a mouse action to simulate (Windows MOUSEINPUT structure).</summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct MOUSEINPUT
         {
-            public int dx;             // position ou déplacement en X (voir MOUSEEVENTF_ABSOLUTE)
-            public int dy;             // position ou déplacement en Y
-            public uint mouseData;     // données supplémentaires : la quantité de molette (étape 8), sinon 0
-            public uint dwFlags;       // QUELLE action : bouton enfoncé, relâché, déplacement...
-            public uint time;          // 0 = laisser Windows mettre l'heure
+            public int dx;             // position or movement in X (see MOUSEEVENTF_ABSOLUTE)
+            public int dy;             // position or movement in Y
+            public uint mouseData;     // extra data: the wheel amount (step 8), otherwise 0
+            public uint dwFlags;       // WHICH action: button pressed, released, movement...
+            public uint time;          // 0 = let Windows set the time
             public UIntPtr dwExtraInfo;
         }
 
         /// <summary>
-        /// Description d'une touche du clavier à simuler (structure KEYBDINPUT de Windows).
-        /// Ajoutée à l'étape 6 pour les modificateurs Ctrl, Maj et Alt.
+        /// Description of a keyboard key to simulate (Windows KEYBDINPUT structure).
+        /// Added in step 6 for the Ctrl, Shift and Alt modifiers.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct KEYBDINPUT
         {
-            public ushort wVk;         // code de la touche (VK_CONTROL, VK_SHIFT…)
-            public ushort wScan;       // code matériel : inutilisé ici (0)
-            public uint dwFlags;       // 0 = touche enfoncée, KEYEVENTF_KEYUP = touche relâchée
-            public uint time;          // 0 = laisser Windows mettre l'heure
+            public ushort wVk;         // key code (VK_CONTROL, VK_SHIFT...)
+            public ushort wScan;       // hardware code: unused here (0)
+            public uint dwFlags;       // 0 = key pressed, KEYEVENTF_KEYUP = key released
+            public uint time;          // 0 = let Windows set the time
             public UIntPtr dwExtraInfo;
         }
 
         /// <summary>
-        /// Une « union » : la souris ET le clavier sont rangés au MÊME endroit de la mémoire
-        /// (FieldOffset(0) pour les deux). Windows lit l'un ou l'autre selon INPUT.type.
-        /// C'est ainsi que la structure INPUT est définie en C ; la reproduire exactement permet
-        /// à Windows de trouver la bonne taille (SendInput la vérifie).
+        /// A "union": the mouse AND the keyboard are stored at the SAME place in memory
+        /// (FieldOffset(0) for both). Windows reads one or the other according to INPUT.type.
+        /// This is how the INPUT structure is defined in C; reproducing it exactly lets Windows
+        /// find the right size (SendInput checks it).
         /// </summary>
         [StructLayout(LayoutKind.Explicit)]
         internal struct INPUTUNION
@@ -201,8 +201,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Enveloppe d'une entrée simulée (structure INPUT de Windows).
-        /// type = INPUT_MOUSE (0) pour la souris, INPUT_KEYBOARD (1) pour le clavier.
+        /// Wrapper of a simulated input (Windows INPUT structure).
+        /// type = INPUT_MOUSE (0) for the mouse, INPUT_KEYBOARD (1) for the keyboard.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct INPUT
@@ -218,75 +218,75 @@ namespace GazeBar
         internal const uint MOUSEEVENTF_LEFTUP = 0x0004;
         internal const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
         internal const uint MOUSEEVENTF_RIGHTUP = 0x0010;
-        internal const uint MOUSEEVENTF_WHEEL = 0x0800;    // molette verticale (étape 8) : quantité dans mouseData
-        internal const uint MOUSEEVENTF_HWHEEL = 0x1000;   // molette horizontale (étape 8)
-        internal const uint MOUSEEVENTF_ABSOLUTE = 0x8000; // dx, dy = position sur l'écran (0 à 65535), pas un écart
+        internal const uint MOUSEEVENTF_WHEEL = 0x0800;    // vertical wheel (step 8): amount in mouseData
+        internal const uint MOUSEEVENTF_HWHEEL = 0x1000;   // horizontal wheel (step 8)
+        internal const uint MOUSEEVENTF_ABSOLUTE = 0x8000; // dx, dy = position on the screen (0 to 65535), not an offset
         internal const uint KEYEVENTF_KEYUP = 0x0002;
 
-        // Codes des touches modificatrices (« virtual-key codes »).
-        internal const ushort VK_SHIFT = 0x10;    // Maj
+        // Codes of the modifier keys ("virtual-key codes").
+        internal const ushort VK_SHIFT = 0x10;    // Shift
         internal const ushort VK_CONTROL = 0x11;  // Ctrl
-        internal const ushort VK_MENU = 0x12;     // Alt (Windows l'appelle « menu »)
-        internal const ushort VK_C = 0x43;        // touche C (copier, avec Ctrl)
-        internal const ushort VK_V = 0x56;        // touche V (coller, avec Ctrl)
-        internal const ushort VK_X = 0x58;        // touche X (couper, avec Ctrl)
+        internal const ushort VK_MENU = 0x12;     // Alt (Windows calls it "menu")
+        internal const ushort VK_C = 0x43;        // C key (copy, with Ctrl)
+        internal const ushort VK_V = 0x56;        // V key (paste, with Ctrl)
+        internal const ushort VK_X = 0x58;        // X key (cut, with Ctrl)
 
-        // Étape 12 (clavier au regard).
-        //  KEYEVENTF_EXTENDEDKEY : touche « étendue » (flèches, Début, Fin, Suppr, Page…,
-        //                          touche Windows) : sans ce drapeau, certaines applications
-        //                          les confondent avec les touches du pavé numérique ;
-        //  KEYEVENTF_UNICODE     : on envoie un CARACTÈRE (dans wScan) et non une touche.
-        //                          Windows le livre tel quel à l'application, quelle que soit
-        //                          la disposition du clavier réglée dans Windows.
+        // Step 12 (gaze keyboard).
+        //  KEYEVENTF_EXTENDEDKEY: "extended" key (arrows, Home, End, Delete, Page...,
+        //                         Windows key): without this flag, some applications confuse
+        //                         them with the numeric keypad keys;
+        //  KEYEVENTF_UNICODE    : a CHARACTER is sent (in wScan) and not a key.
+        //                         Windows delivers it as is to the application, whatever the
+        //                         keyboard layout set in Windows.
         internal const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
         internal const uint KEYEVENTF_UNICODE = 0x0004;
-        internal const ushort VK_BACK = 0x08;     // Retour arrière (effacer)
-        internal const ushort VK_LWIN = 0x5B;     // touche Windows de gauche
+        internal const ushort VK_BACK = 0x08;     // Backspace (delete)
+        internal const ushort VK_LWIN = 0x5B;     // left Windows key
 
         /// <summary>
-        /// Donne la touche (et les modificateurs) qui produit un caractère avec la disposition
-        /// du clavier de Windows. Octet bas = code de la touche ; octet haut = 1 Maj, 2 Ctrl,
-        /// 4 Alt. Renvoie -1 si aucune touche ne produit ce caractère.
+        /// Gives the key (and modifiers) producing a character with the Windows keyboard
+        /// layout. Low byte = key code; high byte = 1 Shift, 2 Ctrl, 4 Alt. Returns -1 if no key
+        /// produces this character.
         /// </summary>
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern short VkKeyScanW(char character);
 
-        /// <summary>Convertit un code de touche en « code matériel » (mode 0 = MAPVK_VK_TO_VSC).</summary>
+        /// <summary>Converts a key code into a "hardware code" (mode 0 = MAPVK_VK_TO_VSC).</summary>
         [DllImport("user32.dll")]
         internal static extern uint MapVirtualKeyW(uint code, uint mode);
 
-        /// <summary>Simule des actions de souris ou de clavier, comme si elles venaient du matériel.</summary>
+        /// <summary>Simulates mouse or keyboard actions, as if they came from the hardware.</summary>
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern uint SendInput(uint inputCount, INPUT[] inputs, int sizeOfInput);
 
-        // ───────────────────────── Fenêtre qui ne prend pas le focus ─────────────────────────
+        // ───────────────────────── Window that does not take the focus ─────────────────────────
 
         internal const int GWL_EXSTYLE = -20;
-        internal const int WS_EX_NOACTIVATE = 0x08000000; // la fenêtre ne devient jamais « active »
-        internal const int WS_EX_TOOLWINDOW = 0x00000080; // fenêtre d'outils : absente d'Alt+Tab
-        internal const int WM_MOUSEACTIVATE = 0x0021;     // message : « un clic va activer la fenêtre »
-        internal const int MA_NOACTIVATE = 3;             // réponse : « non, ne l'active pas »
+        internal const int WS_EX_NOACTIVATE = 0x08000000; // the window never becomes "active"
+        internal const int WS_EX_TOOLWINDOW = 0x00000080; // tool window: not in Alt+Tab
+        internal const int WM_MOUSEACTIVATE = 0x0021;     // message: "a click is going to activate the window"
+        internal const int MA_NOACTIVATE = 3;             // answer: "no, do not activate it"
 
-        // Messages envoyés par Windows à toutes les fenêtres (étape 11, voir OverlayWindow.Crochet) :
-        internal const int WM_SETTINGCHANGE = 0x001A;     // un réglage de Windows a changé
-        internal const int WM_DISPLAYCHANGE = 0x007E;     // la résolution de l'écran a changé
+        // Messages sent by Windows to all windows (step 11, see OverlayWindow.Hook):
+        internal const int WM_SETTINGCHANGE = 0x001A;     // a Windows setting changed
+        internal const int WM_DISPLAYCHANGE = 0x007E;     // the screen resolution changed
 
-        // Pour la fenêtre plein écran (OverlayWindow) qui doit laisser passer les clics :
-        internal const int WS_EX_TRANSPARENT = 0x00000020; // la souris « traverse » la fenêtre
-        internal const int WS_EX_LAYERED = 0x00080000;     // fenêtre à transparence (déjà mis par WPF, on l'assure)
+        // For the full-screen window (OverlayWindow) that must let clicks through:
+        internal const int WS_EX_TRANSPARENT = 0x00000020; // the mouse "goes through" the window
+        internal const int WS_EX_LAYERED = 0x00080000;     // layered window (already set by WPF, we make sure)
 
         /// <summary>
-        /// Change la position, la taille ou la place « au-dessus / en dessous » d'une fenêtre.
-        /// Ici on s'en sert seulement pour remettre le calque tout en haut de la pile des fenêtres.
+        /// Changes the position, the size or the "above / below" place of a window.
+        /// Here it is only used to put the overlay back at the very top of the window stack.
         /// </summary>
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SetWindowPos(IntPtr window, IntPtr insertAfter, int x, int y, int width, int height, uint flags);
 
-        internal static readonly IntPtr HWND_TOPMOST = new IntPtr(-1); // « au-dessus de tout »
-        internal const uint SWP_NOSIZE = 0x0001;      // ne pas changer la taille
-        internal const uint SWP_NOMOVE = 0x0002;      // ne pas déplacer
-        internal const uint SWP_NOACTIVATE = 0x0010;  // ne pas donner le focus
+        internal static readonly IntPtr HWND_TOPMOST = new IntPtr(-1); // "above everything"
+        internal const uint SWP_NOSIZE = 0x0001;      // do not change the size
+        internal const uint SWP_NOMOVE = 0x0002;      // do not move
+        internal const uint SWP_NOACTIVATE = 0x0010;  // do not give the focus
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int GetWindowLong(IntPtr window, int index);
@@ -294,15 +294,15 @@ namespace GazeBar
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int SetWindowLong(IntPtr window, int index, int newValue);
 
-        // ───────────────────────── Capture d'écran (étape 3) ─────────────────────────
+        // ───────────────────────── Screen capture (step 3) ─────────────────────────
         //
-        // Pour photographier une partie de l'écran, on utilise GDI, la vieille bibliothèque
-        // de dessin de Windows (toujours présente). Le principe, en 5 temps (voir CaptureEcran.cs) :
-        //   1. GetDC(0)                       : on obtient le « contexte de dessin » de l'écran entier ;
-        //   2. CreateCompatibleDC/Bitmap      : on prépare une image vide en mémoire ;
-        //   3. SelectObject                   : on « pose » cette image dans un contexte en mémoire ;
-        //   4. BitBlt                         : on copie le rectangle voulu de l'écran dans l'image ;
-        //   5. DeleteObject/DeleteDC/ReleaseDC: on rend tout à Windows (sinon, fuite de mémoire).
+        // To take a picture of part of the screen, we use GDI, the old Windows drawing library
+        // (always present). The principle, in 5 steps (see ScreenCapture.cs):
+        //   1. GetDC(0)                       : get the "drawing context" of the whole screen;
+        //   2. CreateCompatibleDC/Bitmap      : prepare an empty image in memory;
+        //   3. SelectObject                   : "put" this image into an in-memory context;
+        //   4. BitBlt                         : copy the wanted rectangle of the screen into the image;
+        //   5. DeleteObject/DeleteDC/ReleaseDC: give everything back to Windows (otherwise, memory leak).
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetDC(IntPtr window);
@@ -332,102 +332,101 @@ namespace GazeBar
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool DeleteDC(IntPtr dc);
 
-        internal const uint SRCCOPY = 0x00CC0020;   // BitBlt : copie simple des pixels
+        internal const uint SRCCOPY = 0x00CC0020;   // BitBlt: plain pixel copy
 
-        // ───────────────────────── Fenêtres des autres programmes (étape 4) ─────────────────────────
+        // ───────────────────────── Windows of other programs (step 4) ─────────────────────────
         //
-        // Pendant la calibration, GazeBar surveille la fenêtre de l'outil de l'eyetracker pour savoir
-        // quand elle se ferme (voir ModeCalibration).
+        // During calibration, GazeBar watches the window of the eyetracker tool to know when it
+        // closes (see CalibrationMode).
 
-        /// <summary>La fenêtre active (celle qui reçoit le clavier), ou IntPtr.Zero.</summary>
+        /// <summary>The active window (the one receiving the keyboard), or IntPtr.Zero.</summary>
         [DllImport("user32.dll")]
         internal static extern IntPtr GetForegroundWindow();
 
-        /// <summary>Vrai si cette fenêtre existe encore.</summary>
+        /// <summary>True if this window still exists.</summary>
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindow(IntPtr window);
 
-        /// <summary>Vrai si cette fenêtre est visible (ni cachée, ni fermée).</summary>
+        /// <summary>True if this window is visible (neither hidden nor closed).</summary>
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindowVisible(IntPtr window);
 
-        /// <summary>Donne le numéro du programme (processus) auquel appartient une fenêtre.</summary>
+        /// <summary>Gives the number of the program (process) a window belongs to.</summary>
         [DllImport("user32.dll")]
         internal static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
 
-        /// <summary>Lit le titre d'une fenêtre (pour le journal).</summary>
+        /// <summary>Reads the title of a window (for the log).</summary>
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int GetWindowText(IntPtr window, System.Text.StringBuilder text, int maxCount);
 
-        // ───────────────────────── Fenêtre sous le curseur (défilement, 02/11/2026) ─────────────────────────
+        // ───────────────────────── Window under the cursor (scrolling, 2026-11-02) ─────────────────────────
         //
-        // En entrant dans le mode défilement, GazeBar rend active la fenêtre qui est sous le
-        // point visé : certains logiciels ignorent la molette tant que leur fenêtre n'est pas
-        // active (l'utilisateur devait cliquer avant de pouvoir défiler).
+        // When entering scroll mode, GazeBar makes the window under the aimed point active:
+        // some software ignores the wheel as long as its window is not active (the user had to
+        // click before being able to scroll).
 
         /// <summary>
-        /// La fenêtre (ou la partie de fenêtre) qui se trouve à ce point de l'écran. Les fenêtres
-        /// que la souris « traverse » (comme le calque de GazeBar) sont ignorées.
+        /// The window (or part of a window) at this point of the screen. Windows that the mouse
+        /// "goes through" (like GazeBar's overlay) are ignored.
         /// </summary>
         [DllImport("user32.dll")]
         internal static extern IntPtr WindowFromPoint(POINT point);
 
-        /// <summary>Remonte d'une partie de fenêtre à la fenêtre principale qui la contient.</summary>
+        /// <summary>Goes up from a part of a window to the main window containing it.</summary>
         [DllImport("user32.dll")]
         internal static extern IntPtr GetAncestor(IntPtr window, uint flags);
 
-        internal const uint GA_ROOT = 2;   // GetAncestor : la fenêtre principale (tout en haut)
+        internal const uint GA_ROOT = 2;   // GetAncestor: the main window (at the very top)
 
-        /// <summary>Rend une fenêtre active (elle reçoit le clavier et, selon les réglages, la molette).</summary>
+        /// <summary>Makes a window active (it receives the keyboard and, depending on the settings, the wheel).</summary>
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SetForegroundWindow(IntPtr window);
 
         /// <summary>
-        /// « Attache » temporairement deux fils d'exécution : ils partagent alors l'état du
-        /// clavier, ce qui autorise GazeBar à changer la fenêtre active. Windows refuse sinon
-        /// souvent SetForegroundWindow à un programme qui n'est pas lui-même au premier plan.
+        /// Temporarily "attaches" two threads: they then share the keyboard state, which allows
+        /// GazeBar to change the active window. Otherwise Windows often refuses
+        /// SetForegroundWindow to a program that is not itself in the foreground.
         /// </summary>
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool AttachThreadInput(uint threadAttach, uint threadAttachTo, [MarshalAs(UnmanagedType.Bool)] bool attach);
 
-        /// <summary>Le numéro du fil d'exécution qui appelle (ici, celui de l'affichage de GazeBar).</summary>
+        /// <summary>The number of the calling thread (here, the one of GazeBar's display).</summary>
         [DllImport("kernel32.dll")]
         internal static extern uint GetCurrentThreadId();
 
-        /// <summary>Lit un réglage de Windows (ici : à quelle fenêtre va la molette).</summary>
+        /// <summary>Reads a Windows setting (here: which window the wheel goes to).</summary>
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SystemParametersInfo(uint action, uint param, ref uint value, uint winIni);
 
         /// <summary>
-        /// Réglage Windows 10/11 « Faire défiler les fenêtres inactives lorsque je pointe dessus » :
-        /// valeur 2 = la molette va à la fenêtre sous le curseur (activé), 0 = à la fenêtre active
-        /// (désactivé).
+        /// Windows 10/11 setting "Scroll inactive windows when I hover over them": value 2 = the
+        /// wheel goes to the window under the cursor (on), 0 = to the active window (off).
         /// </summary>
         internal const uint SPI_GETMOUSEWHEELROUTING = 0x201C;
 
-        /// <summary>Change ce même réglage (option « Défiler les fenêtres inactives », voir MoletteWindows).</summary>
+        /// <summary>Changes this same setting ("Scroll inactive windows" option, see WheelScroller).</summary>
         internal const uint SPI_SETMOUSEWHEELROUTING = 0x201D;
 
-        /// <summary>Même fonction, la valeur étant passée directement à la place de son adresse (voir MoletteWindows).</summary>
+        /// <summary>Same function, the value being passed directly instead of its address (see WheelScroller).</summary>
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SystemParametersInfo(uint action, uint param, IntPtr value, uint winIni);
 
-        internal const uint SPIF_UPDATEINIFILE = 0x01;   // Windows enregistre le changement
-        internal const uint SPIF_SENDCHANGE = 0x02;      // et prévient les programmes ouverts
+        internal const uint SPIF_UPDATEINIFILE = 0x01;   // Windows saves the change
+        internal const uint SPIF_SENDCHANGE = 0x02;      // and notifies the open programs
 
-        // ───────────────────────── Touche Échap de l'aidant (étape 4) ─────────────────────────
+        // ───────────────────────── Caregiver's Escape key (step 4) ─────────────────────────
         //
-        // Un « crochet clavier » (hook) permet d'être prévenu de chaque touche appuyée, dans
-        // n'importe quel programme. GazeBar se contente d'OBSERVER : la touche continue son
-        // chemin normalement vers le programme actif (voir CrochetClavier.cs).
+        // A "keyboard hook" lets us be notified of every key pressed, in any program. GazeBar
+        // only OBSERVES: the key goes on its way normally to the active program (see
+        // KeyboardHook.cs).
 
-        /// <summary>La fonction appelée par Windows à chaque touche (signature imposée par Windows).</summary>
+        /// <summary>The function called by Windows for every key (signature imposed by Windows).</summary>
         internal delegate IntPtr LowLevelKeyboardProc(int code, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -443,35 +442,35 @@ namespace GazeBar
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
         internal static extern IntPtr GetModuleHandle(string moduleName);
 
-        internal const int WH_KEYBOARD_LL = 13;     // crochet clavier « bas niveau », pour tout le système
-        internal const int WM_KEYDOWN = 0x0100;     // une touche est enfoncée
-        internal const int WM_SYSKEYDOWN = 0x0104;  // idem, avec Alt
-        internal const int VK_ESCAPE = 0x1B;        // code de la touche Échap
+        internal const int WH_KEYBOARD_LL = 13;     // "low-level" keyboard hook, for the whole system
+        internal const int WM_KEYDOWN = 0x0100;     // a key is pressed
+        internal const int WM_SYSKEYDOWN = 0x0104;  // same, with Alt
+        internal const int VK_ESCAPE = 0x1B;        // code of the Escape key
 
         /// <summary>
-        /// Dans la structure reçue par le crochet clavier, le champ « flags » (3e nombre, donc
-        /// 8 octets après le début) : ce drapeau dit que la touche a été SIMULÉE par un
-        /// programme (SendInput), et non tapée sur un vrai clavier (étape 12).
+        /// In the structure received by the keyboard hook, the "flags" field (3rd number, so 8
+        /// bytes after the start): this flag says the key was SIMULATED by a program
+        /// (SendInput), and not typed on a real keyboard (step 12).
         /// </summary>
         internal const int HookFlagsOffset = 8;
         internal const int LLKHF_INJECTED = 0x10;
 
-        // ───────────────────────── Précision de l'horloge ─────────────────────────
+        // ───────────────────────── Clock precision ─────────────────────────
 
-        /// <summary>Demande à Windows une horloge plus précise (1 ms au lieu de ~15 ms environ).</summary>
+        /// <summary>Asks Windows for a more precise clock (1 ms instead of about ~15 ms).</summary>
         [DllImport("winmm.dll")]
         internal static extern uint timeBeginPeriod(uint milliseconds);
 
-        /// <summary>À appeler en fin d'utilisation, pour annuler timeBeginPeriod.</summary>
+        /// <summary>To call when done, to cancel timeBeginPeriod.</summary>
         [DllImport("winmm.dll")]
         internal static extern uint timeEndPeriod(uint milliseconds);
 
-        // ───────────────────────── Chargement d'une DLL native ─────────────────────────
+        // ───────────────────────── Loading a native DLL ─────────────────────────
 
         /// <summary>
-        /// Charge une DLL native (écrite en C) à partir de son chemin complet. Sert à charger à
-        /// l'avance la DLL native de l'eyetracker, qui n'est pas livrée avec GazeBar (voir
-        /// ChargeurEyetracker.cs). Renvoie IntPtr.Zero en cas d'échec (voir GetLastWin32Error).
+        /// Loads a native DLL (written in C) from its full path. Used to load in advance the
+        /// eyetracker's native DLL, which is not shipped with GazeBar (see EyetrackerLoader.cs).
+        /// Returns IntPtr.Zero on failure (see GetLastWin32Error).
         /// </summary>
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern IntPtr LoadLibrary(string dllPath);

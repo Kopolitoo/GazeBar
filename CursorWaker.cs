@@ -3,55 +3,55 @@ using System.Runtime.InteropServices;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : fait réapparaître le curseur si Windows l'a caché (correction du 29/10/2026).
+    /// MODEL: makes the cursor reappear if Windows hid it (fix of 2026-10-29).
     ///
-    /// Le problème observé : GazeBar lancé seul au démarrage de Windows, le curseur reste
-    /// invisible ; il n'apparaît qu'après un glisser-déposer.
+    /// The observed problem: when GazeBar is started alone at Windows startup, the cursor
+    /// stays invisible; it only appears after a drag and drop.
     ///
-    /// L'explication : quand Windows pense qu'il n'y a pas de souris (aucune souris physique
-    /// n'a bougé depuis le démarrage), il « supprime » le curseur. Il ne le remontre qu'au
-    /// prochain mouvement d'une souris. Or le mode mouvement place le curseur avec
-    /// SetCursorPos : pour Windows, ce n'est PAS un mouvement de souris, juste un changement
-    /// de position. Le glisser-déposer, lui, passe par SendInput (MouseInjector.DeplacerVers),
-    /// qui imite une vraie souris : voilà pourquoi il faisait réapparaître le curseur.
+    /// The explanation: when Windows thinks there is no mouse (no physical mouse has moved
+    /// since startup), it "suppresses" the cursor. It only shows it again on the next mouse
+    /// movement. But movement mode places the cursor with SetCursorPos: for Windows, this is
+    /// NOT a mouse movement, only a change of position. Drag and drop, on the other hand,
+    /// goes through SendInput (MouseInjector.MoveTo), which imitates a real mouse: that is
+    /// why it made the cursor reappear.
     ///
-    /// La solution : au démarrage de GazeBar, on demande à Windows l'état du curseur
-    /// (GetCursorInfo). S'il est « supprimé », on simule une toute petite poussée de souris
-    /// par SendInput (1 pixel à droite puis 1 pixel à gauche), puis on remet le curseur
-    /// exactement à sa place avec SetCursorPos. Le curseur réapparaît sans bouger.
-    /// Une seule vérification, au démarrage (choix de l'utilisateur après essai, 29/10/2026).
+    /// The solution: when GazeBar starts, we ask Windows for the cursor state
+    /// (GetCursorInfo). If it is "suppressed", we simulate a tiny mouse nudge through
+    /// SendInput (1 pixel right then 1 pixel left), then put the cursor back exactly in place
+    /// with SetCursorPos. The cursor reappears without moving.
+    /// A single check, at startup (the user's choice after testing, 2026-10-29).
     /// </summary>
     internal static class CursorWaker
     {
-        /// <summary>Si Windows a supprimé le curseur, simule une petite poussée de souris.</summary>
+        /// <summary>If Windows suppressed the cursor, simulates a small mouse nudge.</summary>
         public static void Check()
         {
             NativeMethods.CURSORINFO info = new NativeMethods.CURSORINFO();
             info.cbSize = Marshal.SizeOf(typeof(NativeMethods.CURSORINFO));
             if (!NativeMethods.GetCursorInfo(ref info))
             {
-                return;   // lecture impossible : on ne fait rien
+                return;   // cannot read it: do nothing
             }
 
-            // « & » teste si le drapeau CURSOR_SUPPRESSED fait partie de flags.
+            // "&" tests whether the CURSOR_SUPPRESSED flag is part of flags.
             bool removed = (info.flags & NativeMethods.CURSOR_SUPPRESSED) != 0;
             if (!removed)
             {
                 return;
             }
 
-            App.Log("Curseur caché par Windows : petite poussée de souris simulée pour le montrer");
+            App.Log("Cursor hidden by Windows: small simulated mouse nudge to show it");
 
-            // La place actuelle du curseur, pour l'y remettre exactement après la poussée.
+            // The current cursor position, to put it back exactly after the nudge.
             NativeMethods.POINT before;
             bool knownPosition = NativeMethods.GetCursorPos(out before);
 
-            // Poussée « relative » (comme une vraie souris) : 1 pixel à droite, puis retour.
+            // "Relative" nudge (like a real mouse): 1 pixel right, then back.
             MouseInjector.MoveBy(1, 0);
             MouseInjector.MoveBy(-1, 0);
 
-            // L'accélération de la souris de Windows peut fausser l'aller-retour d'un pixel :
-            // on remet donc le curseur à sa place exacte.
+            // Windows mouse acceleration can distort the one-pixel round trip:
+            // so we put the cursor back at its exact position.
             if (knownPosition)
             {
                 NativeMethods.SetCursorPos(before.X, before.Y);

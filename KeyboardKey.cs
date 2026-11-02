@@ -7,110 +7,108 @@ using System.Windows.Media;
 namespace GazeBar
 {
     /// <summary>
-    /// INTERFACE : une touche du clavier au regard, dessinée sur le calque (étape 12).
+    /// INTERFACE: a key of the gaze keyboard, drawn on the overlay (step 12).
     ///
-    /// C'est un rectangle aux coins légèrement arrondis, avec son libellé au centre. Comme
-    /// sur les captures de l'utilisateur :
-    ///   - les touches qui écrivent une lettre n'ont pas de fond (style « lettre ») ;
-    ///   - les autres ont un fond sombre (style « fonction ») ;
-    ///   - les chiffres, F1 à F12 et les flèches ont un fond plus clair (style « clair »).
+    /// It is a rectangle with slightly rounded corners, with its label in the center. As on
+    /// the user's screenshots:
+    ///   - the keys that type a letter have no background ("letter" style);
+    ///   - the others have a dark background ("function" style);
+    ///   - the digits, F1 to F12 and the arrows have a lighter background ("light" style).
     ///
-    /// Ce qu'on voit quand on la regarde (choix de l'utilisateur du 31/10/2026) :
-    ///   - au survol, elle s'éclaircit légèrement : PAS d'anneau de progression. Depuis le
-    ///     02/11/2026 (demande de l'utilisateur), le fond de survol est un peu moins clair, et
-    ///     un fin contour bleu clair apparaît en fondu ([DureeContourMs]) ;
-    ///   - quand elle s'active, elle « flashe » en vert un court instant (Flasher).
-    /// Un modificateur actif (Maj, Caps Lock, Ctrl, Alt, Win) a un bord vert, comme les
-    /// interrupteurs allumés de la barre de menu.
+    /// What one sees when looking at it (user's choice of 2026-10-31):
+    ///   - on hover, it gets slightly lighter: NO progress ring. Since 2026-11-02 (user
+    ///     request), the hover background is a bit less light, and a thin light-blue outline
+    ///     fades in ([OutlineDurationMs]);
+    ///   - when it activates, it "flashes" green for a short moment (Flash).
+    /// An active modifier (Shift, Caps Lock, Ctrl, Alt, Win) has a green border, like the lit
+    /// switches of the menu bar.
     ///
-    /// Comme BoutonRegard, elle « implémente » ICibleRegard : c'est ViseurBoutons qui décide
-    /// si elle est regardée et quand elle s'active, et qui lui dit quoi dessiner.
-    /// Les positions sont en PIXELS D'ÉCRAN (comme le regard), converties par le calque.
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// Like GazeButton, it "implements" IGazeTarget: ButtonAimer decides whether it is looked
+    /// at and when it activates, and tells it what to draw.
+    /// Positions are in SCREEN PIXELS (like the gaze), converted by the overlay.
     /// </summary>
     internal sealed class KeyboardKey : IGazeTarget
     {
-        /// <summary>Durée du flash vert à l'activation, en millisecondes.</summary>
+        /// <summary>Duration of the green flash on activation, in milliseconds.</summary>
         private const int FlashDurationMs = 150;
 
-        /// <summary>Durée du fondu du contour de survol, en millisecondes.</summary>
+        /// <summary>Duration of the hover outline fade, in milliseconds.</summary>
         private const int OutlineDurationMs = 200;
 
-        /// <summary>Opacité finale du contour de survol (« légèrement coloré »).</summary>
+        /// <summary>Final opacity of the hover outline ("slightly colored").</summary>
         private const double OutlineOpacity = 0.8;
 
-        // Couleurs (figées une fois pour toutes, WPF les dessine alors plus vite).
+        // Colors (frozen once and for all, WPF then draws them faster).
         private static readonly Brush LetterBackground = Freeze(Color.FromArgb(0x00, 0x00, 0x00, 0x00));
         private static readonly Brush FunctionBackground = Freeze(Color.FromArgb(0xFF, 0x26, 0x27, 0x2A));
         private static readonly Brush LightBackground = Freeze(Color.FromArgb(0xFF, 0x3A, 0x3B, 0x3E));
-        // Fond de survol : #505358 au début, un peu moins clair depuis le 02/11/2026.
+        // Hover background: #505358 at first, a bit less light since 2026-11-02.
         private static readonly Brush HoverBackground = Freeze(Color.FromArgb(0xFF, 0x46, 0x48, 0x4D));
         private static readonly Brush FlashBackground = Freeze(Color.FromArgb(0xFF, 0x00, 0xC8, 0x53));
         private static readonly Brush White = Freeze(Colors.White);
         private static readonly Brush Gray = Freeze(Color.FromArgb(0xFF, 0x90, 0x90, 0x90));
         private static readonly Brush Green = Freeze(Color.FromArgb(0xFF, 0x00, 0xC8, 0x53));
-        // Étape 13 : couleur du texte de la case « + monmot » (mot inconnu à ajouter), pour la
-        // distinguer d'une proposition ordinaire (ambre).
+        // Step 13: text color of the "+ myword" cell (unknown word to add), to tell it apart
+        // from an ordinary suggestion (amber).
         private static readonly Brush Amber = Freeze(Color.FromArgb(0xFF, 0xFF, 0xC8, 0x57));
 
         private readonly Border _background;
         private readonly TextBlock _text;
         private readonly Brush _normalBackground;
 
-        // Le contour de survol, bleu clair. Pas figé : son opacité change pendant le fondu.
+        // The hover outline, light blue. Not frozen: its opacity changes during the fade.
         private readonly SolidColorBrush _outline = new SolidColorBrush(Color.FromRgb(0x7F, 0xB8, 0xF0));
 
-        // Vrai pour un modificateur actif : son bord vert passe avant le contour de survol.
+        // True for an active modifier: its green border comes before the hover outline.
         private bool _lit;
 
-        // Instant (Environment.TickCount) du début du survol ; null = pas survolée.
+        // Time (Environment.TickCount) when the hover started; null = not hovered.
         private int? _hoverStart;
 
-        // Instant (Environment.TickCount, en ms) où le flash se termine ; 0 = pas de flash.
+        // Time (Environment.TickCount, in ms) when the flash ends; 0 = no flash.
         private int _flashEnd;
 
-        // Rectangle de la ZONE D'ACTIVATION, en pixels d'écran : la case entière de la grille,
-        // espace autour du dessin compris. Ainsi, il n'y a pas de « trou » entre deux touches
-        // où le regard ne viserait rien.
+        // Rectangle of the ACTIVATION ZONE, in screen pixels: the whole grid cell, including
+        // the space around the drawing. This way, there is no "hole" between two keys where
+        // the gaze would aim at nothing.
         private double _left;
         private double _top;
         private double _right;
         private double _bottom;
 
-        // Taille du dessin de la touche, en unités WPF (retenue par Placer) : sert à choisir la
-        // taille du texte d'une proposition, qui change à chaque lettre tapée (étape 13).
+        // Size of the key drawing, in WPF units (remembered by Place): used to choose the text
+        // size of a suggestion, which changes with each typed letter (step 13).
         private double _widthWpf;
         private double _cellHeightWpf;
 
-        /// <summary>Crée la touche décrite par le fichier de disposition.</summary>
+        /// <summary>Creates the key described by the layout file.</summary>
         public KeyboardKey(LayoutKey description)
         {
             Description = description;
 
-            // Une case de proposition (étape 13) est vide, donc inactive, tant qu'elle ne
-            // montre pas de mot (voir AfficherProposition).
+            // A suggestion cell (step 13) is empty, so inactive, as long as it shows no word
+            // (see ShowSuggestion).
             Active = !description.Prediction.HasValue;
 
             string style = (description.Style ?? "").Trim().ToLowerInvariant();
             if (style == "")
             {
-                style = description.Text != null ? "lettre" : "fonction";
+                style = description.Text != null ? "letter" : "function";
             }
             if (description.Prediction.HasValue)
             {
-                style = "fonction";
+                style = "function";
             }
-            _normalBackground = style == "clair" ? LightBackground : style == "lettre" ? LetterBackground : FunctionBackground;
+            _normalBackground = style == "light" ? LightBackground : style == "letter" ? LetterBackground : FunctionBackground;
 
             _text = new TextBlock();
             _text.Foreground = Active ? White : Gray;
-            // « Segoe UI Symbol » en second : WPF y cherche les symboles absents de Segoe UI
-            // (⌫, ⇧, ␣, ↺…).
+            // "Segoe UI Symbol" second: WPF looks there for the symbols missing from Segoe UI
+            // (⌫, ⇧, ␣, ↺...).
             _text.FontFamily = new FontFamily("Segoe UI, Segoe UI Symbol");
             _text.TextAlignment = TextAlignment.Center;
-            // Une proposition reste sur une ligne (un long mot est écrit plus petit, voir
-            // AfficherProposition) ; les autres libellés peuvent tenir sur deux lignes.
+            // A suggestion stays on one line (a long word is written smaller, see
+            // ShowSuggestion); the other labels may span two lines.
             _text.TextWrapping = description.Prediction.HasValue ? TextWrapping.NoWrap : TextWrapping.Wrap;
             _text.HorizontalAlignment = HorizontalAlignment.Center;
             _text.VerticalAlignment = VerticalAlignment.Center;
@@ -125,16 +123,16 @@ namespace GazeBar
             ShowUppercase(false);
         }
 
-        /// <summary>Ce que dit le fichier de disposition pour cette touche.</summary>
+        /// <summary>What the layout file says for this key.</summary>
         public LayoutKey Description { get; private set; }
 
-        /// <summary>Faux pour une case de proposition vide (aucun mot à proposer).</summary>
+        /// <summary>False for an empty suggestion cell (no word to suggest).</summary>
         public bool Active { get; private set; }
 
         /// <summary>
-        /// Place la touche sur la surface du clavier.
-        /// gauche, haut, largeur, hauteur : la CASE de la grille, en pixels d'écran ;
-        /// ecart : l'espace laissé autour du dessin, en pixels d'écran.
+        /// Places the key on the keyboard surface.
+        /// left, top, width, height: the grid CELL, in screen pixels;
+        /// gap: the space left around the drawing, in screen pixels.
         /// </summary>
         public void Place(OverlayWindow layer, Canvas surface, double left, double top,
                            double width, double height, double gap)
@@ -152,8 +150,8 @@ namespace GazeBar
             Canvas.SetLeft(_background, corner.X);
             Canvas.SetTop(_background, corner.Y);
 
-            // Taille du texte : grande pour une seule lettre, plus petite pour un mot
-            // (« Caps Lock », « Enter »…), qui peut alors tenir sur deux lignes.
+            // Text size: large for a single letter, smaller for a word ("Caps Lock",
+            // "Enter"...), which can then span two lines.
             string label = _text.Text ?? "";
             double cellHeight = layer.LengthToWpf(height);
             _text.FontSize = Math.Max(1, cellHeight * (label.Length <= 2 ? 0.30 : 0.20));
@@ -169,14 +167,14 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Écrit le libellé en majuscules (Maj ou Caps Lock actif) ou tel qu'il est dans le
-        /// fichier. Seules les touches qui écrivent du texte changent (a → A, é → É).
+        /// Writes the label in uppercase (Shift or Caps Lock active) or as it is in the file.
+        /// Only the keys that type text change (a → A, é → É).
         /// </summary>
         public void ShowUppercase(bool uppercaseLetters)
         {
             if (Description.Prediction.HasValue)
             {
-                return;   // une case de proposition a son propre texte (AfficherProposition)
+                return;   // a suggestion cell has its own text (ShowSuggestion)
             }
             string label = Description.Label ?? "";
             if (uppercaseLetters && Description.Text != null)
@@ -187,9 +185,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Étape 13 : le mot montré dans une case de proposition. null = case vide (elle ne
-        /// s'active pas). nouveau = vrai pour la case « + monmot » (mot inconnu à ajouter au
-        /// dictionnaire personnel), écrite en ambre.
+        /// Step 13: the word shown in a suggestion cell. null = empty cell (it does not
+        /// activate). newVal = true for the "+ myword" cell (unknown word to add to the personal
+        /// dictionary), written in amber.
         /// </summary>
         public void ShowSuggestion(string text, bool newVal)
         {
@@ -204,16 +202,15 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Taille du texte d'une proposition : comme un mot sur une touche (20 % de la hauteur
-        /// de la case… un peu plus : 24 %), mais plus petite si le mot est trop long pour la
-        /// largeur. Une lettre de Segoe UI fait en moyenne un peu plus de la moitié de la taille
-        /// du texte en largeur : on compte 0,55.
+        /// Text size of a suggestion: like a word on a key (20 % of the cell height... a bit
+        /// more: 24 %), but smaller if the word is too long for the width. A Segoe UI letter is
+        /// on average a bit more than half the text size wide: we count 0.55.
         /// </summary>
         private void FitFontSize()
         {
             if (_cellHeightWpf <= 0)
             {
-                return;   // pas encore placée : Placer s'en chargera
+                return;   // not placed yet: Place will take care of it
             }
             int number = Math.Max(1, (_text.Text ?? "").Length);
             double usableWidth = Math.Max(1, _widthWpf - 2 * ScreenMetrics.Units(8));
@@ -221,7 +218,7 @@ namespace GazeBar
             _text.FontSize = Math.Max(1, size);
         }
 
-        /// <summary>Bord vert pour un modificateur actif (Maj, Caps Lock, Ctrl, Alt, Win).</summary>
+        /// <summary>Green border for an active modifier (Shift, Caps Lock, Ctrl, Alt, Win).</summary>
         public void SetLit(bool lit)
         {
             _lit = lit;
@@ -230,8 +227,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Le bord de la touche : vert (épais) pour un modificateur actif ; sinon, au survol,
-        /// le contour bleu clair dont l'opacité monte de 0 à [OpaciteContour] en [DureeContourMs].
+        /// The key border: green (thick) for an active modifier; otherwise, on hover, the
+        /// light-blue outline whose opacity rises from 0 to [OutlineOpacity] in [OutlineDurationMs].
         /// </summary>
         private void ApplyBorder(bool hover)
         {
@@ -257,28 +254,27 @@ namespace GazeBar
             _background.BorderThickness = new Thickness(ScreenMetrics.Units(2));
         }
 
-        /// <summary>Lance le flash vert de l'activation.</summary>
+        /// <summary>Starts the green activation flash.</summary>
         public void Flash()
         {
             _flashEnd = Environment.TickCount + FlashDurationMs;
             _background.Background = FlashBackground;
         }
 
-        /// <summary>Vrai si le point du regard (pixels d'écran) est dans la case de la touche.</summary>
+        /// <summary>True if the gaze point (screen pixels) is in the key's cell.</summary>
         public bool Contains(double x, double y)
         {
             return x >= _left && x < _right && y >= _top && y < _bottom;
         }
 
         /// <summary>
-        /// Met à jour l'aspect de la touche. La progression est ignorée : pas d'anneau sur le
-        /// clavier (choix de l'utilisateur). Le libellé au survol non plus : il est déjà écrit
-        /// sur la touche.
+        /// Updates the key's look. Progress is ignored: no ring on the keyboard (user's
+        /// choice). Nor is the hover label: it is already written on the key.
         /// </summary>
         public void Draw(double progress, bool hover, bool showLabel)
         {
-            // « Environment.TickCount - _finFlash < 0 » : encore dans le flash. Cette façon de
-            // comparer reste juste même quand le compteur de Windows repasse par zéro.
+            // "Environment.TickCount - _flashEnd < 0": still flashing. This way of comparing
+            // stays correct even when the Windows counter wraps around zero.
             if (_flashEnd != 0 && Environment.TickCount - _flashEnd < 0)
             {
                 _background.Background = FlashBackground;

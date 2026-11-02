@@ -5,8 +5,8 @@ using System.IO;
 namespace GazeBar
 {
     /// <summary>
-    /// Un profil trouvé dans le dossier des profils : son nom affiché (le nom du fichier sans
-    /// « .json »), son chemin complet et la date de sa dernière modification.
+    /// A profile found in the profiles folder: its displayed name (the file name without
+    /// ".json"), its full path and the date it was last modified.
     /// </summary>
     internal sealed class FoundProfile
     {
@@ -14,7 +14,7 @@ namespace GazeBar
         public string Path;
         public DateTime Date;
 
-        /// <summary>Vrai pour le profil « Sauvegarde automatique » (fait avant chaque chargement).</summary>
+        /// <summary>True for the "automatic backup" profile (made before each load).</summary>
         public bool IsBackup
         {
             get { return string.Equals(Name, SettingsProfiles.BackupName, StringComparison.OrdinalIgnoreCase); }
@@ -22,37 +22,35 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// PROFILS DE PARAMÈTRES (étape 15 du cahier des charges, « profils-parametres »).
+    /// SETTINGS PROFILES (step 15 of the specification, "profils-parametres").
     ///
-    /// Un PROFIL est simplement une copie du fichier parametres.json, rangée dans le dossier
-    ///     Documents\GazeBar\Profils
-    /// (par exemple C:\Users\Nom\Documents\GazeBar\Profils\Réglages 2026-11-02 16h45.json).
-    /// On peut ainsi garder plusieurs jeux de réglages (« Soir », « Fatigue »…) et passer de
-    /// l'un à l'autre au regard, depuis l'onglet « Profils » des paramètres.
+    /// A PROFILE is simply a copy of the settings.json file, stored in the folder
+    ///     Documents\GazeBar\Profiles
+    /// (for example C:\Users\Name\Documents\GazeBar\Profiles\Réglages 2026-11-02 16h45.json).
+    /// This way several sets of settings can be kept ("Evening", "Tired"...) and switched
+    /// with the gaze, from the "Profiles" tab of the settings.
     ///
-    /// Ce que fait cette classe (conception validée par l'utilisateur le 02/11/2026) :
-    ///   - Lister : les fichiers .json du dossier, le plus récent en premier ;
-    ///   - EnregistrerActuels : écrit les réglages en cours sous un nom daté automatiquement.
-    ///     Pour lui donner un vrai nom, l'aidant renomme le fichier dans l'Explorateur ;
-    ///   - Charger : lit un profil (un fichier d'une ancienne version est converti, comme
-    ///     parametres.json au démarrage), garde d'abord les réglages actuels dans le profil
-    ///     « Sauvegarde automatique » (remplacé à chaque chargement : on peut ainsi revenir en
-    ///     arrière au regard), puis applique et enregistre le profil.
+    /// What this class does (design validated by the user on 2026-11-02):
+    ///   - List: the .json files of the folder, the most recent first;
+    ///   - SaveCurrent: writes the current settings under an automatically dated name.
+    ///     To give it a real name, the caregiver renames the file in Explorer;
+    ///   - Load: reads a profile (a file from an older version is converted, like
+    ///     settings.json at startup), first keeps the current settings in the "automatic
+    ///     backup" profile (replaced on each load: this way one can go back with the gaze),
+    ///     then applies and saves the profile.
     ///
-    /// Le réglage « Démarrer avec Windows » n'est PAS pris dans le profil : il concerne
-    /// l'ordinateur plutôt que la personne. Le dictionnaire personnel (« Mes mots ») est un
-    /// autre fichier : il ne change pas non plus.
+    /// The "Start with Windows" setting is NOT taken from the profile: it concerns the
+    /// computer rather than the person. The personal dictionary ("My words") is another
+    /// file: it does not change either.
     ///
-    /// Pas de suppression ni de renommage au regard : l'aidant le fait dans l'Explorateur.
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// No deleting or renaming with the gaze: the caregiver does it in Explorer.
     /// </summary>
     internal static class SettingsProfiles
     {
-        /// <summary>Le nom du profil écrit automatiquement avant chaque chargement.</summary>
+        /// <summary>The name of the profile written automatically before each load.</summary>
         public const string BackupName = "Sauvegarde automatique";
 
-        /// <summary>Le dossier des profils : Documents\GazeBar\Profils.</summary>
+        /// <summary>The profiles folder: Documents\GazeBar\Profiles.</summary>
         public static string Folder
         {
             get
@@ -63,9 +61,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Les profils du dossier, le plus récemment modifié en premier (le dernier enregistré
-        /// est donc toujours sur la première page). Liste vide si le dossier n'existe pas
-        /// encore ou ne peut pas être lu.
+        /// The profiles of the folder, the most recently modified first (so the last one saved
+        /// is always on the first page). Empty list if the folder does not exist yet or cannot
+        /// be read.
         /// </summary>
         public static List<FoundProfile> List()
         {
@@ -87,19 +85,18 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("Profils : dossier illisible : " + ex.Message);
+                App.Log("Profiles: unreadable folder: " + ex.Message);
             }
-            // Tri : la date la plus récente d'abord (b avant a).
+            // Sort: the most recent date first (b before a).
             profiles.Sort((a, b) => b.Date.CompareTo(a.Date));
             return profiles;
         }
 
         /// <summary>
-        /// Bouton « Enregistrer les réglages actuels » : écrit Parametres.Courants dans un
-        /// nouveau profil nommé avec la date et l'heure, par exemple « Réglages 2026-11-02
-        /// 16h45 ». Si ce nom existe déjà (deux enregistrements dans la même minute), on ajoute
-        /// « (2) », « (3) »…
-        /// Renvoie vrai si c'est réussi ; « message » est la phrase à afficher dans l'onglet.
+        /// "Save the current settings" button: writes AppSettings.Current into a new profile
+        /// named with the date and time, for example "Réglages 2026-11-02 16h45". If this name
+        /// already exists (two saves in the same minute), "(2)", "(3)"... is added.
+        /// Returns true on success; "message" is the sentence to show in the tab.
         /// </summary>
         public static bool SaveCurrent(out string message)
         {
@@ -113,7 +110,7 @@ namespace GazeBar
 
             if (AppSettings.Current.SaveTo(path))
             {
-                App.Log("Profils : réglages actuels enregistrés dans « " + name + " »");
+                App.Log("Profiles: current settings saved in \"" + name + "\"");
                 message = "Réglages enregistrés dans le profil « " + name + " ».";
                 return true;
             }
@@ -122,24 +119,24 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Charge le profil « chemin » après confirmation (voir FenetreParametres).
-        ///   1. Le profil est LU d'abord (et converti s'il vient d'une ancienne version). S'il
-        ///      est illisible, rien ne change et on le dit.
-        ///   2. Les réglages actuels sont gardés dans « Sauvegarde automatique ». On lit le
-        ///      profil AVANT d'écrire cette sauvegarde : ainsi, recharger la sauvegarde
-        ///      elle-même fonctionne (on échange simplement les réglages d'avant et d'après).
-        ///   3. « Démarrer avec Windows » garde sa valeur actuelle (réglage de l'ordinateur).
-        ///   4. Le profil devient les réglages en cours, il est enregistré dans parametres.json
-        ///      et le réglage Windows « défiler les fenêtres inactives » est réappliqué.
-        /// Le clavier, s'il est ouvert, relit sa disposition : c'est ModeParametres qui s'en
-        /// charge (il a accès au gestionnaire des modes).
-        /// Renvoie vrai si le profil est chargé ; « message » est la phrase à afficher.
+        /// Loads the profile "path" after confirmation (see SettingsWindow).
+        ///   1. The profile is READ first (and converted if it comes from an older version). If
+        ///      it cannot be read, nothing changes and we say so.
+        ///   2. The current settings are kept in the "automatic backup". The profile is read
+        ///      BEFORE writing this backup: this way, reloading the backup itself works (the
+        ///      settings before and after are simply swapped).
+        ///   3. "Start with Windows" keeps its current value (computer setting).
+        ///   4. The profile becomes the current settings, it is saved in settings.json and the
+        ///      Windows setting "scroll inactive windows" is applied again.
+        /// The keyboard, if it is open, reloads its layout: SettingsMode takes care of it (it
+        /// has access to the mode manager).
+        /// Returns true if the profile is loaded; "message" is the sentence to show.
         /// </summary>
         public static bool Load(string path, out string message)
         {
             string name = Path.GetFileNameWithoutExtension(path);
 
-            // 1. Lire le profil.
+            // 1. Read the profile.
             AppSettings newItems;
             bool updated;
             try
@@ -148,40 +145,40 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("Profils : « " + name + " » illisible : " + ex.Message);
+                App.Log("Profiles: \"" + name + "\" unreadable: " + ex.Message);
                 message = "Le profil « " + name + " » est illisible : rien n'a changé.";
                 return false;
             }
             if (updated)
             {
-                App.Log("Profils : « " + name + " » venait d'une ancienne version, converti");
+                App.Log("Profiles: \"" + name + "\" came from an older version, converted");
             }
             else if (newItems.FileVersion > AppSettings.CurrentVersion)
             {
-                // Profil écrit par une version plus récente de GazeBar : les réglages inconnus
-                // de cette version-ci sont simplement ignorés.
-                App.Log("Profils : « " + name + " » vient d'une version plus récente (" + newItems.FileVersion + ")");
+                // Profile written by a newer version of GazeBar: the settings unknown to this
+                // version are simply ignored.
+                App.Log("Profiles: \"" + name + "\" comes from a newer version (" + newItems.FileVersion + ")");
             }
 
-            // 2. Garder les réglages actuels.
+            // 2. Keep the current settings.
             AppSettings currentValues = AppSettings.Current;
             string backupPath = Path.Combine(Folder, BackupName + ".json");
             if (!currentValues.SaveTo(backupPath))
             {
-                // Sans sauvegarde, on ne pourrait pas revenir en arrière : on n'insiste pas.
+                // Without a backup, we could not go back: we do not insist.
                 message = "Impossible de garder les réglages actuels : le profil n'a pas été chargé.";
                 return false;
             }
 
-            // 3. Le réglage de l'ordinateur ne change pas.
+            // 3. The computer setting does not change.
             newItems.StartWithWindows = currentValues.StartWithWindows;
 
-            // 4. Appliquer et enregistrer.
+            // 4. Apply and save.
             AppSettings.Replace(newItems);
             newItems.Save();
             WheelScroller.Apply(newItems.ScrollInactiveWindows);
 
-            App.Log("Profils : profil « " + name + " » chargé");
+            App.Log("Profiles: profile \"" + name + "\" loaded");
             message = "Profil « " + name + " » chargé. Les réglages d'avant sont dans « " + BackupName + " ».";
             return true;
         }

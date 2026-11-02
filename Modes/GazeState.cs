@@ -1,65 +1,65 @@
 namespace GazeBar
 {
     /// <summary>
-    /// Une « photo » du regard à un instant donné, préparée par le ModeManager pour les modes.
-    /// Ainsi, chaque mode n'a pas à refaire les mêmes vérifications (regard perdu ? hors écran ?).
+    /// A "snapshot" of the gaze at a given moment, prepared by the ModeManager for the modes.
+    /// This way, each mode does not have to redo the same checks (gaze lost? off screen?).
     ///
-    /// « struct » : un petit paquet de valeurs, copié tel quel (comme un nombre), et non un objet partagé.
+    /// "struct": a small bundle of values, copied as is (like a number), not a shared object.
     /// </summary>
     internal struct GazeState
     {
-        /// <summary>Vrai si une mesure récente existe (moins de [AgeMaxMesure] ms). Sinon : regard perdu (yeux fermés, tête hors champ…).</summary>
+        /// <summary>True if a recent measure exists (less than [MaxMeasureAge] ms). Otherwise: gaze lost (eyes closed, head out of range...).</summary>
         public bool Available;
 
-        /// <summary>Position du regard, en pixels d'écran. Peut être négative ou dépasser l'écran.</summary>
+        /// <summary>Gaze position, in screen pixels. Can be negative or beyond the screen.</summary>
         public double X;
         public double Y;
 
         /// <summary>
-        /// Position du regard RAMENÉE DANS L'ÉCRAN (chaque axe bloqué séparément aux bords).
-        /// Exemple : regard au-dessus de l'écran → YEcran = 0, mais XEcran suit toujours le
-        /// regard de gauche à droite. Sert à faire glisser les cercles du regard le long des
-        /// bords quand on regarde hors de l'écran (demande de l'utilisateur du 29/10/2026).
-        /// Sert aussi à la fixation et au mode regard fixe, mais seulement quand le regard est
-        /// tout près de l'écran (voir PresDeLEcran) ; jamais aux boutons.
-        /// Valable seulement si Disponible est vrai.
+        /// Gaze position BROUGHT BACK INTO THE SCREEN (each axis clamped separately at the edges).
+        /// Example: gaze above the screen → YScreen = 0, but XScreen still follows the gaze from
+        /// left to right. Used to slide the gaze circles along the edges when looking off
+        /// screen (user request of 2026-10-29).
+        /// Also used by fixation and fixed gaze mode, but only when the gaze is very close
+        /// to the screen (see NearScreen); never by the buttons.
+        /// Only valid if Available is true.
         /// </summary>
         public double XScreen;
         public double YScreen;
 
         /// <summary>
-        /// Numéro de la mesure (augmente de 1 à chaque mesure reçue du PCEye). Si le numéro
-        /// n'a pas changé depuis le tic précédent, c'est la même mesure : il n'y a rien de neuf.
+        /// Measure number (goes up by 1 for each measure received from the PCEye). If the number
+        /// has not changed since the previous tick, it is the same measure: nothing new.
         /// </summary>
         public long Number;
 
-        /// <summary>Instant où la mesure est arrivée, en millisecondes.</summary>
+        /// <summary>Time when the measure arrived, in milliseconds.</summary>
         public double MeasureTimeMs;
 
         /// <summary>
-        /// L'heure de ce tic, en millisecondes, sur la même horloge que InstantMesureMs.
-        /// Toujours renseignée, même quand le regard n'est pas disponible. Les modes s'en
-        /// servent pour mesurer des durées (délai de fixation, délai d'activation…).
+        /// The time of this tick, in milliseconds, on the same clock as MeasureTimeMs.
+        /// Always set, even when the gaze is not available. The modes use it to measure
+        /// durations (fixation delay, activation delay...).
         /// </summary>
         public double NowMs;
 
-        /// <summary>Vrai si le regard est disponible mais en dehors de l'écran.</summary>
+        /// <summary>True if the gaze is available but outside the screen.</summary>
         public bool OffScreen;
 
-        /// <summary>Vrai si le regard est disponible et SOUS le bas de l'écran (utile pour ouvrir le menu, étape 4).</summary>
+        /// <summary>True if the gaze is available and BELOW the bottom of the screen (used to open the menu, step 4).</summary>
         public bool BelowScreen;
 
         /// <summary>
-        /// Vrai si le regard est disponible et sur l'écran, OU juste à côté : à moins de
-        /// [MargeBords4K] pixels (mesurés sur l'écran 4K) de ses bords (demande de l'utilisateur
-        /// du 02/11/2026). Dans les coins, le PCEye est moins précis : en regardant le coin,
-        /// une partie des mesures tombe un peu hors de l'écran, ce qui remettait la fixation à
-        /// zéro sans arrêt. Dans cette bande, la fixation et le mode regard fixe utilisent la
-        /// position ramenée dans l'écran (XEcran, YEcran) au lieu de tout oublier.
+        /// True if the gaze is available and on the screen, OR right next to it: less than
+        /// [EdgesMargin4K] pixels (measured on the 4K screen) from its edges (user request of
+        /// 2026-11-02). In the corners, the PCEye is less precise: when looking at a corner,
+        /// some measures fall slightly off screen, which kept resetting the fixation. In this
+        /// band, fixation and fixed gaze mode use the position brought back into the screen
+        /// (XScreen, YScreen) instead of forgetting everything.
         /// </summary>
         public bool NearScreen;
 
-        /// <summary>Vrai si le regard est disponible et sur l'écran : le cas « normal ».</summary>
+        /// <summary>True if the gaze is available and on the screen: the "normal" case.</summary>
         public bool OnScreen
         {
             get { return Available && !OffScreen; }

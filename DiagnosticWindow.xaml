@@ -1,15 +1,15 @@
 <!--
-  DiagnosticWindow.xaml : fenêtre de diagnostic du « regard par le curseur ».
+  DiagnosticWindow.xaml: diagnostic window for "gaze through the cursor".
 
-  Elle répond à la question : le curseur piloté par le logiciel de l'eyetracker est-il un bon substitut
-  du regard ? Elle montre :
-    - la position du curseur (valable sur TOUT l'écran, même hors de cette fenêtre) ;
-    - combien de fois par seconde elle change (la cadence réelle) ;
-    - une miniature de l'écran avec un point (le curseur) et sa trace récente ;
-    - un bouton d'enregistrement qui écrit un fichier CSV d'analyse.
+  It answers the question: is the cursor driven by the eyetracker software a good
+  substitute for the gaze? It shows:
+    - the cursor position (valid on the WHOLE screen, even outside this window);
+    - how many times per second it changes (the real rate);
+    - a thumbnail of the screen with a dot (the cursor) and its recent trail;
+    - a record button that writes a CSV file for analysis.
 
-  La miniature est un Canvas : une zone où l'on place les éléments à des coordonnées précises.
-  Les éléments dessinés dedans (point, trace) sont créés dans le code (DiagnosticWindow.xaml.cs).
+  The thumbnail is a Canvas: an area where elements are placed at exact coordinates.
+  The elements drawn in it (dot, trail) are created in code (DiagnosticWindow.xaml.cs).
 -->
 <Window
     x:Class="GazeBar.DiagnosticWindow"

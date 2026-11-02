@@ -7,31 +7,31 @@ using System.Reflection;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : lance l'outil de calibration du moteur de l'eyetracker (étape 4, bouton « Calibration »
-    /// de l'onglet « Outils » des paramètres ; avant le 29/10/2026, de la barre de menu).
+    /// MODEL: starts the calibration tool of the eyetracker engine (step 4, "Calibration"
+    /// button of the "Tools" settings tab; before 2026-10-29, of the menu bar).
     ///
-    /// Le problème : le paquet Tobii.Interaction 0.7.3 n'a presque pas de documentation, et
-    /// ce code n'a pas pu être compilé ni essayé sur le PCEye 5. D'après les exemples connus,
-    /// la commande s'appelle « LaunchConfigurationTool » et prend un « outil » (une valeur
-    /// d'une énumération, par exemple « Recalibrate »), mais ce n'est pas certain.
+    /// The problem: the Tobii.Interaction 0.7.3 package has almost no documentation, and
+    /// this code could not be compiled or tried on the PCEye 5. According to known examples,
+    /// the command is called "LaunchConfigurationTool" and takes a "tool" (a value of an
+    /// enumeration, for example "Recalibrate"), but this is not certain.
     ///
-    /// La solution : la « réflexion ». C'est un mécanisme de .NET qui permet à un programme
-    /// de regarder, PENDANT qu'il tourne, quelles méthodes un objet possède, et de les appeler
-    /// par leur nom (une simple chaîne de caractères). Avantages ici :
-    ///  - si le nom est faux, le programme compile quand même : la calibration échoue
-    ///    simplement, avec un message dans le journal, au lieu d'empêcher toute la compilation ;
-    ///  - le journal liste les méthodes et les outils réellement proposés par l'eyetracker : il
-    ///    suffira de le lire pour corriger le nom si besoin, puis d'écrire l'appel directement.
-    /// Une fois le bon appel trouvé, on pourra remplacer tout ce fichier par une ligne normale.
+    /// The solution: "reflection". It is a .NET mechanism that lets a program look, WHILE it
+    /// runs, at which methods an object has, and call them by name (a simple string).
+    /// Advantages here:
+    ///  - if the name is wrong, the program still compiles: calibration simply fails, with a
+    ///    message in the log, instead of breaking the whole build;
+    ///  - the log lists the methods and tools really offered by the eyetracker: reading it
+    ///    will be enough to fix the name if needed, then write the call directly.
+    /// Once the right call is found, this whole file can be replaced by a normal line.
     /// </summary>
     internal static class Calibration
     {
-        /// <summary>Les noms d'outil essayés, dans l'ordre (valeurs de l'énumération de Tobii.Interaction).</summary>
+        /// <summary>The tool names tried, in order (values of the Tobii.Interaction enumeration).</summary>
         private static readonly string[] ToolNames = { "Recalibrate", "RetailCalibration", "Calibrate", "Calibration" };
 
         /// <summary>
-        /// Essaie de lancer la calibration. Renvoie vrai si un appel a été fait sans erreur.
-        /// message : ce qui s'est passé, en clair (affiché dans la barre de menu si échec).
+        /// Tries to start calibration. Returns true if a call was made without error.
+        /// message: what happened, in plain words (shown in the menu bar on failure).
         /// </summary>
         public static bool Launch(GazeSource gaze, out string message)
         {
@@ -45,7 +45,7 @@ namespace GazeBar
 
             try
             {
-                // Où chercher : l'objet Host lui-même, puis son « Context » (s'il existe).
+                // Where to look: the Host object itself, then its "Context" (if it exists).
                 List<object> targets = new List<object>();
                 targets.Add(host);
                 PropertyInfo contextProperty = host.GetType().GetProperty("Context");
@@ -58,20 +58,20 @@ namespace GazeBar
                     }
                 }
 
-                // 1. Pour le diagnostic : on note toutes les méthodes qui ressemblent à ce
-                //    qu'on cherche (« Launch… », « …Calibrat… », « …Configuration… »).
+                // 1. For diagnosis: log all methods that look like what we are looking for
+                //    ("Launch...", "...Calibrat...", "...Configuration...").
                 foreach (object target in targets)
                 {
                     foreach (MethodInfo method in target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
                     {
                         if (Resembles(method.Name))
                         {
-                            App.Log("Calibration : méthode trouvée : " + target.GetType().Name + "." + Describe(method));
+                            App.Log("Calibration: method found: " + target.GetType().Name + "." + Describe(method));
                         }
                     }
                 }
 
-                // 2. L'appel le plus probable : LaunchConfigurationTool(outil, …).
+                // 2. The most likely call: LaunchConfigurationTool(tool, ...).
                 foreach (object target in targets)
                 {
                     foreach (MethodInfo method in target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
@@ -84,7 +84,7 @@ namespace GazeBar
                     }
                 }
 
-                // 3. À défaut : une méthode dont le nom contient « Recalibrat » ou « Calibrat ».
+                // 3. Otherwise: a method whose name contains "Recalibrat" or "Calibrat".
                 foreach (object target in targets)
                 {
                     foreach (MethodInfo method in target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
@@ -106,18 +106,18 @@ namespace GazeBar
             catch (Exception ex)
             {
                 message = "Calibration : erreur (voir le journal).";
-                App.Log("Calibration : erreur : " + ex);
+                App.Log("Calibration: error: " + ex);
                 return false;
             }
         }
 
         /// <summary>
-        /// Essaie d'appeler une méthode du type LaunchConfigurationTool(outil, …) avec chacun
-        /// des noms d'outil de NomsOutil. Renvoie vrai au premier appel réussi.
+        /// Tries to call a method like LaunchConfigurationTool(tool, ...) with each of the tool
+        /// names of ToolNames. Returns true on the first successful call.
         /// </summary>
         private static bool TryTool(object target, MethodInfo method)
         {
-            // Le paramètre « outil » est une énumération : on cherche lequel.
+            // The "tool" parameter is an enumeration: find which one.
             ParameterInfo toolParameter = method.GetParameters().FirstOrDefault(pi => pi.ParameterType.IsEnum);
             if (toolParameter == null)
             {
@@ -125,7 +125,7 @@ namespace GazeBar
             }
 
             Type toolType = toolParameter.ParameterType;
-            App.Log("Calibration : outils proposés (" + toolType.Name + ") : " +
+            App.Log("Calibration: available tools (" + toolType.Name + ") : " +
                     string.Join(", ", Enum.GetNames(toolType)));
 
             foreach (string name in ToolNames)
@@ -135,7 +135,7 @@ namespace GazeBar
                     object tool = Enum.Parse(toolType, name);
                     if (Call(target, method, tool))
                     {
-                        App.Log("Calibration : lancée avec " + toolType.Name + "." + name);
+                        App.Log("Calibration: started with " + toolType.Name + "." + name);
                         return true;
                     }
                 }
@@ -144,12 +144,12 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Appelle la méthode en remplissant ses paramètres au mieux :
-        ///  - l'énumération reçoit « outil » ;
-        ///  - une fonction de rappel (« délégué ») reçoit une fonction vide, qui ne fait rien ;
-        ///  - un paramètre facultatif reçoit sa valeur par défaut ;
-        ///  - le reste reçoit la valeur « vide » de son type (0, faux, null…).
-        /// Renvoie vrai si l'appel n'a pas provoqué d'erreur.
+        /// Calls the method, filling in its parameters as well as possible:
+        ///  - the enumeration receives "tool";
+        ///  - a callback function ("delegate") receives an empty function that does nothing;
+        ///  - an optional parameter receives its default value;
+        ///  - the rest receives the "empty" value of its type (0, false, null...).
+        /// Returns true if the call did not cause an error.
         /// </summary>
         private static bool Call(object target, MethodInfo method, object tool)
         {
@@ -188,21 +188,21 @@ namespace GazeBar
             }
             catch (TargetInvocationException ex)
             {
-                // L'erreur « vraie » est à l'intérieur (InnerException).
-                App.Log("Calibration : " + Describe(method) + " a échoué : " + ex.InnerException);
+                // The "real" error is inside (InnerException).
+                App.Log("Calibration: " + Describe(method) + " failed: " + ex.InnerException);
                 return false;
             }
             catch (Exception ex)
             {
-                App.Log("Calibration : appel impossible de " + Describe(method) + " : " + ex.Message);
+                App.Log("Calibration: cannot call " + Describe(method) + ": " + ex.Message);
                 return false;
             }
         }
 
         /// <summary>
-        /// Fabrique une fonction qui ne fait rien, du type de délégué demandé. On utilise pour
-        /// cela les « expressions » de .NET : on décrit la fonction (ses paramètres, un corps
-        /// vide) puis on la compile pendant que le programme tourne.
+        /// Builds a function that does nothing, of the requested delegate type. For this we use
+        /// .NET "expressions": we describe the function (its parameters, an empty body) then
+        /// compile it while the program runs.
         /// </summary>
         private static Delegate CreateEmptyFunction(Type delegateType)
         {
@@ -223,7 +223,7 @@ namespace GazeBar
                    name.IndexOf("Configuration", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        /// <summary>Écrit une méthode comme « Nom(TypeParam1, TypeParam2) », pour le journal.</summary>
+        /// <summary>Writes a method as "Name(ParamType1, ParamType2)", for the log.</summary>
         private static string Describe(MethodInfo method)
         {
             return method.Name + "(" +

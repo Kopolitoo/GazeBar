@@ -7,79 +7,76 @@ using System.Runtime.Serialization.Json;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : une disposition du clavier au regard (étape 12, « clavier-base »), lue dans un
-    /// fichier JSON du dossier Claviers (par exemple Claviers/fr-azerty.json).
+    /// MODEL: a gaze keyboard layout (step 12, "clavier-base"), read from a JSON file of the
+    /// Keyboards folder (for example Keyboards/fr-azerty.json).
     ///
-    /// Pourquoi un fichier et pas du code ? Pour pouvoir ajouter une langue ou changer une
-    /// touche plus tard SANS recompiler : il suffit de modifier ou d'ajouter un fichier
-    /// (demande de l'utilisateur du 31/10/2026). Le fichier est relu à chaque ouverture du
-    /// clavier : une modification se voit dès la prochaine ouverture.
+    /// Why a file and not code? To be able to add a language or change a key later WITHOUT
+    /// recompiling: it is enough to edit or add a file (user request of 2026-10-31). The file
+    /// is read again each time the keyboard opens: a change shows at the next opening.
     ///
-    /// Le clavier est une GRILLE : [Colonnes] colonnes sur [Lignes] lignes (12 × 4 pour le
-    /// français). La ligne 0 est celle du haut (Tab, propositions de mots, effacer…).
-    /// Chaque page (lettres, accents, chiffres, symboles, fonctions) liste ses touches ; chaque
-    /// touche dit où elle est (ligne, col, largeur en cases) et ce qu'elle fait.
+    /// The keyboard is a GRID: [Columns] columns by [Rows] rows (12 × 4 for French). Row 0 is
+    /// the top one (Tab, word suggestions, delete...).
+    /// Each page (letters, accents, numbers, symbols, functions) lists its keys; each key says
+    /// where it is (row, col, width in cells) and what it does.
     ///
-    /// Ce qu'une touche fait (une seule de ces lignes par touche) :
-    ///   "texte": "é"           écrit ce texte (en Unicode : voir InjecteurClavier.TaperTexte) ;
-    ///   "touche": "Tab"        appuie sur une vraie touche (Tab, Entree, Echap, Suppr, Debut,
-    ///                          Fin, PageHaut, PageBas, Gauche, Droite, Haut, Bas, F1 à F12,
-    ///                          Windows = la touche Windows seule, qui ouvre le menu Démarrer) ;
-    ///   "raccourci": "Ctrl+F"  un raccourci (Ctrl, Alt, Maj ou Win + une touche) ;
-    ///   "page": "accents"      affiche une autre page ("retour" = la page d'avant) ;
-    ///   "modificateur": "Maj"  Maj, VerrMaj (Caps Lock), Ctrl, Alt ou Win ;
-    ///   "prediction": 1        case de proposition de mot n° 1, 2 ou 3 (remplie par la prédiction, étape 13) ;
-    ///   "commande": "EffacerMot"  EffacerMot ou EffacerLettre.
-    /// Et pour l'aspect :
-    ///   "libelle"   le texte affiché sur la touche ;
-    ///   "texteMaj"  facultatif : le texte écrit avec Maj ou Caps Lock (sinon : le texte en
-    ///               majuscules, é → É) ;
-    ///   "style"     facultatif : "clair" (fond gris clair, comme les chiffres), "fonction"
-    ///               (fond sombre) ou "lettre" (pas de fond). Par défaut : "lettre" pour une
-    ///               touche qui écrit du texte, "fonction" pour les autres.
+    /// What a key does (only one of these lines per key):
+    ///   "text": "é"            types this text (in Unicode: see KeyboardInjector.TypeText);
+    ///   "key": "Tab"           presses a real key (Tab, Enter, Escape, Delete, Home, End,
+    ///                          PageUp, PageDown, Left, Right, Up, Down, F1 to F12,
+    ///                          Windows = the Windows key alone, which opens the Start menu);
+    ///   "shortcut": "Ctrl+F"   a shortcut (Ctrl, Alt, Shift or Win + a key);
+    ///   "page": "accents"      shows another page ("back" = the previous page);
+    ///   "modifier": "Shift"    Shift, CapsLock, Ctrl, Alt or Win;
+    ///   "prediction": 1        word suggestion cell no. 1, 2 or 3 (filled by the prediction, step 13);
+    ///   "command": "DeleteWord"  DeleteWord or DeleteLetter.
+    /// And for the look:
+    ///   "label"      the text shown on the key;
+    ///   "shiftText"  optional: the text typed with Shift or Caps Lock (otherwise: the text in
+    ///                uppercase, é → É);
+    ///   "style"      optional: "light" (light gray background, like the digits), "function"
+    ///                (dark background) or "letter" (no background). Default: "letter" for a
+    ///                key that types text, "function" for the others.
     ///
-    /// Le fichier est lu avec DataContractJsonSerializer, comme parametres.json (fourni avec
-    /// .NET Framework : aucune dépendance en plus). Attention : le JSON n'accepte pas de
-    /// commentaires ; c'est pourquoi le format est expliqué ici.
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// The file is read with DataContractJsonSerializer, like settings.json (shipped with
+    /// .NET Framework: no extra dependency). Note: JSON does not allow comments; that is why
+    /// the format is explained here.
     /// </summary>
-    [DataContract(Name = "Disposition", Namespace = "")]
+    [DataContract(Name = "Layout", Namespace = "")]
     internal sealed class KeyboardLayout
     {
-        /// <summary>Le nom du dossier des dispositions, à côté de GazeBar.exe.</summary>
+        /// <summary>The name of the layouts folder, next to GazeBar.exe.</summary>
         public const string FolderName = "Keyboards";
 
         /// <summary>
-        /// La disposition par défaut. Depuis l'étape 14, on en choisit une autre avec le bouton
-        /// « Langue » de la barre du clavier ([DispositionClavier] dans parametres.json).
+        /// The default layout. Since step 14, another one is chosen with the "Language" button
+        /// of the keyboard bar ([KeyboardLayout] in settings.json).
         /// </summary>
         public const string DefaultName = "fr-azerty";
 
-        /// <summary>Le nom affiché, par exemple « Français AZERTY ».</summary>
-        [DataMember(Name = "nom", Order = 0)]
+        /// <summary>The displayed name, for example "Français AZERTY".</summary>
+        [DataMember(Name = "name", Order = 0)]
         public string Name { get; set; }
 
-        /// <summary>La langue du dictionnaire de mots (« fr »), pour la prédiction (étape 13).</summary>
-        [DataMember(Name = "langue", Order = 1)]
+        /// <summary>The language of the word dictionary ("fr"), for the prediction (step 13).</summary>
+        [DataMember(Name = "language", Order = 1)]
         public string Language { get; set; }
 
-        /// <summary>Nombre de colonnes de la grille (12 pour le français).</summary>
-        [DataMember(Name = "colonnes", Order = 2)]
+        /// <summary>Number of columns of the grid (12 for French).</summary>
+        [DataMember(Name = "columns", Order = 2)]
         public int Columns { get; set; }
 
-        /// <summary>Nombre de lignes de la grille, ligne du haut comprise (4 pour le français).</summary>
-        [DataMember(Name = "lignes", Order = 3)]
+        /// <summary>Number of rows of the grid, top row included (4 for French).</summary>
+        [DataMember(Name = "rows", Order = 3)]
         public int Rows { get; set; }
 
-        /// <summary>Le nom de la page affichée à l'ouverture du clavier.</summary>
-        [DataMember(Name = "pageDepart", Order = 4)]
+        /// <summary>The name of the page shown when the keyboard opens.</summary>
+        [DataMember(Name = "startPage", Order = 4)]
         public string StartPage { get; set; }
 
         [DataMember(Name = "pages", Order = 5)]
         public List<KeyboardPage> Pages { get; set; }
 
-        /// <summary>La page qui porte ce nom, ou null.</summary>
+        /// <summary>The page with this name, or null.</summary>
         public KeyboardPage Page(string name)
         {
             if (Pages == null)
@@ -96,15 +93,15 @@ namespace GazeBar
             return null;
         }
 
-        /// <summary>Le chemin complet du fichier d'une disposition (à côté de GazeBar.exe).</summary>
+        /// <summary>The full path of a layout file (next to GazeBar.exe).</summary>
         public static string PathOf(string name)
         {
             return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FolderName, name + ".json");
         }
 
         /// <summary>
-        /// Lit une disposition. Renvoie null si le fichier est absent ou illisible : erreur
-        /// expliquée dans « message » (affiché dans la barre de menu) et notée dans le journal.
+        /// Reads a layout. Returns null if the file is missing or unreadable: error explained in
+        /// "message" (shown in the menu bar) and written to the log.
         /// </summary>
         public static KeyboardLayout Load(string name, out string message)
         {
@@ -113,7 +110,7 @@ namespace GazeBar
             if (!File.Exists(path))
             {
                 message = "Disposition du clavier introuvable : " + name + ".json";
-                App.Log("Clavier : fichier introuvable : " + path);
+                App.Log("Keyboard: file not found: " + path);
                 return null;
             }
 
@@ -128,9 +125,9 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                // Une faute de frappe dans le JSON (virgule oubliée, guillemet…) : on le dit.
+                // A typo in the JSON (forgotten comma, quote...): say so.
                 message = "Disposition du clavier illisible : " + name + ".json (voir le journal)";
-                App.Log("Clavier : fichier illisible " + path + " : " + ex.Message);
+                App.Log("Keyboard: unreadable file " + path + ": " + ex.Message);
                 return null;
             }
 
@@ -138,19 +135,19 @@ namespace GazeBar
             if (error != null)
             {
                 message = "Disposition du clavier incorrecte (voir le journal)";
-                App.Log("Clavier : " + name + ".json : " + error);
+                App.Log("Keyboard: " + name + ".json: " + error);
                 return null;
             }
 
-            App.Log("Clavier : disposition « " + layout.Name + " » lue (" + layout.Pages.Count + " pages)");
+            App.Log("Keyboard: layout \"" + layout.Name + "\" read (" + layout.Pages.Count + " pages)");
             return layout;
         }
 
         /// <summary>
-        /// Étape 14 (bouton « Langue ») : toutes les dispositions du dossier Claviers qui se
-        /// lisent correctement, triées par nom affiché. Une disposition illisible ou incorrecte
-        /// n'est pas proposée (la raison est écrite dans le journal par Charger).
-        /// Le nom du fichier (sans « .json ») est celui qu'on enregistre dans parametres.json.
+        /// Step 14 ("Language" button): all the layouts of the Keyboards folder that read
+        /// correctly, sorted by displayed name. An unreadable or incorrect layout is not offered
+        /// (the reason is written to the log by Load).
+        /// The file name (without ".json") is the one saved in settings.json.
         /// </summary>
         public static List<FoundLayout> List()
         {
@@ -163,7 +160,7 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("Clavier : dossier des dispositions illisible : " + ex.Message);
+                App.Log("Keyboard: layouts folder unreadable: " + ex.Message);
                 return result;
             }
 
@@ -177,7 +174,7 @@ namespace GazeBar
                     result.Add(new FoundLayout
                     {
                         File = fileName,
-                        // Sans nom dans le fichier : on affiche le nom du fichier.
+                        // No name in the file: show the file name.
                         Name = string.IsNullOrWhiteSpace(layout.Name) ? fileName : layout.Name,
                         Language = string.IsNullOrWhiteSpace(layout.Language) ? "?" : layout.Language.Trim()
                     });
@@ -188,23 +185,23 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Vérifie que la disposition est utilisable. Renvoie null si tout va bien, sinon une
-        /// phrase qui explique le problème (pour le journal). Une touche hors de la grille est
-        /// seulement signalée dans le journal et ignorée : le reste du clavier reste utilisable.
+        /// Checks that the layout is usable. Returns null if all is well, otherwise a sentence
+        /// explaining the problem (for the log). A key outside the grid is only reported in
+        /// the log and ignored: the rest of the keyboard stays usable.
         /// </summary>
         private string Check()
         {
             if (Columns < 1 || Columns > 30 || Rows < 1 || Rows > 10)
             {
-                return "taille de grille impossible (" + Columns + " × " + Rows + ")";
+                return "impossible grid size (" + Columns + " × " + Rows + ")";
             }
             if (Pages == null || Pages.Count == 0)
             {
-                return "aucune page";
+                return "no page";
             }
             if (Page(StartPage) == null)
             {
-                return "la page de départ « " + StartPage + " » n'existe pas";
+                return "start page \"" + StartPage + "\" does not exist";
             }
             foreach (KeyboardPage page in Pages)
             {
@@ -218,8 +215,8 @@ namespace GazeBar
                                   t.Col + t.CellWidth > Columns;
                     if (outside && t != null)
                     {
-                        App.Log("Clavier : touche « " + t.Label + " » de la page " + page.Name +
-                                " hors de la grille (ligne " + t.Row + ", col " + t.Col + ") : ignorée");
+                        App.Log("Keyboard: key \"" + t.Label + "\" of page " + page.Name +
+                                " outside the grid (row " + t.Row + ", col " + t.Col + "): ignored");
                     }
                     return outside;
                 });
@@ -228,78 +225,78 @@ namespace GazeBar
         }
     }
 
-    /// <summary>Une disposition trouvée dans le dossier Claviers (étape 14, liste « Langue »).</summary>
+    /// <summary>A layout found in the Keyboards folder (step 14, "Language" list).</summary>
     internal sealed class FoundLayout
     {
-        /// <summary>Le nom du fichier sans « .json » (« fr-azerty »).</summary>
+        /// <summary>The file name without ".json" ("fr-azerty").</summary>
         public string File { get; set; }
 
-        /// <summary>Le nom affiché (« Français AZERTY »).</summary>
+        /// <summary>The displayed name ("Français AZERTY").</summary>
         public string Name { get; set; }
 
-        /// <summary>La langue du dictionnaire (« fr »).</summary>
+        /// <summary>The dictionary language ("fr").</summary>
         public string Language { get; set; }
     }
 
-    /// <summary>Une page du clavier : son nom et ses touches.</summary>
+    /// <summary>A keyboard page: its name and its keys.</summary>
     [DataContract(Name = "Page", Namespace = "")]
     internal sealed class KeyboardPage
     {
-        [DataMember(Name = "nom", Order = 0)]
+        [DataMember(Name = "name", Order = 0)]
         public string Name { get; set; }
 
-        [DataMember(Name = "touches", Order = 1)]
+        [DataMember(Name = "keys", Order = 1)]
         public List<LayoutKey> Keys { get; set; }
     }
 
     /// <summary>
-    /// Une touche telle qu'elle est écrite dans le fichier (voir DispositionClavier pour le
-    /// sens de chaque champ). Les champs absents du fichier valent null.
-    /// « int? » : un nombre qui peut être absent (null).
+    /// A key as written in the file (see KeyboardLayout for the meaning of each field).
+    /// Fields missing from the file are null.
+    /// "int?": a number that may be missing (null).
     /// </summary>
-    [DataContract(Name = "Touche", Namespace = "")]
+    [DataContract(Name = "Key", Namespace = "")]
     internal sealed class LayoutKey
     {
-        [DataMember(Name = "ligne", Order = 0)]
+        [DataMember(Name = "row", Order = 0)]
         public int Row { get; set; }
 
         [DataMember(Name = "col", Order = 1)]
         public int Col { get; set; }
 
-        [DataMember(Name = "largeur", Order = 2, EmitDefaultValue = false)]
+        [DataMember(Name = "width", Order = 2, EmitDefaultValue = false)]
         public int? Width { get; set; }
 
-        [DataMember(Name = "libelle", Order = 3, EmitDefaultValue = false)]
+        [DataMember(Name = "label", Order = 3, EmitDefaultValue = false)]
         public string Label { get; set; }
 
-        [DataMember(Name = "texte", Order = 4, EmitDefaultValue = false)]
+        [DataMember(Name = "text", Order = 4, EmitDefaultValue = false)]
         public string Text { get; set; }
 
-        [DataMember(Name = "texteMaj", Order = 5, EmitDefaultValue = false)]
+        [DataMember(Name = "shiftText", Order = 5, EmitDefaultValue = false)]
         public string ShiftText { get; set; }
 
-        [DataMember(Name = "touche", Order = 6, EmitDefaultValue = false)]
+        [DataMember(Name = "key", Order = 6, EmitDefaultValue = false)]
         public string Key { get; set; }
 
-        [DataMember(Name = "raccourci", Order = 7, EmitDefaultValue = false)]
+        [DataMember(Name = "shortcut", Order = 7, EmitDefaultValue = false)]
         public string Shortcut { get; set; }
 
         [DataMember(Name = "page", Order = 8, EmitDefaultValue = false)]
         public string Page { get; set; }
 
-        [DataMember(Name = "modificateur", Order = 9, EmitDefaultValue = false)]
+        [DataMember(Name = "modifier", Order = 9, EmitDefaultValue = false)]
         public string Modifier { get; set; }
 
         [DataMember(Name = "prediction", Order = 10, EmitDefaultValue = false)]
         public int? Prediction { get; set; }
 
-        [DataMember(Name = "commande", Order = 11, EmitDefaultValue = false)]
+        [DataMember(Name = "command", Order = 11, EmitDefaultValue = false)]
         public string Command { get; set; }
 
         [DataMember(Name = "style", Order = 12, EmitDefaultValue = false)]
         public string Style { get; set; }
 
-        /// <summary>La largeur en cases (1 si absente ou incorrecte).</summary>
+        /// <summary>The width in cells (1 if missing or incorrect).</summary>
         public int CellWidth
         {
             get { return Width.HasValue && Width.Value >= 1 ? Width.Value : 1; }

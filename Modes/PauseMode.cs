@@ -1,18 +1,18 @@
 namespace GazeBar
 {
     /// <summary>
-    /// MODE PAUSE (étape 4 du cahier des charges).
+    /// PAUSE MODE (step 4 of the specification).
     ///
-    /// Ni le cercle ni le curseur ne suivent le regard : le calque est vide, GazeBar ne fait
-    /// plus rien. Pratique pour regarder une vidéo ou lire sans rien déclencher.
+    /// Neither the circle nor the cursor follows the gaze: the overlay is empty, GazeBar
+    /// does nothing. Handy for watching a video or reading without triggering anything.
     ///
-    /// Une seule chose reste active : regarder en bas, hors de l'écran, pendant [DelaiMenu]
-    /// ouvre la barre de menu (c'est le ModeManager qui s'en charge).
-    /// Depuis la pause, la barre ne montre que le bouton « Reprendre » ; activé, il ramène au
-    /// mode mouvement (voir ModeMenu). La touche Échap de l'aidant ramène aussi au mode mouvement.
+    /// Only one thing stays active: looking down, below the screen, for [MenuDelay]
+    /// opens the menu bar (the ModeManager handles it).
+    /// From pause, the bar only shows the "Resume" button; when activated, it returns to
+    /// movement mode (see MenuMode). The caregiver's Escape key also returns to movement mode.
     ///
-    /// Ce mode remplace le « mode inactif » provisoire des étapes 1 à 3, qui servait à la
-    /// barre d'outils (retirée à l'étape 4).
+    /// This mode replaces the temporary "idle mode" of steps 1 to 3, which was used by the
+    /// toolbar (removed in step 4).
     /// </summary>
     internal sealed class PauseMode : Mode
     {
@@ -21,15 +21,15 @@ namespace GazeBar
             get { return "Pause"; }
         }
 
-        /// <summary>Le menu s'ouvre depuis la pause : c'est la seule façon d'en sortir au regard.</summary>
+        /// <summary>The menu opens from pause: it is the only way to leave it with the gaze.</summary>
         public override bool MenuAllowed
         {
             get { return true; }
         }
 
         /// <summary>
-        /// L'écran a changé (étape 11) : ce mode continue, car il ne dessine rien, et la pause ne doit pas
-        /// s'arrêter toute seule.
+        /// The screen changed (step 11): this mode carries on, because it draws nothing, and the
+        /// pause must not end on its own.
         /// </summary>
         public override bool AdaptToScreen()
         {

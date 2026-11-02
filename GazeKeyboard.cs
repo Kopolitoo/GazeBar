@@ -9,136 +9,132 @@ using System.Windows.Media;
 namespace GazeBar
 {
     /// <summary>
-    /// LOGIQUE : le clavier au regard (étape 12, « clavier-base »).
+    /// LOGIC: the gaze keyboard (step 12, "clavier-base").
     ///
-    /// Ce n'est pas un mode : le clavier reste affiché PENDANT que GazeBar fonctionne
-    /// normalement au-dessus de lui (choix de l'utilisateur du 31/10/2026) :
-    ///   - regard EN DEHORS du clavier : le mode mouvement s'applique (regard fixe, choix
-    ///     d'action, loupe…) ;
-    ///   - regard SUR le clavier : le curseur de la souris ne bouge pas, le cercle du regard
-    ///     est masqué, et c'est ce clavier qui réagit : la touche regardée s'éclaircit, puis
-    ///     flashe et fait son action après [DelaiTouche] (pas d'anneau de progression).
-    /// C'est le mode mouvement qui lui passe le regard (ModeMouvement.Actualiser).
+    /// It is not a mode: the keyboard stays shown WHILE GazeBar works normally above it
+    /// (user's choice of 2026-10-31):
+    ///   - gaze OUTSIDE the keyboard: movement mode applies (fixed gaze, action choice,
+    ///     magnifier…);
+    ///   - gaze ON the keyboard: the mouse cursor does not move, the gaze circle is hidden,
+    ///     and this keyboard reacts: the key looked at lights up, then flashes and performs
+    ///     its action after [KeyDelay] (no progress ring).
+    /// Movement mode passes it the gaze (MovementMode.Update).
     ///
-    /// Il est affiché dans les modes mouvement et regard fixe, et pendant la barre de menu du
-    /// clavier ; il est masqué dans tous les autres (loupe, choix d'action, paramètres, pause…)
-    /// puis réapparaît au retour (SurChangementMode, appelée par le ModeManager).
+    /// It is shown in movement and fixed gaze modes, and while the keyboard menu bar is
+    /// open; it is hidden in all the others (magnifier, action choice, settings, pause…)
+    /// and comes back on return (OnModeChange, called by the ModeManager).
     ///
-    /// Il est dessiné sur le calque (surface SurfaceClavier), en bas de l'écran, sur toute la
-    /// largeur, par-dessus tout et SANS réserver de place : les autres fenêtres gardent leur
-    /// taille. Depuis le 01/11/2026 (remarques de l'utilisateur), la barre de menu du clavier
-    /// propose aussi : le mettre en haut de l'écran (position retenue, [ClavierEnHaut]), et
-    /// le réduire à 75 % ou 50 % ([TailleClavier], centré). Quand cette barre est ouverte, le
-    /// clavier remonte au-dessus d'elle (DefinirReserveBas). Le calque ne prend jamais le focus : l'application où l'on écrit garde son
-    /// curseur de texte, et les touches simulées lui arrivent bien.
+    /// It is drawn on the overlay (KeyboardSurface), at the bottom of the screen, full
+    /// width, above everything and WITHOUT reserving room: other windows keep their size.
+    /// Since 2026-11-01 (user remarks), the keyboard menu bar also offers: moving it to the
+    /// top of the screen (position remembered, [KeyboardAtTop]), and shrinking it to 75 % or
+    /// 50 % ([KeyboardSize], centred). When this bar is open, the keyboard moves up above it
+    /// (SetBottomReserve). The overlay never takes focus: the application being typed in
+    /// keeps its text cursor, and the simulated keys do reach it.
     ///
-    /// Un bouton « Fermer le clavier » est placé au-dessus du clavier, à droite (en dessous
-    /// quand le clavier est en haut). On peut aussi le fermer avec la touche Échap d'un vrai
-    /// clavier (pour l'aidant), ou avec le bouton « Clavier » de la barre classique s'il est
-    /// caché par le mode jeu. (Le bouton Fermer de la barre du clavier a été retiré à l'étape
-    /// 14 : il faisait double emploi.)
+    /// A "Fermer le clavier" button sits above the keyboard, on the right (below when the
+    /// keyboard is at the top). It can also be closed with the Escape key of a real keyboard
+    /// (for the caregiver), or with the "Clavier" button of the classic bar if it is hidden
+    /// by game mode. (The Close button of the keyboard bar was removed in step 14: it was
+    /// redundant.)
     ///
-    /// Les touches viennent d'un fichier de disposition (DispositionClavier, relu à chaque
-    /// ouverture). Le texte tapé n'est JAMAIS écrit dans le journal (vie privée) : seules les
-    /// ouvertures, fermetures et erreurs le sont.
+    /// Keys come from a layout file (KeyboardLayout, read again at each opening). Typed
+    /// text is NEVER written to the log (privacy): only openings, closings and errors are.
     ///
-    /// Étape 13 (« clavier-prediction ») : les 3 cases du haut proposent les mots les plus
-    /// probables qui commencent par le mot en cours (PredicteurMots) ; en regarder une écrit
-    /// le mot entier suivi d'une espace. Un mot inconnu (2 lettres ou plus) s'affiche dans la
-    /// 1re case avec un « + » : la regarder l'ajoute au dictionnaire personnel.
-    /// Juste après une espace, les cases proposent les mots qui ont déjà suivi le mot d'avant
-    /// (« mot suivant », appris au fil des phrases, demande du 02/11/2026).
+    /// Step 13 ("clavier-prediction"): the 3 top boxes suggest the most likely words
+    /// starting with the current word (WordPredictor); looking at one writes the whole word
+    /// followed by a space. An unknown word (2 letters or more) shows in the 1st box with a
+    /// "+": looking at it adds it to the personal dictionary.
+    /// Right after a space, the boxes suggest the words that already followed the previous
+    /// word ("next word", learnt as sentences are written, request of 2026-11-02).
     ///
-    /// Étape 14 (« clavier-options ») : la disposition est celle choisie avec le bouton
-    /// « Langue » ([DispositionClavier], voir ChangerDisposition), et une ZONE DE SAISIE
-    /// facultative ([ZoneSaisie]) montre, dans une bande au-dessus des touches, les derniers
-    /// mots tapés. C'est un simple aperçu : le texte part toujours directement dans
-    /// l'application. Le clavier ne peut pas lire le texte de l'application : l'aperçu est
-    /// donc ce que LE CLAVIER a tapé, et il se vide quand le curseur de texte a pu bouger
-    /// (flèche, Tab, raccourci, clic ailleurs…), comme le mot en cours.
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// Step 14 ("clavier-options"): the layout is the one chosen with the "Langue" button
+    /// ([KeyboardLayout], see ChangeLayout), and an optional INPUT BOX ([InputBox]) shows the
+    /// last typed words in a band above the keys. It is a plain preview: text always goes
+    /// straight to the application. The keyboard cannot read the application's text: the
+    /// preview is therefore what THE KEYBOARD typed, and it is cleared when the text cursor
+    /// may have moved (arrow, Tab, shortcut, click elsewhere…), like the current word.
     /// </summary>
     internal sealed class GazeKeyboard
     {
-        // Distances en pixels de l'écran 4K, converties pour l'écran actuel (Ecran.Px).
-        private const double Margin4K = 16;          // entre le bord du clavier et les touches
-        private const double KeyGap4K = 12;   // espace entre deux touches
-        // Entre le bouton Fermer et le clavier : 24 px au début, 60 px depuis le 01/11/2026
-        // (demande de l'utilisateur : bouton trop près des touches).
+        // Distances in pixels of the 4K screen, converted for the current screen (ScreenMetrics.Px).
+        private const double Margin4K = 16;          // between the keyboard edge and the keys
+        private const double KeyGap4K = 12;   // gap between two keys
+        // Between the Close button and the keyboard: 24 px at first, 60 px since 2026-11-01
+        // (user request: button too close to the keys).
         private const double CloseGap4K = 60;
 
-        /// <summary>Zone d'activation du bouton Fermer : 20 % plus grande que son dessin.</summary>
+        /// <summary>Activation zone of the Close button: 20 % larger than its drawing.</summary>
         private const double CloseZoneFactor = 1.2;
 
-        /// <summary>Hauteur de la zone de saisie (étape 14), par rapport à une rangée de touches.</summary>
+        /// <summary>Height of the input box (step 14), relative to a row of keys.</summary>
         private const double InputBoxRatio = 0.7;
 
-        /// <summary>Nombre de caractères gardés pour l'aperçu de la zone de saisie (on n'en montre que la fin).</summary>
+        /// <summary>Number of characters kept for the input box preview (only the end is shown).</summary>
         private const int PreviewMaxLength = 400;
 
-        // Couleurs de la zone de saisie (figées : WPF les dessine plus vite).
+        // Input box colours (frozen: WPF draws them faster).
         private static readonly Brush InputBoxBackground = Freeze(Color.FromArgb(0xFF, 0x26, 0x27, 0x2A));
         private static readonly Brush InputBoxText = Freeze(Colors.White);
         private static readonly Brush InputBoxEmptyText = Freeze(Color.FromArgb(0xFF, 0x80, 0x80, 0x80));
 
         private readonly OverlayWindow _layer;
 
-        // La disposition lue à l'ouverture, la page affichée et la page d'avant (touche « ↺ »).
+        // The layout read at opening, the shown page and the previous page ("↺" key).
         private KeyboardLayout _layout;
         private string _page;
         private string _previousPage;
 
-        // Les cibles visées au regard : les touches de la page, puis le bouton Fermer (le dernier).
+        // The targets aimed at by the gaze: the page's keys, then the Close button (the last one).
         private readonly List<IGazeTarget> _targets = new List<IGazeTarget>();
         private readonly List<KeyboardKey> _keys = new List<KeyboardKey>();
         private GazeButton _close;
         private readonly ButtonAimer _aimer;
 
-        // Vrai quand le clavier est réellement dessiné à l'écran.
+        // True when the keyboard is really drawn on screen.
         private bool _visible;
 
-        // Place gardée libre en bas de l'écran, en pixels : la hauteur de la barre de menu du
-        // clavier quand elle est ouverte (voir DefinirReserveBas), 0 sinon.
+        // Room kept free at the bottom of the screen, in pixels: the height of the keyboard
+        // menu bar when it is open (see SetBottomReserve), 0 otherwise.
         private double _bottomReserve;
 
-        // Le rectangle du clavier, en pixels d'écran.
+        // The keyboard rectangle, in screen pixels.
         private double _left;
         private double _top;
         private double _right;
         private double _bottom;
 
-        // L'état des modificateurs du clavier. Ils sont à part de ceux du choix d'action
-        // (Modificateurs.cs), qui sont remis à zéro à chaque retour au mode mouvement.
-        private bool _shift;       // pour la prochaine touche seulement
-        private bool _capsLock;   // Caps Lock : reste allumé
+        // State of the keyboard modifiers. They are separate from the action choice ones
+        // (Modifiers.cs), which are reset at every return to movement mode.
+        private bool _shift;       // for the next key only
+        private bool _capsLock;   // Caps Lock: stays on
         private bool _ctrl;
         private bool _alt;
         private bool _win;
 
-        // Le « mot en cours » : les lettres tapées depuis le dernier espace ou signe (voir
-        // Suivre). Sert à « Effacer le mot » et à la prédiction (étape 13).
+        // The "current word": letters typed since the last space or sign (see Follow). Used
+        // by "Effacer le mot" and by prediction (step 13).
         private readonly StringBuilder _currentWord = new StringBuilder();
 
-        // Étape 13 : la prédiction, et ce que montrent les cases de proposition (calculé par
-        // MettreAJourEtat après chaque touche). _motInconnu : vrai quand la 1re case montre
-        // « + monmot » (mot inconnu à ajouter).
+        // Step 13: prediction, and what the suggestion boxes show (computed by RefreshState
+        // after each key). _unknownWord: true when the 1st box shows "+ myword" (unknown word
+        // to add).
         private readonly WordPredictor _predictor;
         private List<string> _suggestions = new List<string>();
         private bool _unknownWord;
 
-        // Le mot écrit juste avant le mot en cours (forme rangée du dictionnaire), pour la
-        // prédiction du mot suivant (02/11/2026) ; null au début, après une ponctuation, ou
-        // quand le curseur de texte a pu bouger (le mot d'avant n'est alors plus sûr).
+        // The word written just before the current word (stored dictionary form), for
+        // next-word prediction (2026-11-02); null at the start, after punctuation, or when the
+        // text cursor may have moved (the previous word is then no longer certain).
         private string _previousWord;
 
-        // Les deux derniers caractères tapés, pour la majuscule automatique après « . ».
+        // The last two typed characters, for automatic capitalisation after ".".
         private string _end = "";
 
-        // Étape 14 : la zone de saisie. _apercu : ce que le clavier a tapé depuis que le
-        // curseur de texte n'a plus bougé (gardé en mémoire seulement, jamais dans le journal) ;
-        // _texteApercu : son texte affiché (null quand la zone n'est pas affichée) ;
-        // _largeurApercuWpf : la largeur disponible pour ce texte, en unités WPF.
+        // Step 14: the input box. _preview: what the keyboard typed since the text cursor
+        // last stayed put (kept in memory only, never in the log); _previewText: its shown
+        // text (null when the box is not shown); _previewWidthWpf: the width available for
+        // this text, in WPF units.
         private readonly StringBuilder _preview = new StringBuilder();
         private TextBlock _previewText;
         private double _previewWidthWpf;
@@ -146,47 +142,47 @@ namespace GazeBar
         public GazeKeyboard(OverlayWindow layer)
         {
             _layer = layer;
-            // « 1 » : une seule mesure du regard suffit pour qu'une touche s'éclaire (2 pour
-            // les autres boutons de GazeBar). Le survol réagit ainsi une mesure plus tôt
-            // (environ 30 ms) ; demande de l'utilisateur du 02/11/2026.
+            // "1": a single gaze sample is enough to light a key (2 for GazeBar's other
+            // buttons). Hover thus reacts one sample earlier (about 30 ms); user request of
+            // 2026-11-02.
             _aimer = new ButtonAimer(_targets, 1);
 
-            // Le dictionnaire français est lu dès le démarrage de GazeBar, en arrière-plan
-            // (cahier des charges) : il est prêt quand on ouvre le clavier.
+            // The French dictionary is read as soon as GazeBar starts, in the background
+            // (specification): it is ready when the keyboard opens.
             _predictor = new WordPredictor();
             _predictor.LoadLanguage("fr");
         }
 
         /// <summary>
-        /// À appeler à la fermeture de GazeBar : enregistre les nombres d'utilisations des mots
-        /// qui ne l'ont pas encore été (ils le sont sinon une fois par minute).
+        /// Call when GazeBar closes: saves the word usage counts not saved yet (otherwise
+        /// they are saved once a minute).
         /// </summary>
         public void Stop()
         {
             _predictor.Stop();
         }
 
-        /// <summary>Vrai entre Ouvrir et Fermer (même quand le clavier est masqué par un autre mode).</summary>
+        /// <summary>True between Open and Close (even when the keyboard is hidden by another mode).</summary>
         public bool IsOpen { get; private set; }
 
-        /// <summary>Vrai quand le clavier est dessiné à l'écran.</summary>
+        /// <summary>True when the keyboard is drawn on screen.</summary>
         public bool Visible
         {
             get { return _visible; }
         }
 
-        // ───────────────────────── Ouverture, fermeture, affichage ─────────────────────────
+        // ───────────────────────── Opening, closing, display ─────────────────────────
 
         /// <summary>
-        /// Ouvre le clavier : lit le fichier de disposition et part de sa page de départ.
-        /// Il apparaîtra au retour en mode mouvement (SurChangementMode).
-        /// Renvoie faux si le fichier est absent ou incorrect (message pour la barre de menu).
+        /// Opens the keyboard: reads the layout file and starts from its start page.
+        /// It will appear on return to movement mode (OnModeChange).
+        /// Returns false if the file is missing or invalid (message for the menu bar).
         /// </summary>
         public bool Open(out string message)
         {
-            // Étape 14 : la disposition choisie avec le bouton « Langue ». Si son fichier a
-            // disparu ou contient une erreur, on essaie la disposition par défaut (fr-azerty)
-            // plutôt que de ne pas ouvrir le clavier du tout ; le choix enregistré ne change pas.
+            // Step 14: the layout chosen with the "Langue" button. If its file disappeared or
+            // contains an error, the default layout (fr-azerty) is tried rather than not
+            // opening the keyboard at all; the saved choice does not change.
             string name = AppSettings.Current.KeyboardLayout;
             KeyboardLayout layout = KeyboardLayout.Load(name, out message);
             if (layout == null &&
@@ -196,7 +192,7 @@ namespace GazeBar
                 layout = KeyboardLayout.Load(KeyboardLayout.DefaultName, out defaultMessage);
                 if (layout != null)
                 {
-                    App.Log("Clavier : disposition « " + name + " » inutilisable, on prend " + KeyboardLayout.DefaultName);
+                    App.Log("Keyboard: layout \"" + name + "\" unusable, using " + KeyboardLayout.DefaultName);
                     message = null;
                 }
             }
@@ -206,18 +202,18 @@ namespace GazeBar
             }
 
             _layout = layout;
-            // Le dictionnaire de la langue de la disposition (« fr » pour fr-azerty.json) :
-            // déjà chargé au démarrage dans le cas habituel.
+            // The dictionary of the layout's language ("fr" for fr-azerty.json): already
+            // loaded at startup in the usual case.
             _predictor.LoadLanguage(layout.Language);
             _page = layout.StartPage;
             _previousPage = null;
             IsOpen = true;
             ForgetState();
-            App.Log("Clavier : ouvert");
+            App.Log("Keyboard: opened");
             return true;
         }
 
-        /// <summary>Ferme le clavier (bouton Fermer, barre de menu du clavier, touche Échap).</summary>
+        /// <summary>Closes the keyboard (Close button, keyboard menu bar, Escape key).</summary>
         public void Close()
         {
             if (!IsOpen)
@@ -227,15 +223,15 @@ namespace GazeBar
             IsOpen = false;
             Hide();
             ForgetState();
-            App.Log("Clavier : fermé");
+            App.Log("Keyboard: closed");
         }
 
         /// <summary>
-        /// Appelée par le ModeManager à chaque changement de mode, AVANT l'entrée dans le
-        /// nouveau mode : le clavier est affiché dans les modes mouvement et regard fixe, et
-        /// pendant la barre de menu du clavier ; il est masqué dans tous les autres.
-        /// (Avant l'entrée : la loupe fait une photo de l'écran dès son entrée, le clavier ne
-        /// doit pas y être.)
+        /// Called by the ModeManager at each mode change, BEFORE entering the new mode: the
+        /// keyboard is shown in movement and fixed gaze modes, and while the keyboard menu
+        /// bar is open; it is hidden in all the others.
+        /// (Before entering: the magnifier takes a screenshot as soon as it starts, the
+        /// keyboard must not be on it.)
         /// </summary>
         public void OnModeChange(Mode newVal)
         {
@@ -251,20 +247,20 @@ namespace GazeBar
             else if (!show && _visible)
             {
                 Hide();
-                // On est parti faire autre chose (un clic ailleurs, les paramètres…) : le texte
-                // autour du curseur a pu changer, le mot en cours n'est plus sûr.
+                // We went off to do something else (a click elsewhere, the settings…): the
+                // text around the cursor may have changed, the current word is no longer certain.
                 ForgetPosition();
             }
             else if (_visible)
             {
-                // Toujours affiché (mouvement ↔ regard fixe, menu du clavier) : plus aucune
-                // touche n'est survolée, et celle qui serait sous le regard attend qu'il la quitte.
+                // Still shown (movement ↔ fixed gaze, keyboard menu): no key is hovered any
+                // more, and the one under the gaze waits for the gaze to leave it.
                 _aimer.ResetAndBlock();
                 RedrawWithoutHover();
             }
         }
 
-        /// <summary>L'écran a changé (étape 11) : le clavier est redessiné aux nouvelles tailles.</summary>
+        /// <summary>The screen changed (step 11): the keyboard is redrawn at the new sizes.</summary>
         public void AdaptToScreen()
         {
             if (_visible)
@@ -274,9 +270,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// La barre de menu du clavier s'ouvre (pixels = sa hauteur, depuis le bas de l'écran)
-        /// ou se ferme (0). Le clavier, s'il est en bas, remonte au-dessus d'elle au lieu
-        /// d'être recouvert (demande de l'utilisateur du 01/11/2026). En haut, rien ne change.
+        /// The keyboard menu bar opens (pixels = its height, from the bottom of the screen)
+        /// or closes (0). If the keyboard is at the bottom, it moves up above the bar instead
+        /// of being covered (user request of 2026-11-01). At the top, nothing changes.
         /// </summary>
         public void SetBottomReserve(double pixels)
         {
@@ -288,7 +284,7 @@ namespace GazeBar
             _bottomReserve = pixels;
             if (_visible && !AppSettings.Current.KeyboardAtTop)
             {
-                // Redessiné à sa nouvelle place, puis glissé depuis l'ancienne (02/11/2026).
+                // Redrawn at its new place, then slid from the old one (2026-11-02).
                 double oldTop = _top;
                 Build();
                 if (_visible)
@@ -299,15 +295,15 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Bouton « Haut / bas » de la barre du clavier : le clavier passe en haut de l'écran
-        /// (ou revient en bas). La position est enregistrée : le clavier se rouvre au même endroit.
+        /// "Haut / bas" button of the keyboard bar: the keyboard moves to the top of the
+        /// screen (or back to the bottom). The position is saved: the keyboard reopens there.
         /// </summary>
         public void TogglePosition()
         {
             AppSettings p = AppSettings.Current;
             p.KeyboardAtTop = !p.KeyboardAtTop;
             p.Save();
-            App.Log("Clavier : " + (p.KeyboardAtTop ? "en haut" : "en bas") + " de l'écran");
+            App.Log("Keyboard: " + (p.KeyboardAtTop ? "top" : "bottom") + " of the screen");
             if (_visible)
             {
                 Build();
@@ -315,15 +311,15 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Bouton « Taille » de la barre du clavier : 100 % → 75 % → 50 % → 100 %… (le même
-        /// réglage que « Taille du clavier » dans l'onglet Clavier des paramètres). Enregistré.
+        /// "Taille" button of the keyboard bar: 100 % → 75 % → 50 % → 100 %… (the same
+        /// setting as "Taille du clavier" in the Clavier settings tab). Saved.
         /// </summary>
         public void ChangeSize()
         {
             AppSettings p = AppSettings.Current;
             p.KeyboardSize = p.KeyboardSize > 75 ? 75 : p.KeyboardSize > 50 ? 50 : 100;
             p.Save();
-            App.Log("Clavier : taille " + p.KeyboardSize + " %");
+            App.Log("Keyboard: size " + p.KeyboardSize + " %");
             if (_visible)
             {
                 Build();
@@ -331,16 +327,16 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Bouton « Zone de saisie » de la barre du clavier (étape 14) : affiche ou cache la
-        /// bande des derniers mots tapés. Enregistré. Le clavier est redessiné (il grandit ou
-        /// rapetisse de la hauteur de la bande).
+        /// "Zone de saisie" button of the keyboard bar (step 14): shows or hides the band of
+        /// the last typed words. Saved. The keyboard is redrawn (it grows or shrinks by the
+        /// band's height).
         /// </summary>
         public void ToggleInputBox()
         {
             AppSettings p = AppSettings.Current;
             p.InputBox = !p.InputBox;
             p.Save();
-            App.Log("Clavier : zone de saisie " + (p.InputBox ? "affichée" : "cachée"));
+            App.Log("Keyboard: input box " + (p.InputBox ? "shown" : "hidden"));
             if (_visible)
             {
                 Build();
@@ -348,7 +344,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// La prédiction de mots, pour la liste « Mes mots » (étape 14, voir ModeListeClavier).
+        /// The word prediction, for the "Mes mots" list (step 14, see KeyboardListMode).
         /// </summary>
         public WordPredictor Predictor
         {
@@ -356,11 +352,11 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Bouton « Langue » (étape 14) : passe à une autre disposition du dossier Claviers
-        /// (nom du fichier sans « .json »). Elle est lue tout de suite ; si elle est absente ou
-        /// incorrecte, rien ne change et « message » explique pourquoi. Sinon le choix est
-        /// enregistré, le dictionnaire de sa langue est chargé (en arrière-plan), et le clavier
-        /// repart de la page de départ de la nouvelle disposition.
+        /// "Langue" button (step 14): switches to another layout of the Keyboards folder
+        /// (file name without ".json"). It is read at once; if missing or invalid, nothing
+        /// changes and "message" explains why. Otherwise the choice is saved, the dictionary
+        /// of its language is loaded (in the background), and the keyboard restarts from the
+        /// new layout's start page.
         /// </summary>
         public bool ChangeLayout(string name, out string message)
         {
@@ -378,7 +374,7 @@ namespace GazeBar
             _page = layout.StartPage;
             _previousPage = null;
             ForgetState();
-            App.Log("Clavier : disposition choisie : " + name);
+            App.Log("Keyboard: layout chosen: " + name);
             if (_visible)
             {
                 Build();
@@ -387,13 +383,13 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Étape 15 : un profil de paramètres vient d'être chargé (appelée par ModeParametres).
-        /// La taille, la position et la zone de saisie sont relues à chaque dessin : rien à
-        /// faire pour elles. Mais la disposition (et donc la langue du dictionnaire) a pu
-        /// changer : si le clavier est ouvert, on le rouvre, ce qui relit la disposition
-        /// enregistrée dans les réglages. S'il ne peut pas l'être (fichier absent), il se ferme.
-        /// Pendant les paramètres, le clavier est masqué : il réapparaîtra au retour en mode
-        /// mouvement.
+        /// Step 15: a settings profile has just been loaded (called by SettingsMode).
+        /// Size, position and input box are read again at each drawing: nothing to do for
+        /// them. But the layout (and therefore the dictionary language) may have changed: if
+        /// the keyboard is open, it is reopened, which reads the layout saved in the
+        /// settings again. If it cannot be (missing file), it closes.
+        /// During settings, the keyboard is hidden: it will come back on return to movement
+        /// mode.
         /// </summary>
         public void SettingsReplaced()
         {
@@ -404,14 +400,14 @@ namespace GazeBar
             string message;
             if (!Open(out message))
             {
-                App.Log("Clavier : disposition du profil inutilisable, clavier fermé (" + message + ")");
+                App.Log("Keyboard: profile layout unusable, keyboard closed (" + message + ")");
                 Close();
             }
         }
 
         /// <summary>
-        /// Vrai si le point du regard (pixels d'écran, VRAI regard et non ramené dans l'écran)
-        /// est sur le clavier ou sur son bouton Fermer. Faux si le clavier n'est pas affiché.
+        /// True if the gaze point (screen pixels, TRUE gaze and not clamped to the screen) is
+        /// on the keyboard or on its Close button. False if the keyboard is not shown.
         /// </summary>
         public bool Contains(double x, double y)
         {
@@ -432,7 +428,7 @@ namespace GazeBar
             _visible = false;
         }
 
-        /// <summary>Remet à zéro les modificateurs, le mot en cours et la fin du texte.</summary>
+        /// <summary>Resets the modifiers, the current word and the end of the text.</summary>
         private void ForgetState()
         {
             _shift = false;
@@ -444,9 +440,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Le curseur de texte a pu bouger (flèche, Tab, raccourci, clic ailleurs…) : on oublie
-        /// le mot en cours, le mot d'avant, la fin du texte et l'aperçu de la zone de saisie,
-        /// qui ne correspondent peut-être plus au texte autour du curseur.
+        /// The text cursor may have moved (arrow, Tab, shortcut, click elsewhere…): forget the
+        /// current word, the previous word, the end of the text and the input box preview,
+        /// which may no longer match the text around the cursor.
         /// </summary>
         private void ForgetPosition()
         {
@@ -456,11 +452,11 @@ namespace GazeBar
             _preview.Clear();
         }
 
-        // ───────────────────────── Le regard ─────────────────────────
+        // ───────────────────────── Gaze ─────────────────────────
 
         /// <summary>
-        /// À appeler à chaque tic du mode mouvement, tant que le clavier est affiché : met à
-        /// jour la touche survolée et l'active si le regard y est resté [DelaiTouche].
+        /// Call at every movement mode tick, while the keyboard is shown: updates the hovered
+        /// key and activates it if the gaze stayed on it for [KeyDelay].
         /// </summary>
         public void Update(GazeState gaze)
         {
@@ -478,29 +474,29 @@ namespace GazeBar
 
             if (num >= _keys.Count)
             {
-                // Le dernier de la liste : le bouton Fermer.
+                // The last one in the list: the Close button.
                 Close();
                 return;
             }
             Activate(_keys[num]);
         }
 
-        /// <summary>Fait l'action d'une touche.</summary>
+        /// <summary>Performs a key's action.</summary>
         private void Activate(KeyboardKey key)
         {
             LayoutKey d = key.Description;
             key.Flash();
 
-            // Vrai pour une touche qu'on peut répéter en gardant le regard dessus
-            // ([RepetitionTouche]) : lettres, effacer, flèches… Pas pour un modificateur
-            // ou un raccourci : en continuant à regarder, on l'allumerait et l'éteindrait sans fin.
+            // True for a key that can repeat while the gaze stays on it ([KeyRepeat]):
+            // letters, delete, arrows… Not for a modifier or a shortcut: by keeping looking,
+            // it would be toggled on and off endlessly.
             bool repeatable = true;
 
             if (d.Prediction.HasValue)
             {
-                // Étape 13 : une case de proposition. Pas de répétition : en continuant à la
-                // regarder, on n'écrirait pas deux fois le mot (la case est d'ailleurs vide
-                // juste après, le mot en cours repartant de zéro).
+                // Step 13: a suggestion box. No repetition: by keeping looking at it, the word
+                // would not be written twice (the box is empty right after anyway, the current
+                // word starting from scratch).
                 ChooseSuggestion(d.Prediction.Value);
                 repeatable = false;
             }
@@ -519,7 +515,7 @@ namespace GazeBar
             }
             else if (d.Page != null)
             {
-                // La page change : les touches sont remplacées (voir Construire).
+                // The page changes: the keys are replaced (see Build).
                 ChangePage(d.Page);
                 return;
             }
@@ -528,17 +524,17 @@ namespace GazeBar
                 ToggleModifier(d.Modifier);
                 repeatable = false;
             }
-            else if (d.Command == "EffacerLettre")
+            else if (d.Command == "DeleteLetter")
             {
                 DeleteLetter();
             }
-            else if (d.Command == "EffacerMot")
+            else if (d.Command == "DeleteWord")
             {
                 DeleteWord();
             }
             else
             {
-                App.Log("Clavier : touche « " + d.Label + " » sans action connue");
+                App.Log("Keyboard: key \"" + d.Label + "\" has no known action");
             }
 
             if (!repeatable || !AppSettings.Current.KeyRepeat)
@@ -548,19 +544,19 @@ namespace GazeBar
             RefreshState();
         }
 
-        // ───────────────────────── Les actions ─────────────────────────
+        // ───────────────────────── Actions ─────────────────────────
 
-        /// <summary>Écrit le texte d'une touche, en majuscules si Maj ou Caps Lock (mais pas les deux).</summary>
+        /// <summary>Writes a key's text, in upper case if Shift or Caps Lock (but not both).</summary>
         private void Write(LayoutKey d)
         {
-            // Maj et Caps Lock ensemble donnent des minuscules, comme sur un vrai clavier.
+            // Shift and Caps Lock together give lower case, as on a real keyboard.
             bool uppercaseLetters = _shift ^ _capsLock;
             string text = uppercaseLetters ? (d.ShiftText ?? d.Text.ToUpper(CultureInfo.CurrentCulture)) : d.Text;
 
             if ((_ctrl || _alt || _win) && text.Length == 1)
             {
-                // Avec Ctrl, Alt ou Win, il faut la VRAIE touche (Ctrl + c = copier) : on demande à
-                // Windows quelle touche produit ce caractère. Octet haut : 1 = il faut aussi Maj.
+                // With Ctrl, Alt or Win, the REAL key is needed (Ctrl + c = copy): Windows is
+                // asked which key produces this character. High byte: 1 = Shift is needed too.
                 short result = NativeMethods.VkKeyScanW(text[0]);
                 if (result != -1)
                 {
@@ -575,7 +571,7 @@ namespace GazeBar
                     _alt = false;
                     _win = false;
                     _shift = false;
-                    // Un raccourci n'écrit pas de texte : le mot en cours n'est plus sûr.
+                    // A shortcut writes no text: the current word is no longer certain.
                     ForgetPosition();
                     return;
                 }
@@ -588,25 +584,25 @@ namespace GazeBar
             _win = false;
             if (ContainsLetter(text))
             {
-                _shift = false;   // Maj ne vaut que pour une lettre
+                _shift = false;   // Shift only counts for a letter
             }
             Follow(text);
         }
 
-        /// <summary>Appuie sur une vraie touche (Tab, Entree, flèches…), avec les modificateurs actifs.</summary>
+        /// <summary>Presses a real key (Tab, Enter, arrows…), with the active modifiers.</summary>
         private void PressKey(string name)
         {
             ushort code;
             bool extent;
             if (!KeyCode(name, out code, out extent))
             {
-                App.Log("Clavier : touche inconnue « " + name + " » dans la disposition");
+                App.Log("Keyboard: unknown key \"" + name + "\" in the layout");
                 return;
             }
 
-            // Ici, Maj compte (Maj + Tab, Maj + flèche pour sélectionner…).
+            // Here, Shift counts (Shift + Tab, Shift + arrow to select…).
             List<ushort> mods = ActiveModifiers(true);
-            // Ctrl, Alt ou Win + Entrée n'est pas une simple fin de ligne (Maj + Entrée, si).
+            // Ctrl, Alt or Win + Enter is not a plain line end (Shift + Enter is).
             bool withModifier = _ctrl || _alt || _win;
             KeyboardInjector.TypeKey(code, extent, mods);
             _ctrl = false;
@@ -616,20 +612,20 @@ namespace GazeBar
 
             if (code == 0x0D && !withModifier)
             {
-                Follow("\n");   // Entrée : fin de ligne (compte pour la majuscule automatique)
+                Follow("\n");   // Enter: line end (counts for automatic capitalisation)
                 Preview(0, "\n");
             }
             else
             {
-                // Tab, flèches, Début, Ctrl + Entrée… : le curseur de texte a pu bouger, le mot
-                // en cours n'est plus sûr.
+                // Tab, arrows, Home, Ctrl + Enter…: the text cursor may have moved, the
+                // current word is no longer certain.
                 ForgetPosition();
             }
         }
 
         /// <summary>
-        /// Un raccourci écrit dans la disposition, par exemple « Ctrl+F » : les mots avant la
-        /// dernière « + » sont les modificateurs (Ctrl, Alt, Maj, Win), le dernier est la touche.
+        /// A shortcut written in the layout, for example "Ctrl+F": the words before the last
+        /// "+" are the modifiers (Ctrl, Alt, Shift, Win), the last one is the key.
         /// </summary>
         private void Shortcut(string shortcut)
         {
@@ -645,7 +641,6 @@ namespace GazeBar
                     case "alt":
                         mods.Add(NativeMethods.VK_MENU);
                         break;
-                    case "maj":
                     case "shift":
                         mods.Add(NativeMethods.VK_SHIFT);
                         break;
@@ -653,7 +648,7 @@ namespace GazeBar
                         mods.Add(NativeMethods.VK_LWIN);
                         break;
                     default:
-                        App.Log("Clavier : modificateur inconnu dans le raccourci « " + shortcut + " »");
+                        App.Log("Keyboard: unknown modifier in shortcut \"" + shortcut + "\"");
                         return;
                 }
             }
@@ -662,18 +657,18 @@ namespace GazeBar
             bool extent;
             if (!KeyCode(pieces[pieces.Length - 1].Trim(), out code, out extent))
             {
-                App.Log("Clavier : touche inconnue dans le raccourci « " + shortcut + " »");
+                App.Log("Keyboard: unknown key in shortcut \"" + shortcut + "\"");
                 return;
             }
             KeyboardInjector.TypeKey(code, extent, mods);
             ForgetPosition();
         }
 
-        /// <summary>Effacer une lettre : Retour arrière (avec Ctrl, Alt, Maj s'ils sont allumés).</summary>
+        /// <summary>Delete a letter: Backspace (with Ctrl, Alt, Shift if they are on).</summary>
         private void DeleteLetter()
         {
-            // Avec Ctrl, Retour arrière efface un mot entier dans la plupart des applications :
-            // l'aperçu fait de même ; avec Alt ou Win, on ne sait pas ce qui se passe : il se vide.
+            // With Ctrl, Backspace deletes a whole word in most applications: the preview does
+            // the same; with Alt or Win, the result is unknown: the preview is cleared.
             if (_alt || _win)
             {
                 _preview.Clear();
@@ -697,17 +692,17 @@ namespace GazeBar
             }
             else
             {
-                // On efface l'espace ou la fin du mot d'avant : il n'est plus sûr.
+                // Deleting the space or the end of the previous word: it is no longer certain.
                 _previousWord = null;
             }
             _end = _end.Length > 0 ? _end.Substring(0, _end.Length - 1) : "";
         }
 
         /// <summary>
-        /// Effacer le mot : autant de Retour arrière que de lettres dans le mot en cours. Si le
-        /// clavier ne connaît pas le mot (juste après une espace, ou après un clic ailleurs), il
-        /// envoie Ctrl + Retour arrière, que la plupart des applications comprennent comme
-        /// « effacer le mot d'avant ».
+        /// Delete the word: as many Backspaces as letters in the current word. If the
+        /// keyboard does not know the word (right after a space, or after a click elsewhere),
+        /// it sends Ctrl + Backspace, which most applications understand as "delete the
+        /// previous word".
         /// </summary>
         private void DeleteWord()
         {
@@ -723,21 +718,21 @@ namespace GazeBar
             else
             {
                 KeyboardInjector.TypeKey(NativeMethods.VK_BACK, false, new List<ushort> { NativeMethods.VK_CONTROL });
-                _previousWord = null;   // c'est le mot d'avant qui vient d'être effacé
+                _previousWord = null;   // the previous word has just been deleted
                 RemovePreviewWord();
             }
             _end = "";
         }
 
-        /// <summary>Allume ou éteint un modificateur (Maj, VerrMaj, Ctrl, Alt, Win).</summary>
+        /// <summary>Turns a modifier on or off (Shift, CapsLock, Ctrl, Alt, Win).</summary>
         private void ToggleModifier(string name)
         {
             switch (name.Trim().ToLowerInvariant())
             {
-                case "maj":
+                case "shift":
                     _shift = !_shift;
                     break;
-                case "verrmaj":
+                case "capslock":
                     _capsLock = !_capsLock;
                     break;
                 case "ctrl":
@@ -750,21 +745,21 @@ namespace GazeBar
                     _win = !_win;
                     break;
                 default:
-                    App.Log("Clavier : modificateur inconnu « " + name + " » dans la disposition");
+                    App.Log("Keyboard: unknown modifier \"" + name + "\" in the layout");
                     break;
             }
         }
 
-        /// <summary>Affiche une autre page du clavier (« retour » = la page d'avant).</summary>
+        /// <summary>Shows another keyboard page ("back" = the previous page).</summary>
         private void ChangePage(string name)
         {
-            if (string.Equals(name, "retour", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(name, "back", StringComparison.OrdinalIgnoreCase))
             {
                 name = _previousPage ?? _layout.StartPage;
             }
             if (_layout.Page(name) == null)
             {
-                App.Log("Clavier : page « " + name + " » introuvable dans la disposition");
+                App.Log("Keyboard: page \"" + name + "\" not found in the layout");
                 return;
             }
             _previousPage = _page;
@@ -773,12 +768,12 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Garde la trace de ce qui vient d'être écrit :
-        ///  - le mot en cours : lettres, chiffres et tiret (« peut-être ») ; tout autre caractère
-        ///    (espace, ponctuation, apostrophe, fin de ligne) termine le mot ;
-        ///  - les deux derniers caractères, pour la majuscule automatique : après « . », « ? »
-        ///    ou « ! » suivi d'une espace ou d'une fin de ligne, Maj s'allume tout seul pour la
-        ///    lettre suivante ([MajusculeAuto]). On voit Maj allumé : on peut l'éteindre.
+        /// Keeps track of what has just been written:
+        ///  - the current word: letters, digits and hyphen ("peut-être"); any other character
+        ///    (space, punctuation, apostrophe, line end) ends the word;
+        ///  - the last two characters, for automatic capitalisation: after ".", "?" or "!"
+        ///    followed by a space or a line end, Shift turns on by itself for the next letter
+        ///    ([AutoCapitalize]). Shift is shown on: it can be turned off.
         /// </summary>
         private void Follow(string text)
         {
@@ -790,18 +785,17 @@ namespace GazeBar
                 }
                 else
                 {
-                    // Le mot en cours est terminé (étape 13) : s'il est connu, la prédiction
-                    // retient qu'il a été utilisé une fois de plus, et qu'il a suivi le mot
-                    // d'avant (apprentissage). Avec une apostrophe, c'est la forme élidée qui
-                    // compte : « l' », « qu' ».
+                    // The current word is finished (step 13): if it is known, the prediction
+                    // remembers it was used once more, and that it followed the previous word
+                    // (learning). With an apostrophe, the elided form counts: "l'", "qu'".
                     bool apostrophe = c == '\'' || c == '’';
                     if (_currentWord.Length > 0)
                     {
                         string word = _currentWord.ToString();
                         _previousWord = _predictor.RecordUsage(apostrophe ? word + "'" : word, _previousWord);
                     }
-                    // Mot suivant : seuls une espace ou une apostrophe gardent le lien avec le
-                    // mot d'avant ; une ponctuation (. , ? ! …) ou une fin de ligne le coupent.
+                    // Next word: only a space or an apostrophe keep the link with the previous
+                    // word; punctuation (. , ? ! …) or a line end break it.
                     if (c != ' ' && !apostrophe)
                     {
                         _previousWord = null;
@@ -813,8 +807,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Retient les deux derniers caractères écrits, et allume Maj tout seul après « . »,
-        /// « ? » ou « ! » suivi d'une espace ou d'une fin de ligne ([MajusculeAuto]).
+        /// Remembers the last two written characters, and turns Shift on by itself after ".",
+        /// "?" or "!" followed by a space or a line end ([AutoCapitalize]).
         /// </summary>
         private void KeepEnd(string text)
         {
@@ -832,21 +826,21 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Étape 13 : l'utilisateur a regardé la case de proposition n° « numero » (1, 2 ou 3).
-        ///  - case « + monmot » : le mot tapé est ajouté au dictionnaire personnel, puis une
-        ///    espace est écrite (le mot est déjà écrit en entier) ;
-        ///  - sinon : le mot proposé remplace les lettres tapées, suivi d'une espace. Pour aller
-        ///    vite et sans clignotement, on n'efface que la fin qui diffère : « bon » → « bonjour »
-        ///    écrit seulement « jour » ; « ete » → « été » efface « te » et écrit « té ».
-        ///    Après un mot élidé (m' t' n' s' c' l' qu' d' j'…), pas d'espace : le mot suivant
-        ///    s'y colle (demande de l'utilisateur du 02/11/2026).
+        /// Step 13: the user looked at suggestion box number "num" (1, 2 or 3).
+        ///  - "+ myword" box: the typed word is added to the personal dictionary, then a space
+        ///    is written (the word is already written in full);
+        ///  - otherwise: the suggested word replaces the typed letters, followed by a space. To
+        ///    be fast and flicker-free, only the differing end is deleted: "bon" → "bonjour"
+        ///    only writes "jour"; "ete" → "été" deletes "te" and writes "té".
+        ///    After an elided word (m' t' n' s' c' l' qu' d' j'…), no space: the next word
+        ///    sticks to it (user request of 2026-11-02).
         /// </summary>
         private void ChooseSuggestion(int num)
         {
             string typed = _currentWord.ToString();
-            // Maj ou Caps Lock allumé avant un mot suivant : sa 1re lettre en majuscule.
+            // Shift or Caps Lock on before a next word: its 1st letter in upper case.
             bool uppercaseRequested = _shift ^ _capsLock;
-            // Les autres modificateurs ne s'appliquent pas à un mot entier : on les éteint.
+            // The other modifiers do not apply to a whole word: they are turned off.
             _shift = false;
             _ctrl = false;
             _alt = false;
@@ -857,20 +851,20 @@ namespace GazeBar
                 _predictor.Add(typed);
                 KeyboardInjector.TypeText(" ");
                 Preview(0, " ");
-                Follow(" ");   // termine le mot : il compte déjà une utilisation
+                Follow(" ");   // ends the word: it already counts one use
                 return;
             }
 
             int idx = num - 1;
             if (idx < 0 || idx >= _suggestions.Count)
             {
-                return;   // case vide (ne devrait pas arriver : elle est inactive)
+                return;   // empty box (should not happen: it is inactive)
             }
 
-            // (Avec « tape » vide, c'est une proposition de mot suivant : rien à effacer.)
+            // (With an empty "typed", it is a next-word suggestion: nothing to delete.)
             string word = ShownShape(_suggestions[idx], typed, uppercaseRequested);
 
-            // Les premières lettres identiques restent en place.
+            // The identical first letters stay in place.
             int common = 0;
             while (common < typed.Length && common < word.Length && typed[common] == word[common])
             {
@@ -892,9 +886,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Le mot tel qu'il s'affiche dans sa case et s'écrit : avec les majuscules de ce qui a
-        /// été tapé (AvecMajuscule) ; pour un mot suivant (rien de tapé), avec une majuscule
-        /// au début si Maj ou Caps Lock est allumé.
+        /// The word as shown in its box and written: with the capitals of what was typed
+        /// (WithUppercase); for a next word (nothing typed), with a capital at the start if
+        /// Shift or Caps Lock is on.
         /// </summary>
         private static string ShownShape(string word, string typed, bool uppercase)
         {
@@ -906,9 +900,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Le mot proposé avec les majuscules de ce qui a été tapé : « Bo » → « Bonjour » (le
-        /// mot garde sa majuscule de départ, cahier des charges), « BON » (Caps Lock) →
-        /// « BONJOUR ». Sinon, le mot tel qu'il est rangé (« Paris » reste « Paris »).
+        /// The suggested word with the capitals of what was typed: "Bo" → "Bonjour" (the word
+        /// keeps its initial capital, specification), "BON" (Caps Lock) → "BONJOUR".
+        /// Otherwise, the word as stored ("Paris" stays "Paris").
         /// </summary>
         private static string WithUppercase(string word, string typed)
         {
@@ -940,12 +934,12 @@ namespace GazeBar
             return word;
         }
 
-        // ───────────────────────── La zone de saisie (étape 14) ─────────────────────────
+        // ───────────────────────── Input box (step 14) ─────────────────────────
 
         /// <summary>
-        /// Met à jour l'aperçu de la zone de saisie comme l'application l'a fait : « effaces »
-        /// Retour arrière, puis « ajout » écrit. L'aperçu est tenu à jour même quand la zone est
-        /// cachée : on la voit juste en l'affichant. Seule la fin est gardée.
+        /// Updates the input box preview as the application did: "deleted" Backspaces, then
+        /// "addition" written. The preview is kept up to date even when the box is hidden: it
+        /// is right as soon as it is shown. Only the end is kept.
         /// </summary>
         private void Preview(int deleted, string addition)
         {
@@ -958,8 +952,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Comme Ctrl + Retour arrière dans la plupart des applications : retire les espaces de
-        /// la fin, puis les lettres du dernier mot.
+        /// Like Ctrl + Backspace in most applications: removes trailing spaces, then the
+        /// letters of the last word.
         /// </summary>
         private void RemovePreviewWord()
         {
@@ -976,9 +970,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Écrit l'aperçu dans la zone de saisie (si elle est affichée). Une fin de ligne est
-        /// montrée par « ↵ ». Quand le texte est trop long, seule la fin est montrée, précédée
-        /// de « … ». Zone vide : un petit texte gris explique à quoi elle sert.
+        /// Writes the preview in the input box (if shown). A line end is shown as "↵". When
+        /// the text is too long, only the end is shown, preceded by "…". Empty box: a small
+        /// grey text explains what it is for.
         /// </summary>
         private void ShowPreview()
         {
@@ -998,9 +992,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// La plus longue fin de « texte » qui tient dans la largeur de la zone (précédée de
-        /// « … » si elle est coupée). On cherche le point de coupure par dichotomie : on mesure
-        /// une dizaine de fois au lieu d'essayer chaque caractère.
+        /// The longest end of "text" that fits in the box width (preceded by "…" if cut). The
+        /// cut point is found by binary search: about ten measures instead of trying every
+        /// character.
         /// </summary>
         private string FittingEnd(string text)
         {
@@ -1008,25 +1002,25 @@ namespace GazeBar
             {
                 return text;
             }
-            // On cherche le plus petit « debut » pour lequel « … » + la fin depuis debut tient.
+            // Find the smallest "start" for which "…" + the end from start fits.
             int bottom = 1;
-            int top = text.Length;   // texte vide : tient toujours
+            int top = text.Length;   // empty text: always fits
             while (bottom < top)
             {
                 int middle = bottom + (top - bottom) / 2;
                 if (TextWidth("…" + text.Substring(middle)) <= _previewWidthWpf)
                 {
-                    top = middle;     // ça tient : on peut peut-être garder plus de texte
+                    top = middle;     // it fits: maybe more text can be kept
                 }
                 else
                 {
-                    bottom = middle + 1;  // trop long : il faut couper plus loin
+                    bottom = middle + 1;  // too long: cut further
                 }
             }
             return "…" + text.Substring(bottom);
         }
 
-        /// <summary>Largeur d'un texte dans la police de la zone de saisie, en unités WPF.</summary>
+        /// <summary>Width of a text in the input box font, in WPF units.</summary>
         private double TextWidth(string text)
         {
             FormattedText measure = new FormattedText(
@@ -1040,7 +1034,7 @@ namespace GazeBar
             return measure.WidthIncludingTrailingWhitespace;
         }
 
-        // ───────────────────────── Petits outils ─────────────────────────
+        // ───────────────────────── Small helpers ─────────────────────────
 
         private static Brush Freeze(Color color)
         {
@@ -1049,7 +1043,7 @@ namespace GazeBar
             return brush;
         }
 
-        /// <summary>Les codes des modificateurs allumés (Maj seulement si avecMaj).</summary>
+        /// <summary>The codes of the modifiers that are on (Shift only if withShift).</summary>
         private List<ushort> ActiveModifiers(bool withShift)
         {
             List<ushort> mods = new List<ushort>();
@@ -1085,9 +1079,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Le code Windows (« virtual-key code ») d'une touche nommée dans la disposition.
-        /// etendue : vrai pour les touches « étendues » (flèches, Début, Fin, Suppr, Page…).
-        /// Accepte aussi une lettre seule (A à Z) ou un chiffre seul, pour les raccourcis.
+        /// The Windows virtual-key code of a key named in the layout.
+        /// extent: true for "extended" keys (arrows, Home, End, Delete, Page…).
+        /// Also accepts a single letter (A to Z) or a single digit, for shortcuts.
         /// </summary>
         private static bool KeyCode(string name, out ushort code, out bool extent)
         {
@@ -1096,34 +1090,34 @@ namespace GazeBar
             switch (name.Trim().ToLowerInvariant())
             {
                 case "tab": code = 0x09; return true;
-                case "entree": code = 0x0D; return true;
-                case "echap": code = 0x1B; return true;
-                case "espace": code = 0x20; return true;
-                case "retourarriere": code = NativeMethods.VK_BACK; return true;
-                case "pagehaut": code = 0x21; extent = true; return true;
-                case "pagebas": code = 0x22; extent = true; return true;
-                case "fin": code = 0x23; extent = true; return true;
-                case "debut": code = 0x24; extent = true; return true;
-                case "gauche": code = 0x25; extent = true; return true;
-                case "haut": code = 0x26; extent = true; return true;
-                case "droite": code = 0x27; extent = true; return true;
-                case "bas": code = 0x28; extent = true; return true;
-                case "inser": code = 0x2D; extent = true; return true;
-                case "suppr": code = 0x2E; extent = true; return true;
-                // La touche Windows seule (02/11/2026) : ouvre ou ferme le menu Démarrer.
-                // C'est une touche « étendue » pour Windows.
+                case "enter": code = 0x0D; return true;
+                case "escape": code = 0x1B; return true;
+                case "space": code = 0x20; return true;
+                case "backspace": code = NativeMethods.VK_BACK; return true;
+                case "pageup": code = 0x21; extent = true; return true;
+                case "pagedown": code = 0x22; extent = true; return true;
+                case "end": code = 0x23; extent = true; return true;
+                case "home": code = 0x24; extent = true; return true;
+                case "left": code = 0x25; extent = true; return true;
+                case "up": code = 0x26; extent = true; return true;
+                case "right": code = 0x27; extent = true; return true;
+                case "down": code = 0x28; extent = true; return true;
+                case "insert": code = 0x2D; extent = true; return true;
+                case "delete": code = 0x2E; extent = true; return true;
+                // The Windows key alone (2026-11-02): opens or closes the Start menu.
+                // It is an "extended" key for Windows.
                 case "windows": code = NativeMethods.VK_LWIN; extent = true; return true;
             }
 
             string n = name.Trim().ToUpperInvariant();
-            // F1 à F24 : codes 0x70 à 0x87.
+            // F1 to F24: codes 0x70 to 0x87.
             int num;
             if (n.Length >= 2 && n[0] == 'F' && int.TryParse(n.Substring(1), out num) && num >= 1 && num <= 24)
             {
                 code = (ushort)(0x70 + num - 1);
                 return true;
             }
-            // Une lettre ou un chiffre seul : son code est celui du caractère en majuscule.
+            // A single letter or digit: its code is that of the upper-case character.
             if (n.Length == 1 && ((n[0] >= 'A' && n[0] <= 'Z') || (n[0] >= '0' && n[0] <= '9')))
             {
                 code = n[0];
@@ -1132,11 +1126,11 @@ namespace GazeBar
             return false;
         }
 
-        // ───────────────────────── Le dessin ─────────────────────────
+        // ───────────────────────── Drawing ─────────────────────────
 
         /// <summary>
-        /// (Re)dessine le clavier : fond, touches de la page affichée et bouton Fermer.
-        /// Toutes les positions sont en pixels d'écran, converties par le calque.
+        /// (Re)draws the keyboard: background, keys of the shown page and Close button.
+        /// All positions are in screen pixels, converted by the overlay.
         /// </summary>
         private void Build()
         {
@@ -1154,20 +1148,20 @@ namespace GazeBar
             double width = ScreenMetrics.WidthPixels;
             double height = ScreenMetrics.HeightPixels;
 
-            // Taille (01/11/2026) : à 75 % ou 50 %, largeur ET hauteur sont réduites ensemble,
-            // les touches gardent donc leur forme ; le clavier est centré horizontalement.
+            // Size (2026-11-01): at 75 % or 50 %, width AND height shrink together, so keys
+            // keep their shape; the keyboard is centred horizontally.
             double sizePercent = p.KeyboardSize / 100.0;
             double keyboardWidth = width * sizePercent;
             double keysHeight = height * p.KeyboardHeight / 100.0 * sizePercent;
 
-            // La grille des touches.
+            // The key grid.
             double margin = ScreenMetrics.Px(Margin4K);
             double cellWidth = (keyboardWidth - 2 * margin) / _layout.Columns;
             double cellHeight = (keysHeight - 2 * margin) / _layout.Rows;
             double gap = Math.Min(ScreenMetrics.Px(KeyGap4K), Math.Min(cellWidth, cellHeight) * 0.15);
 
-            // Étape 14 : la zone de saisie ajoute une bande au-dessus des touches. Le clavier
-            // grandit de sa hauteur : les touches gardent leur taille.
+            // Step 14: the input box adds a band above the keys. The keyboard grows by its
+            // height: keys keep their size.
             double zoneHeight = p.InputBox ? Math.Round(cellHeight * InputBoxRatio) : 0;
             double keyboardHeight = keysHeight + zoneHeight;
 
@@ -1175,13 +1169,13 @@ namespace GazeBar
             _right = _left + keyboardWidth;
             if (p.KeyboardAtTop)
             {
-                // En haut de l'écran (bouton « Haut / bas » de la barre du clavier).
+                // At the top of the screen ("Haut / bas" button of the keyboard bar).
                 _top = 0;
                 _bottom = keyboardHeight;
             }
             else
             {
-                // En bas, au-dessus de la barre de menu du clavier si elle est ouverte.
+                // At the bottom, above the keyboard menu bar if it is open.
                 _bottom = Math.Max(keyboardHeight, height - _bottomReserve);
                 _top = _bottom - keyboardHeight;
             }
@@ -1189,7 +1183,7 @@ namespace GazeBar
             _layer.PrepareKeyboardSurface();
             Canvas surface = _layer.KeyboardSurface;
 
-            // ── Le fond : un rectangle presque noir, comme sur les captures de l'utilisateur.
+            // ── The background: an almost black rectangle, as on the user's screenshots.
             Border background = new Border();
             background.Background = new SolidColorBrush(Color.FromArgb(0xF5, 0x12, 0x12, 0x12));
             background.Width = _layer.LengthToWpf(keyboardWidth);
@@ -1199,9 +1193,9 @@ namespace GazeBar
             Canvas.SetTop(background, corner.Y);
             surface.Children.Add(background);
 
-            // ── La zone de saisie (étape 14) : une bande sombre, sur toute la largeur des
-            //    touches, avec le texte aligné à gauche. Ce n'est pas une cible du regard : le
-            //    regard dessus ne fait rien (le curseur de la souris reste immobile).
+            // ── The input box (step 14): a dark band, the full width of the keys, with the
+            //    text aligned left. It is not a gaze target: gaze on it does nothing (the
+            //    mouse cursor stays still).
             _previewText = null;
             if (zoneHeight > 0)
             {
@@ -1229,7 +1223,7 @@ namespace GazeBar
                 surface.Children.Add(zone);
             }
 
-            // ── Les touches, sous la zone de saisie si elle est affichée.
+            // ── The keys, below the input box if it is shown.
             double keysTop = _top + zoneHeight;
             foreach (LayoutKey d in page.Keys)
             {
@@ -1244,12 +1238,12 @@ namespace GazeBar
                 _targets.Add(key);
             }
 
-            // ── Le bouton Fermer : à droite, AU-DESSUS du clavier quand il est en bas, EN
-            //    DESSOUS quand il est en haut (son libellé est alors sous le bouton). Il reste
-            //    sur l'écran même si le clavier est très haut. (E711 = croix « annuler ».)
-            //    Demande de l'utilisateur du 02/11/2026 : il reste contre le BORD DROIT DE
-            //    L'ÉCRAN même quand le clavier est réduit (75 %, 50 %, clavier centré), et sa
-            //    taille ne dépend pas de celle du clavier : c'est toujours [TailleIcones].
+            // ── The Close button: on the right, ABOVE the keyboard when it is at the bottom,
+            //    BELOW when it is at the top (its label is then below the button). It stays
+            //    on screen even if the keyboard is very tall. (E711 = "cancel" cross.)
+            //    User request of 2026-11-02: it stays against the RIGHT EDGE OF THE SCREEN
+            //    even when the keyboard is shrunk (75 %, 50 %, centred keyboard), and its size
+            //    does not depend on the keyboard's: it is always [IconSize].
             double size = p.IconSizePx;
             double closeGap = ScreenMetrics.Px(CloseGap4K);
             double yClose = p.KeyboardAtTop
@@ -1264,8 +1258,8 @@ namespace GazeBar
                            size, !p.KeyboardAtTop);
             _targets.Add(_close);
 
-            // Les touches ont changé : celle qui serait sous le regard ne s'active pas tant
-            // que le regard ne l'a pas quittée (par exemple après un changement de page).
+            // Keys changed: the one under the gaze is not activated until the gaze has left
+            // it (for example after a page change).
             _aimer.ResetAndBlock();
             RefreshState();
 
@@ -1274,9 +1268,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Met à jour les libellés (majuscules), les bords verts des modificateurs et, depuis
-        /// l'étape 13, les mots des cases de proposition (recalculés d'après le mot en cours :
-        /// moins d'une milliseconde).
+        /// Updates the labels (capitals), the green borders of the modifiers and, since step
+        /// 13, the words of the suggestion boxes (recomputed from the current word: less than
+        /// a millisecond).
         /// </summary>
         private void RefreshState()
         {
@@ -1318,9 +1312,9 @@ namespace GazeBar
         {
             switch (modifier.Trim().ToLowerInvariant())
             {
-                case "maj":
+                case "shift":
                     return _shift;
-                case "verrmaj":
+                case "capslock":
                     return _capsLock;
                 case "ctrl":
                     return _ctrl;
@@ -1333,7 +1327,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Dessine toutes les cibles sans survol (par exemple au passage en regard fixe).</summary>
+        /// <summary>Draws every target without hover (for example when switching to fixed gaze).</summary>
         private void RedrawWithoutHover()
         {
             foreach (IGazeTarget target in _targets)

@@ -8,70 +8,66 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// MODE CONFIGURATION DES ICÔNES (étape 10 du cahier des charges).
+    /// ICON CONFIGURATION MODE (step 10 of the specification).
     ///
-    /// Entrée : bouton « Configurer les icônes » de l'onglet « Icônes » du mode paramètres.
-    /// Sortie : icône « retour » (au milieu du bord droit) ou touche Échap de l'aidant : retour
-    /// au mode paramètres, sur l'onglet « Icônes ». Le menu du bas ne s'ouvre pas ici.
+    /// Entry: "Configure icons" button of the "Icons" tab of settings mode.
+    /// Exit: "back" icon (in the middle of the right edge) or the caregiver's Escape key: back
+    /// to settings mode, on the "Icons" tab. The bottom menu does not open here.
     ///
-    /// Mise en page (demande de l'utilisateur du 28/10/2026) : LA MÊME que le choix d'action
-    /// (DispositionChoixAction), sur le même écran noir du calque. À la place de la photo, un
-    /// cadre gris qui explique l'écran. Les quatorze emplacements sont dessinés : les huit de la
-    /// couronne, les trois modificateurs (bord gauche) et les trois boutons utilitaires (bord
-    /// haut). Chacun porte une pastille ronde en haut à droite :
-    ///   - « − » rouge : une action est assignée. Regarder l'icône RETIRE l'action ;
-    ///     l'emplacement devient vide (pastille « + ») ;
-    ///   - « + » verte : l'emplacement est vide. Regarder l'icône ouvre LA LISTE.
+    /// Layout (user request of 2026-10-28): THE SAME as the action choice
+    /// (ActionChoiceLayout), on the same black screen of the overlay. Instead of the photo, a
+    /// gray frame that explains the screen. The fourteen slots are drawn: the eight of the
+    /// crown, the three modifiers (left edge) and the three utility buttons (top edge). Each
+    /// carries a round badge at the top right:
+    ///   - red "−": an action is assigned. Looking at the icon REMOVES the action; the slot
+    ///     becomes empty ("+" badge);
+    ///   - green "+": the slot is empty. Looking at the icon opens THE LIST.
     ///
-    /// La liste : un rectangle aux bords arrondis qui occupe les trois quarts de l'écran, avec
-    /// TOUTES les actions du même groupe, chacune avec son nom en dessous, et un bouton
-    /// « Annuler ». Une action peut être placée plusieurs fois dans son groupe (demande de
-    /// l'utilisateur du 28/10/2026), par exemple deux clics gauches dans la couronne. Une fois
-    /// l'action choisie, elle est placée et la liste se ferme.
+    /// The list: a rounded rectangle taking three quarters of the screen, with ALL the actions
+    /// of the same group, each with its name underneath, and a "Cancel" button. An action can
+    /// be placed several times in its group (user request of 2026-10-28), for example two left
+    /// clicks in the crown. Once the action is chosen, it is placed and the list closes.
     ///
-    /// Chaque changement est appliqué tout de suite (Parametres.Courants) et enregistré dans
-    /// parametres.json : le prochain choix d'action utilise la nouvelle disposition.
+    /// Each change is applied at once (AppSettings.Current) and saved in settings.json: the
+    /// next action choice uses the new layout.
     ///
-    /// Après chaque changement, l'écran est redessiné et l'icône qui se trouve sous le regard
-    /// est bloquée tant que le regard ne l'a pas quittée (ViseurBoutons.ReinitialiserEtBloquer) :
-    /// sans cela, en continuant à regarder une icône qu'on vient de vider, on rouvrirait
-    /// aussitôt la liste.
+    /// After each change, the screen is redrawn and the icon under the gaze is blocked until
+    /// the gaze has left it (ButtonAimer.ResetAndBlock): otherwise, by keeping looking at an
+    /// icon just emptied, the list would open again at once.
     ///
-    /// Ce mode est dessiné sur le calque, qui laisse passer la souris : il se commande au
-    /// regard uniquement (l'aidant peut en sortir avec Échap).
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// This mode is drawn on the overlay, which lets the mouse through: it is driven by the
+    /// gaze only (the caregiver can leave it with Escape).
     /// </summary>
     internal sealed class IconConfigMode : Mode
     {
-        /// <summary>Proportion de l'écran occupée par la liste (les trois quarts, en largeur et en hauteur).</summary>
+        /// <summary>Proportion of the screen taken by the list (three quarters, in width and height).</summary>
         private const double ListRatio = 0.75;
 
-        /// <summary>Nombre maximal de colonnes de la liste (huit actions → deux lignes de quatre).</summary>
+        /// <summary>Maximum number of columns of the list (eight actions → two rows of four).</summary>
         private const int ListColumns = 4;
 
-        // ── Couleurs.
+        // ── Colors.
         private static readonly Brush PreviewBackground = Freeze(new SolidColorBrush(Color.FromRgb(0x20, 0x21, 0x24)));
         private static readonly Brush ListBackground = Freeze(new SolidColorBrush(Color.FromRgb(0x1E, 0x21, 0x26)));
         private static readonly Brush Soft = Freeze(new SolidColorBrush(Color.FromRgb(0x9A, 0xA3, 0xAD)));
         private static readonly Brush Veil = Freeze(new SolidColorBrush(Color.FromArgb(0xC0, 0x00, 0x00, 0x00)));
 
-        // Les boutons affichés, et ce que fait chacun (même ordre).
+        // The buttons shown, and what each one does (same order).
         private readonly List<GazeButton> _buttons = new List<GazeButton>();
         private readonly List<Action> _actions = new List<Action>();
 
-        // Décide quel bouton est regardé et quand il s'active (classe partagée avec le menu).
+        // Decides which button is looked at and when it activates (class shared with the menu).
         private readonly ButtonAimer _aimer;
 
-        // Vrai tant que l'écran n'a pas pu être construit (calque pas encore prêt).
+        // True as long as the screen could not be built (overlay not ready yet).
         private bool _toBuild;
 
-        // La liste est-elle ouverte ? Et pour quel emplacement ?
+        // Is the list open? And for which slot?
         private bool _listOpen;
         private IconGroup _chosenGroup;
         private int _chosenSlot;
 
-        // Le petit cercle qui montre le regard (comme dans le choix d'action).
+        // The small circle showing the gaze (as in the action choice).
         private Ellipse _gazeCircleBackground;
         private Ellipse _gazeCircle;
         private readonly Smoother _smoothed = new Smoother();
@@ -106,13 +102,13 @@ namespace GazeBar
 
             AppSettings p = AppSettings.Current;
 
-            // Dans la liste, chaque action a déjà son nom écrit en dessous : le libellé au
-            // survol se superposerait à ce nom, il n'est donc pas affiché.
+            // In the list, each action already has its name written underneath: the hover label
+            // would overlap this name, so it is not shown.
             bool labels = p.ShowLabels && !_listOpen;
             int active = _aimer.Update(gaze, p.ActivationDelay, labels);
             if (active >= 0)
             {
-                App.Log("Configuration des icônes : " + _buttons[active].Label);
+                App.Log("Icon configuration: " + _buttons[active].Label);
                 _actions[active]();
                 return;
             }
@@ -121,8 +117,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// L'écran a changé (étape 11) : on reste ici, et tout l'écran est redessiné au
-        /// prochain tic avec les nouvelles tailles (la liste reste ouverte si elle l'était).
+        /// The screen changed (step 11): we stay here, and the whole screen is redrawn on the
+        /// next tick with the new sizes (the list stays open if it was).
         /// </summary>
         public override bool AdaptToScreen()
         {
@@ -141,28 +137,28 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Icône « retour » ou touche Échap (appelée aussi par App) : retour au mode
-        /// paramètres, sur l'onglet « Icônes ».
+        /// "Back" icon or Escape key (also called by App): back to settings mode, on the "Icons"
+        /// tab.
         /// </summary>
         public void BackToSettings()
         {
-            App.Log("Configuration des icônes : retour aux paramètres");
+            App.Log("Icon configuration: back to settings");
             Manager.ChangeMode(new SettingsMode(SettingsCatalog.IconsTabIndex));
         }
 
-        // ───────────────────────── Les actions ─────────────────────────
+        // ───────────────────────── Actions ─────────────────────────
 
-        /// <summary>Icône assignée (pastille « − ») : l'action est retirée, l'emplacement devient vide.</summary>
+        /// <summary>Assigned icon ("−" badge): the action is removed, the slot becomes empty.</summary>
         private void Remove(IconGroup group, int num)
         {
             AppSettings p = AppSettings.Current;
             p.SetSlot(group, num, null);
             p.Save();
-            App.Log("Configuration des icônes : " + group + " " + num + " vidé");
+            App.Log("Icon configuration: " + group + " " + num + " emptied");
             Build();
         }
 
-        /// <summary>Icône vide (pastille « + ») : ouvre la liste des actions à placer.</summary>
+        /// <summary>Empty icon ("+" badge): opens the list of actions to place.</summary>
         private void OpenList(IconGroup group, int num)
         {
             _listOpen = true;
@@ -171,36 +167,36 @@ namespace GazeBar
             Build();
         }
 
-        /// <summary>Une action de la liste : elle est placée, la liste se ferme.</summary>
+        /// <summary>An action of the list: it is placed, the list closes.</summary>
         private void PlaceAction(ChoiceAction action)
         {
             AppSettings p = AppSettings.Current;
             p.SetSlot(_chosenGroup, _chosenSlot, action);
             p.Save();
-            App.Log("Configuration des icônes : " + action + " placé en " + _chosenGroup + " " + _chosenSlot);
+            App.Log("Icon configuration: " + action + " placed at " + _chosenGroup + " " + _chosenSlot);
             _listOpen = false;
             Build();
         }
 
-        /// <summary>« Annuler » dans la liste : rien ne change, la liste se ferme.</summary>
+        /// <summary>"Cancel" in the list: nothing changes, the list closes.</summary>
         private void CloseList()
         {
             _listOpen = false;
             Build();
         }
 
-        // ───────────────────────── Construction de l'écran ─────────────────────────
+        // ───────────────────────── Building the screen ─────────────────────────
 
         /// <summary>
-        /// (Re)dessine tout l'écran : la disposition, et la liste par-dessus si elle est ouverte.
-        /// Toutes les positions sont calculées en pixels d'écran, puis converties par le calque.
+        /// (Re)draws the whole screen: the layout, and the list on top if it is open.
+        /// All positions are computed in screen pixels, then converted by the overlay.
         /// </summary>
         private void Build()
         {
             OverlayWindow layer = Manager.Layer;
             if (!layer.Ready)
             {
-                _toBuild = true;   // on réessaiera au prochain tic
+                _toBuild = true;   // we will try again on the next tick
                 return;
             }
             _toBuild = false;
@@ -210,7 +206,7 @@ namespace GazeBar
             double height = Manager.ScreenHeight;
             double size = p.IconSizePx;
 
-            // La photo du choix d'action a le même côté : 2 × [RayonCercle], au plus l'écran.
+            // The photo of the action choice has the same side: 2 × [CircleRadius], at most the screen.
             double photoSide = Math.Min(Math.Round(2 * p.CircleRadiusPx), Math.Min(width, height));
             ActionChoiceLayout placed = new ActionChoiceLayout(width, height, size, photoSide);
 
@@ -219,8 +215,8 @@ namespace GazeBar
             _buttons.Clear();
             _actions.Clear();
 
-            // Quand la liste est ouverte, la disposition est dessinée derrière, mais ses icônes
-            // ne sont pas des cibles du regard (seules celles de la liste le sont).
+            // When the list is open, the layout is drawn behind it, but its icons are not gaze
+            // targets (only those of the list are).
             bool targets = !_listOpen;
 
             BuildPreview(layer, screen, placed);
@@ -231,8 +227,8 @@ namespace GazeBar
                 Point[] slots = placed.Slots(group);
                 for (int i = 0; i < layout.Length; i++)
                 {
-                    IconGroup g = group;   // copies pour les fonctions ci-dessous
-                    int num = i;            // (sinon elles verraient les dernières valeurs)
+                    IconGroup g = group;   // copies for the functions below
+                    int num = i;            // (otherwise they would see the last values)
                     GazeButton button;
                     Action action;
                     if (layout[i].HasValue)
@@ -259,7 +255,7 @@ namespace GazeBar
                 BuildList(layer, screen, placed, p);
             }
 
-            // Le petit cercle du regard, ajouté EN DERNIER pour être par-dessus tout.
+            // The small gaze circle, added LAST to be on top of everything.
             _gazeCircleBackground = new Ellipse();
             _gazeCircleBackground.Stroke = Brushes.Black;
             _gazeCircleBackground.StrokeThickness = ScreenMetrics.Units(4);
@@ -274,14 +270,14 @@ namespace GazeBar
 
             layer.ShowChoiceScreen();
 
-            // Les boutons viennent d'être remplacés : celui qui est sous le regard ne s'active
-            // pas tant que le regard ne l'a pas quitté.
+            // The buttons were just replaced: the one under the gaze does not activate until
+            // the gaze has left it.
             _aimer.ResetAndBlock();
         }
 
         /// <summary>
-        /// À la place de la photo : un carré gris de la même taille, avec le titre de l'écran
-        /// et un rappel du rôle des pastilles.
+        /// Instead of the photo: a gray square of the same size, with the screen title and a
+        /// reminder of the role of the badges.
         /// </summary>
         private static void BuildPreview(OverlayWindow layer, Canvas screen, ActionChoiceLayout placed)
         {
@@ -313,16 +309,16 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// La liste : un voile sombre sur tout l'écran, puis un rectangle aux bords arrondis
-        /// (les trois quarts de l'écran) avec un titre, toutes les actions du groupe en grille
-        /// (quatre colonnes au plus), chacune avec son nom, et « Annuler » en bas.
+        /// The list: a dark veil over the whole screen, then a rounded rectangle (three quarters
+        /// of the screen) with a title, all the actions of the group in a grid (four columns at
+        /// most), each with its name, and "Cancel" at the bottom.
         /// </summary>
         private void BuildList(OverlayWindow layer, Canvas screen, ActionChoiceLayout placed, AppSettings p)
         {
             double size = placed.Size;
             double space = ActionChoiceLayout.Space;
 
-            // ── Le voile, qui assombrit la disposition derrière la liste.
+            // ── The veil, which darkens the layout behind the list.
             Rectangle veil = new Rectangle();
             veil.Fill = Veil;
             veil.Width = screen.Width;
@@ -331,7 +327,7 @@ namespace GazeBar
             Canvas.SetTop(veil, 0);
             screen.Children.Add(veil);
 
-            // ── Le rectangle aux bords arrondis, centré.
+            // ── The rounded rectangle, centered.
             double l = placed.Width * ListRatio;
             double h = placed.Height * ListRatio;
             double left = (placed.Width - l) / 2;
@@ -348,14 +344,14 @@ namespace GazeBar
             Canvas.SetTop(frame, corner.Y);
             screen.Children.Add(frame);
 
-            // ── Le titre, en haut du rectangle.
-            // Les textes de la liste suivent aussi la taille du texte de Windows (étape 11).
+            // ── The title, at the top of the rectangle.
+            // The texts of the list also follow the Windows text size (step 11).
             double titleFont = size * 0.3 * ScreenMetrics.WindowsText;
             AddCenteredText(layer, screen, "Choisir l'action à placer", placed.CenterX, top + size * 0.35,
                                l, titleFont, Brushes.White, true);
 
-            // ── « Annuler », en bas du rectangle, avec son nom en dessous.
-            //    E711 = croix (annuler).
+            // ── "Cancel", at the bottom of the rectangle, with its name underneath.
+            //    E711 = cross (cancel).
             double nameFont = size * 0.2 * ScreenMetrics.WindowsText;
             double yCancel = top + h - size / 2 - nameFont * 2.5;
             AddButton(layer, screen, new GazeButton("", null, "Annuler"), CloseList,
@@ -363,17 +359,17 @@ namespace GazeBar
             AddCenteredText(layer, screen, "Annuler", placed.CenterX, yCancel + size / 2 + nameFont * 0.4,
                                size * 3, nameFont, Soft, false);
 
-            // ── Toutes les actions du groupe, même celles déjà placées ailleurs : une action
-            //    peut apparaître plusieurs fois (demande de l'utilisateur du 28/10/2026).
+            // ── All the actions of the group, even those already placed elsewhere: an action
+            //    may appear several times (user request of 2026-10-28).
             List<ChoiceAction> free = new List<ChoiceAction>(ActionCatalog.Actions(_chosenGroup));
 
-            // La zone de la grille : entre le titre et « Annuler ».
+            // The grid zone: between the title and "Cancel".
             double gridTop = top + size * 0.35 + titleFont * 2;
             double gridBottom = yCancel - size / 2 - space / 2;
 
             if (free.Count == 0)
             {
-                // Ne devrait pas arriver : chaque groupe a au moins une action.
+                // Should not happen: each group has at least one action.
                 AddCenteredText(layer, screen, "Aucune action pour ce groupe.",
                                    placed.CenterX, (gridTop + gridBottom) / 2, l, nameFont * 1.3, Soft, false);
                 return;
@@ -381,27 +377,27 @@ namespace GazeBar
 
             int columns = Math.Min(free.Count, ListColumns);
             int rows = (free.Count + columns - 1) / columns;
-            // La grille occupe toute la place du rectangle (demande de l'utilisateur du
-            // 28/10/2026 : les icônes paraissaient petites au milieu de beaucoup d'espace).
-            // Chaque action reçoit une « case » : la largeur du rectangle partagée entre les
-            // colonnes, et la hauteur entre le titre et « Annuler » partagée entre les lignes.
-            // L'icône et son nom sont centrés dans leur case.
+            // The grid takes the whole room of the rectangle (user request of 2026-10-28: the
+            // icons looked small in the middle of a lot of space).
+            // Each action gets a "cell": the width of the rectangle shared between the columns,
+            // and the height between the title and "Cancel" shared between the rows.
+            // The icon and its name are centered in their cell.
             double stepX = l / columns;
             double stepY = Math.Max((gridBottom - gridTop) / rows, size + nameFont * 2 + space * 0.5);
-            // Centre de l'icône de la première ligne : le milieu de la case, remonté de la
-            // moitié de la hauteur du nom (le nom est écrit sous l'icône).
+            // Center of the icon of the first row: the middle of the cell, raised by half the
+            // height of the name (the name is written under the icon).
             double yFirst = (gridTop + gridBottom) / 2 - (rows - 1) * stepY / 2 - nameFont;
 
             for (int i = 0; i < free.Count; i++)
             {
                 int row = i / columns;
                 int column = i % columns;
-                // La dernière ligne, si elle est incomplète, est centrée elle aussi.
+                // The last row, if incomplete, is centered too.
                 int inRow = Math.Min(columns, free.Count - row * columns);
                 double x = placed.CenterX + (column - (inRow - 1) / 2.0) * stepX;
                 double y = yFirst + row * stepY;
 
-                ChoiceAction action = free[i];   // copie pour la fonction ci-dessous
+                ChoiceAction action = free[i];   // copy for the function below
                 AddButton(layer, screen, ActionCatalog.CreateButton(action), () => PlaceAction(action),
                               x, y, size, true);
                 AddCenteredText(layer, screen, ActionCatalog.ShortName(action), x, y + size / 2 + nameFont * 0.4,
@@ -409,11 +405,11 @@ namespace GazeBar
             }
         }
 
-        // ───────────────────────── Petits outils ─────────────────────────
+        // ───────────────────────── Small tools ─────────────────────────
 
         /// <summary>
-        /// Place un bouton (centré sur x, y en pixels d'écran). cible = vrai : le regard peut
-        /// l'activer, et « action » est alors appelée ; faux : il est seulement dessiné.
+        /// Places a button (centered on x, y in screen pixels). target = true: the gaze can
+        /// activate it, and "action" is then called; false: it is only drawn.
         /// </summary>
         private void AddButton(OverlayWindow layer, Canvas screen, GazeButton button, Action action,
                                    double x, double y, double size, bool target)
@@ -428,8 +424,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Écrit un texte centré horizontalement sur x, son haut en y (pixels d'écran), sur une
-        /// largeur de « largeur » pixels (le texte passe à la ligne au-delà).
+        /// Writes a text horizontally centered on x, its top at y (screen pixels), over a width
+        /// of "width" pixels (the text wraps beyond).
         /// </summary>
         private static void AddCenteredText(OverlayWindow layer, Canvas screen, string text, double x, double y,
                                                double width, double fontPixels, Brush color, bool bold)
@@ -460,9 +456,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Déplace le petit cercle du regard : il suit le regard en douceur ([Lissage]), comme
-        /// dans le choix d'action. Son rayon est la moitié de [RayonCercle]. Regard hors de
-        /// l'écran : il glisse le long du bord. Regard perdu : il reste où il est.
+        /// Moves the small gaze circle: it follows the gaze smoothly ([Smoothing]), as in the
+        /// action choice. Its radius is half of [CircleRadius]. Gaze off screen: it slides
+        /// along the edge. Gaze lost: it stays where it is.
         /// </summary>
         private void MoveGazeCircle(GazeState gaze, AppSettings p)
         {
@@ -471,8 +467,8 @@ namespace GazeBar
                 return;
             }
 
-            // Position ramenée dans l'écran : regard hors de l'écran → le cercle glisse le
-            // long du bord (voir EtatRegard.XEcran).
+            // Position brought back into the screen: gaze off screen → the circle slides along
+            // the edge (see GazeState.XScreen).
             if (!_gazeCirclePlaced)
             {
                 _smoothed.Place(gaze.XScreen, gaze.YScreen);

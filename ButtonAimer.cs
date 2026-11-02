@@ -3,62 +3,62 @@ using System.Collections.Generic;
 namespace GazeBar
 {
     /// <summary>
-    /// LOGIQUE : décide quel bouton (BoutonRegard) est regardé, et quand il s'active (étape 4).
-    /// Depuis l'étape 7, il vise toute cible qui implémente ICibleRegard (aussi les cibles du
-    /// mode paramètres).
+    /// LOGIC: decides which button (GazeButton) is looked at, and when it activates (step 4).
+    /// Since step 7, it aims at any target implementing IGazeTarget (also the targets of
+    /// settings mode).
     ///
-    /// Ce travail était fait directement dans ModeChoixAction à l'étape 3. La barre de menu en
-    /// a besoin aussi : on l'a donc sorti dans cette petite classe, partagée par les deux modes.
+    /// This work was done directly in ActionChoiceMode in step 3. The menu bar needs it too:
+    /// so it was moved into this small class, shared by both modes.
     ///
-    /// Les règles :
-    ///  - à chaque NOUVELLE mesure du regard, on cherche le bouton qui est dessous ;
-    ///  - pour passer à un autre bouton (ou à « aucun »), il faut [_mesuresPourChanger] mesures
-    ///    de suite au même endroit : une mesure isolée (un petit sursaut du regard) est ignorée ;
-    ///  - le regard posé sur un bouton actif pendant le délai d'activation l'active ; son anneau
-    ///    de progression se remplit pendant ce temps ;
-    ///  - un bouton vide ou indisponible ne s'active jamais (seul son libellé apparaît) ;
-    ///  - regard perdu : le minuteur repart de zéro (on n'active jamais un bouton qu'on ne
-    ///    regarde plus) ;
-    ///  - après BloquerJusquASortie, le bouton regardé ne peut pas s'activer de nouveau tant que
-    ///    le regard ne l'a pas quitté. Utile pour un interrupteur (« Suivi souris ») : sans cela,
-    ///    en continuant à le regarder, on l'allumerait et l'éteindrait sans fin ;
-    ///  - après ReinitialiserEtBloquer (les boutons viennent d'être remplacés), le bouton qui
-    ///    se trouve sous le regard à la première mesure est bloqué de la même façon. Ainsi, un
-    ///    nouveau bouton apparu sous le regard ne s'active pas tout seul.
+    /// The rules:
+    ///  - on each NEW gaze measure, we look for the button underneath;
+    ///  - to switch to another button (or to "none"), [_measuresToChange] measures in a row at
+    ///    the same place are needed: an isolated measure (a small jump of the gaze) is ignored;
+    ///  - the gaze resting on an active button for the activation delay activates it; its
+    ///    progress ring fills up meanwhile;
+    ///  - an empty or unavailable button never activates (only its label appears);
+    ///  - gaze lost: the timer starts again from zero (a button that is no longer looked at
+    ///    is never activated);
+    ///  - after BlockUntilExit, the looked-at button cannot activate again until the gaze has
+    ///    left it. Useful for a switch ("Mouse tracking"): otherwise, by keeping looking at
+    ///    it, it would be turned on and off endlessly;
+    ///  - after ResetAndBlock (the buttons were just replaced), the button under the gaze at
+    ///    the first measure is blocked the same way. This way, a new button appearing under
+    ///    the gaze does not activate on its own.
     /// </summary>
     internal sealed class ButtonAimer
     {
         /// <summary>
-        /// Nombre de mesures de suite qu'il faut sur un nouveau bouton pour le viser : 2 par
-        /// défaut ; 1 pour le clavier au regard (survol plus rapide, 02/11/2026).
+        /// Number of measures in a row needed on a new button to aim at it: 2 by default;
+        /// 1 for the gaze keyboard (faster hover, 2026-11-02).
         /// </summary>
         private readonly int _measuresToChange;
 
-        // La liste des boutons, partagée avec le mode (qui peut la remplir après coup).
-        // IReadOnlyList<ICibleRegard> (étape 7) : une liste qu'on peut lire mais pas modifier,
-        // de n'importe quelles cibles (BoutonRegard, CibleParametre…). Grâce à une règle de C#
-        // appelée « covariance », une List<BoutonRegard> peut être donnée telle quelle.
+        // The list of buttons, shared with the mode (which may fill it afterwards).
+        // IReadOnlyList<IGazeTarget> (step 7): a list that can be read but not modified, of any
+        // targets (GazeButton, SettingTarget...). Thanks to a C# rule called "covariance", a
+        // List<GazeButton> can be given as is.
         private readonly IReadOnlyList<IGazeTarget> _buttons;
 
-        // Le bouton « candidat » vu sur les dernières mesures, et combien de fois de suite.
+        // The "candidate" button seen on the last measures, and how many times in a row.
         private int _candidate;
         private int _candidateMeasures;
         private long _lastNumber;
 
-        // Instant (ms) où le regard est arrivé sur le bouton visé ; -1 = minuteur arrêté.
+        // Time (ms) when the gaze arrived on the aimed button; -1 = timer stopped.
         private double _aimStartMs;
 
-        // Vrai après BloquerJusquASortie, jusqu'à ce que le regard change de bouton.
+        // True after BlockUntilExit, until the gaze changes button.
         private bool _blocked;
 
-        // Vrai après ReinitialiserEtBloquer, jusqu'à la première nouvelle mesure.
+        // True after ResetAndBlock, until the first new measure.
         private bool _blockFirst;
 
         public ButtonAimer(IReadOnlyList<IGazeTarget> buttons) : this(buttons, 2)
         {
         }
 
-        /// <summary>mesuresPourChanger : voir _mesuresPourChanger (au moins 1).</summary>
+        /// <summary>measuresToChange: see _measuresToChange (at least 1).</summary>
         public ButtonAimer(IReadOnlyList<IGazeTarget> buttons, int measuresToChange)
         {
             _buttons = buttons;
@@ -66,10 +66,10 @@ namespace GazeBar
             Reset();
         }
 
-        /// <summary>Le numéro du bouton visé dans la liste, ou -1 si aucun.</summary>
+        /// <summary>The index of the aimed button in the list, or -1 if none.</summary>
         public int Aimed { get; private set; }
 
-        /// <summary>Oublie tout (à l'entrée dans un mode).</summary>
+        /// <summary>Forgets everything (when entering a mode).</summary>
         public void Reset()
         {
             Aimed = -1;
@@ -82,8 +82,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Oublie tout (les boutons viennent d'être remplacés), et bloque le bouton qui sera
-        /// sous le regard à la prochaine mesure, jusqu'à ce que le regard le quitte.
+        /// Forgets everything (the buttons were just replaced), and blocks the button that will
+        /// be under the gaze at the next measure, until the gaze leaves it.
         /// </summary>
         public void ResetAndBlock()
         {
@@ -92,7 +92,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Empêche le bouton visé de s'activer de nouveau tant que le regard ne l'a pas quitté.
+        /// Prevents the aimed button from activating again until the gaze has left it.
         /// </summary>
         public void BlockUntilExit()
         {
@@ -101,12 +101,12 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// À appeler à chaque tic. Met à jour le bouton visé et son minuteur, puis dessine les
-        /// boutons (anneau sur le bouton visé seulement).
-        /// delaiSecondes : le délai d'activation ([DelaiActivation] en général) ;
-        /// afficherLibelles : montre le libellé du bouton visé ([AfficherLibelles]).
-        /// Renvoie le numéro du bouton qui vient de s'activer, ou -1. Quand un bouton s'active,
-        /// les boutons ne sont pas redessinés : le mode va de toute façon changer quelque chose.
+        /// To call on each tick. Updates the aimed button and its timer, then draws the buttons
+        /// (ring on the aimed button only).
+        /// delaySeconds: the activation delay ([ActivationDelay] in general);
+        /// showLabels: shows the label of the aimed button ([ShowLabels]).
+        /// Returns the index of the button that just activated, or -1. When a button activates,
+        /// the buttons are not redrawn: the mode is going to change something anyway.
         /// </summary>
         public int Update(GazeState gaze, double delaySeconds, bool showLabels)
         {
@@ -114,18 +114,18 @@ namespace GazeBar
 
             if (!gaze.Available)
             {
-                // Regard perdu : le minuteur repart de zéro.
+                // Gaze lost: the timer starts again from zero.
                 _aimStartMs = -1;
             }
             else if (gaze.Number != _lastNumber)
             {
-                // Nouvelle mesure : sur quel bouton est-elle ? (hors écran → aucun)
+                // New measure: which button is it on? (off screen → none)
                 _lastNumber = gaze.Number;
                 int seen = gaze.OffScreen ? -1 : ButtonUnder(gaze.X, gaze.Y);
                 if (_blockFirst)
                 {
-                    // Première mesure après le remplacement des boutons : celui qui est sous
-                    // le regard est visé tout de suite, mais bloqué.
+                    // First measure after the buttons were replaced: the one under the gaze is
+                    // aimed at once, but blocked.
                     _blockFirst = false;
                     Aimed = seen;
                     _blocked = seen >= 0;
@@ -136,7 +136,7 @@ namespace GazeBar
                 }
             }
 
-            // Le minuteur du bouton visé (pas pendant un blocage).
+            // The timer of the aimed button (not while blocked).
             if (gaze.Available && Aimed >= 0 && !_blocked && _aimStartMs < 0)
             {
                 _aimStartMs = now;
@@ -146,7 +146,7 @@ namespace GazeBar
                 _aimStartMs = -1;
             }
 
-            // Un bouton vide ou indisponible ne s'active jamais : pas de progression.
+            // An empty or unavailable button never activates: no progress.
             double progress = 0;
             if (Aimed >= 0 && _aimStartMs >= 0 && _buttons[Aimed].Active)
             {
@@ -169,9 +169,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Change de bouton visé seulement si le nouveau est confirmé par
-        /// [_mesuresPourChanger] mesures de suite. Changer de bouton remet le minuteur à zéro
-        /// et lève le blocage.
+        /// Changes the aimed button only if the new one is confirmed by [_measuresToChange]
+        /// measures in a row. Changing button resets the timer and lifts the block.
         /// </summary>
         private void ChangeAimedIfNeeded(int seen)
         {
@@ -200,7 +199,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Le numéro du bouton sous ce point du regard, ou -1.</summary>
+        /// <summary>The index of the button under this gaze point, or -1.</summary>
         private int ButtonUnder(double x, double y)
         {
             for (int i = 0; i < _buttons.Count; i++)

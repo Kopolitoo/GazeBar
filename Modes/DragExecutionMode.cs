@@ -3,36 +3,36 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// MODE GLISSER-DÉPOSER, 3e temps : l'exécution (étape 6).
+    /// DRAG AND DROP MODE, part 3: the execution (step 6).
     ///
-    /// On y arrive depuis la loupe, quand le point d'arrivée a été affiné. Tout se fait tout
-    /// seul, en quelques dixièmes de seconde, sans regarder nulle part :
+    /// We get here from the magnifier, once the drop point has been refined. Everything
+    /// happens on its own, in a few tenths of a second, without looking anywhere:
     ///
-    ///  1. MASQUAGE.     Tout ce que GazeBar dessine est caché, et on attend [AttenteMs] que
-    ///                   Windows l'ait effacé (sinon le glisser partirait sur l'écran noir).
-    ///  2. APPUI.        Les modificateurs actifs (Ctrl, Maj, Alt) sont enfoncés, le curseur est
-    ///                   placé sur le point de départ, puis le bouton est enfoncé.
-    ///  3. PAUSE.        Seulement pour le glisser-déposer « android » : on attend
-    ///                   [DureePauseAndroid] sans bouger, bouton enfoncé, comme un doigt posé
-    ///                   sur une icône de téléphone avant de la déplacer.
-    ///  4. DÉPLACEMENT.  Le curseur va du départ à l'arrivée en ligne droite, en [DureeGlisser],
-    ///                   un petit pas à chaque tic (environ 60 par seconde), comme une vraie main.
-    ///                   Déplacer d'un seul coup ne marcherait pas : beaucoup d'applications ne
-    ///                   reconnaissent un glisser qu'après plusieurs petits mouvements.
-    ///  5. DÉPÔT.        Le curseur est remis exactement sur l'arrivée, on attend
-    ///                   [AttenteDepotMs] (le temps que l'application visée remarque qu'on
-    ///                   survole la cible), puis le bouton est relâché, et les modificateurs aussi.
+    ///  1. HIDING.       Everything GazeBar draws is hidden, and we wait [WaitMs] for
+    ///                   Windows to erase it (otherwise the drag would start on the black screen).
+    ///  2. PRESS.        The active modifiers (Ctrl, Shift, Alt) are pressed, the cursor is
+    ///                   placed on the start point, then the button is pressed.
+    ///  3. PAUSE.        Only for the "android" drag and drop: we wait [AndroidPauseDuration]
+    ///                   without moving, button pressed, like a finger resting on a phone icon
+    ///                   before moving it.
+    ///  4. MOVE.         The cursor goes from the start to the drop point in a straight line,
+    ///                   in [DragDuration], a small step on each tick (about 60 per second),
+    ///                   like a real hand. Moving in one go would not work: many applications
+    ///                   only recognize a drag after several small movements.
+    ///  5. DROP.         The cursor is put back exactly on the drop point, we wait
+    ///                   [DropWaitMs] (the time for the target application to notice that the
+    ///                   target is hovered), then the button is released, and the modifiers too.
     ///
-    /// Ensuite : retour au mode mouvement. Une nouvelle fixation au point d'arrivée est
-    /// ignorée tant que le regard n'en est pas sorti, comme après un clic. Les modificateurs
-    /// sont désactivés (« ils se désactivent après chaque action »).
+    /// Then: back to movement mode. A new fixation on the drop point is ignored until the
+    /// gaze has left it, as after a click. The modifiers are deactivated ("they deactivate
+    /// after each action").
     ///
-    /// Sécurité : si l'on quitte ce mode avant la fin (touche Échap de l'aidant, erreur), le
-    /// bouton et les touches sont relâchés dans Quitter. Le menu ne s'ouvre pas pendant ce mode.
+    /// Safety: if this mode is left before the end (caregiver's Escape key, error), the
+    /// button and keys are released in Quit. The menu does not open during this mode.
     /// </summary>
     internal sealed class DragExecutionMode : Mode
     {
-        /// <summary>Les temps du mode (voir le commentaire de la classe).</summary>
+        /// <summary>The phases of the mode (see the class comment).</summary>
         private enum Step
         {
             Hiding,
@@ -42,20 +42,20 @@ namespace GazeBar
             Finished
         }
 
-        /// <summary>Attente après avoir tout caché, en millisecondes (même valeur que le choix d'action).</summary>
+        /// <summary>Wait after hiding everything, in milliseconds (same value as the action choice).</summary>
         private const double WaitMs = 60;
 
         /// <summary>
-        /// Attente entre l'arrivée du curseur et le relâchement, en millisecondes. Ce n'est pas
-        /// un réglage du cahier des charges : c'est une précaution technique, car certaines
-        /// applications (l'Explorateur, par exemple) ont besoin de « voir » le curseur immobile
-        /// sur la cible un court instant avant d'accepter le dépôt.
+        /// Wait between the cursor's arrival and the release, in milliseconds. It is not a
+        /// setting of the specification: it is a technical precaution, because some
+        /// applications (Explorer, for example) need to "see" the cursor still on the target
+        /// for a short moment before accepting the drop.
         /// </summary>
         private const double DropWaitMs = 100;
 
         private readonly DragGesture _drag;
 
-        // Le point d'arrivée, en pixels d'écran.
+        // The drop point, in screen pixels.
         private readonly double _ax;
         private readonly double _ay;
 
@@ -76,7 +76,7 @@ namespace GazeBar
 
         public override void Enter(GazeState gaze)
         {
-            // 1. MASQUAGE : on cache tout, et on attend un peu avant d'enfoncer le bouton.
+            // 1. HIDING: hide everything, and wait a bit before pressing the button.
             Manager.Layer.HideAll();
             _step = Step.Hiding;
             _stepStartMs = gaze.NowMs;
@@ -94,8 +94,8 @@ namespace GazeBar
                     if (elapsedMs >= WaitMs)
                     {
                         Press();
-                        // Avec la pause « android », on attend avant de bouger ; sinon, on
-                        // commence le déplacement dès le prochain tic.
+                        // With the "android" pause, wait before moving; otherwise, start
+                        // moving on the next tick.
                         _step = _drag.WithPause ? Step.Pause : Step.Move;
                         _stepStartMs = now;
                     }
@@ -111,7 +111,7 @@ namespace GazeBar
 
                 case Step.Move:
                     {
-                        // Fraction du trajet déjà parcourue, de 0 à 1.
+                        // Fraction of the path already covered, from 0 to 1.
                         double fraction = Math.Min(1.0, elapsedMs / (p.DragDuration * 1000.0));
                         double x = _drag.StartX + (_ax - _drag.StartX) * fraction;
                         double y = _drag.StartY + (_ay - _drag.StartY) * fraction;
@@ -119,8 +119,8 @@ namespace GazeBar
 
                         if (fraction >= 1.0)
                         {
-                            // Arrivé : le curseur est remis exactement sur le point (l'arrondi
-                            // de DeplacerVers peut le décaler d'un pixel).
+                            // Arrived: the cursor is put back exactly on the point (the rounding
+                            // in MoveTo can shift it by one pixel).
                             NativeMethods.SetCursorPos((int)Math.Round(_ax), (int)Math.Round(_ay));
                             _step = Step.Drop;
                             _stepStartMs = now;
@@ -139,19 +139,19 @@ namespace GazeBar
 
         public override void Quit()
         {
-            // Si l'on part avant la fin (Échap, erreur), rien ne doit rester enfoncé.
+            // If we leave before the end (Escape, error), nothing must stay pressed.
             if (_step != Step.Finished)
             {
                 MouseInjector.Release(_drag.Button);
                 Modifiers.ReleaseAll();
                 if (_step != Step.Hiding)
                 {
-                    App.Log("Glisser : interrompu avant la fin, bouton et touches relâchés");
+                    App.Log("Drag: interrupted before the end, button and keys released");
                 }
             }
         }
 
-        /// <summary>2. APPUI : modificateurs, curseur sur le départ, bouton enfoncé.</summary>
+        /// <summary>2. PRESS: modifiers, cursor on the start point, button pressed.</summary>
         private void Press()
         {
             Modifiers.PressActive();
@@ -159,27 +159,27 @@ namespace GazeBar
             int dx = (int)Math.Round(_drag.StartX);
             int dy = (int)Math.Round(_drag.StartY);
             NativeMethods.SetCursorPos(dx, dy);
-            // Un « vrai » mouvement de souris sur place : l'application sait ainsi que la
-            // souris est au-dessus de l'élément à saisir avant que le bouton ne s'enfonce.
+            // A "real" mouse movement on the spot: the application then knows the mouse is
+            // over the element to grab before the button goes down.
             MouseInjector.MoveTo(dx, dy);
             NativeMethods.SetCursorPos(dx, dy);
 
             MouseInjector.Press(_drag.Button);
-            App.Log("Glisser : " + _drag.Name + ", bouton enfoncé en (" + dx + ", " + dy +
-                    "), modificateurs : " + Modifiers.Description());
+            App.Log("Drag: " + _drag.Name + ", button pressed at (" + dx + ", " + dy +
+                    "), modifiers: " + Modifiers.Description());
         }
 
-        /// <summary>5. DÉPÔT : bouton relâché, puis modificateurs, puis retour au mode mouvement.</summary>
+        /// <summary>5. DROP: button released, then modifiers, then back to movement mode.</summary>
         private void Drop()
         {
             MouseInjector.Release(_drag.Button);
             Modifiers.ReleaseAll();
             _step = Step.Finished;
 
-            App.Log("Glisser : déposé en (" + _ax.ToString("F0") + ", " + _ay.ToString("F0") + ")");
+            App.Log("Drag: dropped at (" + _ax.ToString("F0") + ", " + _ay.ToString("F0") + ")");
 
-            // Le mode mouvement désactive les modificateurs et ignore une nouvelle fixation
-            // autour du point d'arrivée tant que le regard n'en est pas sorti.
+            // Movement mode deactivates the modifiers and ignores a new fixation around the
+            // drop point until the gaze has left it.
             Manager.ChangeMode(new MovementMode(_ax, _ay));
         }
     }

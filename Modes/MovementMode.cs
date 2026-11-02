@@ -3,62 +3,63 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// MODE MOUVEMENT (mode par défaut, étape 2 du cahier des charges).
+    /// MOVEMENT MODE (default mode, step 2 of the specification).
     ///
-    /// Un cercle de [RayonCercle] suit le regard sur le calque, lissé ([Lissage], voir Lisseur.cs).
-    /// Le curseur de la souris ne bouge pas, sauf si [SuiviSouris] est activé : il suit alors
-    /// le cercle. Pour ne pas trembler, il ne se met en route que quand le cercle s'est éloigné
-    /// de plus de [ZoneMorteCurseur] pixels ; ensuite il le suit en continu jusqu'à le rattraper.
+    /// A [CircleRadius] circle follows the gaze on the overlay, smoothed ([Smoothing], see
+    /// Smoother.cs). The mouse cursor does not move, unless [MouseTracking] is on: it then
+    /// follows the circle. So as not to jitter, it only gets on the way when the circle has
+    /// moved more than [CursorDeadZone] pixels away; then it follows continuously until it
+    /// catches up.
     ///
-    /// En même temps, un DetecteurFixation surveille le regard. Quand le regard est resté
-    /// immobile pendant [DelaiFixation], on passe au mode regard fixe sur le point fixé.
-    /// (Pas d'anneau de progression pendant cette attente.)
+    /// At the same time, a FixationDetector watches the gaze. When the gaze has stayed still
+    /// for [FixationDelay], we switch to fixed gaze mode on the fixated point.
+    /// (No progress ring during this wait.)
     ///
-    /// Regard hors de l'écran : le cercle continue de suivre le regard, mais bloqué aux bords
-    /// de l'écran (chaque axe séparément, voir EtatRegard.XEcran). Regard au-dessus de l'écran :
-    /// le cercle glisse de gauche à droite le long du bord du haut ; regard à droite : il glisse
-    /// de haut en bas le long du bord droit. La fixation, elle, est oubliée dès que le regard
-    /// s'éloigne de l'écran ; mais un regard JUSTE à côté de l'écran (bande étroite, voir
-    /// EtatRegard.PresDeLEcran) compte encore, ramené au bord : sinon, dans les coins, les
-    /// mesures qui débordent un peu empêchaient le regard fixe (02/11/2026).
-    /// Regard perdu (pas de mesure) : le cercle et le curseur restent où ils sont.
+    /// Gaze off screen: the circle keeps following the gaze, but clamped to the screen edges
+    /// (each axis separately, see GazeState.XScreen). Gaze above the screen: the circle slides
+    /// from left to right along the top edge; gaze on the right: it slides up and down along
+    /// the right edge. The fixation, however, is forgotten as soon as the gaze moves away
+    /// from the screen; but a gaze JUST next to the screen (narrow band, see
+    /// GazeState.NearScreen) still counts, brought back to the edge: otherwise, in the
+    /// corners, the measures overflowing a little prevented fixed gaze (2026-11-02).
+    /// Gaze lost (no measure): the circle and the cursor stay where they are.
     ///
-    /// C'est l'un des seuls modes d'où le menu peut s'ouvrir (avec la pause, étape 6).
+    /// It is one of the only modes from which the menu can open (with pause, step 6).
     ///
-    /// Étape 12, clavier au regard (voir ClavierRegard) : quand il est affiché et que le
-    /// regard est DESSUS, ce mode lui passe la main : le curseur ne bouge pas, le cercle est
-    /// masqué, aucune fixation ne démarre, et ce sont les touches qui réagissent. Le cercle
-    /// continue de suivre le regard en cachette : il réapparaît sans saut en sortant du clavier.
+    /// Step 12, gaze keyboard (see GazeKeyboard): when it is shown and the gaze is ON it, this
+    /// mode hands over to it: the cursor does not move, the circle is hidden, no fixation
+    /// starts, and the keys react. The circle keeps following the gaze secretly: it reappears
+    /// without a jump when leaving the keyboard.
     /// </summary>
     internal sealed class MovementMode : Mode
     {
         private readonly FixationDetector _fixation = new FixationDetector();
 
-        // Position (décimale) du cercle lissé, en pixels d'écran (voir Lisseur.cs).
+        // Position (decimal) of the smoothed circle, in screen pixels (see Smoother.cs).
         private readonly Smoother _smoothed = new Smoother();
 
-        // Vrai quand le curseur est « en route » derrière le cercle ([SuiviSouris]).
+        // True when the cursor is "on the way" behind the circle ([MouseTracking]).
         private bool _cursorOnTheWay;
 
-        // Vrai dès que le cercle a une position (sinon, il n'est pas encore dessiné).
+        // True as soon as the circle has a position (otherwise it is not drawn yet).
         private bool _placed;
 
-        // Zone « déjà traitée » : après un clic direct, on ne relance pas une fixation au même
-        // endroit tant que le regard n'en est pas sorti. Sinon, en continuant à regarder le
-        // bouton qu'on vient de cliquer, on cliquerait dessus encore et encore.
+        // "Already handled" zone: after a direct click, no fixation is started again at the
+        // same place until the gaze has left it. Otherwise, by keeping looking at the button
+        // just clicked, it would be clicked again and again.
         private bool _ignoredZone;
         private readonly double _zoneX;
         private readonly double _zoneY;
 
-        /// <summary>Mode mouvement ordinaire.</summary>
+        /// <summary>Ordinary movement mode.</summary>
         public MovementMode()
         {
         }
 
         /// <summary>
-        /// Mode mouvement qui ignore une nouvelle fixation autour de (x, y), dans un rayon de
-        /// [RayonCercle], tant que le regard n'est pas sorti de cette zone.
-        /// Utilisé après un clic direct, ou une action faite à cet endroit.
+        /// Movement mode that ignores a new fixation around (x, y), within a radius of
+        /// [CircleRadius], until the gaze has left this zone.
+        /// Used after a direct click, or an action done at this place.
         /// </summary>
         public MovementMode(double xIgnored, double yIgnored)
         {
@@ -72,15 +73,15 @@ namespace GazeBar
             get { return "Mouvement"; }
         }
 
-        /// <summary>Le menu s'ouvre depuis le mode mouvement (regard en bas, hors de l'écran).</summary>
+        /// <summary>The menu opens from movement mode (gaze down, below the screen).</summary>
         public override bool MenuAllowed
         {
             get { return true; }
         }
 
         /// <summary>
-        /// L'écran a changé (étape 11) : ce mode continue, car il redessine le cercle à chaque tic,
-        /// avec les tailles du nouvel écran.
+        /// The screen changed (step 11): this mode carries on, because it redraws the circle on
+        /// each tick, with the sizes of the new screen.
         /// </summary>
         public override bool AdaptToScreen()
         {
@@ -89,16 +90,17 @@ namespace GazeBar
 
         public override void Enter(GazeState gaze)
         {
-            // Retour au mode mouvement = fin de l'action (ou abandon) : les modificateurs
-            // Ctrl, Maj, Alt du choix d'action sont désactivés (voir Modificateurs.cs).
+            // Back to movement mode = end of the action (or giving up): the Ctrl, Shift, Alt
+            // modifiers of the action choice are deactivated (see Modifiers.cs).
             Modifiers.DisableAll();
 
-            // Point de départ du cercle, sans jamais le placer « par défaut » au centre :
-            //  - si un cercle est déjà affiché (on revient du mode regard fixe), on part de
-            //    là où il est : il glissera en douceur vers le regard, sans saut ;
-            //  - sinon, on part directement du regard (ramené dans l'écran s'il en sort) ;
-            //  - si le regard n'est pas encore disponible, rien n'est dessiné : le cercle
-            //    apparaîtra à la première mesure.
+            // Starting point of the circle, never placed "by default" in the center:
+            //  - if a circle is already shown (coming back from fixed gaze mode), start from
+            //    where it is: it will slide smoothly towards the gaze, without a jump;
+            //  - otherwise, start directly from the gaze (brought back into the screen if
+            //    outside);
+            //  - if the gaze is not available yet, nothing is drawn: the circle will appear at
+            //    the first measure.
             if (Manager.Layer.CircleShown)
             {
                 Place(Manager.Layer.CircleX, Manager.Layer.CircleY);
@@ -121,52 +123,52 @@ namespace GazeBar
         {
             AppSettings p = AppSettings.Current;
 
-            // Le regard est-il sur le clavier au regard (étape 12) ? Vrai regard, sur l'écran.
+            // Is the gaze on the gaze keyboard (step 12)? Real gaze, on the screen.
             GazeKeyboard keyboard = Manager.Keyboard;
             bool onKeyboard = gaze.OnScreen && keyboard.Contains(gaze.X, gaze.Y);
 
             if (gaze.Available)
             {
-                // 1. Le cercle se rapproche du regard, en douceur (voir Lisseur.cs).
-                //    (Première mesure reçue : il apparaît directement sur le regard.)
-                //    On vise la position RAMENÉE DANS L'ÉCRAN : si le regard sort de l'écran,
-                //    le cercle reste au bord et glisse le long de ce bord.
+                // 1. The circle moves smoothly towards the gaze (see Smoother.cs).
+                //    (First measure received: it appears directly on the gaze.)
+                //    We aim at the position BROUGHT BACK INTO THE SCREEN: if the gaze leaves
+                //    the screen, the circle stays at the edge and slides along it.
                 if (!_placed)
                 {
                     Place(gaze.XScreen, gaze.YScreen);
                 }
                 _smoothed.Follow(gaze.XScreen, gaze.YScreen, gaze.NowMs);
 
-                // 2. Le curseur suit le cercle, seulement si l'option [SuiviSouris] est
-                //    activée. Sinon, il ne bouge pas : il rejoindra le regard une fois fixé.
+                // 2. The cursor follows the circle, only if the [MouseTracking] option is on.
+                //    Otherwise, it does not move: it will join the gaze once fixated.
                 if (p.MouseTracking && !onKeyboard)
                 {
                     MoveCursor(p.CursorDeadZonePx);
                 }
             }
 
-            // 3. Le regard est-il sorti de la zone ignorée ? (Seulement avec un regard sur
-            //    l'écran, comme avant : un regard hors de l'écran ne compte pas.)
+            // 3. Has the gaze left the ignored zone? (Only with a gaze on the screen, as
+            //    before: a gaze off screen does not count.)
             if (gaze.OnScreen && _ignoredZone &&
                 Distance(gaze.X, gaze.Y, _zoneX, _zoneY) > p.CircleRadiusPx)
             {
                 _ignoredZone = false;
             }
 
-            // 4. La fixation. Dans la zone ignorée, on ne la laisse pas progresser.
-            //    Un regard franchement hors de l'écran la remet à zéro ; juste à côté de
-            //    l'écran, il est ramené au bord (voir DetecteurFixation.Ajouter).
-            //    Pas d'anneau de progression ici (choix de l'utilisateur) : l'anneau est
-            //    réservé aux boutons (icône d'options, choix d'action, barre de menu).
+            // 4. The fixation. In the ignored zone, it is not allowed to progress.
+            //    A gaze clearly off screen resets it; right next to the screen, it is brought
+            //    back to the edge (see FixationDetector.Add).
+            //    No progress ring here (user's choice): the ring is reserved for buttons
+            //    (options icon, action choice, menu bar).
             _fixation.Add(gaze);
             if (_ignoredZone || onKeyboard)
             {
-                // Sur le clavier, pas de fixation : ce sont les touches qui réagissent.
+                // On the keyboard, no fixation: the keys react.
                 _fixation.Reset();
             }
 
-            // 4 bis. Le clavier au regard (étape 12) : touche survolée, activée… S'il n'est pas
-            //        affiché, il ne fait rien.
+            // 4b. The gaze keyboard (step 12): key hovered, activated... If it is not shown,
+            //     it does nothing.
             keyboard.Update(gaze);
 
             if (_fixation.Reached)
@@ -175,9 +177,9 @@ namespace GazeBar
                 return;
             }
 
-            // 5. Le dessin du cercle (dès qu'on a une position).
-            //    Il est masqué au-dessus du clavier (étape 12), y compris quand le regard est
-            //    sous l'écran : le cercle, bloqué au bord du bas, serait alors sur le clavier.
+            // 5. Drawing the circle (as soon as there is a position).
+            //    It is hidden above the keyboard (step 12), including when the gaze is below
+            //    the screen: the circle, clamped to the bottom edge, would then be on the keyboard.
             if (_placed)
             {
                 if (onKeyboard || keyboard.Contains(_smoothed.X, _smoothed.Y))
@@ -193,11 +195,11 @@ namespace GazeBar
 
         public override void Quit()
         {
-            // Le cercle reste affiché : le mode suivant le reprend là où il est.
+            // The circle stays visible: the next mode takes it over where it is.
             Manager.Layer.HideRing();
         }
 
-        /// <summary>Place le cercle directement en (x, y), sans lissage.</summary>
+        /// <summary>Places the circle directly at (x, y), without smoothing.</summary>
         private void Place(double x, double y)
         {
             _smoothed.Place(x, y);
@@ -205,15 +207,16 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Fait suivre le cercle au curseur, sans le faire trembler :
-        ///  - au repos, le curseur ne bouge pas tant que le cercle en est à moins de zoneMorte
-        ///    pixels (le petit tremblement du regard est ignoré) ;
-        ///  - dès que le cercle s'en éloigne davantage, le curseur se met « en route » et suit le
-        ///    cercle à CHAQUE tic, en continu, jusqu'à l'avoir rattrapé (moins d'un pixel).
-        /// Avant, le curseur restait immobile puis sautait de zoneMorte pixels d'un coup, encore
-        /// et encore : il avançait par petits bonds, ce qui donnait un mouvement saccadé.
-        /// On lit la vraie position du curseur : s'il a été déplacé par la souris entre-temps,
-        /// on en tient compte.
+        /// Makes the cursor follow the circle, without jitter:
+        ///  - at rest, the cursor does not move as long as the circle is less than deadZone
+        ///    pixels away (the small gaze jitter is ignored);
+        ///  - as soon as the circle moves further away, the cursor gets "on the way" and
+        ///    follows the circle on EVERY tick, continuously, until it has caught up (less than
+        ///    one pixel).
+        /// Before, the cursor stayed still then jumped deadZone pixels at once, again and
+        /// again: it moved in small leaps, which gave a jerky movement.
+        /// The real cursor position is read: if it was moved by the mouse in the meantime,
+        /// this is taken into account.
         /// </summary>
         private void MoveCursor(double deadZone)
         {
@@ -236,7 +239,7 @@ namespace GazeBar
             NativeMethods.SetCursorPos((int)Math.Round(_smoothed.X), (int)Math.Round(_smoothed.Y));
             if (distance < 1)
             {
-                _cursorOnTheWay = false; // rattrapé : retour au repos
+                _cursorOnTheWay = false; // caught up: back to rest
             }
         }
 

@@ -8,60 +8,59 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// MODE GLISSER-DÉPOSER, 1er temps : choisir le point d'arrivée (étape 6).
+    /// DRAG AND DROP MODE, part 1: choosing the drop point (step 6).
     ///
-    /// On y arrive depuis le choix d'action, avec l'une des trois actions « glisser-déposer »
-    /// de la couronne. Le point de départ est le point visé du choix d'action (la croix).
+    /// We get here from the action choice, with one of the three "drag and drop" actions of
+    /// the crown. The start point is the aimed point of the action choice (the cross).
     ///
-    /// Affichage, par-dessus l'écran réel (l'écran noir du choix d'action a disparu) :
-    ///   - le cercle de [RayonCercle] suit le regard, lissé, comme en mode mouvement ;
-    ///   - une ligne blanche en pointillés relie le point de départ au cercle : c'est le futur
-    ///     trajet de la souris ;
-    ///   - un petit point blanc marque le point de départ ;
-    ///   - un bouton « retour », au bord droit de l'écran et centré verticalement (choix de
-    ///     l'utilisateur du 25/10/2026), annule le glisser-déposer sans rien enfoncer et ramène
-    ///     au mode mouvement.
+    /// Display, on top of the real screen (the black screen of the action choice is gone):
+    ///   - the [CircleRadius] circle follows the gaze, smoothed, as in movement mode;
+    ///   - a dotted white line joins the start point to the circle: it is the future path of
+    ///     the mouse;
+    ///   - a small white dot marks the start point;
+    ///   - a "back" button, on the right edge of the screen and vertically centered (user's
+    ///     choice of 2026-10-25), cancels the drag and drop without pressing anything and
+    ///     returns to movement mode.
     ///
-    /// Quand le regard se fixe (même détection qu'en mode mouvement, [DelaiFixation]), on
-    /// passe au 2e temps : la loupe s'ouvre autour du point fixé pour affiner l'arrivée
-    /// (ModeLoupe, avec ce glisser-déposer en cours). Le curseur, lui, n'a pas bougé : il est
-    /// toujours sur le point de départ.
+    /// When the gaze fixates (same detection as in movement mode, [FixationDelay]), we move
+    /// to part 2: the magnifier opens around the fixated point to refine the drop point
+    /// (MagnifierMode, with this drag and drop in progress). The cursor has not moved: it is
+    /// still on the start point.
     ///
-    /// Deux précautions, comme dans la loupe :
-    ///  - à l'entrée, le regard est encore là où se trouvait l'icône qu'on vient d'activer
-    ///    dans la couronne. Une fixation n'est reconnue qu'une fois le regard sorti de cet
-    ///    endroit (rayon [RayonCercle]) ;
-    ///  - une fixation sur le bouton « retour » ne compte pas comme point d'arrivée.
+    /// Two precautions, as in the magnifier:
+    ///  - on entry, the gaze is still where the crown icon just activated was. A fixation is
+    ///    only recognized once the gaze has left that place (radius [CircleRadius]);
+    ///  - a fixation on the "back" button does not count as a drop point.
     ///
-    /// Le menu ne s'ouvre pas pendant ce mode (choix du 25/10/2026) : la sortie est le bouton
-    /// « retour » (ou la touche Échap de l'aidant).
+    /// The menu does not open during this mode (choice of 2026-10-25): the way out is the
+    /// "back" button (or the caregiver's Escape key).
     /// </summary>
     internal sealed class DragTargetMode : Mode
     {
-        /// <summary>Rayon du point qui marque le départ, en pixels de l'écran 4K (converti avec Ecran.Px, étape 11).</summary>
+        /// <summary>Radius of the dot marking the start, in 4K screen pixels (converted with ScreenMetrics.Px, step 11).</summary>
         private const double StartDotRadius = 6;
 
         private readonly DragGesture _drag;
 
         private readonly FixationDetector _fixation = new FixationDetector();
 
-        // Le bouton « retour » (seul bouton de ce mode) et ce qui décide s'il est activé.
+        // The "back" button (the only button of this mode) and what decides whether it is activated.
         private readonly List<GazeButton> _buttons = new List<GazeButton>();
         private readonly ButtonAimer _aimer;
 
-        // Position (décimale) du cercle lissé, en pixels d'écran ; _place = faux tant qu'il
-        // n'a pas de position.
+        // Position (decimal) of the smoothed circle, in screen pixels; _placed = false as long
+        // as it has no position.
         private readonly Smoother _smoothed = new Smoother();
         private bool _placed;
 
-        // Zone ignorée : là où était le regard à l'entrée (voir le commentaire de la classe).
+        // Ignored zone: where the gaze was on entry (see the class comment).
         private bool _ignoredZone;
         private bool _ignoredZoneKnown;
         private double _zoneX;
         private double _zoneY;
 
-        // La ligne du trajet : un trait noir continu dessous et un trait blanc en pointillés
-        // dessus, pour qu'elle se voie sur tous les fonds.
+        // The path line: a solid black line underneath and a dotted white line on top, so
+        // that it can be seen on every background.
         private Line _rowBackground;
         private Line _row;
 
@@ -89,41 +88,41 @@ namespace GazeBar
                 return;
             }
 
-            // La zone ignorée est centrée sur le regard actuel (s'il est sur l'écran),
-            // sinon sur la première mesure sur l'écran qui arrivera.
+            // The ignored zone is centered on the current gaze (if it is on the screen),
+            // otherwise on the first on-screen measure to come.
             _ignoredZone = true;
             _ignoredZoneKnown = gaze.OnScreen;
             _zoneX = gaze.X;
             _zoneY = gaze.Y;
 
-            // Le cercle part du regard (le choix d'action l'avait caché : pas de saut visible),
-            // ramené dans l'écran s'il en sort.
+            // The circle starts from the gaze (the action choice had hidden it: no visible
+            // jump), brought back into the screen if it is outside.
             _placed = gaze.Available;
             _smoothed.Place(gaze.XScreen, gaze.YScreen);
 
             BuildSurface();
-            App.Log("Glisser : choix de l'arrivée (" + _drag.Name + ", départ en (" +
+            App.Log("Drag: choosing the end point (" + _drag.Name + ", start at (" +
                     _drag.StartX.ToString("F0") + ", " + _drag.StartY.ToString("F0") +
-                    "), modificateurs : " + Modifiers.Description() + ")");
+                    "), modifiers: " + Modifiers.Description() + ")");
         }
 
         public override void Update(GazeState gaze)
         {
             AppSettings p = AppSettings.Current;
 
-            // 1. Le bouton « retour » vient-il d'être activé ?
+            // 1. Has the "back" button just been activated?
             int active = _aimer.Update(gaze, p.ActivationDelay, p.ShowLabels);
             if (active >= 0)
             {
-                App.Log("Glisser : annulé (retour)");
+                App.Log("Drag: cancelled (back)");
                 Manager.ChangeMode(new MovementMode());
                 return;
             }
 
             if (gaze.Available)
             {
-                // 2. Le cercle se rapproche du regard, en douceur (voir Lisseur.cs). Regard hors
-                //    de l'écran : il reste au bord et glisse le long de ce bord (EtatRegard.XEcran).
+                // 2. The circle moves smoothly towards the gaze (see Smoother.cs). Gaze off
+                //    screen: it stays at the edge and slides along it (GazeState.XScreen).
                 if (!_placed)
                 {
                     _smoothed.Place(gaze.XScreen, gaze.YScreen);
@@ -134,7 +133,7 @@ namespace GazeBar
 
             if (gaze.OnScreen)
             {
-                // 3. La zone ignorée : le regard en est-il sorti ? (Vrai regard sur l'écran seulement.)
+                // 3. The ignored zone: has the gaze left it? (Real on-screen gaze only.)
                 if (!_ignoredZoneKnown)
                 {
                     _zoneX = gaze.X;
@@ -147,8 +146,8 @@ namespace GazeBar
                 }
             }
 
-            // 4. La fixation, hors de la zone ignorée et hors du bouton « retour ».
-            //    Pas d'anneau de progression, comme en mode mouvement.
+            // 4. The fixation, outside the ignored zone and outside the "back" button.
+            //    No progress ring, as in movement mode.
             _fixation.Add(gaze);
             bool onBack = gaze.OnScreen && _buttons.Count > 0 && _buttons[0].Contains(gaze.X, gaze.Y);
             if (_ignoredZone || onBack)
@@ -158,13 +157,13 @@ namespace GazeBar
 
             if (_fixation.Reached)
             {
-                App.Log("Glisser : arrivée fixée en (" + _fixation.X.ToString("F0") + ", " +
-                        _fixation.Y.ToString("F0") + "), ouverture de la loupe");
+                App.Log("Drag: end point fixed at (" + _fixation.X.ToString("F0") + ", " +
+                        _fixation.Y.ToString("F0") + "), opening the magnifier");
                 Manager.ChangeMode(new MagnifierMode(_fixation.X, _fixation.Y, _drag));
                 return;
             }
 
-            // 5. Le dessin : le cercle et la ligne du trajet.
+            // 5. Drawing: the circle and the path line.
             if (_placed)
             {
                 Manager.Layer.ShowCircle(_smoothed.X, _smoothed.Y, p.CircleRadiusPx, false);
@@ -174,8 +173,8 @@ namespace GazeBar
 
         public override void Quit()
         {
-            // La surface est cachée et vidée. Le cercle reste affiché : en cas d'annulation, le
-            // mode mouvement le reprend là où il est (la loupe, elle, cache tout).
+            // The surface is hidden and cleared. The circle stays visible: if cancelled,
+            // movement mode takes it over where it is (the magnifier hides everything).
             Manager.Layer.HideDragSurface();
             Manager.Layer.DragSurface.Children.Clear();
             _buttons.Clear();
@@ -183,9 +182,9 @@ namespace GazeBar
             _rowBackground = null;
         }
 
-        // ───────────────────────── Dessin ─────────────────────────
+        // ───────────────────────── Drawing ─────────────────────────
 
-        /// <summary>Remplit la surface du glisser : ligne du trajet, point de départ, bouton « retour ».</summary>
+        /// <summary>Fills the drag surface: path line, start point, "back" button.</summary>
         private void BuildSurface()
         {
             OverlayWindow layer = Manager.Layer;
@@ -193,7 +192,7 @@ namespace GazeBar
             Canvas surface = layer.DragSurface;
             double size = AppSettings.Current.IconSizePx;
 
-            // La ligne : elle partira du point de départ ; son autre bout suit le cercle.
+            // The line: it will start from the start point; its other end follows the circle.
             _rowBackground = new Line();
             _rowBackground.Stroke = Brushes.Black;
             _rowBackground.StrokeThickness = ScreenMetrics.Units(5);
@@ -202,13 +201,13 @@ namespace GazeBar
             _row = new Line();
             _row.Stroke = Brushes.White;
             _row.StrokeThickness = ScreenMetrics.Units(3);
-            // Pointillés : 3 épaisseurs de trait, puis 2 épaisseurs de vide, et ainsi de suite.
+            // Dots: 3 line thicknesses, then 2 thicknesses of gap, and so on.
             _row.StrokeDashArray = new DoubleCollection(new double[] { 3, 2 });
             _row.Visibility = Visibility.Collapsed;
             surface.Children.Add(_rowBackground);
             surface.Children.Add(_row);
 
-            // Le point de départ : un petit disque blanc bordé de noir.
+            // The start point: a small white disc with a black border.
             Point startPoint = layer.ToWpf(_drag.StartX, _drag.StartY);
             double r = layer.LengthToWpf(ScreenMetrics.Px(StartDotRadius));
             Ellipse point = new Ellipse();
@@ -221,8 +220,8 @@ namespace GazeBar
             Canvas.SetTop(point, startPoint.Y - r);
             surface.Children.Add(point);
 
-            // Le bouton « retour », au bord droit de l'écran, centré verticalement.
-            // Symbole E72B = flèche « retour » de la police Windows.
+            // The "back" button, on the right edge of the screen, vertically centered.
+            // Symbol E72B = "back" arrow of the Windows font.
             double xBack = Manager.ScreenWidth - size / 2 - ScreenMetrics.Px(10);
             double yBack = Manager.ScreenHeight / 2;
             GazeButton back = new GazeButton("", null, "Annuler le glisser-déposer");
@@ -232,7 +231,7 @@ namespace GazeBar
             layer.ShowDragSurface();
         }
 
-        /// <summary>Place la ligne du trajet entre le point de départ et (x, y), en pixels d'écran.</summary>
+        /// <summary>Places the path line between the start point and (x, y), in screen pixels.</summary>
         private void PlaceRow(double x, double y)
         {
             if (_row == null)

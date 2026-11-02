@@ -4,78 +4,74 @@ using System.Windows;
 namespace GazeBar
 {
     /// <summary>
-    /// MODE PARAMÈTRES (étape 7 du cahier des charges).
+    /// SETTINGS MODE (step 7 of the specification).
     ///
-    /// Entrée : bouton « Paramètres » de la barre de menu.
+    /// Entry: "Settings" button of the menu bar.
     ///
-    /// Affichage : la fenêtre FenetreParametres, plein écran, fond noir (voir ce fichier pour
-    /// la mise en page). Le calque est vidé : rien n'y est dessiné pendant ce mode.
+    /// Display: the SettingsWindow window, full screen, black background (see that file for
+    /// the layout). The overlay is emptied: nothing is drawn on it during this mode.
     ///
-    /// Le regard : ce mode fait le lien entre le regard et la fenêtre.
-    ///   - à chaque tic, la position du regard (pixels d'écran) est convertie en position sur
-    ///     la page 1920 × 1080 de la fenêtre, puis donnée à un ViseurBoutons, le même que
-    ///     pour le menu et le choix d'action ;
-    ///   - une cible regardée pendant [DelaiActivation] s'active ;
-    ///   - RÉPÉTITION (choix de l'utilisateur du 26/10/2026) : si le regard reste sur « − » ou
-    ///     « + », la valeur continue de changer, d'un pas toutes les [DelaiRepetition]
-    ///     secondes. Les autres cibles (onglets, Non / Oui…) ne s'activent qu'une fois : il
-    ///     faut quitter la cible du regard pour l'activer de nouveau ;
-    ///   - un petit cercle gris (50 px) montre où est le regard.
+    /// The gaze: this mode links the gaze to the window.
+    ///   - on each tick, the gaze position (screen pixels) is converted to a position on the
+    ///     1920 × 1080 page of the window, then given to a ButtonAimer, the same as for the
+    ///     menu and the action choice;
+    ///   - a target looked at for [ActivationDelay] activates;
+    ///   - REPEAT (user's choice of 2026-10-26): if the gaze stays on "−" or "+", the value
+    ///     keeps changing, by one step every [RepeatDelay] seconds. The other targets (tabs,
+    ///     No / Yes...) only activate once: the gaze must leave the target to activate it again;
+    ///   - a small gray circle (50 px) shows where the gaze is.
     ///
-    /// Étape 10 : le bouton « Configurer les icônes » de l'onglet « Icônes » ouvre l'écran de
-    /// configuration des icônes (ModeConfigIcones), qui revient ici, sur cet onglet.
+    /// Step 10: the "Configure icons" button of the "Icons" tab opens the icon configuration
+    /// screen (IconConfigMode), which comes back here, on this tab.
     ///
-    /// Étape 14 : le bouton « Mes mots » de l'onglet « Général » ouvre la liste des mots ajoutés
-    /// au clavier (ModeListeClavier), qui revient ici, sur cet onglet.
+    /// Step 14: the "My words" button of the "General" tab opens the list of the words added
+    /// to the keyboard (KeyboardListMode), which comes back here, on this tab.
     ///
-    /// Onglet « Outils » (29/10/2026, boutons déplacés de la barre de menu) :
-    ///   - « Calibration » lance l'outil de l'eyetracker puis passe en mode calibration (qui revient au
-    ///     mode mouvement quand l'outil se ferme). Si le lancement échoue, on reste ici et le
-    ///     message s'affiche dans l'onglet ;
-    ///   - « Diagnostic » revient au mode mouvement et ouvre la fenêtre Diagnostic.
+    /// "Tools" tab (2026-10-29, buttons moved from the menu bar):
+    ///   - "Calibration" starts the eyetracker tool then switches to calibration mode (which
+    ///     returns to movement mode when the tool closes). If starting fails, we stay here and
+    ///     the message is shown in the tab;
+    ///   - "Diagnostic" returns to movement mode and opens the Diagnostic window.
     ///
-    /// Étape 15 (profils) : onglet « Profils ». « Charger un profil » ouvre la liste des
-    /// profils (ModeListeClavier, sorte Profils), qui revient ici avec le profil choisi : la
-    /// fenêtre demande alors confirmation. « Oui » : ChargerProfil (ci-dessous) applique le
-    /// profil, puis le clavier relit sa disposition (la langue a pu changer).
+    /// Step 15 (profiles): "Profiles" tab. "Load a profile" opens the list of profiles
+    /// (KeyboardListMode, kind Profiles), which comes back here with the chosen profile: the
+    /// window then asks for confirmation. "Yes": LoadProfile (below) applies the profile, then
+    /// the keyboard reloads its layout (the language may have changed).
     ///
-    /// Sortie : bouton « Retour » (au milieu du bord droit) ou touche Échap de l'aidant,
-    /// vers le mode mouvement. Le menu du bas ne s'ouvre pas ici (Mode.MenuAutorise reste
-    /// « non », règle du 25/10/2026).
+    /// Exit: "Back" button (in the middle of the right edge) or the caregiver's Escape key,
+    /// to movement mode. The bottom menu does not open here (Mode.MenuAllowed stays "no",
+    /// rule of 2026-10-25).
     ///
-    /// Chaque changement est appliqué tout de suite (Parametres.Courants) et enregistré dans
-    /// parametres.json.
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// Each change is applied at once (AppSettings.Current) and saved in settings.json.
     /// </summary>
     internal sealed class SettingsMode : Mode
     {
-        /// <summary>Intervalle de la répétition sur « − » et « + », en secondes.</summary>
+        /// <summary>Repeat interval on "−" and "+", in seconds.</summary>
         private const double RepeatDelay = 0.4;
 
-        // L'onglet affiché à l'ouverture (0 = le premier).
+        // The tab shown when opening (0 = the first).
         private readonly int _startTab;
 
-        // Étape 15 : le profil choisi dans la liste, à confirmer à l'ouverture (ou null).
+        // Step 15: the profile chosen in the list, to confirm when opening (or null).
         private readonly FoundProfile _profileToConfirm;
 
         private SettingsWindow _window;
         private ButtonAimer _aimer;
 
-        // Version de la page vue au tic précédent : si elle change, les cibles ont changé.
+        // Version of the page seen at the previous tick: if it changes, the targets changed.
         private int _version = -1;
 
-        // La cible en cours de répétition (« − » ou « + »), ou -1.
+        // The target being repeated ("−" or "+"), or -1.
         private int _repeatedTarget = -1;
 
-        // Le petit cercle du regard : position lissée, en pixels d'écran.
+        // The small gaze circle: smoothed position, in screen pixels.
         private readonly Smoother _smoothed = new Smoother();
         private bool _circlePlaced;
 
         /// <summary>
-        /// Ouvre les paramètres sur l'onglet numéro « onglet » (le premier si on ne le donne
-        /// pas). Étape 15 : « profilAConfirmer » = profil choisi dans la liste des profils ;
-        /// la page s'ouvre alors sur la question « Charger le profil … ? ».
+        /// Opens the settings on tab number "tab" (the first one if not given). Step 15:
+        /// "profileToConfirm" = profile chosen in the list of profiles; the page then opens on
+        /// the question "Load profile ...?".
         /// </summary>
         public SettingsMode(int tab = 0, FoundProfile profileToConfirm = null)
         {
@@ -90,12 +86,12 @@ namespace GazeBar
 
         public override void Enter(GazeState gaze)
         {
-            // Rien sur le calque pendant ce mode : tout est dans la fenêtre.
+            // Nothing on the overlay during this mode: everything is in the window.
             Manager.Layer.HideAll();
 
-            // La fenêtre est rangée dans _fenetre SEULEMENT quand tout est prêt (viseur
-            // compris) : Actualiser ne fait rien tant que _fenetre est vide (bogue du
-            // 02/11/2026 : un tic arrivé pendant Show trouvait un viseur vide).
+            // The window is stored in _window ONLY when everything is ready (aimer included):
+            // Update does nothing as long as _window is empty (bug of 2026-11-02: a tick
+            // arriving during Show found an empty aimer).
             SettingsWindow window = new SettingsWindow(_startTab, _profileToConfirm);
             window.BackRequested += Back;
             window.IconConfigRequested += OpenIconConfig;
@@ -109,9 +105,9 @@ namespace GazeBar
             _repeatedTarget = -1;
 
             window.Show();
-            // Activate : la fenêtre prend le clavier, pour que l'aidant puisse taper une valeur.
-            // (Windows peut le refuser si un autre programme est au premier plan ; un clic de
-            // l'aidant dans la fenêtre suffit alors.)
+            // Activate: the window takes the keyboard, so that the caregiver can type a value.
+            // (Windows may refuse it if another program is in the foreground; a click of the
+            // caregiver in the window is then enough.)
             window.Activate();
             _window = window;
 
@@ -130,9 +126,9 @@ namespace GazeBar
             }
             AppSettings p = AppSettings.Current;
 
-            // 1. La page a-t-elle été reconstruite (nouvel onglet, confirmation…) ? Le viseur
-            //    repart de zéro, et la cible qui se trouve sous le regard ne s'active pas tant
-            //    que le regard ne l'a pas quittée (comme dans le menu).
+            // 1. Has the page been rebuilt (new tab, confirmation...)? The aimer starts again
+            //    from zero, and the target under the gaze does not activate until the gaze has
+            //    left it (as in the menu).
             if (_window.Version != _version)
             {
                 _version = _window.Version;
@@ -140,8 +136,8 @@ namespace GazeBar
                 _repeatedTarget = -1;
             }
 
-            // 2. Le regard, converti en coordonnées de la page. EtatRegard est une « struct » :
-            //    surPage est une copie, on peut changer X et Y sans toucher à l'original.
+            // 2. The gaze, converted to page coordinates. GazeState is a "struct": onPage is a
+            //    copy, X and Y can be changed without touching the original.
             GazeState onPage = gaze;
             if (gaze.Available)
             {
@@ -150,12 +146,12 @@ namespace GazeBar
                 onPage.Y = point.Y;
             }
 
-            // 3. Les cibles. Pendant une répétition, le délai est plus court.
+            // 3. The targets. During a repeat, the delay is shorter.
             double delay = (_repeatedTarget >= 0 && _aimer.Aimed == _repeatedTarget) ? RepeatDelay : p.ActivationDelay;
             int active = _aimer.Update(onPage, delay, false);
             if (_aimer.Aimed != _repeatedTarget)
             {
-                _repeatedTarget = -1;   // le regard a quitté « − » ou « + » : fin de la répétition
+                _repeatedTarget = -1;   // the gaze left "−" or "+": end of the repeat
             }
 
             if (active >= 0)
@@ -172,12 +168,12 @@ namespace GazeBar
                 _window.Activate(active);
                 if (Manager.CurrentMode != this)
                 {
-                    return;   // « Retour » : on a déjà changé de mode
+                    return;   // "Back": the mode has already changed
                 }
             }
 
-            // 4. Le petit cercle du regard. Regard hors de l'écran : il reste au bord et glisse
-            //    le long de ce bord (EtatRegard.XEcran). Regard perdu : il reste où il est.
+            // 4. The small gaze circle. Gaze off screen: it stays at the edge and slides along
+            //    it (GazeState.XScreen). Gaze lost: it stays where it is.
             if (gaze.Available)
             {
                 if (!_circlePlaced)
@@ -208,9 +204,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// L'écran a changé (étape 11) : on reste dans les paramètres. La fenêtre reprend la
-        /// taille de l'écran et la page est redessinée (l'onglet « Affichage » montre l'écran
-        /// détecté). La page de 1920 × 1080 unités s'adapte toute seule (Viewbox).
+        /// The screen changed (step 11): we stay in the settings. The window takes the screen
+        /// size again and the page is redrawn (the "Display" tab shows the detected screen).
+        /// The 1920 × 1080 unit page adapts by itself (Viewbox).
         /// </summary>
         public override bool AdaptToScreen()
         {
@@ -222,46 +218,46 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Touche Échap de l'aidant (appelée par App) : si une valeur est en cours de saisie,
-        /// la saisie est annulée et on reste ici. Renvoie vrai dans ce cas.
+        /// The caregiver's Escape key (called by App): if a value is being typed, the input is
+        /// cancelled and we stay here. Returns true in that case.
         /// </summary>
         public bool CancelInput()
         {
             return _window != null && _window.CancelInput();
         }
 
-        /// <summary>Bouton « Configurer les icônes » : ouvre l'écran de configuration des icônes.</summary>
+        /// <summary>"Configure icons" button: opens the icon configuration screen.</summary>
         private void OpenIconConfig()
         {
-            App.Log("Paramètres : configuration des icônes");
+            App.Log("Settings: icon configuration");
             Manager.ChangeMode(new IconConfigMode());
         }
 
         /// <summary>
-        /// Bouton « Mes mots » de l'onglet « Général » (étape 14) : la liste des mots ajoutés
-        /// au clavier, qui revient ici, sur cet onglet.
+        /// "My words" button of the "General" tab (step 14): the list of the words added to the
+        /// keyboard, which comes back here, on this tab.
         /// </summary>
         private void OpenMyWords()
         {
-            App.Log("Paramètres : mes mots");
+            App.Log("Settings: my words");
             Manager.ChangeMode(new KeyboardListMode(KeyboardListMode.ListKind.MyWords));
         }
 
         /// <summary>
-        /// Bouton « Charger un profil » de l'onglet « Profils » (étape 15) : la liste des
-        /// profils en plein écran, qui revient ici (onglet Profils) avec ou sans choix.
+        /// "Load a profile" button of the "Profiles" tab (step 15): the full-screen list of
+        /// profiles, which comes back here (Profiles tab) with or without a choice.
         /// </summary>
         private void OpenProfileList()
         {
-            App.Log("Paramètres : liste des profils");
+            App.Log("Settings: profile list");
             Manager.ChangeMode(new KeyboardListMode(KeyboardListMode.ListKind.Profiles));
         }
 
         /// <summary>
-        /// « Oui » à « Charger le profil … ? » (étape 15) : le profil devient les réglages en
-        /// cours (ProfilsParametres.Charger). Le clavier, s'il est ouvert, relit sa
-        /// disposition, car le profil peut avoir une autre langue. On reste dans les
-        /// paramètres : la page est reconstruite avec les nouvelles valeurs et le message.
+        /// "Yes" to "Load profile ...?" (step 15): the profile becomes the current settings
+        /// (SettingsProfiles.Load). The keyboard, if open, reloads its layout, because the
+        /// profile may have another language. We stay in the settings: the page is rebuilt
+        /// with the new values and the message.
         /// </summary>
         private void LoadProfile(FoundProfile profile)
         {
@@ -277,19 +273,19 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Bouton « Calibration » de l'onglet « Outils ».
+        /// "Calibration" button of the "Tools" tab.
         ///
-        /// Difficulté : la fenêtre des paramètres est plein écran et « toujours devant »
-        /// (Topmost). Si on lançait l'outil de l'eyetracker sans rien faire, sa fenêtre serait cachée
-        /// derrière. On CACHE donc d'abord la fenêtre des paramètres (Hide : elle existe
-        /// toujours, elle n'est simplement plus affichée).
+        /// Difficulty: the settings window is full screen and "always on top" (Topmost). If the
+        /// eyetracker tool were started without doing anything, its window would be hidden
+        /// behind. So we first HIDE the settings window (Hide: it still exists, it is simply
+        /// no longer shown).
         ///
-        /// Ensuite, comme depuis la barre de menu, on note la fenêtre active AVANT de lancer
-        /// l'outil : le mode calibration saura reconnaître la fenêtre de l'outil, qui sera la
-        /// suivante à devenir active (voir ModeCalibration). En cachant la nôtre, Windows a
-        /// rendu active une autre fenêtre (l'application d'avant) : c'est elle qu'on note.
+        /// Then, as from the menu bar, we note the active window BEFORE starting the tool:
+        /// calibration mode will recognize the tool's window, which will be the next one to
+        /// become active (see CalibrationMode). By hiding ours, Windows made another window
+        /// active (the previous application): that is the one we note.
         ///
-        /// Si le lancement échoue, on réaffiche la fenêtre et on montre le message.
+        /// If starting fails, the window is shown again with the message.
         /// </summary>
         private void LaunchCalibration()
         {
@@ -297,14 +293,14 @@ namespace GazeBar
             {
                 return;
             }
-            App.Log("Paramètres : calibration");
+            App.Log("Settings: calibration");
             _window.Hide();
             IntPtr previousWindow = NativeMethods.GetForegroundWindow();
 
             string message;
             if (Calibration.Launch(Manager.Gaze, out message))
             {
-                // Quitter() fermera la fenêtre des paramètres (déjà cachée).
+                // Quit() will close the settings window (already hidden).
                 Manager.ChangeMode(new CalibrationMode(previousWindow));
             }
             else
@@ -316,21 +312,20 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Bouton « Diagnostic » de l'onglet « Outils » : retour au mode mouvement (la fenêtre
-        /// des paramètres, toujours devant, cacherait la fenêtre Diagnostic), puis ouverture de
-        /// la fenêtre Diagnostic.
+        /// "Diagnostic" button of the "Tools" tab: back to movement mode (the settings window,
+        /// always on top, would hide the Diagnostic window), then the Diagnostic window opens.
         /// </summary>
         private void OpenDiagnostic()
         {
-            App.Log("Paramètres : diagnostic");
+            App.Log("Settings: diagnostic");
             Manager.ChangeMode(new MovementMode());
             ((App)Application.Current).OpenDiagnostic();
         }
 
-        /// <summary>Bouton « Retour » : retour au mode mouvement.</summary>
+        /// <summary>"Back" button: back to movement mode.</summary>
         private void Back()
         {
-            App.Log("Paramètres : retour au mode mouvement");
+            App.Log("Settings: back to movement mode");
             Manager.ChangeMode(new MovementMode());
         }
     }

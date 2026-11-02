@@ -1,56 +1,58 @@
 <!--
-  OverlayWindow.xaml : le « calque », une fenêtre transparente qui couvre tout l'écran.
+  OverlayWindow.xaml: the "overlay", a transparent window covering the whole screen.
 
-  C'est sur elle que GazeBar dessine ce qui doit apparaître par-dessus les autres
-  applications (le cercle qui suit le regard, l'anneau de progression, l'icône d'options…).
-  Elle ne doit JAMAIS gêner l'application visée :
-    - elle est invisible, sauf ce qu'on y dessine ;
-    - les clics la traversent (réglé dans le code, OverlayWindow.xaml.cs) ;
-    - elle ne prend jamais le focus.
+  This is where GazeBar draws what must appear on top of the other applications (the
+  circle following the gaze, the progress ring, the options icon...).
+  It must NEVER get in the way of the target application:
+    - it is invisible, except what is drawn on it;
+    - clicks go through it (set in code, OverlayWindow.xaml.cs);
+    - it never takes the focus.
 
-  Réglages de la fenêtre :
+  Window settings:
     WindowStyle="None" + AllowsTransparency="True" + Background="Transparent"
-                                  fenêtre sans bord, dont le fond est réellement transparent
-    Topmost="True"                toujours au-dessus des autres fenêtres
-    ShowInTaskbar="False"         absente de la barre des tâches
-    ShowActivated="False"         ne prend pas le focus à son ouverture
-    IsHitTestVisible="False"      WPF ne cherche même pas à savoir si la souris la touche
-  Sa position et sa taille (tout l'écran) sont calculées dans le code, en tenant compte
-  de la mise à l'échelle de Windows (125 %, 150 %…).
+                                  borderless window whose background is really transparent
+    Topmost="True"                always above the other windows
+    ShowInTaskbar="False"         not in the taskbar
+    ShowActivated="False"         does not take the focus when it opens
+    IsHitTestVisible="False"      WPF does not even check whether the mouse touches it
+  Its position and size (the whole screen) are computed in code, taking the Windows
+  scaling into account (125 %, 150 %...).
 
-  Le cercle est dessiné deux fois, l'un sur l'autre : un trait noir dessous et un trait vert
-  plus fin dessus, à moitié transparents (Opacity="0.5") pour rester discrets. Ainsi il reste
-  visible sur un fond clair comme sur un fond sombre. En mode regard fixe, le trait de dessus
-  devient blanc et opaque : on voit tout de suite que le cercle est figé.
+  The circle is drawn twice, one on top of the other: a black line underneath and a thinner
+  green line on top, half transparent (Opacity="0.5") to stay discreet. This way it stays
+  visible on a light background as well as a dark one. In fixed gaze mode, the top line
+  becomes white and opaque: one sees at once that the circle is frozen.
 
-  Éléments ajoutés à l'étape 2 (mode mouvement) :
-    Anneau        l'anneau de progression : un arc épais qui se remplit sur le bord du cercle,
-                  dans le sens des aiguilles d'une montre, en partant du haut ;
-    Icone         l'icône d'options du mode regard fixe : un carré sombre aux coins arrondis
-                  qui contient un symbole de la police Windows (« … », code E712) ;
-    AnneauIcone   l'anneau qui se remplit autour de l'icône quand on la regarde ;
-    Libelle       le texte « Options » affiché sous l'icône quand on la regarde (si
-                  AfficherLibelles est activé).
-  Élément ajouté à l'étape 3 (choix d'action) :
-    EcranChoix    l'écran noir du mode choix d'action. Il couvre tout le calque, par-dessus le
-                  reste. Son contenu (capture agrandie, croix, icônes d'action et leurs anneaux)
-                  est créé dans le code (ModeChoixAction et BoutonRegard). Le calque restant
-                  transparent aux clics, cet écran noir ne capte jamais la souris.
-  Élément ajouté à l'étape 4 (mode menu) :
-    BarreMenu     la surface de la barre de menu, en bas de l'écran. Elle couvre tout le calque
-                  mais reste transparente : seuls la barre et ses boutons, créés dans le code
-                  (ModeMenu et BoutonRegard), sont visibles. Elle est placée AVANT l'écran
-                  noir, donc dessinée en dessous de lui.
-  Élément ajouté à l'étape 6 (glisser-déposer) :
-    SurfaceGlisser  la surface du choix du point d'arrivée d'un glisser-déposer : la ligne en
-                  pointillés du trajet et le bouton « retour » au bord droit. Transparente,
-                  comme la barre de menu : on voit l'écran réel en dessous.
-  Élément ajouté à l'étape 12 (clavier au regard) :
-    SurfaceClavier  le clavier, en bas de l'écran (voir ClavierRegard). Il est opaque, mais
-                  comme tout le calque, il laisse passer les clics d'une vraie souris et ne
-                  prend jamais le focus : l'application où l'on écrit garde son curseur de texte.
-  Les symboles viennent de la police « Segoe Fluent Icons » (Windows 11) ou, à défaut,
-  « Segoe MDL2 Assets » (Windows 10) : WPF prend la première présente sur l'ordinateur.
+  Elements added in step 2 (movement mode):
+    Ring              the progress ring: a thick arc filling up on the edge of the circle,
+                      clockwise, starting from the top;
+    OptionsIcon       the options icon of fixed gaze mode: a dark square with rounded corners
+                      containing a symbol of the Windows font ("...", code E712);
+    OptionsIconRing   the ring filling up around the icon when it is looked at;
+    OptionsLabel      the "Options" text shown under the icon when it is looked at (if
+                      ShowLabels is on).
+  Element added in step 3 (action choice):
+    ChoiceScreen      the black screen of action choice mode. It covers the whole overlay, on
+                      top of the rest. Its content (enlarged capture, cross, action icons and
+                      their rings) is created in code (ActionChoiceMode and GazeButton). Since
+                      the overlay stays transparent to clicks, this black screen never catches
+                      the mouse.
+  Element added in step 4 (menu mode):
+    MenuBar           the menu bar surface, at the bottom of the screen. It covers the whole
+                      overlay but stays transparent: only the bar and its buttons, created in
+                      code (MenuMode and GazeButton), are visible. It is placed BEFORE the
+                      black screen, so drawn underneath it.
+  Element added in step 6 (drag and drop):
+    DragSurface       the surface for choosing the drop point of a drag and drop: the dotted
+                      line of the path and the "back" button on the right edge. Transparent,
+                      like the menu bar: the real screen is seen underneath.
+  Element added in step 12 (gaze keyboard):
+    KeyboardSurface   the keyboard, at the bottom of the screen (see GazeKeyboard). It is
+                      opaque but, like the whole overlay, lets the clicks of a real mouse
+                      through and never takes the focus: the application being typed into
+                      keeps its text cursor.
+  The symbols come from the "Segoe Fluent Icons" font (Windows 11) or, failing that,
+  "Segoe MDL2 Assets" (Windows 10): WPF takes the first one present on the computer.
 -->
 <Window
     x:Class="GazeBar.OverlayWindow"
@@ -68,21 +70,21 @@
     Focusable="False"
     IsHitTestVisible="False">
 
-    <!-- Canvas : une surface où l'on place les éléments par coordonnées (Canvas.Left / Canvas.Top). -->
+    <!-- Canvas: a surface where elements are placed by coordinates (Canvas.Left / Canvas.Top). -->
     <Canvas x:Name="Surface">
-        <!-- Surface du clavier au regard (étape 12). Placée EN PREMIER : elle est dessinée
-             sous tout le reste (cercle, icône d'options, barre de menu…). Sa taille et son
-             contenu sont réglés dans le code (ClavierRegard). -->
+        <!-- Gaze keyboard surface (step 12). Placed FIRST: it is drawn underneath everything
+             else (circle, options icon, menu bar...). Its size and content are set in code
+             (GazeKeyboard). -->
         <Canvas x:Name="KeyboardSurface" Visibility="Collapsed" />
 
         <Ellipse x:Name="CircleBackground" Stroke="LightGray" StrokeThickness="2" Opacity="0.5" Visibility="Collapsed" />
         <Ellipse x:Name="Circle" Stroke="DarkGray" StrokeThickness="1" Opacity="0.3" Visibility="Collapsed" />
 
-        <!-- Anneau de progression du cercle. Sa forme (Data) est calculée dans le code. -->
+        <!-- Progress ring of the circle. Its shape (Data) is computed in code. -->
         <Path x:Name="Ring" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"
               StrokeEndLineCap="Round" Visibility="Collapsed" />
 
-        <!-- Icône d'options du mode regard fixe. Sa taille et sa place sont réglées dans le code. -->
+        <!-- Options icon of fixed gaze mode. Its size and position are set in code. -->
         <Border x:Name="OptionsIcon" Background="#D0202124" BorderBrush="White" BorderThickness="2"
                 CornerRadius="12" Visibility="Collapsed">
             <TextBlock x:Name="OptionsIconSymbol" Text="&#xE712;" Foreground="White"
@@ -96,13 +98,13 @@
             <TextBlock x:Name="OptionsLabelText" Text="Options" Foreground="White" FontSize="20" />
         </Border>
 
-        <!-- Surface du glisser-déposer (étape 6). Sa taille et son contenu sont réglés dans le code. -->
+        <!-- Drag and drop surface (step 6). Its size and content are set in code. -->
         <Canvas x:Name="DragSurface" Visibility="Collapsed" />
 
-        <!-- Surface de la barre de menu (étape 4). Sa taille et son contenu sont réglés dans le code. -->
+        <!-- Menu bar surface (step 4). Its size and content are set in code. -->
         <Canvas x:Name="MenuBar" Visibility="Collapsed" />
 
-        <!-- Écran noir du mode choix d'action (étape 3). Sa taille est réglée dans le code. -->
+        <!-- Black screen of action choice mode (step 3). Its size is set in code. -->
         <Canvas x:Name="ChoiceScreen" Background="Black" Visibility="Collapsed" />
     </Canvas>
 </Window>

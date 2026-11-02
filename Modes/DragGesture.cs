@@ -1,21 +1,21 @@
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : la description d'un glisser-déposer en cours de préparation (étape 6).
+    /// MODEL: the description of a drag and drop being prepared (step 6).
     ///
-    /// Un glisser-déposer traverse trois modes (voir le cahier des charges) :
-    ///   1. ModeGlisserArrivee   le cercle suit le regard jusqu'à une fixation sur le point
-    ///                           d'arrivée ; une ligne en pointillés part du point de départ ;
-    ///   2. ModeLoupe            la loupe affine le point d'arrivée ;
-    ///   3. ModeGlisserExecution bouton enfoncé au départ, curseur déplacé jusqu'à l'arrivée
-    ///                           en [DureeGlisser], bouton relâché.
-    /// Cet objet passe de l'un à l'autre : il garde ce qui ne change pas en chemin.
+    /// A drag and drop goes through three modes (see the specification):
+    ///   1. DragTargetMode     the circle follows the gaze until a fixation on the drop
+    ///                         point; a dotted line starts from the start point;
+    ///   2. MagnifierMode      the magnifier refines the drop point;
+    ///   3. DragExecutionMode  button pressed at the start, cursor moved to the drop point
+    ///                         in [DragDuration], button released.
+    /// This object is passed from one to the next: it keeps what does not change on the way.
     ///
-    /// Les trois actions de la couronne ne diffèrent que par ces réglages :
-    ///   glisser-déposer gauche   : bouton gauche, sans pause ;
-    ///   glisser-déposer droit    : bouton droit, sans pause ;
-    ///   glisser-déposer android  : bouton gauche, avec une pause de [DureePauseAndroid] entre
-    ///                              l'appui et le déplacement (remplace l'ancien appui long).
+    /// The three crown actions only differ by these settings:
+    ///   left drag and drop     : left button, no pause;
+    ///   right drag and drop    : right button, no pause;
+    ///   android drag and drop  : left button, with a pause of [AndroidPauseDuration] between
+    ///                            the press and the move (replaces the old long press).
     /// </summary>
     internal sealed class DragGesture
     {
@@ -27,18 +27,18 @@ namespace GazeBar
             WithPause = withPause;
         }
 
-        /// <summary>Point de départ (là où le bouton sera enfoncé), en pixels d'écran.</summary>
+        /// <summary>Start point (where the button will be pressed), in screen pixels.</summary>
         public double StartX { get; private set; }
 
         public double StartY { get; private set; }
 
-        /// <summary>Le bouton de la souris maintenu pendant le glisser.</summary>
+        /// <summary>The mouse button held during the drag.</summary>
         public MouseSide Button { get; private set; }
 
-        /// <summary>Vrai pour le glisser-déposer « android » : pause avant le déplacement.</summary>
+        /// <summary>True for the "android" drag and drop: pause before the move.</summary>
         public bool WithPause { get; private set; }
 
-        /// <summary>Nom lisible, pour le journal.</summary>
+        /// <summary>Readable name, for the log.</summary>
         public string Name
         {
             get

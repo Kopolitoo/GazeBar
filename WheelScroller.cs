@@ -3,24 +3,23 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : l'option [DefilerFenetresInactives] (demande de l'utilisateur du 02/11/2026,
-    /// onglet « Défilement » des paramètres).
+    /// MODEL: the [ScrollInactiveWindows] option (user request of 2026-11-02, "Scroll" tab
+    /// of the settings).
     ///
-    /// C'est le réglage de Windows 10/11 « Faire défiler les fenêtres inactives lorsque je
-    /// pointe dessus » (Paramètres Windows → Bluetooth et appareils → Souris). Il décide à
-    /// quelle fenêtre Windows envoie la molette :
-    ///   - activé : à la fenêtre SOUS LE CURSEUR, même si elle n'est pas active. C'est ce
-    ///     qu'il faut au mode défilement de GazeBar, qui pose le curseur sur le point visé ;
-    ///   - désactivé : toujours à la fenêtre ACTIVE, même si le curseur est ailleurs. Il faut
-    ///     alors cliquer dans une fenêtre avant de pouvoir la faire défiler.
+    /// It is the Windows 10/11 setting "Scroll inactive windows when I hover over them"
+    /// (Windows Settings → Bluetooth & devices → Mouse). It decides which window Windows
+    /// sends the wheel to:
+    ///   - on: to the window UNDER THE CURSOR, even if it is not active. This is what
+    ///     GazeBar's scroll mode needs, since it puts the cursor on the aimed point;
+    ///   - off: always to the ACTIVE window, even if the cursor is elsewhere. A window must
+    ///     then be clicked before it can be scrolled.
     ///
-    /// GazeBar ne fait que modifier ce réglage de Windows, avec la fonction
-    /// SystemParametersInfo (fournie par Windows : aucune dépendance nouvelle). Le
-    /// changement est enregistré par Windows : il reste valable même quand GazeBar est fermé.
+    /// GazeBar only changes this Windows setting, with the SystemParametersInfo function
+    /// (provided by Windows: no new dependency). Windows saves the change: it stays valid
+    /// even when GazeBar is closed.
     ///
-    /// Valeurs du réglage dans Windows : 0 = fenêtre active, 1 = mixte (fenêtre active pour
-    /// les programmes classiques, fenêtre sous le curseur pour les applications du Store),
-    /// 2 = fenêtre sous le curseur.
+    /// Values of the setting in Windows: 0 = active window, 1 = hybrid (active window for
+    /// classic programs, window under the cursor for Store apps), 2 = window under the cursor.
     /// </summary>
     internal static class WheelScroller
     {
@@ -28,8 +27,8 @@ namespace GazeBar
         private const uint UnderCursor = 2;          // MOUSEWHEEL_ROUTING_MOUSE_POS
 
         /// <summary>
-        /// Lit le réglage actuel de Windows. Renvoie null s'il est illisible (Windows trop
-        /// ancien, par exemple).
+        /// Reads the current Windows setting. Returns null if it cannot be read (Windows too
+        /// old, for example).
         /// </summary>
         public static uint? Read()
         {
@@ -43,12 +42,12 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("Molette : lecture du réglage Windows impossible : " + ex.Message);
+                App.Log("Wheel: cannot read the Windows setting: " + ex.Message);
             }
             return null;
         }
 
-        /// <summary>Décrit le réglage actuel de Windows, pour le journal.</summary>
+        /// <summary>Describes the current Windows setting, for the log.</summary>
         public static string Description()
         {
             uint? val = Read();
@@ -64,12 +63,12 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Met le réglage de Windows d'accord avec l'option de GazeBar (actif = vrai : la molette
-        /// va à la fenêtre sous le curseur). Ne fait rien s'il l'est déjà. Ne fait jamais planter
-        /// le programme : une erreur est seulement notée dans le journal.
+        /// Makes the Windows setting match GazeBar's option (active = true: the wheel goes to
+        /// the window under the cursor). Does nothing if it already matches. Never crashes
+        /// the program: an error is only written to the log.
         ///
-        /// Appelée au démarrage de GazeBar et à chaque changement de l'option dans le mode
-        /// paramètres (comme DemarrageWindows.Appliquer).
+        /// Called when GazeBar starts and each time the option is changed in settings mode
+        /// (like WindowsStartup.Apply).
         /// </summary>
         public static void Apply(bool active)
         {
@@ -82,14 +81,14 @@ namespace GazeBar
                     return;
                 }
 
-                // SPIF_UPDATEINIFILE : Windows enregistre le changement (il reste après un
-                // redémarrage). SPIF_SENDCHANGE : les programmes ouverts sont prévenus.
+                // SPIF_UPDATEINIFILE: Windows saves the change (it survives a restart).
+                // SPIF_SENDCHANGE: open programs are notified.
                 uint flagsValue = NativeMethods.SPIF_UPDATEINIFILE | NativeMethods.SPIF_SENDCHANGE;
 
-                // La documentation de Microsoft dit que la valeur se donne par son ADRESSE
-                // (« pointeur »). Certains programmes la passent directement à la place de
-                // l'adresse : si la première façon n'a pas pris, on essaie la seconde. Dans les
-                // deux cas, on relit le réglage pour vérifier.
+                // Microsoft's documentation says the value is passed by its ADDRESS
+                // ("pointer"). Some programs pass it directly instead of the address: if the
+                // first way did not work, we try the second one. In both cases, we read the
+                // setting back to check.
                 uint val = wanted;
                 NativeMethods.SystemParametersInfo(NativeMethods.SPI_SETMOUSEWHEELROUTING, 0, ref val, flagsValue);
                 if (Read() != wanted)
@@ -97,12 +96,12 @@ namespace GazeBar
                     NativeMethods.SystemParametersInfo(NativeMethods.SPI_SETMOUSEWHEELROUTING, 0, new IntPtr(wanted), flagsValue);
                 }
 
-                App.Log("Molette : réglage Windows « défiler les fenêtres inactives » " +
-                        (active ? "activé" : "désactivé") + " par GazeBar, résultat : " + Description());
+                App.Log("Wheel: Windows setting \"scroll inactive windows\" " +
+                        (active ? "turned on" : "turned off") + " by GazeBar, result: " + Description());
             }
             catch (Exception ex)
             {
-                App.Log("Molette : impossible de changer le réglage Windows : " + ex.Message);
+                App.Log("Wheel: cannot change the Windows setting: " + ex.Message);
             }
         }
     }

@@ -4,38 +4,37 @@ using System.Windows;
 namespace GazeBar
 {
     /// <summary>
-    /// LA MISE EN PAGE de l'écran du choix d'action (étape 10) : où se trouvent la photo, les
-    /// huit emplacements de la couronne, les trois modificateurs, les trois boutons
-    /// utilitaires et l'icône « retour ».
+    /// THE LAYOUT of the action choice screen (step 10): where the photo, the eight crown
+    /// slots, the three modifiers, the three utility buttons and the "back" icon are.
     ///
-    /// Ces calculs étaient faits dans ModeChoixAction. L'écran de configuration des icônes
-    /// (ModeConfigIcones) doit montrer EXACTEMENT la même mise en page (demande de
-    /// l'utilisateur du 28/10/2026) : ils sont donc rangés ici, et les deux modes s'en servent.
+    /// These computations used to be done in ActionChoiceMode. The icon configuration screen
+    /// (IconConfigMode) must show EXACTLY the same layout (user request of 2026-10-28): so
+    /// they live here, and both modes use them.
     ///
-    /// Toutes les positions sont des CENTRES, en pixels d'écran (comme le regard).
+    /// All positions are CENTERS, in screen pixels (like the gaze).
     ///
-    /// Étape 11 : [Espace] et [MargeBord] sont des pixels de l'écran 4K de l'utilisateur,
-    /// convertis pour l'écran actuel avec Ecran.Px (60 px en 4K → 30 px en 1920 × 1080).
+    /// Step 11: [Space] and [EdgeMargin] are pixels of the user's 4K screen, converted for
+    /// the current screen with ScreenMetrics.Px (60 px in 4K → 30 px in 1920 × 1080).
     /// </summary>
     internal sealed class ActionChoiceLayout
     {
-        /// <summary>Agrandissement de la photo (le cahier des charges fixe ×2).</summary>
+        /// <summary>Photo enlargement (the specification sets ×2).</summary>
         public const double Zoom = 2;
 
         /// <summary>
-        /// Espace, en pixels de l'écran 4K, entre deux boutons voisins, entre les boutons et la photo, et entre
-        /// les modificateurs et le bord gauche de l'écran (demande de l'utilisateur du 26/10/2026 :
-        /// « environ 60 pixels »).
+        /// Space, in 4K screen pixels, between two neighbouring buttons, between the buttons and
+        /// the photo, and between the modifiers and the left edge of the screen (user request of
+        /// 2026-10-26: "about 60 pixels").
         /// </summary>
         public const double Space4K = 60;
 
-        /// <summary>[Espace4K] en pixels de l'écran actuel (avec [TailleInterface]).</summary>
+        /// <summary>[Space4K] in pixels of the current screen (with [InterfaceSize]).</summary>
         public static double Space
         {
             get { return ScreenMetrics.Px(Space4K); }
         }
 
-        /// <summary>Marge, en pixels de l'écran 4K, entre un bouton et le bord de l'écran quand il y est collé.</summary>
+        /// <summary>Margin, in 4K screen pixels, between a button and the screen edge when it is stuck to it.</summary>
         private const double EdgeMargin4K = 10;
 
         private static double EdgeMargin
@@ -44,8 +43,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Calcule la mise en page pour un écran de cette taille, des boutons de ce côté
-        /// ([TailleIcones]) et une photo de ce côté AVANT agrandissement (2 × [RayonCercle]).
+        /// Computes the layout for a screen of this size, buttons of this side ([IconSize]) and
+        /// a photo of this side BEFORE enlargement (2 × [CircleRadius]).
         /// </summary>
         public ActionChoiceLayout(double width, double height, double size, double photoSide)
         {
@@ -58,19 +57,19 @@ namespace GazeBar
             CenterX = cx;
             CenterY = cy;
 
-            // ── La photo agrandie, au centre de l'écran.
+            // ── The enlarged photo, in the center of the screen.
             EnlargedPhotoSide = photoSide * Zoom;
 
-            // ── La couronne : huit emplacements, DEUX PAR CÔTÉ de la photo (demande de
-            //    l'utilisateur du 26/10/2026). Sur chaque côté, les deux boutons sont séparés de
-            //    [Espace] pixels et centrés sur le milieu du côté. Ils sont à [Espace] pixels de
-            //    la photo, sauf si l'écran est trop petit (en haut et en bas sur un écran 1080p) :
-            //    ils se rapprochent alors de la photo pour rester entièrement sur l'écran.
+            // ── The crown: eight slots, TWO PER SIDE of the photo (user request of
+            //    2026-10-26). On each side, the two buttons are [Space] pixels apart and centered
+            //    on the middle of the side. They are [Space] pixels from the photo, unless the
+            //    screen is too small (top and bottom on a 1080p screen): they then move closer
+            //    to the photo to stay fully on the screen.
             double halfPhoto = EnlargedPhotoSide / 2;
             double wantedDistance = halfPhoto + Space + size / 2;
             double distanceX = Math.Min(wantedDistance, width / 2 - size / 2 - EdgeMargin);
             double distanceY = Math.Min(wantedDistance, height / 2 - size / 2 - EdgeMargin);
-            double offset = size + Space;   // du milieu du côté au centre de chaque bouton
+            double offset = size + Space;   // from the middle of the side to the center of each button
 
             Crown = new Point[8];
             for (int i = 0; i < Crown.Length; i++)
@@ -78,9 +77,9 @@ namespace GazeBar
                 Crown[i] = CrownSlot(i, cx, cy, distanceX, distanceY, offset);
             }
 
-            // ── Les boutons utilitaires (Copier, Couper, Coller) : une ligne collée au bord
-            //    haut de l'écran, centrée, répartie sur la largeur comme les modificateurs sur la
-            //    hauteur (demande du 28/10/2026). Sur un écran 1920 × 1080 : x = 440, 960 et 1480.
+            // ── The utility buttons (Copy, Cut, Paste): a row stuck to the top edge of the
+            //    screen, centered, spread over the width like the modifiers over the height
+            //    (request of 2026-10-28). On a 1920 × 1080 screen: x = 440, 960 and 1480.
             int utilityCount = ActionCatalog.SlotCount(IconGroup.Utilities);
             double utilitiesGap = (width - size * utilityCount) / utilityCount;
             double yUtilities = size / 2 + EdgeMargin;
@@ -91,8 +90,8 @@ namespace GazeBar
                 Utilities[i] = new Point(x, yUtilities);
             }
 
-            // ── Les modificateurs : une colonne de trois, collée au bord gauche de l'écran
-            //    (demande du 26/10/2026), à [Espace] pixels du bord.
+            // ── The modifiers: a column of three, stuck to the left edge of the screen
+            //    (request of 2026-10-26), [Space] pixels from the edge.
             int modifierCount = ActionCatalog.SlotCount(IconGroup.Modifiers);
             double xModifiers = Space + size / 2;
             double modifiersGap = (height - size * modifierCount) / modifierCount;
@@ -103,7 +102,7 @@ namespace GazeBar
                 Modifiers[i] = new Point(xModifiers, y);
             }
 
-            // ── L'icône « retour », au milieu du bord droit.
+            // ── The "back" icon, in the middle of the right edge.
             Back = new Point(width - size, cy);
         }
 
@@ -111,30 +110,30 @@ namespace GazeBar
 
         public double Height { get; private set; }
 
-        /// <summary>Côté des boutons, en pixels.</summary>
+        /// <summary>Button side, in pixels.</summary>
         public double Size { get; private set; }
 
-        /// <summary>Centre de l'écran (et de la photo).</summary>
+        /// <summary>Center of the screen (and of the photo).</summary>
         public double CenterX { get; private set; }
 
         public double CenterY { get; private set; }
 
-        /// <summary>Côté de la photo agrandie, en pixels.</summary>
+        /// <summary>Side of the enlarged photo, in pixels.</summary>
         public double EnlargedPhotoSide { get; private set; }
 
-        /// <summary>Les huit emplacements de la couronne (voir PlaceCouronne pour l'ordre).</summary>
+        /// <summary>The eight crown slots (see CrownSlot for the order).</summary>
         public Point[] Crown { get; private set; }
 
-        /// <summary>Les trois modificateurs, de haut en bas.</summary>
+        /// <summary>The three modifiers, from top to bottom.</summary>
         public Point[] Modifiers { get; private set; }
 
-        /// <summary>Les trois boutons utilitaires, de gauche à droite.</summary>
+        /// <summary>The three utility buttons, from left to right.</summary>
         public Point[] Utilities { get; private set; }
 
-        /// <summary>L'icône « retour ».</summary>
+        /// <summary>The "back" icon.</summary>
         public Point Back { get; private set; }
 
-        /// <summary>Les centres des emplacements d'un groupe.</summary>
+        /// <summary>The centers of the slots of a group.</summary>
         public Point[] Slots(IconGroup group)
         {
             switch (group)
@@ -149,17 +148,16 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Centre de l'emplacement numéro « numero » de la couronne, en pixels d'écran.
-        /// Deux emplacements par côté de la photo, dans le sens des aiguilles d'une montre en
-        /// partant du haut :
+        /// Center of crown slot number "num", in screen pixels.
+        /// Two slots per side of the photo, clockwise starting from the top:
         ///         7   0
         ///      6         1
         ///         photo
         ///      5         2
         ///         4   3
-        /// distanceX, distanceY : écart entre le centre de l'écran et la ligne des boutons des
-        /// côtés gauche/droit (X) et haut/bas (Y) ; decalage : écart entre le milieu d'un côté
-        /// et le centre de chacun de ses deux boutons.
+        /// distanceX, distanceY: distance between the center of the screen and the line of the
+        /// buttons of the left/right sides (X) and top/bottom sides (Y); offset: distance
+        /// between the middle of a side and the center of each of its two buttons.
         /// </summary>
         private static Point CrownSlot(int num, double cx, double cy, double distanceX,
                                            double distanceY, double offset)

@@ -3,74 +3,72 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// MODE JEU (étape 9 de la feuille de route, section « 10. Mode jeu » du cahier des charges).
+    /// GAME MODE (step 9 of the roadmap, section "10. Game mode" of the specification).
     ///
-    /// Entrée : bouton « Jeu » du menu. Sortie : regarder en bas, hors de l'écran, pendant
-    /// [DelaiMenu] ouvre le menu (MenuAutorise = oui), où le bouton devient « Quitter le jeu ».
-    /// La touche Échap de l'aidant ramène aussi au mode mouvement.
+    /// Entry: "Game" button of the menu. Exit: looking down, below the screen, for
+    /// [MenuDelay] opens the menu (MenuAllowed = yes), where the button becomes "Quit game".
+    /// The caregiver's Escape key also returns to movement mode.
     ///
-    /// Dans ce mode, rien n'est dessiné : pas de cercle, pas de fixation, pas de regard fixe,
-    /// pas de clic au regard. L'utilisateur clique avec son contacteur ; aucune touche du
-    /// clavier n'est envoyée.
+    /// In this mode, nothing is drawn: no circle, no fixation, no fixed gaze, no gaze click.
+    /// The user clicks with his switch; no keyboard key is sent.
     ///
-    /// Deux variantes, choisies par le réglage [SourisJeu] :
+    /// Two variants, chosen by the [GameMouse] setting:
     ///
-    ///   « directe » (par défaut, pour Mindball Play) : le curseur bouge EXACTEMENT comme en
-    ///   mode mouvement avec le suivi souris, mais sans cercle (demande de l'utilisateur du
-    ///   28/10/2026 : avec [LissageJeu] = 0.7 puis 0.3, le curseur saccadait trop). Donc :
-    ///   même lissage double que le mode mouvement, mais avec son propre réglage [LissageJeu]
-    ///   (0.16 par défaut, comme [Lissage] : l'utilisateur veut deux réglages séparés), et
-    ///   anti-tremblement [ZoneMorteCurseur] :
-    ///   au repos, le curseur ne bouge pas tant que le regard lissé en est à moins de
-    ///   [ZoneMorteCurseur] pixels ; au-delà, il le suit en continu jusqu'à l'avoir rattrapé.
-    ///   Regard perdu ou hors de l'écran : le curseur reste où il est.
+    ///   "direct" (default, for Mindball Play): the cursor moves EXACTLY as in movement mode
+    ///   with mouse tracking, but without a circle (user request of 2026-10-28: with
+    ///   [GameSmoothing] = 0.7 then 0.3, the cursor stuttered too much). So: the same double
+    ///   smoothing as movement mode, but with its own [GameSmoothing] setting (0.16 by
+    ///   default, like [Smoothing]: the user wants two separate settings), and the
+    ///   [CursorDeadZone] anti-jitter:
+    ///   at rest, the cursor does not move as long as the smoothed gaze is less than
+    ///   [CursorDeadZone] pixels away; beyond that, it follows continuously until it has
+    ///   caught up. Gaze lost or off screen: the cursor stays where it is.
     ///
-    ///   « relative » (pour d'autres jeux) : beaucoup de jeux ignorent la position du curseur
-    ///   et ne lisent que les DÉPLACEMENTS de la souris (« entrée brute »). On envoie donc des
-    ///   déplacements avec SendInput. Deux façons de traduire le regard, choisies par
-    ///   [RelativeJeu] (le cahier des charges dit « à tester ») :
-    ///     « suivi »   : le déplacement envoyé suit le déplacement du regard lissé
-    ///                   (le regard bouge de 50 px → la souris bouge de 50 px × [SensibiliteJeu]) ;
-    ///     « manette » : l'écart entre le regard et le CENTRE de l'écran donne une vitesse,
-    ///                   comme le petit levier d'une manette. Au centre, dans un cercle de rayon
-    ///                   [RayonCercle], rien ne bouge ; la vitesse augmente ensuite jusqu'au bord
-    ///                   de l'écran.
-    ///   Regard perdu ou hors de l'écran : plus aucun déplacement n'est envoyé.
+    ///   "relative" (for other games): many games ignore the cursor position and only read
+    ///   the mouse MOVEMENTS ("raw input"). So movements are sent with SendInput. Two ways of
+    ///   translating the gaze, chosen by [GameRelative] (the specification says "to test"):
+    ///     "tracking": the movement sent follows the movement of the smoothed gaze
+    ///                 (gaze moves 50 px → mouse moves 50 px × [GameSensitivity]);
+    ///     "gamepad" : the gap between the gaze and the screen CENTER gives a speed, like the
+    ///                 small stick of a gamepad. In the center, within a circle of radius
+    ///                 [CircleRadius], nothing moves; the speed then increases up to the
+    ///                 screen edge.
+    ///   Gaze lost or off screen: no more movement is sent.
     ///
-    /// Attention, limites connues : un jeu en « plein écran exclusif » peut cacher le calque de
-    /// GazeBar (le menu du bas pourrait alors ne pas se voir), et rien n'est garanti face aux
-    /// systèmes anti-triche de certains jeux en ligne, qui peuvent refuser les entrées simulées.
+    /// Note, known limits: a game in "exclusive full screen" may hide GazeBar's overlay (the
+    /// bottom menu might then not be visible), and nothing is guaranteed against the
+    /// anti-cheat systems of some online games, which may refuse simulated input.
     /// </summary>
     internal sealed class GameMode : Mode
     {
         /// <summary>
-        /// Mode manette : vitesse maximale du curseur, en pixels de l'écran 4K par seconde
-        /// (convertie avec Ecran.PxRegard, étape 11), atteinte quand le
-        /// regard est au bord de l'écran (avant multiplication par [SensibiliteJeu]).
-        /// Valeur de départ, à ajuster après essai.
+        /// Gamepad mode: maximum cursor speed, in 4K screen pixels per second (converted with
+        /// ScreenMetrics.GazePx, step 11), reached when the gaze is at the screen edge (before
+        /// multiplying by [GameSensitivity]).
+        /// Starting value, to adjust after testing.
         /// </summary>
         private const double MaxGamepadSpeed = 1500;
 
-        // Le regard lissé avec [LissageJeu] (réglage séparé de [Lissage], celui du mode mouvement).
+        // The gaze smoothed with [GameSmoothing] (setting separate from [Smoothing], the one of movement mode).
         private readonly Smoother _smoothed = new Smoother(() => AppSettings.Current.GameSmoothing);
 
-        // Vrai quand _lisse a une position valable (sinon on la place sur le regard).
+        // True when _smoothed has a valid position (otherwise it is placed on the gaze).
         private bool _placed;
 
-        // Souris directe : vrai quand le curseur est « en route » derrière le regard lissé
-        // (même principe que le suivi souris du mode mouvement).
+        // Direct mouse: true when the cursor is "on the way" behind the smoothed gaze
+        // (same principle as the mouse tracking of movement mode).
         private bool _cursorOnTheWay;
 
-        // Souris relative, mode suivi : position lissée au tic précédent.
+        // Relative mouse, tracking mode: smoothed position at the previous tick.
         private double _previousX;
         private double _previousY;
 
-        // Souris relative : les morceaux de pixel pas encore envoyés. SendInput n'accepte que
-        // des pixels entiers ; sans ces restes, les petits mouvements lents seraient perdus.
+        // Relative mouse: the pixel fractions not sent yet. SendInput only accepts whole
+        // pixels; without these remainders, small slow movements would be lost.
         private double _remainderX;
         private double _remainderY;
 
-        // Souris relative, mode manette : instant du tic précédent (−1 = aucun).
+        // Relative mouse, gamepad mode: time of the previous tick (−1 = none).
         private double _lastMs = -1;
 
         public override string Name
@@ -78,15 +76,15 @@ namespace GazeBar
             get { return "Jeu (" + AppSettings.Current.GameMouse + ")"; }
         }
 
-        /// <summary>Le menu s'ouvre depuis le jeu : c'est la sortie au regard (choix du 25/10/2026).</summary>
+        /// <summary>The menu opens from the game: it is the gaze way out (choice of 2026-10-25).</summary>
         public override bool MenuAllowed
         {
             get { return true; }
         }
 
         /// <summary>
-        /// L'écran a changé (étape 11) : ce mode continue, car un jeu ne doit pas être interrompu, et la position
-        /// du curseur est recalculée à chaque tic.
+        /// The screen changed (step 11): this mode carries on, because a game must not be
+        /// interrupted, and the cursor position is recomputed on each tick.
         /// </summary>
         public override bool AdaptToScreen()
         {
@@ -95,19 +93,19 @@ namespace GazeBar
 
         public override void Enter(GazeState gaze)
         {
-            // Aucun dessin dans ce mode : le jeu doit rester entièrement visible.
+            // No drawing in this mode: the game must stay fully visible.
             Manager.Layer.HideAll();
             Modifiers.DisableAll();
 
-            // On repart de zéro à chaque entrée (aussi au retour du menu) : le lissage repart
-            // du regard actuel, sans glisser depuis une vieille position.
+            // Start from zero on each entry (also when coming back from the menu): the
+            // smoothing starts again from the current gaze, without sliding from an old position.
             _placed = false;
             _cursorOnTheWay = false;
             _remainderX = 0;
             _remainderY = 0;
             _lastMs = -1;
 
-            App.Log("Mode jeu : souris " + AppSettings.Current.GameMouse +
+            App.Log("Game mode: mouse " + AppSettings.Current.GameMouse +
                     (AppSettings.Current.RelativeMouse ? " (" + AppSettings.Current.GameRelative + ")" : ""));
         }
 
@@ -115,8 +113,8 @@ namespace GazeBar
         {
             AppSettings p = AppSettings.Current;
 
-            // Regard perdu ou hors de l'écran : on ne bouge plus rien. Au retour du regard, le
-            // lissage repartira du regard (pas de déplacement brusque en mode relatif).
+            // Gaze lost or off screen: nothing moves any more. When the gaze comes back, the
+            // smoothing will start again from the gaze (no sudden move in relative mode).
             if (!gaze.OnScreen)
             {
                 _placed = false;
@@ -128,9 +126,10 @@ namespace GazeBar
 
             if (!_placed)
             {
-                // Point de départ du lissage. En souris directe, on part du CURSEUR (comme le
-                // cercle du mode mouvement part de sa place) : il glisse vers le regard au lieu
-                // de sauter. En souris relative, on part du regard (aucun déplacement envoyé).
+                // Starting point of the smoothing. With the direct mouse, we start from the
+                // CURSOR (as the circle of movement mode starts from its place): it slides
+                // towards the gaze instead of jumping. With the relative mouse, we start from
+                // the gaze (no movement sent).
                 NativeMethods.POINT cursor;
                 if (!p.RelativeMouse && NativeMethods.GetCursorPos(out cursor))
                 {
@@ -161,13 +160,13 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Souris directe : le curseur suit le regard lissé, comme le suivi souris du mode
-        /// mouvement (ModeMouvement.DeplacerCurseur) :
-        ///  - au repos, le curseur ne bouge pas tant que le regard lissé en est à moins de
-        ///    [ZoneMorteCurseur] pixels (le petit tremblement du regard est ignoré) ;
-        ///  - au-delà, il se met « en route » et suit à chaque image, en continu, jusqu'à
-        ///    l'avoir rattrapé (moins d'un pixel), puis revient au repos.
-        /// On lit la vraie position du curseur : si le jeu l'a déplacé, on en tient compte.
+        /// Direct mouse: the cursor follows the smoothed gaze, like the mouse tracking of
+        /// movement mode (MovementMode.MoveCursor):
+        ///  - at rest, the cursor does not move as long as the smoothed gaze is less than
+        ///    [CursorDeadZone] pixels away (the small gaze jitter is ignored);
+        ///  - beyond that, it gets "on the way" and follows on each frame, continuously, until
+        ///    it has caught up (less than one pixel), then goes back to rest.
+        /// The real cursor position is read: if the game moved it, this is taken into account.
         /// </summary>
         private void DirectMouse()
         {
@@ -192,11 +191,11 @@ namespace GazeBar
             NativeMethods.SetCursorPos((int)Math.Round(_smoothed.X), (int)Math.Round(_smoothed.Y));
             if (distance < 1)
             {
-                _cursorOnTheWay = false; // rattrapé : retour au repos
+                _cursorOnTheWay = false; // caught up: back to rest
             }
         }
 
-        /// <summary>Souris relative « suivi » : on envoie le déplacement du regard lissé depuis le tic précédent.</summary>
+        /// <summary>Relative mouse "tracking": send the movement of the smoothed gaze since the previous tick.</summary>
         private void TrackingMouse()
         {
             double dx = (_smoothed.X - _previousX) * AppSettings.Current.GameSensitivity;
@@ -207,8 +206,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Souris relative « manette » : l'écart entre le regard lissé et le centre de l'écran
-        /// donne une vitesse. Le déplacement envoyé = vitesse × temps écoulé depuis le tic précédent.
+        /// Relative mouse "gamepad": the gap between the smoothed gaze and the screen center
+        /// gives a speed. The movement sent = speed × time elapsed since the previous tick.
         /// </summary>
         private void GamepadMouse(double nowMs)
         {
@@ -220,7 +219,7 @@ namespace GazeBar
             }
             if (dt > 0.05)
             {
-                dt = 0.05; // après un tic très en retard, pas de grand bond
+                dt = 0.05; // after a very late tick, no big leap
             }
 
             double centerX = Manager.ScreenWidth / 2;
@@ -229,25 +228,25 @@ namespace GazeBar
             double gapY = _smoothed.Y - centerY;
             double distance = Math.Sqrt(gapX * gapX + gapY * gapY);
 
-            // Zone neutre au centre : le cercle de rayon [RayonCercle], comme pour le défilement.
+            // Neutral zone in the center: the circle of radius [CircleRadius], as for scrolling.
             double neutralZone = AppSettings.Current.CircleRadiusPx;
-            // Distance où la vitesse est au maximum : le bord le plus proche (demi-hauteur).
+            // Distance where the speed is at its maximum: the nearest edge (half height).
             double maxDistance = Math.Min(centerX, centerY);
             if (distance <= neutralZone || maxDistance <= neutralZone)
             {
                 return;
             }
 
-            // De 0 (bord de la zone neutre) à 1 (bord de l'écran), sans dépasser 1.
+            // From 0 (edge of the neutral zone) to 1 (screen edge), without going above 1.
             double force = Math.Min(1.0, (distance - neutralZone) / (maxDistance - neutralZone));
-            // VitesseMaxManette est en pixels de l'écran 4K par seconde : convertie (étape 11).
+            // MaxGamepadSpeed is in 4K screen pixels per second: converted (step 11).
             double speed = force * ScreenMetrics.GazePx(MaxGamepadSpeed) * AppSettings.Current.GameSensitivity;
 
-            // Même direction que l'écart (ecart / distance = direction de longueur 1).
+            // Same direction as the gap (gap / distance = direction of length 1).
             SendMove(gapX / distance * speed * dt, gapY / distance * speed * dt);
         }
 
-        /// <summary>Ajoute le déplacement aux restes et envoie la partie entière (en pixels).</summary>
+        /// <summary>Adds the movement to the remainders and sends the whole part (in pixels).</summary>
         private void SendMove(double dx, double dy)
         {
             _remainderX += dx;

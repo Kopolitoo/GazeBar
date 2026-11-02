@@ -4,26 +4,25 @@ using System.Runtime.InteropServices;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : surveille la touche Échap, dans tous les programmes (étape 4).
+    /// MODEL: watches the Escape key, in all programs (step 4).
     ///
-    /// Le cahier des charges demande « toujours une sortie » : une touche du clavier (Échap)
-    /// ramène au mode mouvement, pour l'aidant. C'est d'autant plus utile depuis que
-    /// l'ancienne barre d'outils (qu'on pouvait cliquer à la souris) a disparu.
+    /// The specification asks for "always a way out": a keyboard key (Escape) returns to
+    /// movement mode, for the caregiver. It is all the more useful since the old toolbar
+    /// (which could be clicked with the mouse) was removed.
     ///
-    /// Comment : on installe un « crochet clavier bas niveau » (WH_KEYBOARD_LL). Windows
-    /// appelle alors notre fonction SurTouche à chaque touche appuyée, où qu'on soit.
-    /// On se contente d'observer : la touche est toujours transmise au programme actif
-    /// (CallNextHookEx). Échap continue donc de fermer une boîte de dialogue, par exemple.
+    /// How: we install a "low-level keyboard hook" (WH_KEYBOARD_LL). Windows then calls our
+    /// OnKey function on every key press, wherever the focus is.
+    /// We only observe: the key is always passed on to the active program
+    /// (CallNextHookEx). Escape therefore still closes a dialog box, for example.
     ///
-    /// Windows appelle SurTouche sur le fil de l'interface (celui qui a installé le crochet),
-    /// pendant qu'il traite ses messages : on peut donc changer de mode directement. Mais il
-    /// faut répondre vite (sinon Windows retire le crochet) : l'événement est déclenché après
-    /// coup, avec BeginInvoke.
+    /// Windows calls OnKey on the UI thread (the one that installed the hook), while it
+    /// processes its messages: so we could change mode directly. But we must answer quickly
+    /// (otherwise Windows removes the hook): the event is raised afterwards, with BeginInvoke.
     /// </summary>
     internal sealed class KeyboardHook : IDisposable
     {
-        // Garder une référence à la fonction : sinon le « ramasse-miettes » de .NET pourrait
-        // la détruire alors que Windows l'appelle encore (plantage).
+        // Keep a reference to the function: otherwise the .NET "garbage collector" could
+        // destroy it while Windows still calls it (crash).
         private readonly NativeMethods.LowLevelKeyboardProc _function;
         private IntPtr _hook = IntPtr.Zero;
 
@@ -32,10 +31,10 @@ namespace GazeBar
             _function = OnKey;
         }
 
-        /// <summary>Déclenché (sur le fil de l'interface) quand la touche Échap est enfoncée.</summary>
+        /// <summary>Raised (on the UI thread) when the Escape key is pressed.</summary>
         public event Action EscapePressed;
 
-        /// <summary>Installe le crochet. Renvoie faux si Windows le refuse (noté dans le journal).</summary>
+        /// <summary>Installs the hook. Returns false if Windows refuses it (written to the log).</summary>
         public bool Install()
         {
             if (_hook != IntPtr.Zero)
@@ -43,17 +42,17 @@ namespace GazeBar
                 return true;
             }
 
-            // Pour un crochet bas niveau, Windows demande le « module » du programme ;
-            // GetModuleHandle(null) donne celui de GazeBar.exe.
+            // For a low-level hook, Windows asks for the program's "module";
+            // GetModuleHandle(null) gives the one of GazeBar.exe.
             _hook = NativeMethods.SetWindowsHookEx(
                 NativeMethods.WH_KEYBOARD_LL, _function, NativeMethods.GetModuleHandle(null), 0);
 
             if (_hook == IntPtr.Zero)
             {
-                App.Log("Touche Échap : crochet clavier refusé (erreur " + Marshal.GetLastWin32Error() + ")");
+                App.Log("Escape key: keyboard hook refused (error " + Marshal.GetLastWin32Error() + ")");
                 return false;
             }
-            App.Log("Touche Échap : surveillée");
+            App.Log("Escape key: watched");
             return true;
         }
 
@@ -66,20 +65,20 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Appelée par Windows à chaque touche. Doit répondre très vite.</summary>
+        /// <summary>Called by Windows for every key. Must answer very quickly.</summary>
         private IntPtr OnKey(int code, IntPtr wParam, IntPtr lParam)
         {
-            // code ≥ 0 : le message est à traiter. wParam dit « enfoncée » ou « relâchée ».
-            // lParam pointe vers une structure dont le premier champ est le code de la touche.
+            // code >= 0: the message must be handled. wParam says "pressed" or "released".
+            // lParam points to a structure whose first field is the key code.
             if (code >= 0)
             {
                 int message = wParam.ToInt32();
                 if (message == NativeMethods.WM_KEYDOWN || message == NativeMethods.WM_SYSKEYDOWN)
                 {
                     int key = Marshal.ReadInt32(lParam);
-                    // Étape 12 : la touche Échap du clavier au regard est SIMULÉE par GazeBar.
-                    // Elle doit arriver à l'application, mais pas ramener au mode mouvement ni
-                    // fermer le clavier : on ne réagit qu'à un vrai clavier (celui de l'aidant).
+                    // Step 12: the Escape key of the gaze keyboard is SIMULATED by GazeBar.
+                    // It must reach the application, but must neither return to movement mode
+                    // nor close the keyboard: we only react to a real keyboard (the caregiver's).
                     int flagsValue = Marshal.ReadInt32(lParam, NativeMethods.HookFlagsOffset);
                     bool simulated = (flagsValue & NativeMethods.LLKHF_INJECTED) != 0;
                     if (key == NativeMethods.VK_ESCAPE && !simulated)
@@ -93,7 +92,7 @@ namespace GazeBar
                 }
             }
 
-            // Toujours transmettre la touche au programme suivant.
+            // Always pass the key on to the next program.
             return NativeMethods.CallNextHookEx(_hook, code, wParam, lParam);
         }
     }

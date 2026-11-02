@@ -11,83 +11,78 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// INTERFACE : la fenêtre du mode paramètres (étape 7), plein écran, fond noir.
+    /// INTERFACE: the settings mode window (step 7), full screen, black background.
     ///
-    /// Mise en page validée par l'utilisateur le 26/10/2026 :
-    ///   - sept onglets à gauche (CatalogueParametres ; six au départ, « Défilement » ajouté à
-    ///     l'étape 8) ; un seul onglet affiché à la fois,
-    ///     cinq réglages au plus, rien ne défile ;
-    ///   - chaque réglage : son nom, une phrase d'explication, puis « − », la valeur, « + »
-    ///     (ou un interrupteur pour un oui / non, voir plus bas) ; la valeur par défaut est
-    ///     rappelée sous la valeur ;
-    ///   - à droite : « Défaut » en haut (remet les valeurs de l'onglet affiché, après
-    ///     confirmation) et « Retour » au milieu du bord (retour au mode mouvement).
+    /// Layout validated by the user on 2026-10-26:
+    ///   - tabs on the left (SettingsCatalog), grouped in collapsible categories since
+    ///     2026-11-02; one tab shown at a time, five settings at most, nothing scrolls;
+    ///   - each setting: its name, an explanation sentence, then "−", the value, "+" (or a
+    ///     switch for a yes / no, see below); the default value is recalled below the value;
+    ///   - on the right: "Défaut" at the top (restores the shown tab's values, after
+    ///     confirmation) and "Retour" in the middle of the edge (back to movement mode).
     ///
-    /// Étape 10 : un neuvième onglet, « Icônes », avec un seul gros bouton « Configurer les
-    /// icônes » qui demande au mode d'ouvrir l'écran de configuration (ModeConfigIcones).
+    /// Step 10: an "Icônes" tab, with a single big "Configurer les icônes" button that asks
+    /// the mode to open the configuration screen (IconConfigMode).
     ///
-    /// 29/10/2026 : un dixième onglet, « Outils », avec deux gros boutons « Calibration » et
-    /// « Diagnostic » (ils étaient avant dans la barre de menu). Comme pour « Configurer les
-    /// icônes », la fenêtre ne fait que PRÉVENIR le mode (événements CalibrationDemandee et
-    /// DiagnosticDemande) : c'est ModeParametres qui lance l'outil et change de mode.
+    /// 2026-10-29: an "Outils" tab, with two big buttons "Calibration" and "Diagnostic"
+    /// (they used to be in the menu bar). As for "Configurer les icônes", the window only
+    /// NOTIFIES the mode (CalibrationRequested and DiagnosticRequested events): SettingsMode
+    /// starts the tool and changes mode.
     ///
-    /// Étape 15 : un onglet « Profils » (catégorie Système), avec deux gros boutons :
-    ///   - « Enregistrer les réglages actuels » : fait ici même (ProfilsParametres), un
-    ///     message donne le nom du profil créé ;
-    ///   - « Charger un profil » : prévient le mode (ListeProfilsDemandee), qui ouvre la liste
-    ///     des profils en plein écran. Le profil choisi revient ici sous forme d'une
-    ///     confirmation « Oui / Non » (constructeur, « profilAConfirmer ») ; « Oui » prévient
-    ///     le mode (ChargementProfilDemande), qui charge le profil.
+    /// Step 15: a "Profils" tab (Système category), with two big buttons:
+    ///   - "Enregistrer les réglages actuels": done right here (SettingsProfiles), a
+    ///     message gives the name of the created profile;
+    ///   - "Charger un profil": notifies the mode (ProfileListRequested), which opens the
+    ///     full-screen profile list. The chosen profile comes back here as a "Oui / Non"
+    ///     confirmation (constructor, "profileToConfirm"); "Oui" notifies the mode
+    ///     (ProfileLoadRequested), which loads the profile.
     ///
-    /// POURQUOI UNE VRAIE FENÊTRE, et pas un dessin sur le calque comme les autres modes ?
-    /// Le calque laisse passer les clics et ne prend jamais le clavier. Or l'aidant doit
-    /// pouvoir cliquer à la souris et taper une valeur au clavier (ou la dicter). Cette
-    /// fenêtre-ci accepte donc la souris et le clavier. Le regard, lui, est traité par
-    /// ModeParametres, qui demande à la fenêtre où sont ses cibles.
+    /// WHY A REAL WINDOW, and not a drawing on the overlay like the other modes?
+    /// The overlay lets clicks through and never takes the keyboard. But the caregiver must
+    /// be able to click with the mouse and type a value on the keyboard (or dictate it).
+    /// This window therefore accepts mouse and keyboard. The gaze is handled by
+    /// SettingsMode, which asks the window where its targets are.
     ///
-    /// LA PAGE : tout est dessiné sur une surface de 1920 × 1080 unités (_page), placée dans
-    /// une « Viewbox » qui l'agrandit ou la réduit à la taille réelle de l'écran. Les
-    /// positions écrites ici sont donc celles d'un écran 1920 × 1080, quel que soit l'écran.
-    /// Les boutons gardent une taille fixe : changer [TailleIcones] ne déplace pas ce qu'on
-    /// est en train de regarder.
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// THE PAGE: everything is drawn on a 1920 × 1080 unit surface (_page), placed in a
+    /// "Viewbox" that scales it to the real screen size. Positions written here are thus
+    /// those of a 1920 × 1080 screen, whatever the screen. Buttons keep a fixed size:
+    /// changing [IconSize] does not move what is being looked at.
     /// </summary>
     internal sealed class SettingsWindow : Window
     {
         public const double PageWidth = 1920;
         public const double PageHeight = 1080;
 
-        // ── Mise en page (en unités de la page 1920 × 1080).
+        // ── Layout (in units of the 1920 × 1080 page).
         private const double LeftTab = 60;
         private const double TabWidth = 340;
-        private const double TabMaxHeight = 140;   // hauteur d'un onglet quand il y a la place
-        private const double TabGap = 20;         // espace entre deux onglets
-        private const double TopTabs = 60;         // haut du premier onglet
-        private const double BottomTabs = 1040;        // le dernier onglet s'arrête avant cette ligne
-        private const double TabIndent = 40;       // retrait des onglets sous leur catégorie (02/11/2026)
+        private const double TabMaxHeight = 140;   // height of a tab when there is room
+        private const double TabGap = 20;         // gap between two tabs
+        private const double TopTabs = 60;         // top of the first tab
+        private const double BottomTabs = 1040;        // the last tab stops before this line
+        private const double TabIndent = 40;       // indent of tabs below their category (2026-11-02)
         private const double LeftContent = 460;
         private const double TopRow = 92;
-        private const double StepRow = 184;           // d'une ligne de réglage à la suivante
+        private const double StepRow = 184;           // from one setting row to the next
         private const double RowHeight = 160;
         private const double LabelWidth = 520;
         private const double Gap = 18;
-        private const double SideButton = 120;         // « − », « + », hauteur des boutons
+        private const double SideButton = 120;         // "−", "+", button height
         private const double ValueWidth = 290;
-        private const double ChoiceWidth = 260;       // les deux boutons d'un choix entre deux mots
+        private const double ChoiceWidth = 260;       // the two buttons of a choice between two words
 
-        // ── L'interrupteur d'un réglage oui / non (02/11/2026, style Bootstrap « switch »).
-        //    La CIBLE du regard reste grande (toute la place des anciens boutons « Non » et
-        //    « Oui » : 2 × 260 + 18 = 538 × 120) ; l'interrupteur dessiné est dedans.
-        private const double SwitchWidth = 150;   // la piste (la « pilule »)
+        // ── The switch of a yes / no setting (2026-11-02, Bootstrap "switch" style).
+        //    The gaze TARGET stays large (the whole room of the former "Non" and "Oui"
+        //    buttons: 2 × 260 + 18 = 538 × 120); the drawn switch sits inside it.
+        private const double SwitchWidth = 150;   // the track (the "pill")
         private const double SwitchHeight = 76;
-        private const double SwitchButton = 60;     // le rond qui glisse
-        private static readonly Brush ActiveTrack = Freeze(new SolidColorBrush(Color.FromRgb(0x0D, 0x6E, 0xFD)));   // le bleu de Bootstrap
-        private const double RightLeft = 1700;      // colonne de droite (Défaut, Retour)
+        private const double SwitchButton = 60;     // the sliding knob
+        private static readonly Brush ActiveTrack = Freeze(new SolidColorBrush(Color.FromRgb(0x0D, 0x6E, 0xFD)));   // Bootstrap blue
+        private const double RightLeft = 1700;      // right column (Défaut, Retour)
         private const double RightSide = 160;
         private const double GazeDotDiameter = 50;
 
-        // ── Couleurs.
+        // ── Colours.
         private static readonly Brush White = Freeze(new SolidColorBrush(Color.FromRgb(0xEE, 0xF1, 0xF4)));
         private static readonly Brush Soft = Freeze(new SolidColorBrush(Color.FromRgb(0x9A, 0xA3, 0xAD)));
         private static readonly Brush Border = Freeze(new SolidColorBrush(Color.FromRgb(0x4A, 0x52, 0x5C)));
@@ -95,40 +90,40 @@ namespace GazeBar
 
         private const string IconFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
 
-        // La page, son contenu (refait à chaque changement d'onglet) et le point du regard.
+        // The page, its content (rebuilt on every tab change) and the gaze dot.
         private readonly Canvas _page;
         private readonly Canvas _content;
         private readonly Ellipse _gazeDot;
 
-        // Les cibles du regard, dans l'ordre où elles ont été créées.
+        // The gaze targets, in creation order.
         private readonly List<SettingTarget> _targets = new List<SettingTarget>();
 
-        // Pour chaque réglage numérique affiché : son cadre de valeur (pour la saisie au clavier).
+        // For each numeric setting shown: its value frame (for keyboard input).
         private readonly Dictionary<Setting, ValueFrame> _frames = new Dictionary<Setting, ValueFrame>();
 
         private int _tab;
         private bool _confirmation;
 
-        // Un message affiché dans l'onglet « Outils » (par exemple « Calibration impossible… »)
-        // ou « Profils » (« Profil chargé… »), ou null. Effacé quand on change d'onglet.
+        // A message shown in the "Outils" tab (for example "Calibration impossible…") or
+        // "Profils" ("Profil chargé…"), or null. Cleared when the tab changes.
         private string _message;
 
-        // Étape 15 : le profil choisi dans la liste, en attente de confirmation (« Charger le
-        // profil … ? Oui / Non »), ou null.
+        // Step 15: the profile chosen in the list, awaiting confirmation ("Charger le
+        // profil … ? Oui / Non"), or null.
         private FoundProfile _profileToConfirm;
 
-        // La saisie au clavier en cours (null = aucune).
+        // The keyboard input in progress (null = none).
         private Setting _editedSetting;
         private TextBox _input;
 
-        // Vrai quand c'est le mode qui ferme la fenêtre (et non Alt+F4, par exemple).
+        // True when the mode closes the window (and not Alt+F4, for example).
         private bool _closeRequested;
 
         /// <summary>
-        /// Crée la fenêtre, ouverte sur l'onglet numéro « onglet » (0 = le premier). Au retour
-        /// de l'écran de configuration des icônes, elle s'ouvre sur l'onglet « Icônes ».
-        /// Étape 15 : au retour de la liste des profils, « profilAConfirmer » est le profil
-        /// choisi ; la page montre alors la question « Charger le profil … ? ».
+        /// Creates the window, opened on tab number "tab" (0 = the first). When coming back
+        /// from the icon configuration screen, it opens on the "Icônes" tab.
+        /// Step 15: when coming back from the profile list, "profileToConfirm" is the chosen
+        /// profile; the page then shows the question "Charger le profil … ?".
         /// </summary>
         public SettingsWindow(int tab = 0, FoundProfile profileToConfirm = null)
         {
@@ -150,7 +145,7 @@ namespace GazeBar
             _content = new Canvas();
             _page.Children.Add(_content);
 
-            // Le petit cercle gris du regard, par-dessus tout, et transparent à la souris.
+            // The small grey gaze dot, above everything, and transparent to the mouse.
             _gazeDot = new Ellipse();
             _gazeDot.Width = GazeDotDiameter;
             _gazeDot.Height = GazeDotDiameter;
@@ -160,7 +155,7 @@ namespace GazeBar
             _gazeDot.Visibility = Visibility.Collapsed;
             _page.Children.Add(_gazeDot);
 
-            // La Viewbox met la page de 1920 × 1080 à l'échelle de l'écran, sans la déformer.
+            // The Viewbox scales the 1920 × 1080 page to the screen, without distorting it.
             Viewbox scale = new Viewbox();
             scale.Stretch = Stretch.Uniform;
             scale.Child = _page;
@@ -169,33 +164,32 @@ namespace GazeBar
             Build();
         }
 
-        // ───────────────────────── Ce que le mode utilise ─────────────────────────
+        // ───────────────────────── What the mode uses ─────────────────────────
 
-        /// <summary>Demande de retour au mode mouvement (bouton « Retour », ou fermeture par Windows).</summary>
+        /// <summary>Request to go back to movement mode ("Retour" button, or closing by Windows).</summary>
         public event Action BackRequested;
 
-        /// <summary>Bouton « Configurer les icônes » de l'onglet « Icônes » (étape 10).</summary>
+        /// <summary>"Configurer les icônes" button of the "Icônes" tab (step 10).</summary>
         public event Action IconConfigRequested;
 
-        /// <summary>Bouton « Calibration » de l'onglet « Outils » (29/10/2026).</summary>
+        /// <summary>"Calibration" button of the "Outils" tab (2026-10-29).</summary>
         public event Action CalibrationRequested;
 
-        /// <summary>Bouton « Diagnostic » de l'onglet « Outils » (29/10/2026).</summary>
+        /// <summary>"Diagnostic" button of the "Outils" tab (2026-10-29).</summary>
         public event Action DiagnosticRequested;
 
-        /// <summary>Bouton « Mes mots » de l'onglet « Général » (étape 14).</summary>
+        /// <summary>"Mes mots" button of the "Général" tab (step 14).</summary>
         public event Action MyWordsRequested;
 
-        /// <summary>Bouton « Charger un profil » de l'onglet « Profils » (étape 15).</summary>
+        /// <summary>"Charger un profil" button of the "Profils" tab (step 15).</summary>
         public event Action ProfileListRequested;
 
-        /// <summary>« Oui » à la question « Charger le profil … ? » (étape 15) : le profil à charger.</summary>
+        /// <summary>"Oui" to the question "Charger le profil … ?" (step 15): the profile to load.</summary>
         public event Action<FoundProfile> ProfileLoadRequested;
 
         /// <summary>
-        /// Affiche un message dans l'onglet ouvert (« Outils » : la calibration n'a pas pu être
-        /// lancée ; « Profils » : le profil est chargé…). La page est reconstruite pour le
-        /// montrer.
+        /// Shows a message in the open tab ("Outils": calibration could not be started;
+        /// "Profils": the profile is loaded…). The page is rebuilt to show it.
         /// </summary>
         public void ShowMessage(string message)
         {
@@ -204,8 +198,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Les cibles du regard. La même liste est gardée d'un bout à l'autre : elle est
-        /// seulement vidée et remplie de nouveau quand la page est reconstruite.
+        /// The gaze targets. The same list is kept throughout: it is only cleared and filled
+        /// again when the page is rebuilt.
         /// </summary>
         public IReadOnlyList<IGazeTarget> Targets
         {
@@ -213,28 +207,28 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Augmente à chaque reconstruction de la page (nouvel onglet, confirmation…). Le mode
-        /// s'en sert pour savoir que les cibles ont changé. « − » et « + » ne reconstruisent
-        /// pas la page (seul le texte de la valeur change) : la répétition peut continuer.
+        /// Increases on every page rebuild (new tab, confirmation…). The mode uses it to know
+        /// the targets changed. "−" and "+" do not rebuild the page (only the value text
+        /// changes): repetition can go on.
         /// </summary>
         public int Version { get; private set; }
 
-        /// <summary>Vrai si l'activation de cette cible peut se répéter (« − » et « + »).</summary>
+        /// <summary>True if activating this target can repeat ("−" and "+").</summary>
         public bool RepeatableTarget(int num)
         {
             return _targets[num].Repeat;
         }
 
-        /// <summary>Active la cible indiquée (le regard s'y est posé assez longtemps).</summary>
+        /// <summary>Activates the given target (the gaze rested on it long enough).</summary>
         public void Activate(int num)
         {
             _targets[num].Action();
         }
 
         /// <summary>
-        /// Convertit un point de l'écran (en pixels réels, comme le regard) en point de la page
-        /// 1920 × 1080. PointFromScreen tient compte de la mise à l'échelle de Windows ET de
-        /// celle de la Viewbox. Avant l'affichage de la fenêtre, renvoie un point très loin.
+        /// Converts a screen point (in real pixels, like the gaze) to a point of the
+        /// 1920 × 1080 page. PointFromScreen takes into account the Windows scaling AND the
+        /// Viewbox scaling. Before the window is shown, returns a point very far away.
         /// </summary>
         public Point ToPage(double xScreen, double yScreen)
         {
@@ -245,7 +239,7 @@ namespace GazeBar
             return _page.PointFromScreen(new Point(xScreen, yScreen));
         }
 
-        /// <summary>Place le petit cercle du regard (coordonnées de la page).</summary>
+        /// <summary>Places the small gaze dot (page coordinates).</summary>
         public void PlaceGazeDot(Point point)
         {
             Canvas.SetLeft(_gazeDot, point.X - GazeDotDiameter / 2);
@@ -254,9 +248,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Touche Échap pendant une saisie au clavier : la saisie est annulée (la valeur ne
-        /// change pas) et on reste dans les paramètres. Renvoie vrai si une saisie était en
-        /// cours ; sinon, Échap garde son rôle habituel (retour au mode mouvement).
+        /// Escape key during keyboard input: the input is cancelled (the value does not
+        /// change) and the settings stay open. Returns true if an input was in progress;
+        /// otherwise Escape keeps its usual role (back to movement mode).
         /// </summary>
         public bool CancelInput()
         {
@@ -265,26 +259,26 @@ namespace GazeBar
                 return false;
             }
             Setting setting = _editedSetting;
-            _editedSetting = null;   // d'abord, pour que la perte du focus ne valide pas la saisie
+            _editedSetting = null;   // first, so that losing focus does not confirm the input
             RestoreDisplay(setting);
-            App.Log("Paramètres : saisie annulée (" + setting.Name + ")");
+            App.Log("Settings: input cancelled (" + setting.Name + ")");
             return true;
         }
 
-        /// <summary>Ferme la fenêtre (appelée par le mode quand on le quitte).</summary>
+        /// <summary>Closes the window (called by the mode when it is left).</summary>
         public void CloseSettings()
         {
-            // Une saisie en cours est validée, comme si l'aidant avait appuyé sur Entrée.
+            // An input in progress is confirmed, as if the caregiver had pressed Enter.
             ConfirmInput();
             _closeRequested = true;
             Close();
         }
 
-        // ───────────────────────── Fenêtre ─────────────────────────
+        // ───────────────────────── Window ─────────────────────────
 
         /// <summary>
-        /// Une fois la fenêtre créée par Windows, on lui donne la taille exacte de l'écran
-        /// principal, comme pour le calque (voir OverlayWindow.CouvrirEcran).
+        /// Once Windows has created the window, give it the exact size of the primary screen,
+        /// as for the overlay (see OverlayWindow.CoverScreen).
         /// </summary>
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -293,9 +287,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// L'écran a changé pendant que la fenêtre est ouverte (étape 11, appelée par le mode) :
-        /// elle reprend la taille de l'écran, et la page est reconstruite (une saisie en cours
-        /// est validée).
+        /// The screen changed while the window is open (step 11, called by the mode): it
+        /// takes the screen size again, and the page is rebuilt (an input in progress is
+        /// confirmed).
         /// </summary>
         public void AdaptToScreen()
         {
@@ -303,7 +297,7 @@ namespace GazeBar
             Build();
         }
 
-        /// <summary>Donne à la fenêtre la taille exacte de l'écran principal.</summary>
+        /// <summary>Gives the window the exact size of the primary screen.</summary>
         private void CoverScreen()
         {
             HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
@@ -322,10 +316,10 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Fermeture demandée par Windows (Alt+F4…) et non par le mode : on l'annule, et on
-        /// demande plutôt le retour au mode mouvement, qui fermera la fenêtre proprement.
-        /// « BeginInvoke » : un peu plus tard, car on ne peut pas fermer une fenêtre pendant
-        /// qu'elle est en train de se fermer.
+        /// Closing requested by Windows (Alt+F4…) and not by the mode: it is cancelled, and a
+        /// return to movement mode is requested instead, which will close the window cleanly.
+        /// "BeginInvoke": a little later, because a window cannot be closed while it is
+        /// closing.
         /// </summary>
         protected override void OnClosing(CancelEventArgs e)
         {
@@ -346,17 +340,17 @@ namespace GazeBar
             }
         }
 
-        // ───────────────────────── Construction de la page ─────────────────────────
+        // ───────────────────────── Building the page ─────────────────────────
 
         private static AppSettings P
         {
             get { return AppSettings.Current; }
         }
 
-        /// <summary>(Re)construit toute la page pour l'onglet choisi.</summary>
+        /// <summary>(Re)builds the whole page for the chosen tab.</summary>
         private void Build()
         {
-            // Une saisie en cours est validée avant de tout refaire.
+            // An input in progress is confirmed before rebuilding everything.
             ConfirmInput();
 
             _content.Children.Clear();
@@ -365,18 +359,18 @@ namespace GazeBar
 
             SettingsTab tab = SettingsCatalog.Tabs[_tab];
 
-            // ── Le titre, en haut.
+            // ── The title, at the top.
             TextBlock title = Text("Paramètres — " + tab.Name, 30, Soft, false);
             Place(title, LeftContent, 26);
 
-            // ── La colonne de gauche : les CATÉGORIES « dépliantes » (02/11/2026, choix de
-            //    l'utilisateur). On voit les quatre catégories ; seule celle qui contient
-            //    l'onglet ouvert montre ses onglets, juste en dessous d'elle et en retrait.
-            //    Au plus 4 + 3 = 7 boutons (au lieu de 11 avant), donc des boutons plus hauts.
+            // ── The left column: the "collapsible" CATEGORIES (2026-11-02, user's choice).
+            //    All four categories are visible; only the one holding the open tab shows its
+            //    tabs, right below it and indented.
+            //    At most 4 + 3 = 7 buttons (instead of 11 before), hence taller buttons.
             BuildLeftColumn();
 
-            // ── Le contenu : les réglages, ou la confirmation de « Défaut », ou celle du
-            //    chargement d'un profil (étape 15).
+            // ── The content: the settings, or the "Défaut" confirmation, or the profile
+            //    load confirmation (step 15).
             if (_confirmation)
             {
                 BuildConfirmation(tab);
@@ -414,10 +408,10 @@ namespace GazeBar
                 }
             }
 
-            // ── La colonne de droite : « Défaut » en haut, « Retour » au milieu du bord.
-            //    E72C = flèches circulaires (remettre), E72B = flèche de retour.
-            //    Pas de « Défaut » pour un onglet sans rien à remettre (« Outils », « Profils ») : un bouton
-            //    qui ne fait rien serait déroutant.
+            // ── The right column: "Défaut" at the top, "Retour" in the middle of the edge.
+            //    E72C = circular arrows (restore), E72B = back arrow.
+            //    No "Défaut" for a tab with nothing to restore ("Outils", "Profils"): a button
+            //    that does nothing would be confusing.
             bool hasDefaults = tab.Settings.Count > 0 || tab.Name == SettingsCatalog.IconsTabName;
             if (hasDefaults)
             {
@@ -431,21 +425,20 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// La colonne de gauche : les catégories, et sous la catégorie ouverte ses onglets.
+        /// The left column: the categories, and below the open category its tabs.
         ///
-        /// Regarder une autre catégorie l'ouvre directement sur son premier onglet (un seul
-        /// regard, comme avant pour changer d'onglet). Regarder la catégorie déjà ouverte ne
-        /// fait rien. L'onglet ouvert est encadré comme avant ; la catégorie ouverte a son
-        /// symbole en couleur.
+        /// Looking at another category opens it directly on its first tab (a single look, as
+        /// before to change tab). Looking at the already open category does nothing. The open
+        /// tab is framed as before; the open category has its symbol in colour.
         /// </summary>
         private void BuildLeftColumn()
         {
             int openCategory = SettingsCatalog.CategoryOf(_tab);
             List<int> openTabs = SettingsCatalog.TabsOf(openCategory);
 
-            // Le nombre de lignes de la colonne : toutes les catégories + les onglets de la
-            // catégorie ouverte. Les lignes se partagent la hauteur de la page, sans dépasser
-            // la hauteur maximale (140) : avec 7 lignes, chacune fait environ 120 de haut.
+            // Number of rows in the column: all categories + the tabs of the open category.
+            // Rows share the page height, without exceeding the maximum height (140): with 7
+            // rows, each one is about 120 high.
             int rowCount = SettingsCatalog.Categories.Count + openTabs.Count;
             double step = Math.Min(TabMaxHeight + TabGap,
                                   (BottomTabs - TopTabs + TabGap) / Math.Max(1, rowCount));
@@ -456,9 +449,9 @@ namespace GazeBar
                 SettingsCategory category = SettingsCatalog.Categories[c];
                 bool open = c == openCategory;
 
-                // La catégorie : symbole (en couleur si elle est ouverte) et nom.
+                // The category: symbol (in colour if open) and name.
                 UIElement categoryRow = RowColumn(category.Symbol, category.Name, open, 46, 36, 24);
-                int categoryIndex = c;   // copie pour la fonction ci-dessous
+                int categoryIndex = c;   // copy for the lambda below
                 AddTarget(LeftTab, y, TabWidth, step - TabGap, categoryRow,
                              () => ChooseCategory(categoryIndex), false, false);
                 y += step;
@@ -468,13 +461,13 @@ namespace GazeBar
                     continue;
                 }
 
-                // Les onglets de la catégorie ouverte, en retrait vers la droite (le retrait
-                // montre qu'ils « appartiennent » à la catégorie du dessus).
+                // The tabs of the open category, indented to the right (the indent shows they
+                // "belong" to the category above).
                 foreach (int tabIndex in openTabs)
                 {
                     SettingsTab o = SettingsCatalog.Tabs[tabIndex];
                     UIElement tabRow = RowColumn(o.Symbol, o.Name, tabIndex == _tab, 34, 30, 14);
-                    int num = tabIndex;   // copie pour la fonction ci-dessous
+                    int num = tabIndex;   // copy for the lambda below
                     AddTarget(LeftTab + TabIndent, y, TabWidth - TabIndent, step - TabGap,
                                  tabRow, () => ChooseTab(num), false, tabIndex == _tab);
                     y += step;
@@ -483,9 +476,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Le contenu d'un bouton de la colonne de gauche : un symbole puis un nom. Les onglets
-        /// ont un texte un peu plus petit et une marge plus courte que les catégories, pour que
-        /// « Loupe, glisser » tienne dans le bouton en retrait.
+        /// The content of a left column button: a symbol then a name. Tabs have slightly
+        /// smaller text and a shorter margin than categories, so that "Loupe, glisser" fits
+        /// in the indented button.
         /// </summary>
         private static UIElement RowColumn(string symbol, string name, bool inColor,
                                               double symbolSize, double nameSize, double margin)
@@ -505,10 +498,10 @@ namespace GazeBar
             return row;
         }
 
-        /// <summary>Une ligne de réglage : nom et explication, puis les boutons.</summary>
+        /// <summary>A setting row: name and explanation, then the buttons.</summary>
         private void BuildRow(Setting setting, double top)
         {
-            // Nom et explication, centrés verticalement dans la hauteur de la ligne.
+            // Name and explanation, vertically centred in the row height.
             StackPanel texts = new StackPanel();
             texts.Width = LabelWidth;
             texts.Height = RowHeight;
@@ -530,9 +523,9 @@ namespace GazeBar
 
             if (setting.Switch)
             {
-                // Un oui / non : une seule grande cible ; la regarder inverse la valeur.
-                // ModeParametres bloque la cible jusqu'à ce que le regard la quitte : rester
-                // dessus ne fait donc pas basculer l'interrupteur en boucle.
+                // A yes / no: a single big target; looking at it toggles the value.
+                // SettingsMode blocks the target until the gaze leaves it: staying on it
+                // therefore does not toggle the switch over and over.
                 bool current = setting.ReadYesNo(P);
                 AddTarget(x, y, 2 * ChoiceWidth + Gap, SideButton, SwitchDrawing(current, current ? setting.RightWord : setting.WrongWord),
                              () => ChangeYesNo(setting, !current), false, false);
@@ -541,20 +534,20 @@ namespace GazeBar
 
             if (setting.YesNo)
             {
-                // Un choix entre deux mots (« Directe » / « Relative »…) : deux boutons.
+                // A choice between two words ("Directe" / "Relative"…): two buttons.
                 bool val = setting.ReadYesNo(P);
                 AddTarget(x, y, ChoiceWidth, SideButton, Word(setting.WrongWord, 42), () => ChangeYesNo(setting, false), false, !val);
                 AddTarget(x + ChoiceWidth + Gap, y, ChoiceWidth, SideButton, Word(setting.RightWord, 42), () => ChangeYesNo(setting, true), false, val);
                 return;
             }
 
-            // « − » (U+2212, le vrai signe moins), la valeur, « + ». Les deux boutons se répètent.
+            // "−" (U+2212, the true minus sign), the value, "+". Both buttons repeat.
             AddTarget(x, y, SideButton, SideButton, Word("−", 72), () => ChangeNumber(setting, -1), true, false);
             AddTarget(x + SideButton + Gap + ValueWidth + Gap, y, SideButton, SideButton, Word("+", 72),
                          () => ChangeNumber(setting, +1), true, false);
 
-            // La valeur : un cadre qui n'est PAS une cible du regard. L'aidant clique dessus
-            // pour taper une valeur au clavier.
+            // The value: a frame that is NOT a gaze target. The caregiver clicks on it to type
+            // a value on the keyboard.
             ValueFrame frame = new ValueFrame();
             frame.Value = Text(setting.Text(P), 50, White, true);
             frame.Value.HorizontalAlignment = HorizontalAlignment.Center;
@@ -586,12 +579,12 @@ namespace GazeBar
             _frames[setting] = frame;
         }
 
-        /// <summary>Le nom de l'onglet « Affichage », sous lequel l'écran détecté est rappelé (étape 11).</summary>
+        /// <summary>Name of the "Affichage" tab, below which the detected screen is recalled (step 11).</summary>
         private const string DisplayTabName = "Affichage";
 
         /// <summary>
-        /// Onglet « Affichage » (étape 11) : l'écran détecté par GazeBar (résolution, mise à
-        /// l'échelle et taille du texte de Windows), pour vérifier que le changement a été vu.
+        /// "Affichage" tab (step 11): the screen detected by GazeBar (Windows resolution,
+        /// scaling and text size), to check that the change was seen.
         /// </summary>
         private void BuildScreenInfo(double top)
         {
@@ -604,7 +597,7 @@ namespace GazeBar
             Place(info, LeftContent, top + 30);
         }
 
-        /// <summary>Onglet Général : rappel de l'endroit où les réglages sont enregistrés.</summary>
+        /// <summary>Général tab: reminder of where the settings are saved.</summary>
         private void BuildFileInfo(double top)
         {
             StackPanel info = new StackPanel();
@@ -620,10 +613,10 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Onglet « Général » (étape 14, demande de l'utilisateur du 02/11/2026) : un gros bouton
-        /// « Mes mots », sous le rappel du fichier des réglages. Il ouvre la liste des mots
-        /// ajoutés au dictionnaire personnel du clavier (ModeListeClavier), pour en retirer.
-        /// L'onglet Clavier n'avait plus de place (cinq réglages). E82D = dictionnaire.
+        /// "Général" tab (step 14, user request of 2026-11-02): a big "Mes mots" button, below
+        /// the settings file reminder. It opens the list of words added to the keyboard's
+        /// personal dictionary (KeyboardListMode), to remove some. The Clavier tab had no room
+        /// left (five settings). E82D = dictionary.
         /// </summary>
         private void BuildMyWordsButton()
         {
@@ -637,8 +630,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Onglet « Icônes » (étape 10) : une explication, puis un gros bouton qui ouvre l'écran
-        /// de configuration des icônes du choix d'action. E71D = grille de carrés.
+        /// "Icônes" tab (step 10): an explanation, then a big button that opens the action
+        /// choice icon configuration screen. E71D = grid of squares.
         /// </summary>
         private void BuildIconsTab()
         {
@@ -670,10 +663,10 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Onglet « Outils » (29/10/2026) : deux gros boutons l'un au-dessus de l'autre, avec un
-        /// grand écart entre eux pour ne pas activer l'un en visant l'autre.
-        ///   E890 = œil (Calibration), E9D9 = diagnostic (courbe).
-        /// Sous les boutons : le message éventuel (calibration impossible…).
+        /// "Outils" tab (2026-10-29): two big buttons one above the other, with a wide gap
+        /// between them so that aiming at one does not activate the other.
+        ///   E890 = eye (Calibration), E9D9 = diagnostic (curve).
+        /// Below the buttons: the possible message (calibration impossible…).
         /// </summary>
         private void BuildToolsTab()
         {
@@ -697,7 +690,7 @@ namespace GazeBar
             BuildMessage();
         }
 
-        /// <summary>Le message éventuel de l'onglet (sous les gros boutons), en bleu.</summary>
+        /// <summary>The tab's possible message (below the big buttons), in blue.</summary>
         private void BuildMessage()
         {
             if (!string.IsNullOrEmpty(_message))
@@ -710,11 +703,10 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Onglet « Profils » (étape 15) : une explication avec le dossier des profils, puis
-        /// deux gros boutons l'un au-dessus de l'autre (même hauteur que ceux de « Outils »,
-        /// mais plus larges pour le long texte,
-        /// avec le même grand écart). E74E = disquette (Enregistrer), E8E5 = dossier ouvert
-        /// (Charger). Sous les boutons : le message (« Réglages enregistrés dans… »).
+        /// "Profils" tab (step 15): an explanation with the profiles folder, then two big
+        /// buttons one above the other (same height as those of "Outils", but wider for the
+        /// long text, with the same wide gap). E74E = floppy disk (Enregistrer), E8E5 = open
+        /// folder (Charger). Below the buttons: the message ("Réglages enregistrés dans…").
         /// </summary>
         private void BuildProfilesTab()
         {
@@ -745,9 +737,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// La question « Charger le profil … ? » (étape 15), comme la confirmation de
-        /// « Défaut » : « Oui » et « Non » au milieu de la page. Pour la sauvegarde
-        /// automatique, la question dit plutôt qu'on revient aux réglages d'avant.
+        /// The question "Charger le profil … ?" (step 15), like the "Défaut" confirmation:
+        /// "Oui" and "Non" in the middle of the page. For the automatic backup, the question
+        /// rather says the previous settings come back.
         /// </summary>
         private void BuildProfileConfirmation()
         {
@@ -770,7 +762,7 @@ namespace GazeBar
             AddTarget(1040, 480, 300, SideButton, Word("Non", 42), CancelProfile, false, false);
         }
 
-        /// <summary>Bouton « Enregistrer les réglages actuels » : un nouveau profil daté.</summary>
+        /// <summary>"Enregistrer les réglages actuels" button: a new dated profile.</summary>
         private void SaveProfile()
         {
             ConfirmInput();
@@ -779,7 +771,7 @@ namespace GazeBar
             ShowMessage(message);
         }
 
-        /// <summary>« Oui » : le mode charge le profil (puis affiche le message ici).</summary>
+        /// <summary>"Oui": the mode loads the profile (then shows the message here).</summary>
         private void ConfirmProfile()
         {
             FoundProfile profile = _profileToConfirm;
@@ -795,15 +787,15 @@ namespace GazeBar
             }
         }
 
-        /// <summary>« Non » : on revient à l'onglet « Profils », rien ne change.</summary>
+        /// <summary>"Non": back to the "Profils" tab, nothing changes.</summary>
         private void CancelProfile()
         {
-            App.Log("Profils : chargement annulé");
+            App.Log("Profiles: load cancelled");
             _profileToConfirm = null;
             Build();
         }
 
-        /// <summary>Le contenu d'un gros bouton : un symbole à gauche, puis un mot.</summary>
+        /// <summary>The content of a big button: a symbol on the left, then a word.</summary>
         private static UIElement BigButton(string symbol, string word)
         {
             StackPanel button = new StackPanel();
@@ -822,8 +814,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Prévient le mode (déclenche l'événement donné, s'il a des abonnés). Une saisie en
-        /// cours est d'abord validée.
+        /// Notifies the mode (raises the given event, if it has subscribers). An input in
+        /// progress is confirmed first.
         /// </summary>
         private void Notify(Action evt)
         {
@@ -845,9 +837,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// La confirmation de « Défaut ». « Oui » et « Non » sont au milieu de la page, loin du
-        /// bouton « Défaut » (en haut à droite) : on ne confirme jamais en continuant
-        /// simplement à regarder au même endroit.
+        /// The "Défaut" confirmation. "Oui" and "Non" are in the middle of the page, far from
+        /// the "Défaut" button (top right): confirmation never happens by simply keeping the
+        /// gaze at the same place.
         /// </summary>
         private void BuildConfirmation(SettingsTab tab)
         {
@@ -863,12 +855,11 @@ namespace GazeBar
             AddTarget(1040, 480, 300, SideButton, Word("Non", 42), CancelDefaults, false, false);
         }
 
-        // ───────────────────────── Les actions ─────────────────────────
+        // ───────────────────────── Actions ─────────────────────────
 
         /// <summary>
-        /// Regard sur une catégorie : si elle n'est pas déjà ouverte, elle s'ouvre sur son
-        /// premier onglet. Si elle est déjà ouverte, rien ne change (on ne quitte pas l'onglet
-        /// en cours par erreur).
+        /// Gaze on a category: if it is not open yet, it opens on its first tab. If it is
+        /// already open, nothing changes (the current tab is not left by mistake).
         /// </summary>
         private void ChooseCategory(int category)
         {
@@ -879,7 +870,7 @@ namespace GazeBar
             List<int> tabs = SettingsCatalog.TabsOf(category);
             if (tabs.Count > 0)
             {
-                App.Log("Paramètres : catégorie " + SettingsCatalog.Categories[category].Name);
+                App.Log("Settings: category " + SettingsCatalog.Categories[category].Name);
                 ChooseTab(tabs[0]);
             }
         }
@@ -890,11 +881,11 @@ namespace GazeBar
             _confirmation = false;
             _profileToConfirm = null;
             _message = null;
-            App.Log("Paramètres : onglet " + SettingsCatalog.Tabs[num].Name);
+            App.Log("Settings: tab " + SettingsCatalog.Tabs[num].Name);
             Build();
         }
 
-        /// <summary>« − » ou « + » : seul le texte de la valeur change (pas de reconstruction).</summary>
+        /// <summary>"−" or "+": only the value text changes (no rebuild).</summary>
         private void ChangeNumber(Setting setting, int direction)
         {
             ConfirmInput();
@@ -911,11 +902,11 @@ namespace GazeBar
         {
             if (setting.ReadYesNo(P) == val)
             {
-                return;   // déjà choisi : rien à faire
+                return;   // already chosen: nothing to do
             }
             setting.WriteYesNo(P, val);
             Save(setting);
-            Build();   // pour redessiner l'interrupteur (ou encadrer le nouveau choix)
+            Build();   // to redraw the switch (or frame the new choice)
         }
 
         private void RequestDefaults()
@@ -930,13 +921,13 @@ namespace GazeBar
             Build();
         }
 
-        /// <summary>Remet les réglages de l'onglet à leur valeur de départ (lue dans un objet neuf).</summary>
+        /// <summary>Restores the tab's settings to their initial value (read from a new object).</summary>
         private void RestoreDefaults(SettingsTab tab)
         {
             AppSettings defaults = new AppSettings();
             if (tab.Name == SettingsCatalog.IconsTabName)
             {
-                P.DefaultIcons();   // l'onglet « Icônes » n'a pas de réglage, mais une disposition
+                P.DefaultIcons();   // the "Icônes" tab has no setting, but a layout
             }
             foreach (Setting setting in tab.Settings)
             {
@@ -947,12 +938,12 @@ namespace GazeBar
                 }
             }
             P.Save();
-            App.Log("Paramètres : valeurs par défaut de l'onglet " + tab.Name);
+            App.Log("Settings: default values of tab " + tab.Name);
             _confirmation = false;
             Build();
         }
 
-        /// <summary>Enregistre le fichier après un changement, et le note dans le journal.</summary>
+        /// <summary>Saves the file after a change, and logs it.</summary>
         private static void Save(Setting setting)
         {
             if (setting.AfterChange != null)
@@ -960,15 +951,15 @@ namespace GazeBar
                 setting.AfterChange(P);
             }
             P.Save();
-            App.Log("Paramètres : " + setting.Name + " = " + setting.Text(P));
+            App.Log("Settings: " + setting.Name + " = " + setting.Text(P));
         }
 
-        // ───────────────────────── Saisie au clavier (pour l'aidant) ─────────────────────────
+        // ───────────────────────── Keyboard input (for the caregiver) ─────────────────────────
 
         /// <summary>
-        /// Remplace l'affichage de la valeur par une zone de texte où l'aidant tape (ou dicte)
-        /// une valeur. Entrée valide ; cliquer ailleurs valide aussi ; Échap annule (voir
-        /// AnnulerSaisie, appelée par App quand la touche Échap est enfoncée).
+        /// Replaces the value display with a text box where the caregiver types (or dictates)
+        /// a value. Enter confirms; clicking elsewhere also confirms; Escape cancels (see
+        /// CancelInput, called by App when the Escape key is pressed).
         /// </summary>
         private void StartInput(Setting setting)
         {
@@ -1003,14 +994,14 @@ namespace GazeBar
             _editedSetting = setting;
             frame.Border.Child = _input;
 
-            // La fenêtre doit avoir le clavier pour que la frappe arrive dans la zone de texte.
+            // The window must have the keyboard for typing to reach the text box.
             Activate();
             _input.Focus();
             Keyboard.Focus(_input);
             _input.SelectAll();
         }
 
-        /// <summary>Valide la saisie en cours, s'il y en a une.</summary>
+        /// <summary>Confirms the input in progress, if any.</summary>
         private void ConfirmInput()
         {
             if (_editedSetting == null)
@@ -1019,22 +1010,22 @@ namespace GazeBar
             }
             Setting setting = _editedSetting;
             string text = _input.Text;
-            _editedSetting = null;   // d'abord, pour ne pas valider deux fois (perte du focus)
+            _editedSetting = null;   // first, so it is not confirmed twice (focus loss)
 
             double val;
             if (Setting.ReadInput(text, out val))
             {
-                setting.WriteNumber(P, val);   // ramenée dans ses limites par Corriger
+                setting.WriteNumber(P, val);   // brought back within its limits by Fix
                 Save(setting);
             }
             else
             {
-                App.Log("Paramètres : saisie illisible pour " + setting.Name + " : « " + text + " »");
+                App.Log("Settings: unreadable input for " + setting.Name + ": \"" + text + "\"");
             }
             RestoreDisplay(setting);
         }
 
-        /// <summary>Remet l'affichage normal de la valeur à la place de la zone de texte.</summary>
+        /// <summary>Puts the normal value display back in place of the text box.</summary>
         private void RestoreDisplay(Setting setting)
         {
             ValueFrame frame;
@@ -1046,12 +1037,12 @@ namespace GazeBar
             _input = null;
         }
 
-        // ───────────────────────── Petits outils ─────────────────────────
+        // ───────────────────────── Small helpers ─────────────────────────
 
         /// <summary>
-        /// Crée une cible du regard à cette place, avec ce contenu. Elle répond aussi au clic
-        /// de souris (pour l'aidant). repetition : vrai pour « − » et « + » ; choisie : vrai
-        /// pour l'onglet affiché ou le choix actuel (Non / Oui), encadré en bleu.
+        /// Creates a gaze target at this place, with this content. It also responds to mouse
+        /// clicks (for the caregiver). repeat: true for "−" and "+"; chosen: true for the
+        /// shown tab or the current choice (Non / Oui), framed in blue.
         /// </summary>
         private void AddTarget(double x, double y, double width, double height, UIElement content,
                                   Action action, bool repeat, bool chosen)
@@ -1087,7 +1078,7 @@ namespace GazeBar
             return block;
         }
 
-        /// <summary>Un mot (ou un signe) centré, pour le contenu d'un bouton.</summary>
+        /// <summary>A centred word (or sign), for a button's content.</summary>
         private static UIElement Word(string word, double size)
         {
             TextBlock block = Text(word, size, White, true);
@@ -1097,12 +1088,12 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Le dessin d'un interrupteur (comme le « switch » de Bootstrap), suivi du mot
-        /// « Oui » ou « Non ». La piste est une Border aux bouts tout ronds (CornerRadius =
-        /// la moitié de la hauteur), le rond est une Ellipse posée à gauche ou à droite :
-        ///   - activé : piste bleue pleine, rond blanc à DROITE ;
-        ///   - désactivé : piste sombre bordée de gris, rond gris à GAUCHE.
-        /// Ce n'est qu'un dessin : c'est la cible qui le contient qui réagit au regard.
+        /// The drawing of a switch (like the Bootstrap "switch"), followed by the word "Oui" or
+        /// "Non". The track is a Border with fully round ends (CornerRadius = half the
+        /// height), the knob is an Ellipse placed left or right:
+        ///   - on: solid blue track, white knob on the RIGHT;
+        ///   - off: dark track with grey border, grey knob on the LEFT.
+        /// It is only a drawing: the target that contains it reacts to the gaze.
         /// </summary>
         private static UIElement SwitchDrawing(bool active, string word)
         {
@@ -1115,7 +1106,7 @@ namespace GazeBar
             track.Background = active ? ActiveTrack : ValueBackground;
             track.VerticalAlignment = VerticalAlignment.Center;
 
-            // Le rond : marge pour qu'il ne touche pas le bord de la piste.
+            // The knob: margin so it does not touch the edge of the track.
             double margin = (SwitchHeight - 6 - SwitchButton) / 2;
             Ellipse round = new Ellipse();
             round.Width = SwitchButton;
@@ -1129,7 +1120,7 @@ namespace GazeBar
             TextBlock text = Text(word, 42, active ? White : Soft, true);
             text.VerticalAlignment = VerticalAlignment.Center;
             text.Margin = new Thickness(30, 0, 0, 0);
-            text.MinWidth = 90;   // « Oui » et « Non » : l'interrupteur ne bouge pas
+            text.MinWidth = 90;   // "Oui" and "Non": the switch does not move
 
             StackPanel row = new StackPanel();
             row.Orientation = Orientation.Horizontal;
@@ -1140,7 +1131,7 @@ namespace GazeBar
             return row;
         }
 
-        /// <summary>Un symbole de la police d'icônes au-dessus d'un mot (boutons Défaut et Retour).</summary>
+        /// <summary>An icon-font symbol above a word (Défaut and Retour buttons).</summary>
         private static UIElement SymbolAndWord(string symbol, string word)
         {
             StackPanel stack = new StackPanel();
@@ -1163,7 +1154,7 @@ namespace GazeBar
             return brush;
         }
 
-        /// <summary>Le cadre de la valeur d'un réglage numérique, et ce qu'il contient.</summary>
+        /// <summary>The value frame of a numeric setting, and what it contains.</summary>
         private sealed class ValueFrame
         {
             public Border Border;
@@ -1173,13 +1164,13 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// INTERFACE : une cible du regard du mode paramètres (onglet, « − », « + », « Non »,
-    /// « Oui », « Défaut », « Retour »). Un rectangle sombre aux coins arrondis ; pendant
-    /// qu'on le regarde, son fond s'éclaircit et une barre verte se remplit en bas, de
-    /// gauche à droite (l'équivalent de l'anneau des boutons ronds, plus lisible sur un
-    /// rectangle large comme un onglet).
+    /// INTERFACE: a gaze target of settings mode (tab, "−", "+", "Non", "Oui", "Défaut",
+    /// "Retour"). A dark rectangle with rounded corners; while it is looked at, its
+    /// background lightens and a green bar fills at the bottom, from left to right (the
+    /// equivalent of the round buttons' ring, more readable on a rectangle as wide as a
+    /// tab).
     ///
-    /// Sa zone est en coordonnées de la page 1920 × 1080 (voir FenetreParametres).
+    /// Its zone is in coordinates of the 1920 × 1080 page (see SettingsWindow).
     /// </summary>
     internal sealed class SettingTarget : IGazeTarget
     {
@@ -1212,7 +1203,7 @@ namespace GazeBar
             _bar.Visibility = Visibility.Collapsed;
             _bar.IsHitTestVisible = false;
 
-            // Une grille superpose le contenu (au centre) et la barre (en bas).
+            // A grid stacks the content (centre) and the bar (bottom).
             Grid grid = new Grid();
             grid.Children.Add(content);
             grid.Children.Add(_bar);
@@ -1229,13 +1220,13 @@ namespace GazeBar
             Background.Child = grid;
         }
 
-        /// <summary>L'élément affiché (à placer sur la page).</summary>
+        /// <summary>The displayed element (to place on the page).</summary>
         public Border Background { get; private set; }
 
-        /// <summary>Ce qui se passe quand la cible s'active.</summary>
+        /// <summary>What happens when the target activates.</summary>
         public Action Action { get; private set; }
 
-        /// <summary>Vrai si l'activation se répète tant que le regard reste dessus (« − » et « + »).</summary>
+        /// <summary>True if activation repeats while the gaze stays on it ("−" and "+").</summary>
         public bool Repeat { get; private set; }
 
         public bool Active
@@ -1261,7 +1252,7 @@ namespace GazeBar
 
             if (progress > 0)
             {
-                // Largeur intérieure : la largeur de la cible moins ses deux bords.
+                // Inner width: the target width minus its two borders.
                 double inner = _zone.Width - 2 * Background.BorderThickness.Left;
                 _bar.Width = Math.Max(0, inner * Math.Min(progress, 1));
                 _bar.Visibility = Visibility.Visible;

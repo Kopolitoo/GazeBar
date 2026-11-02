@@ -1,6 +1,6 @@
 namespace GazeBar
 {
-    /// <summary>Les trois touches modificatrices du choix d'action.</summary>
+    /// <summary>The three modifier keys of the action choice.</summary>
     internal enum Modifier
     {
         Ctrl,
@@ -9,24 +9,23 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// MODÈLE : l'état des modificateurs Ctrl, Maj et Alt du choix d'action (étape 6).
+    /// MODEL: the state of the Ctrl, Shift and Alt modifiers of the action choice (step 6).
     ///
-    /// Fonctionnement (cahier des charges, « Actions et modificateurs ») :
-    ///  - un regard sur l'icône d'un modificateur l'active (bord vert), un second le désactive ;
-    ///  - à l'exécution d'une action, les touches actives sont enfoncées juste avant
-    ///    (EnfoncerActifs) et relâchées juste après (RelacherTout), ou après le dépôt pour un
-    ///    glisser-déposer ;
-    ///  - ils se désactivent automatiquement après chaque action (ToutDesactiver).
+    /// How it works (specification, "Actions and modifiers"):
+    ///  - a gaze on a modifier's icon activates it (green border), a second one deactivates it;
+    ///  - when an action runs, the active keys are pressed just before (PressActive) and
+    ///    released just after (ReleaseAll), or after the drop for a drag and drop;
+    ///  - they are deactivated automatically after each action (DisableAll).
     ///
-    /// Pourquoi une classe « static », partagée, et pas un simple champ du choix d'action ?
-    /// Parce qu'on peut quitter le choix d'action sans agir : par exemple Ctrl, puis « Loupe »,
-    /// puis retour au choix d'action sur le point affiné. Un nouveau ModeChoixAction est alors
-    /// créé, et il doit retrouver Ctrl allumé. De même, le glisser-déposer traverse trois
-    /// modes (arrivée, loupe, exécution) avant d'utiliser les modificateurs.
+    /// Why a shared "static" class, and not a simple field of the action choice?
+    /// Because the action choice can be left without acting: for example Ctrl, then
+    /// "Magnifier", then back to the action choice on the refined point. A new
+    /// ActionChoiceMode is then created, and it must find Ctrl still lit. Likewise, drag and
+    /// drop goes through three modes (target, magnifier, execution) before using the modifiers.
     ///
-    /// Les modificateurs sont aussi désactivés à chaque retour au mode mouvement (même sans
-    /// action, par « retour » ou Échap) : ainsi, un Ctrl oublié ne reste jamais actif en
-    /// cachette pour le prochain clic.
+    /// The modifiers are also deactivated on every return to movement mode (even without an
+    /// action, through "back" or Escape): this way, a forgotten Ctrl never stays secretly
+    /// active for the next click.
     /// </summary>
     internal static class Modifiers
     {
@@ -36,13 +35,13 @@ namespace GazeBar
 
         public static bool Alt { get; private set; }
 
-        /// <summary>Vrai si au moins un modificateur est actif.</summary>
+        /// <summary>True if at least one modifier is active.</summary>
         public static bool AnyActive
         {
             get { return Ctrl || Shift || Alt; }
         }
 
-        /// <summary>Vrai si ce modificateur est actif.</summary>
+        /// <summary>True if this modifier is active.</summary>
         public static bool IsActive(Modifier m)
         {
             switch (m)
@@ -56,7 +55,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Active le modificateur s'il est inactif, le désactive sinon. Renvoie le nouvel état.</summary>
+        /// <summary>Activates the modifier if it is inactive, deactivates it otherwise. Returns the new state.</summary>
         public static bool Toggle(Modifier m)
         {
             switch (m)
@@ -71,23 +70,23 @@ namespace GazeBar
                     Alt = !Alt;
                     break;
             }
-            App.Log("Modificateurs : " + Description());
+            App.Log("Modifiers: " + Description());
             return IsActive(m);
         }
 
-        /// <summary>Désactive les trois modificateurs (sans toucher au clavier).</summary>
+        /// <summary>Deactivates the three modifiers (without touching the keyboard).</summary>
         public static void DisableAll()
         {
             if (AnyActive)
             {
-                App.Log("Modificateurs : tous désactivés");
+                App.Log("Modifiers: all off");
             }
             Ctrl = false;
             Shift = false;
             Alt = false;
         }
 
-        /// <summary>Enfonce les touches des modificateurs actifs (juste avant une action).</summary>
+        /// <summary>Presses the keys of the active modifiers (just before an action).</summary>
         public static void PressActive()
         {
             if (Ctrl)
@@ -104,13 +103,13 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Relâche toutes les touches enfoncées (juste après une action).</summary>
+        /// <summary>Releases all pressed keys (just after an action).</summary>
         public static void ReleaseAll()
         {
             KeyboardInjector.ReleaseAll();
         }
 
-        /// <summary>Texte pour le journal, par exemple « Ctrl + Maj » ou « aucun ».</summary>
+        /// <summary>Text for the log, for example "Ctrl + Shift" or "none".</summary>
         public static string Description()
         {
             string text = "";

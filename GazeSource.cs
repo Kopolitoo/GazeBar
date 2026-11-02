@@ -6,31 +6,31 @@ using Tobii.Interaction;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : la vraie position du regard, fournie par l'eyetracker via la
-    /// bibliothèque Tobii.Interaction (la même que Mill Mouse). Elle ne dépend plus du curseur
-    /// piloté par le logiciel du fabricant.
+    /// MODEL: the real gaze position, provided by the eyetracker through the Tobii.Interaction
+    /// library (the same as Mill Mouse). It no longer depends on the cursor driven by the
+    /// vendor's software.
     ///
-    /// Les coordonnées sont en pixels d'écran. Elles peuvent être NÉGATIVES ou dépasser la
-    /// taille de l'écran quand on regarde en dehors : c'est utile (menu hors écran, etc.).
+    /// Coordinates are in screen pixels. They can be NEGATIVE or beyond the screen size when
+    /// looking outside it: this is useful (off-screen menu, etc.).
     ///
-    /// Si le moteur de l'eyetracker n'est pas disponible, le programme continue de fonctionner :
-    /// IsRunning reste faux et ErrorMessage explique pourquoi.
+    /// If the eyetracker engine is not available, the program keeps working: IsRunning stays
+    /// false and ErrorMessage explains why.
     ///
-    /// Depuis le 02/11/2026, les DLL de l'eyetracker ne sont plus livrées avec GazeBar : elles sont
-    /// cherchées sur le PC au démarrage (voir ChargeurEyetracker.cs). Pour que GazeBar démarre
-    /// même quand elles sont introuvables, les types de Tobii.Interaction (Host, GazePointDataStream)
-    /// n'apparaissent plus que dans la méthode ConnecterEyetracker : .NET ne cherche une DLL qu'au
-    /// moment où il prépare (« compile à la volée ») une méthode qui s'en sert. Si la DLL
-    /// manque, l'erreur arrive donc à l'appel de ConnecterEyetracker, à l'intérieur du try de Start,
-    /// au lieu de faire planter tout le programme.
+    /// Since 2026-11-02, the eyetracker DLLs are no longer shipped with GazeBar: they are
+    /// searched for on the PC at startup (see EyetrackerLoader.cs). So that GazeBar starts
+    /// even when they cannot be found, the Tobii.Interaction types (Host, GazePointDataStream)
+    /// only appear in the ConnectEyetracker method: .NET only looks for a DLL when it prepares
+    /// ("just-in-time compiles") a method that uses it. If the DLL is missing, the error
+    /// therefore happens when ConnectEyetracker is called, inside the try of Start, instead of
+    /// crashing the whole program.
     /// </summary>
     internal sealed class GazeSource : IDisposable
     {
         private readonly object _lock = new object();
         private readonly Stopwatch _clock = Stopwatch.StartNew();
 
-        // L'objet Host et le flux de regard (types de Tobii.Interaction). Volontairement rangés sous des types
-        // « neutres » (IDisposable, object) : voir le commentaire en tête de la classe.
+        // The Host object and the gaze stream (Tobii.Interaction types). Deliberately stored
+        // under "neutral" types (IDisposable, object): see the comment at the top of the class.
         private IDisposable _host;
         private object _stream;
 
@@ -38,36 +38,36 @@ namespace GazeBar
         private double _y;
         private bool _hasData;
         private double _lastSampleMs = -1;
-        private long _measureNumber;   // compteur : +1 à chaque nouvelle mesure reçue
+        private long _measureNumber;   // counter: +1 for each new measure received
 
-        // Calcul de la cadence : on compte les mesures reçues pendant une fenêtre d'une seconde.
+        // Rate computation: count the measures received during a one-second window.
         private int _countInWindow;
         private double _windowStartMs;
         private double _samplesPerSecond;
 
-        /// <summary>Vrai si la connexion au moteur de l'eyetracker a réussi.</summary>
+        /// <summary>True if the connection to the eyetracker engine succeeded.</summary>
         public bool IsRunning { get; private set; }
 
-        /// <summary>Message d'erreur si la connexion a échoué (sinon vide).</summary>
+        /// <summary>Error message if the connection failed (empty otherwise).</summary>
         public string ErrorMessage { get; private set; }
 
         /// <summary>
-        /// L'objet Host (Tobii.Interaction) (null si la connexion a échoué). Sert uniquement à lancer
-        /// l'outil de calibration (voir Calibration.cs, étape 4). Son type est « object »
-        /// pour que le reste du programme n'ait pas à connaître Tobii.Interaction.
+        /// The Host object (Tobii.Interaction) (null if the connection failed). Only used to start
+        /// the calibration tool (see Calibration.cs, step 4). Its type is "object" so that the
+        /// rest of the program does not need to know Tobii.Interaction.
         /// </summary>
         public object Host
         {
             get { return _host; }
         }
 
-        /// <summary>Vrai dès qu'au moins une mesure a été reçue.</summary>
+        /// <summary>True as soon as at least one measure has been received.</summary>
         public bool HasData
         {
             get { lock (_lock) { return _hasData; } }
         }
 
-        /// <summary>Cadence des mesures : nombre par seconde (0 si plus rien n'arrive).</summary>
+        /// <summary>Measure rate: number per second (0 if nothing arrives any more).</summary>
         public double SamplesPerSecond
         {
             get
@@ -80,7 +80,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Temps écoulé depuis la dernière mesure, en ms (très grand si aucune).</summary>
+        /// <summary>Time elapsed since the last measure, in ms (very large if none).</summary>
         public double MsSinceLastSample
         {
             get
@@ -92,15 +92,15 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Se connecte au moteur de l'eyetracker et commence à recevoir le regard.</summary>
+        /// <summary>Connects to the eyetracker engine and starts receiving the gaze.</summary>
         public void Start()
         {
-            // Les DLL de l'eyetracker ont-elles été trouvées sur le PC ? (voir ChargeurEyetracker.cs)
+            // Were the eyetracker DLLs found on the PC? (see EyetrackerLoader.cs)
             if (!EyetrackerLoader.Available)
             {
                 IsRunning = false;
                 ErrorMessage = EyetrackerLoader.Message;
-                App.Log("Regard : pas de connexion : " + ErrorMessage);
+                App.Log("Gaze: no connection: " + ErrorMessage);
                 return;
             }
 
@@ -108,20 +108,20 @@ namespace GazeBar
             {
                 ConnectEyetracker();
                 IsRunning = true;
-                App.Log("Regard : connecté");
+                App.Log("Gaze: connected");
             }
             catch (Exception ex)
             {
                 IsRunning = false;
                 ErrorMessage = ex.Message;
-                App.Log("Regard : échec de la connexion : " + ex);
+                App.Log("Gaze: connection failed: " + ex);
             }
         }
 
         /// <summary>
-        /// Le seul endroit qui utilise directement les types de Tobii.Interaction. « NoInlining » interdit
-        /// au compilateur de recopier cette méthode à l'intérieur de Start : sinon, une DLL
-        /// manquante ferait échouer Start elle-même, hors de son try.
+        /// The only place that uses the Tobii.Interaction types directly. "NoInlining" forbids
+        /// the compiler from copying this method inside Start: otherwise, a missing DLL would
+        /// make Start itself fail, outside its try.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void ConnectEyetracker()
@@ -131,7 +131,7 @@ namespace GazeBar
             GazePointDataStream stream = host.Streams.CreateGazePointDataStream();
             _stream = stream;
 
-            // Appelée par Tobii.Interaction, sur l'un de ses threads, à chaque nouvelle mesure.
+            // Called by Tobii.Interaction, on one of its threads, for each new measure.
             stream.Next += (sender, measure) => OnGaze(measure.Data.X, measure.Data.Y);
         }
 
@@ -157,7 +157,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Dernière position du regard connue (pixels d'écran).</summary>
+        /// <summary>Latest known gaze position (screen pixels).</summary>
         public void GetLatest(out double x, out double y)
         {
             lock (_lock)
@@ -165,21 +165,21 @@ namespace GazeBar
                 x = _x;
                 y = _y;
             }
-            // Correction de l'échelle (étape 11, voir Ecran.FacteurRegard) : 1 d'habitude.
+            // Scale correction (step 11, see ScreenMetrics.GazeFactor): usually 1.
             double factor = ScreenMetrics.GazeFactor;
             x *= factor;
             y *= factor;
         }
 
         /// <summary>
-        /// Dernière position du regard, avec son numéro et l'instant où elle est arrivée.
+        /// Latest gaze position, with its number and the time it arrived.
         ///
-        /// Pourquoi le numéro ? L'horloge des modes tourne à 60 tics par seconde, mais le
-        /// PCEye 5 n'envoie qu'environ 30 mesures par seconde : un tic sur deux voit donc la
-        /// MÊME mesure qu'au tic précédent. En comparant les numéros, un mode sait si la mesure
-        /// est nouvelle, et ne la compte qu'une seule fois.
-        /// L'instant (en millisecondes, sur l'horloge de GazeSource) permet de calculer une
-        /// vitesse ou une durée en vrai temps, quelle que soit la cadence.
+        /// Why the number? The modes' clock runs at 60 ticks per second, but the PCEye 5 only
+        /// sends about 30 measures per second: so one tick out of two sees the SAME measure as
+        /// the previous tick. By comparing the numbers, a mode knows whether the measure is new,
+        /// and counts it only once.
+        /// The time (in milliseconds, on GazeSource's clock) allows computing a speed or a
+        /// duration in real time, whatever the rate.
         /// </summary>
         public void GetLatest(out double x, out double y, out long num, out double instantMs)
         {
@@ -190,19 +190,19 @@ namespace GazeBar
                 num = _measureNumber;
                 instantMs = _lastSampleMs;
             }
-            // Correction de l'échelle (étape 11, voir Ecran.FacteurRegard) : 1 d'habitude.
+            // Scale correction (step 11, see ScreenMetrics.GazeFactor): usually 1.
             double factor = ScreenMetrics.GazeFactor;
             x *= factor;
             y *= factor;
         }
 
-        /// <summary>L'heure actuelle sur l'horloge de GazeSource, en millisecondes (même échelle que instantMs).</summary>
+        /// <summary>Current time on GazeSource's clock, in milliseconds (same scale as instantMs).</summary>
         public double NowMs
         {
             get { return _clock.Elapsed.TotalMilliseconds; }
         }
 
-        /// <summary>Vrai si la position est en dehors de l'écran principal.</summary>
+        /// <summary>True if the position is outside the primary screen.</summary>
         public static bool IsOffScreen(double x, double y, double screenWidth, double screenHeight)
         {
             return x < 0 || y < 0 || x >= screenWidth || y >= screenHeight;

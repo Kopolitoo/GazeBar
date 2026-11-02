@@ -4,24 +4,24 @@ using System.Runtime.InteropServices;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : simule l'appui et le relâchement des touches du clavier (étape 6).
+    /// MODEL: simulates pressing and releasing keyboard keys (step 6).
     ///
-    /// Il sert aux touches modificatrices Ctrl, Maj et Alt du choix d'action (voir
-    /// Modificateurs.cs) et, depuis l'étape 12, au clavier au regard (TaperTexte, TaperTouche).
-    /// Il fonctionne comme MouseInjector, avec SendInput.
+    /// It is used by the Ctrl, Shift and Alt modifier keys of the action choice (see
+    /// Modifiers.cs) and, since step 12, by the gaze keyboard (TypeText, TypeKey).
+    /// It works like MouseInjector, with SendInput.
     ///
-    /// Sécurité : comme pour la souris, la classe se souvient des touches qu'elle a enfoncées,
-    /// pour pouvoir toutes les relâcher (RelacherTout) en cas d'erreur, d'appui sur Échap ou à
-    /// la fermeture. Une touche Ctrl restée enfoncée transformerait chaque clic en Ctrl + clic.
+    /// Safety: as for the mouse, the class remembers the keys it pressed, so it can release
+    /// them all (ReleaseAll) on error, on Escape or when closing. A Ctrl key left pressed
+    /// would turn every click into Ctrl + click.
     /// </summary>
     internal static class KeyboardInjector
     {
         private static readonly object LockState = new object();
 
-        // Les codes des touches actuellement enfoncées par GazeBar.
+        // The codes of the keys currently pressed by GazeBar.
         private static readonly List<ushort> Pressed = new List<ushort>();
 
-        /// <summary>Enfonce la touche (si GazeBar ne l'a pas déjà enfoncée).</summary>
+        /// <summary>Presses the key (if GazeBar has not already pressed it).</summary>
         public static void PressDown(ushort keyCode)
         {
             lock (LockState)
@@ -37,7 +37,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Relâche la touche (si GazeBar l'a enfoncée).</summary>
+        /// <summary>Releases the key (if GazeBar pressed it).</summary>
         public static void Release(ushort keyCode)
         {
             lock (LockState)
@@ -46,13 +46,13 @@ namespace GazeBar
                 {
                     return;
                 }
-                // Même si Windows refuse, on l'oublie : on ne réessaiera pas sans fin.
+                // Even if Windows refuses, we forget it: we will not retry endlessly.
                 Send(keyCode, NativeMethods.KEYEVENTF_KEYUP);
                 Pressed.Remove(keyCode);
             }
         }
 
-        /// <summary>Relâche toutes les touches enfoncées par GazeBar, dans l'ordre inverse de l'appui.</summary>
+        /// <summary>Releases all keys pressed by GazeBar, in the reverse order of pressing.</summary>
         public static void ReleaseAll()
         {
             lock (LockState)
@@ -65,17 +65,17 @@ namespace GazeBar
             }
         }
 
-        // ───────────────────────── Clavier au regard (étape 12) ─────────────────────────
+        // ───────────────────────── Gaze keyboard (step 12) ─────────────────────────
         //
-        // Ces méthodes envoient une touche complète (appui ET relâchement) en un seul appel à
-        // SendInput : Windows les traite d'un bloc, sans qu'une vraie touche puisse se glisser
-        // au milieu, et rien ne reste enfoncé après. Elles n'ont donc pas besoin de la liste
-        // « Enfoncees » (qui sert aux modificateurs du choix d'action).
+        // These methods send a complete key (press AND release) in a single SendInput call:
+        // Windows handles them as one block, a real key cannot slip in between, and nothing
+        // stays pressed afterwards. So they do not need the "Pressed" list (which is used by
+        // the modifiers of the action choice).
 
         /// <summary>
-        /// Écrit un texte, caractère par caractère, en UNICODE : l'application reçoit
-        /// exactement « é », « œ » ou « € », que Windows soit réglé en clavier français,
-        /// anglais ou autre. C'est ce qui permettra de changer de langue sans souci.
+        /// Types a text, character by character, in UNICODE: the application receives exactly
+        /// "é", "œ" or "€", whether Windows is set to a French, English or other keyboard.
+        /// This is what will allow changing language without trouble.
         /// </summary>
         public static void TypeText(string text)
         {
@@ -89,13 +89,13 @@ namespace GazeBar
                 entries.Add(Character(c, 0));
                 entries.Add(Character(c, NativeMethods.KEYEVENTF_KEYUP));
             }
-            SendAll(entries, "texte");
+            SendAll(entries, "text");
         }
 
         /// <summary>
-        /// Appuie puis relâche une vraie touche (Tab, Entrée, flèches, F1…), avec des
-        /// modificateurs éventuels (Ctrl, Maj, Alt, Windows), enfoncés avant et relâchés après,
-        /// dans l'ordre inverse. etendue : touche « étendue » (flèches, Début, Fin, Suppr…).
+        /// Presses then releases a real key (Tab, Enter, arrows, F1...), with optional modifiers
+        /// (Ctrl, Shift, Alt, Windows), pressed before and released after, in reverse order.
+        /// extent: "extended" key (arrows, Home, End, Delete...).
         /// </summary>
         public static void TypeKey(ushort code, bool extent, IList<ushort> modifiers)
         {
@@ -117,10 +117,10 @@ namespace GazeBar
                     entries.Add(Key(m, m == NativeMethods.VK_LWIN, true));
                 }
             }
-            SendAll(entries, "touche " + code);
+            SendAll(entries, "key " + code);
         }
 
-        /// <summary>Une entrée « caractère Unicode » (appui ou relâchement).</summary>
+        /// <summary>A "Unicode character" input (press or release).</summary>
         private static NativeMethods.INPUT Character(char c, uint flagsValue)
         {
             NativeMethods.INPUT input = new NativeMethods.INPUT();
@@ -132,8 +132,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Une entrée « touche » (appui ou relâchement), avec son code matériel (wScan) : certaines
-        /// applications lisent ce code plutôt que le code de la touche.
+        /// A "key" input (press or release), with its hardware code (wScan): some applications
+        /// read this code rather than the key code.
         /// </summary>
         private static NativeMethods.INPUT Key(ushort code, bool extent, bool release)
         {
@@ -154,21 +154,21 @@ namespace GazeBar
             return input;
         }
 
-        /// <summary>Envoie toutes les entrées d'un coup. quoi : pour le journal en cas d'échec.</summary>
+        /// <summary>Sends all the inputs at once. what: for the log on failure.</summary>
         private static void SendAll(List<NativeMethods.INPUT> entries, string what)
         {
             NativeMethods.INPUT[] array = entries.ToArray();
             uint sentCount = NativeMethods.SendInput((uint)array.Length, array, Marshal.SizeOf(typeof(NativeMethods.INPUT)));
             if (sentCount != array.Length)
             {
-                // Cas connu : une fenêtre lancée en administrateur refuse les touches simulées
-                // par un programme normal (étape « ui-access » de la feuille de route).
-                App.Log("SendInput (" + what + ") : " + sentCount + " entrées sur " + array.Length +
-                        " acceptées (erreur Windows " + Marshal.GetLastWin32Error() + ")");
+                // Known case: a window started as administrator refuses the keys simulated by
+                // a normal program ("ui-access" step of the roadmap).
+                App.Log("SendInput (" + what + ") : " + sentCount + " inputs out of " + array.Length +
+                        " accepted (Windows error " + Marshal.GetLastWin32Error() + ")");
             }
         }
 
-        /// <summary>Envoie un appui (drapeaux = 0) ou un relâchement (KEYEVENTF_KEYUP) à Windows.</summary>
+        /// <summary>Sends a press (flags = 0) or a release (KEYEVENTF_KEYUP) to Windows.</summary>
         private static bool Send(ushort keyCode, uint flagsValue)
         {
             NativeMethods.INPUT input = new NativeMethods.INPUT();
@@ -180,7 +180,7 @@ namespace GazeBar
             uint sentCount = NativeMethods.SendInput(1, inputs, Marshal.SizeOf(typeof(NativeMethods.INPUT)));
             if (sentCount == 0)
             {
-                App.Log("SendInput (clavier) a échoué (erreur Windows " + Marshal.GetLastWin32Error() + ")");
+                App.Log("SendInput (keyboard) failed (Windows error " + Marshal.GetLastWin32Error() + ")");
                 return false;
             }
             return true;

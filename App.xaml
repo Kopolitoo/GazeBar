@@ -1,15 +1,15 @@
 <!--
-  App.xaml : définition de l'application (et non d'une fenêtre).
+  App.xaml: the application definition (not a window).
 
-  XAML est un langage de description d'interface : un fichier XML où chaque balise
-  est un élément visuel (bouton, texte...). Ici on ne définit que des « ressources »,
-  c'est-à-dire des éléments réutilisables par toutes les fenêtres.
+  XAML is a user interface description language: an XML file where each tag is a
+  visual element (button, text...). Here we only define "resources", that is,
+  elements reused by every window.
 
-  Le style ci-dessous s'applique à TOUS les boutons : gros, contrastés, lisibles et
-  faciles à viser avec le regard. Il redéfinit aussi l'apparence au survol (gris clair)
-  et à l'appui (bleu), car l'apparence standard de Windows est peu contrastée sur fond sombre.
+  The style below applies to ALL buttons: large, high-contrast, readable and easy to
+  aim at with the eyes. It also redefines the look on hover (light gray) and on press
+  (blue), because the standard Windows look has little contrast on a dark background.
 
-  Il n'y a pas de StartupUri : c'est le code (App.xaml.cs) qui ouvre la première fenêtre.
+  There is no StartupUri: the code (App.xaml.cs) opens the first window.
 -->
 <Application
     x:Class="GazeBar.App"

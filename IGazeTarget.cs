@@ -1,31 +1,31 @@
 namespace GazeBar
 {
     /// <summary>
-    /// Ce qu'une « cible » activable au regard doit savoir faire, pour que ViseurBoutons
-    /// puisse décider si on la regarde et quand elle s'active (étape 7).
+    /// What a "target" that can be activated with the gaze must provide, so that ButtonAimer
+    /// can decide whether it is being looked at and when it activates (step 7).
     ///
-    /// Jusqu'à l'étape 6, ViseurBoutons ne connaissait que les BoutonRegard (les carrés du
-    /// choix d'action et du menu, dessinés sur le calque). Le mode paramètres a d'autres
-    /// cibles : les onglets, les boutons « − » et « + », les interrupteurs oui / non… (CibleParametre).
-    /// Plutôt que d'écrire un deuxième viseur, on décrit ici ce qu'ils ont en commun :
-    /// c'est une « interface ». Une classe qui « implémente » l'interface (écrit
-    /// « class BoutonRegard : ICibleRegard ») promet de fournir ces trois éléments.
+    /// Up to step 6, ButtonAimer only knew GazeButton objects (the squares of the action
+    /// choice and of the menu, drawn on the overlay). Settings mode has other targets: the
+    /// tabs, the "−" and "+" buttons, the yes / no switches... (SettingTarget).
+    /// Rather than writing a second aimer, we describe here what they have in common:
+    /// this is an "interface". A class that "implements" the interface (written
+    /// "class GazeButton : IGazeTarget") promises to provide these three members.
     ///
-    /// Attention : Contient reçoit le point du regard dans le repère de la cible. Pour un
-    /// BoutonRegard, ce sont des pixels d'écran ; pour une CibleParametre, ce sont les
-    /// coordonnées de la page des paramètres (voir ModeParametres).
+    /// Note: Contains receives the gaze point in the target's coordinate system. For a
+    /// GazeButton these are screen pixels; for a SettingTarget these are the coordinates
+    /// of the settings page (see SettingsMode).
     /// </summary>
     internal interface IGazeTarget
     {
-        /// <summary>Faux pour une cible qui ne s'active jamais (emplacement vide, fonction à venir).</summary>
+        /// <summary>False for a target that never activates (empty slot, future feature).</summary>
         bool Active { get; }
 
-        /// <summary>Vrai si le point du regard est sur la cible.</summary>
+        /// <summary>True if the gaze point is on the target.</summary>
         bool Contains(double x, double y);
 
         /// <summary>
-        /// Met à jour l'aspect de la cible : progression de 0 à 1 (anneau ou barre), survol,
-        /// et libellé affiché ou non.
+        /// Updates the target's look: progress from 0 to 1 (ring or bar), hover,
+        /// and whether the label is shown.
         /// </summary>
         void Draw(double progress, bool hover, bool showLabel);
     }

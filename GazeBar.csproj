@@ -1,83 +1,82 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Fichier de projet (.csproj) : il dit à MSBuild comment fabriquer le programme.
+    Project file (.csproj): it tells MSBuild how to build the program.
 
-    Format moderne « SDK-style » : tous les fichiers .cs et .xaml du dossier sont
-    trouvés automatiquement. Quand vous ajouterez un fichier, il n'y a rien à déclarer ici.
+    Modern "SDK-style" format: all the .cs and .xaml files of the folder are found
+    automatically. When you add a file, there is nothing to declare here.
 
-    Ce projet est une application WPF sur .NET Framework 4.8 (et non .NET 10), car la
-    bibliothèque Tobii.Interaction, qui fournit le regard, n'existe que pour ce cadre, en 32 bits.
-    C'est une application WPF : un programme Windows classique
-    (« de bureau »), qui peut donc simuler la souris et le clavier, afficher des
-    fenêtres transparentes, etc. Voir README.md.
+    This project is a WPF application on .NET Framework 4.8 (not .NET 10), because the
+    Tobii.Interaction library, which provides the gaze, only exists for this framework, in 32 bits.
+    It is a WPF application: a classic ("desktop") Windows program, which can therefore
+    simulate the mouse and keyboard, show transparent windows, etc. See README.md.
   -->
   <PropertyGroup>
-    <!-- WinExe = programme avec fenêtres (pas de console noire derrière). -->
+    <!-- WinExe = program with windows (no black console behind it). -->
     <OutputType>WinExe</OutputType>
 
-    <!-- .NET Framework 4.8, fourni avec Windows. -->
+    <!-- .NET Framework 4.8, shipped with Windows. -->
     <TargetFramework>net48</TargetFramework>
 
-    <!-- 32 bits : la bibliothèque native de l'eyetracker est chargée en 32 bits.
-         Cela fonctionne très bien sur un Windows 64 bits. -->
+    <!-- 32 bits: the eyetracker's native library is loaded in 32 bits.
+         This works fine on a 64-bit Windows. -->
     <PlatformTarget>x86</PlatformTarget>
 
-    <!-- Version du langage C# : la plus récente disponible. -->
+    <!-- C# language version: the latest available. -->
     <LangVersion>latest</LangVersion>
 
-    <!-- Active WPF. -->
+    <!-- Enables WPF. -->
     <UseWPF>true</UseWPF>
 
     <RootNamespace>GazeBar</RootNamespace>
     <AssemblyName>GazeBar</AssemblyName>
 
-    <!-- Deux options volontairement désactivées pour que le code reste explicite :
-         - ImplicitUsings : sinon des « using » invisibles seraient ajoutés automatiquement ;
-         - Nullable : sinon le compilateur signalerait beaucoup d'avertissements sur les valeurs « null ». -->
+    <!-- Two options deliberately disabled so that the code stays explicit:
+         - ImplicitUsings: otherwise invisible "using" directives would be added automatically;
+         - Nullable: otherwise the compiler would report many warnings about "null" values. -->
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
 
-    <!-- Le « manifeste » : un petit fichier XML lu par Windows au lancement du programme.
-         Il déclare GazeBar « sensible au DPI » : voir app.manifest. -->
+    <!-- The "manifest": a small XML file read by Windows when the program starts.
+         It declares GazeBar "DPI aware": see app.manifest. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
-    <!-- L'icône du programme : celle qu'affichent l'Explorateur Windows, la barre des tâches,
-         Alt+Tab et les raccourcis. Le fichier .ico contient la même image en plusieurs tailles
-         (16, 24, 32, 48, 64 et 256 pixels) : Windows choisit la plus adaptée à l'écran.
-         Les fenêtres WPF qui ne précisent pas d'icône reprennent automatiquement celle-ci. -->
+    <!-- The program icon: the one shown by Windows Explorer, the taskbar, Alt+Tab and
+         shortcuts. The .ico file contains the same image in several sizes
+         (16, 24, 32, 48, 64 and 256 pixels): Windows picks the best one for the screen.
+         WPF windows that do not set an icon automatically use this one. -->
     <ApplicationIcon>Resources\GazeBar.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Étape 12 : les dispositions du clavier au regard (fichiers JSON du dossier Claviers)
-         sont copiées à côté de GazeBar.exe à chaque compilation, si elles ont changé.
-         GazeBar les lit là (voir DispositionClavier.cs). -->
+    <!-- Step 12: the gaze keyboard layouts (JSON files of the Keyboards folder) are copied
+         next to GazeBar.exe on each build, if they changed.
+         GazeBar reads them there (see KeyboardLayout.cs). -->
     <None Update="Keyboards\*.json" CopyToOutputDirectory="PreserveNewest" />
-    <!-- Étape 13 : le dictionnaire de la prédiction de mots (Dictionnaires/fr.txt, tiré de
-         Lexique 3.83) et sa licence sont copiés de même à côté de GazeBar.exe
-         (voir PredicteurMots.cs). -->
+    <!-- Step 13: the word prediction dictionary (Dictionaries/fr.txt, taken from
+         Lexique 3.83) and its license are copied next to GazeBar.exe in the same way
+         (see WordPredictor.cs). -->
     <None Update="Dictionaries\*.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Le regard, via le moteur de l'eyetracker (même source que Mill Mouse).
-         02/11/2026 : les DLL de l'eyetracker (Tobii) sont du code propriétaire, on ne les livre PAS avec
-         GazeBar. Le paquet sert seulement à COMPILER :
-         - ExcludeAssets="runtime" : les DLL .NET de l'eyetracker ne sont plus copiées à côté de GazeBar.exe ;
-         - ExcludeAssets="build" : le petit script du paquet, qui copiait la DLL native
-           Tobii.EyeX.Client.dll, n'est plus exécuté.
-         Au démarrage, GazeBar va chercher ces DLL sur le PC (voir ChargeurEyetracker.cs). -->
+    <!-- The gaze, through the eyetracker engine (same source as Mill Mouse).
+         2026-11-02: the eyetracker (Tobii) DLLs are proprietary code, we do NOT ship them with
+         GazeBar. The package is only used to COMPILE:
+         - ExcludeAssets="runtime": the eyetracker .NET DLLs are no longer copied next to GazeBar.exe;
+         - ExcludeAssets="build": the package's small script, which copied the native DLL
+           Tobii.EyeX.Client.dll, no longer runs.
+         At startup, GazeBar looks for these DLLs on the PC (see EyetrackerLoader.cs). -->
     <PackageReference Include="Tobii.Interaction" Version="0.7.3" ExcludeAssets="runtime;build" />
   </ItemGroup>
 
-  <!-- Ceinture et bretelles : si une DLL de l'eyetracker se retrouvait quand même à côté de
-       GazeBar.exe (ancienne compilation, autre réglage…), on l'efface après chaque
-       compilation, pour qu'elle ne parte jamais avec ce qu'on distribue.
-       Le sous-dossier « Eyetracker » (copie faite par l'utilisateur lui-même) n'est pas touché. -->
-  <Target Name="SupprimerDllEyetracker" AfterTargets="Build">
+  <!-- Belt and braces: if an eyetracker DLL still ended up next to GazeBar.exe (old build,
+       other setting...), it is deleted after each build, so that it never ships with what
+       we distribute.
+       The "Eyetracker" subfolder (a copy made by the user himself) is not touched. -->
+  <Target Name="RemoveEyetrackerDlls" AfterTargets="Build">
     <ItemGroup>
-      <DllEyetrackerASupprimer Include="$(OutDir)Tobii.*.dll" />
+      <EyetrackerDllToRemove Include="$(OutDir)Tobii.*.dll" />
     </ItemGroup>
-    <Delete Files="@(DllEyetrackerASupprimer)" />
+    <Delete Files="@(EyetrackerDllToRemove)" />
   </Target>
 </Project>

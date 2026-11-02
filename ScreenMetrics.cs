@@ -4,106 +4,103 @@ using Microsoft.Win32;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : les mesures de l'écran, et la conversion des tailles de GazeBar en pixels
-    /// (étape 11, « mesures-ecran »).
+    /// MODEL: the screen measurements, and the conversion of GazeBar's sizes to pixels
+    /// (step 11, "mesures-ecran").
     ///
-    /// LE PROBLÈME : jusqu'à l'étape 10, les tailles étaient écrites en pixels (cercle de
-    /// 190 px, icônes de 120 px…), réglées sur l'écran 4K de l'utilisateur (3840 × 2160).
-    /// Sur un écran 1920 × 1080, le même cercle de 190 px paraît deux fois plus grand.
+    /// THE PROBLEM: up to step 10, sizes were written in pixels (190 px circle, 120 px
+    /// icons...), tuned on the user's 4K screen (3840 × 2160). On a 1920 × 1080 screen, the
+    /// same 190 px circle looks twice as big.
     ///
-    /// LA SOLUTION (cahier des charges, étape 11) : les tailles sont exprimées en
-    /// POURCENTAGE DE LA HAUTEUR DE L'ÉCRAN. Un cercle de 8.8 % mesure 190 px sur un écran
-    /// de 2160 px de haut, et 95 px sur un écran de 1080 px : sur le même écran physique, il
-    /// garde la même taille réelle. C'est ce qui compte pour le regard, dont la précision ne
-    /// dépend pas de la résolution choisie dans Windows.
+    /// THE SOLUTION (specification, step 11): sizes are expressed as a PERCENTAGE OF THE
+    /// SCREEN HEIGHT. An 8.8 % circle is 190 px on a 2160 px high screen, and 95 px on a
+    /// 1080 px screen: on the same physical screen, it keeps the same real size. This is what
+    /// matters for the gaze, whose precision does not depend on the resolution chosen in
+    /// Windows.
     ///
-    /// Trois sortes de valeurs passent par ici :
-    ///   1. les RÉGLAGES de parametres.json, en % de la hauteur (RayonCercle, TailleIcones…) :
-    ///      méthodes Pourcent et PourcentInterface ;
-    ///   2. les CONSTANTES écrites en pixels dans le code (par exemple l'espace de 60 px entre
-    ///      les boutons du choix d'action). Elles ont été réglées sur l'écran 4K de
-    ///      l'utilisateur : on les garde telles quelles, comme « pixels d'un écran de 2160 px
-    ///      de haut », et on les convertit : méthodes Px et PxRegard ;
-    ///   3. les CONSTANTES écrites en unités WPF (épaisseur d'un trait, taille d'un texte…).
-    ///      Sur l'écran 4K à 200 %, l'écran mesure 1080 unités WPF de haut : on les garde comme
-    ///      « unités d'un écran de 1080 unités de haut » : méthodes Unites et Police.
+    /// Three kinds of values go through here:
+    ///   1. the SETTINGS of settings.json, in % of the height (CircleRadius, IconSize...):
+    ///      Percent and InterfacePercent methods;
+    ///   2. the CONSTANTS written in pixels in the code (for example the 60 px space between
+    ///      the buttons of the action choice). They were tuned on the user's 4K screen: they
+    ///      are kept as they are, as "pixels of a 2160 px high screen", and converted: Px and
+    ///      GazePx methods;
+    ///   3. the CONSTANTS written in WPF units (line thickness, text size...). On the 4K
+    ///      screen at 200 %, the screen is 1080 WPF units high: they are kept as "units of a
+    ///      1080-unit high screen": Units and Font methods.
     ///
-    /// Deux réglages de Windows s'y ajoutent :
-    ///   - la MISE À L'ÉCHELLE (100 %, 125 %, 200 %…) : elle ne change que la conversion entre
-    ///     pixels et unités WPF, la taille réelle des éléments de GazeBar reste la même ;
-    ///   - la TAILLE DU TEXTE (Paramètres de Windows › Accessibilité › Taille du texte, de 100 à
-    ///     225 %) : elle agrandit les textes du calque (libellés, barre de menu…), méthode Police.
-    /// Et un réglage de GazeBar : [TailleInterface] (75, 100, 125 ou 150 %), qui agrandit ou
-    /// réduit tout ce qui est dessiné, mais pas les réglages du regard (rayon de fixation,
-    /// vitesse maximale, anti-tremblement) : le tremblement de l'œil ne dépend pas du goût
-    /// de chacun pour les grandes icônes.
+    /// Two Windows settings are added:
+    ///   - the SCALING (100 %, 125 %, 200 %...): it only changes the conversion between pixels
+    ///     and WPF units, the real size of GazeBar's elements stays the same;
+    ///   - the TEXT SIZE (Windows Settings › Accessibility › Text size, from 100 to 225 %): it
+    ///     enlarges the texts of the overlay (labels, menu bar...), Font method.
+    /// And one GazeBar setting: [InterfaceSize] (75, 100, 125 or 150 %), which enlarges or
+    /// shrinks everything drawn, but not the gaze settings (fixation radius, maximum speed,
+    /// anti-jitter): the eye's jitter does not depend on one's taste for large icons.
     ///
-    /// LES CHANGEMENTS PENDANT QUE GAZEBAR TOURNE : le calque (OverlayWindow) appelle Mesurer
-    /// quand Windows annonce un changement d'affichage, et aussi toutes les deux secondes par
-    /// précaution. Si quelque chose a changé, l'événement Change est déclenché : le
-    /// gestionnaire de modes redessine ce qu'il faut (voir ModeManager.OnEcranChange).
+    /// CHANGES WHILE GAZEBAR RUNS: the overlay (OverlayWindow) calls Measure when Windows
+    /// announces a display change, and also every two seconds as a precaution. If something
+    /// changed, the Change event is raised: the mode manager redraws what is needed (see
+    /// ModeManager.OnScreenChanged).
     ///
-    /// « static » : il n'y a qu'un écran principal, ces valeurs sont partagées par tout le programme.
-    ///
-    /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
+    /// "static": there is only one primary screen, these values are shared by the whole program.
     /// </summary>
     internal static class ScreenMetrics
     {
-        /// <summary>Hauteur, en pixels, de l'écran sur lequel les constantes en pixels ont été réglées (4K).</summary>
+        /// <summary>Height, in pixels, of the screen on which the pixel constants were tuned (4K).</summary>
         public const double ReferenceHeightPixels = 2160;
 
-        /// <summary>Hauteur, en unités WPF, de ce même écran (4K à 200 %).</summary>
+        /// <summary>Height, in WPF units, of that same screen (4K at 200 %).</summary>
         public const double ReferenceHeightUnits = 1080;
 
-        /// <summary>Largeur de l'écran principal, en pixels réels.</summary>
+        /// <summary>Width of the primary screen, in real pixels.</summary>
         public static double WidthPixels { get; private set; } = 1920;
 
-        /// <summary>Hauteur de l'écran principal, en pixels réels.</summary>
+        /// <summary>Height of the primary screen, in real pixels.</summary>
         public static double HeightPixels { get; private set; } = 1080;
 
-        /// <summary>Mise à l'échelle de Windows : 1 = 100 %, 1.25 = 125 %, 2 = 200 %.</summary>
+        /// <summary>Windows scaling: 1 = 100 %, 1.25 = 125 %, 2 = 200 %.</summary>
         public static double WindowsScale { get; private set; } = 1;
 
-        /// <summary>Taille du texte de Windows (Accessibilité) : 1 = 100 %, 2.25 = 225 %.</summary>
+        /// <summary>Windows text size (Accessibility): 1 = 100 %, 2.25 = 225 %.</summary>
         public static double WindowsText { get; private set; } = 1;
 
         /// <summary>
-        /// La mise à l'échelle de Windows AU DÉMARRAGE de GazeBar (1 = 100 %). Windows la
-        /// « fige » pour le programme : elle ne change plus ensuite, même si l'on change la
-        /// mise à l'échelle dans les paramètres de Windows. Lue avec GetDpiForSystem.
+        /// The Windows scaling WHEN GazeBar STARTED (1 = 100 %). Windows "freezes" it for the
+        /// program: it no longer changes afterwards, even if the scaling is changed in the
+        /// Windows settings. Read with GetDpiForSystem.
         /// </summary>
         public static double StartupScale { get; } = ReadStartupScale();
 
         /// <summary>
-        /// Correction du regard de l'eyetracker (étape 11, correction du 29/10/2026).
+        /// Correction of the eyetracker gaze (step 11, fix of 2026-10-29).
         ///
-        /// Essai de l'utilisateur : GazeBar lancé en 1920 × 1080 à 100 %, puis écran passé en
-        /// 3840 × 2160 à 150 %. Le journal montre que le regard reçu de l'eyetracker ne dépassait plus
-        /// X 1830 environ (au lieu de 3840) ; revenu à 100 %, il atteignait de nouveau 3802.
-        /// L'eyetracker donne donc le regard dans les unités de l'échelle du DÉMARRAGE : il est réduit
-        /// de 150 ÷ 100 = 1.5. On le multiplie par ce rapport pour retrouver les vrais pixels.
-        /// Quand l'échelle n'a pas changé depuis le démarrage (cas habituel), le rapport vaut 1
-        /// et rien ne change (c'est pourquoi tout marchait en 4K à 200 % dès le lancement).
+        /// The user's test: GazeBar started in 1920 × 1080 at 100 %, then the screen switched
+        /// to 3840 × 2160 at 150 %. The log shows that the gaze received from the eyetracker no
+        /// longer went beyond about X 1830 (instead of 3840); back at 100 %, it reached 3802
+        /// again. So the eyetracker gives the gaze in the units of the STARTUP scale: it is
+        /// reduced by 150 ÷ 100 = 1.5. We multiply it by this ratio to get the real pixels back.
+        /// When the scale has not changed since startup (the usual case), the ratio is 1 and
+        /// nothing changes (that is why everything worked in 4K at 200 % from the start).
         /// </summary>
         public static double GazeFactor
         {
-            // Avant la première mesure (au tout début), pas de correction.
+            // Before the first measurement (at the very beginning), no correction.
             get { return _measure ? WindowsScale / StartupScale : 1; }
         }
 
-        /// <summary>Hauteur de l'écran en unités WPF (1080 pour un écran 4K à 200 % ou 1080p à 100 %).</summary>
+        /// <summary>Screen height in WPF units (1080 for a 4K screen at 200 % or 1080p at 100 %).</summary>
         public static double HeightUnits
         {
             get { return HeightPixels / WindowsScale; }
         }
 
-        /// <summary>Déclenché quand la résolution, la mise à l'échelle ou la taille du texte a changé.</summary>
+        /// <summary>Raised when the resolution, the scaling or the text size changed.</summary>
         public static event Action Change;
 
-        // Vrai après la première mesure (au démarrage, rien n'a « changé » : pas d'événement).
+        // True after the first measurement (at startup, nothing has "changed": no event).
         private static bool _measure;
 
-        /// <summary>[TailleInterface] en facteur : 100 % → 1, 125 % → 1.25.</summary>
+        /// <summary>[InterfaceSize] as a factor: 100 % → 1, 125 % → 1.25.</summary>
         private static double InterfaceFactor
         {
             get { return AppSettings.Current.InterfaceSize / 100.0; }
@@ -112,9 +109,9 @@ namespace GazeBar
         // ───────────────────────── Conversions ─────────────────────────
 
         /// <summary>
-        /// Un pourcentage de la hauteur de l'écran, en pixels. Pour les réglages du REGARD
-        /// (rayon de fixation, vitesse maximale, anti-tremblement) : [TailleInterface] ne
-        /// s'applique pas. Exemple : 1.4 % sur un écran de 1080 px → 15 px.
+        /// A percentage of the screen height, in pixels. For the GAZE settings (fixation
+        /// radius, maximum speed, anti-jitter): [InterfaceSize] does not apply.
+        /// Example: 1.4 % on a 1080 px screen → 15 px.
         /// </summary>
         public static double Percent(double percent)
         {
@@ -122,9 +119,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Un pourcentage de la hauteur de l'écran, en pixels, multiplié par [TailleInterface].
-        /// Pour ce qui est DESSINÉ (rayon du cercle, taille des icônes).
-        /// Exemple : 8.8 % sur un écran de 1080 px, interface à 100 % → 95 px.
+        /// A percentage of the screen height, in pixels, multiplied by [InterfaceSize].
+        /// For what is DRAWN (circle radius, icon size).
+        /// Example: 8.8 % on a 1080 px screen, interface at 100 % → 95 px.
         /// </summary>
         public static double InterfacePercent(double percent)
         {
@@ -132,9 +129,9 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Une constante du code écrite en pixels de l'écran 4K (2160 px de haut), convertie en
-        /// pixels de l'écran actuel, multipliée par [TailleInterface]. Pour ce qui est dessiné.
-        /// Exemple : 60 px sur l'écran 4K → 30 px sur un écran de 1080 px.
+        /// A code constant written in pixels of the 4K screen (2160 px high), converted to
+        /// pixels of the current screen, multiplied by [InterfaceSize]. For what is drawn.
+        /// Example: 60 px on the 4K screen → 30 px on a 1080 px screen.
         /// </summary>
         public static double Px(double pixels4K)
         {
@@ -142,8 +139,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Comme Px, mais sans [TailleInterface] : pour une distance du REGARD (par exemple la
-        /// marge hors de l'écran du mode défilement).
+        /// Like Px, but without [InterfaceSize]: for a GAZE distance (for example the off-screen
+        /// margin of scroll mode).
         /// </summary>
         public static double GazePx(double pixels4K)
         {
@@ -151,10 +148,10 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Une constante du code écrite en unités WPF de l'écran 4K à 200 % (1080 unités de
-        /// haut), convertie en unités WPF de l'écran actuel, multipliée par [TailleInterface].
-        /// Pour les épaisseurs de trait, les coins arrondis, les marges des textes…
-        /// Sur un écran 1080p à 100 % comme sur un écran 4K à 200 %, elle ne change pas.
+        /// A code constant written in WPF units of the 4K screen at 200 % (1080 units high),
+        /// converted to WPF units of the current screen, multiplied by [InterfaceSize].
+        /// For line thicknesses, rounded corners, text margins...
+        /// On a 1080p screen at 100 % as on a 4K screen at 200 %, it does not change.
         /// </summary>
         public static double Units(double units)
         {
@@ -162,32 +159,32 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Une taille de police, comme Unites, multipliée en plus par la taille du texte de
-        /// Windows. Pour les textes du calque (libellés au survol, barre de menu…).
+        /// A font size, like Units, additionally multiplied by the Windows text size. For the
+        /// texts of the overlay (hover labels, menu bar...).
         /// </summary>
         public static double Font(double units)
         {
             return Units(units) * WindowsText;
         }
 
-        // ───────────────────────── Mesure ─────────────────────────
+        // ───────────────────────── Measurement ─────────────────────────
 
         /// <summary>
-        /// Lit la taille de l'écran principal et la taille du texte de Windows.
-        /// echelle : la mise à l'échelle de Windows, donnée par le calque (1 = 100 %).
-        /// La première fois, ne déclenche rien ; ensuite, déclenche Change si une valeur a changé.
-        /// Renvoie vrai si quelque chose a changé.
+        /// Reads the size of the primary screen and the Windows text size.
+        /// scale: the Windows scaling, given by the overlay (1 = 100 %).
+        /// The first time, raises nothing; afterwards, raises Change if a value changed.
+        /// Returns true if something changed.
         /// </summary>
         public static bool Measure(double scale)
         {
-            // La vraie résolution (GetSystemMetrics ne voit pas toujours le changement : voir
-            // NativeMethods.TailleEcranPrincipal).
+            // The real resolution (GetSystemMetrics does not always see the change: see
+            // NativeMethods.PrimaryScreenSize).
             double width;
             double height;
             NativeMethods.PrimaryScreenSize(out width, out height);
             if (width <= 0 || height <= 0)
             {
-                return false;   // mesure impossible pour l'instant (écran en train de changer)
+                return false;   // cannot measure for now (screen changing)
             }
             if (double.IsNaN(scale) || scale <= 0)
             {
@@ -209,9 +206,9 @@ namespace GazeBar
             HeightPixels = height;
             WindowsScale = scale;
             WindowsText = text;
-            App.Log("Écran : " + Description() + (firstOne ? "" : " (changement détecté)") +
-                    " ; échelle au démarrage " + (StartupScale * 100).ToString("F0") +
-                    " %, regard × " + GazeFactor.ToString("0.###"));
+            App.Log("Screen: " + Description() + (firstOne ? "" : " (change detected)") +
+                    "; startup scale " + (StartupScale * 100).ToString("F0") +
+                    " %, gaze × " + GazeFactor.ToString("0.###"));
 
             if (firstOne)
             {
@@ -225,14 +222,14 @@ namespace GazeBar
             return true;
         }
 
-        /// <summary>Résumé lisible, pour le journal et l'onglet « Affichage » : « 1920 × 1080 px, échelle 100 %, texte 100 % ».</summary>
+        /// <summary>Readable summary, for the log and the "Display" tab: "1920 × 1080 px, scale 100 %, text 100 %".</summary>
         public static string Description()
         {
             return WidthPixels.ToString("F0") + " × " + HeightPixels.ToString("F0") + " px, échelle " +
                    (WindowsScale * 100).ToString("F0") + " %, texte " + (WindowsText * 100).ToString("F0") + " %";
         }
 
-        /// <summary>La mise à l'échelle figée au démarrage (voir EchelleDemarrage). 1 si elle est illisible.</summary>
+        /// <summary>The scaling frozen at startup (see StartupScale). 1 if it cannot be read.</summary>
         private static double ReadStartupScale()
         {
             try
@@ -240,21 +237,21 @@ namespace GazeBar
                 uint dpi = NativeMethods.GetDpiForSystem();
                 if (dpi > 0)
                 {
-                    return dpi / 96.0;   // 96 points par pouce = 100 %
+                    return dpi / 96.0;   // 96 dots per inch = 100 %
                 }
             }
             catch (EntryPointNotFoundException)
             {
-                // Windows 10 trop ancien (avant la version 1607) : pas de GetDpiForSystem.
+                // Windows 10 too old (before version 1607): no GetDpiForSystem.
             }
             return 1;
         }
 
         /// <summary>
-        /// La taille du texte de Windows (Accessibilité › Taille du texte). Windows la range
-        /// dans le registre, sous HKEY_CURRENT_USER\Software\Microsoft\Accessibility, valeur
-        /// « TextScaleFactor », de 100 à 225 (en %). Absente = jamais changée = 100 %.
-        /// WPF ne l'applique pas tout seul : c'est GazeBar qui la lit (méthode Police).
+        /// The Windows text size (Accessibility › Text size). Windows stores it in the
+        /// registry, under HKEY_CURRENT_USER\Software\Microsoft\Accessibility, value
+        /// "TextScaleFactor", from 100 to 225 (in %). Missing = never changed = 100 %.
+        /// WPF does not apply it by itself: GazeBar reads it (Font method).
         /// </summary>
         private static double ReadTextSize()
         {
@@ -272,7 +269,7 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("Écran : taille du texte illisible (" + ex.Message + "), 100 % utilisé");
+                App.Log("Screen: unreadable text size (" + ex.Message + "), 100 % used");
             }
             return 1;
         }

@@ -6,21 +6,21 @@ using System.Windows.Media.Imaging;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : photographie un rectangle de l'écran (étape 3, mode choix d'action).
+    /// MODEL: takes a picture of a rectangle of the screen (step 3, action choice mode).
     ///
-    /// On passe par GDI, la bibliothèque de dessin intégrée à Windows (voir NativeMethods),
-    /// puis on convertit l'image obtenue en image WPF (BitmapSource) pour pouvoir l'afficher.
-    /// Aucune bibliothèque supplémentaire n'est nécessaire.
+    /// We go through GDI, the drawing library built into Windows (see NativeMethods),
+    /// then convert the resulting image into a WPF image (BitmapSource) to display it.
+    /// No extra library is needed.
     ///
-    /// Attention : la capture contient tout ce qui est affiché à ce moment, y compris les
-    /// fenêtres de GazeBar. C'est pourquoi le mode choix d'action cache le cercle et l'icône
-    /// du calque, et attend un instant, AVANT d'appeler Capturer.
+    /// Note: the capture contains everything displayed at that moment, including GazeBar's
+    /// windows. That is why action choice mode hides the overlay's circle and icon, and
+    /// waits a moment, BEFORE calling Capture.
     /// </summary>
     internal static class ScreenCapture
     {
         /// <summary>
-        /// Capture le rectangle (x, y, largeur, hauteur), en pixels d'écran.
-        /// Renvoie null en cas d'échec (l'erreur est notée dans le journal).
+        /// Captures the rectangle (x, y, width, height), in screen pixels.
+        /// Returns null on failure (the error is written to the log).
         /// </summary>
         public static BitmapSource Capture(int x, int y, int width, int height)
         {
@@ -31,40 +31,40 @@ namespace GazeBar
 
             try
             {
-                // 1. Le contexte de dessin de l'écran entier (0 = « tout l'écran »).
+                // 1. The drawing context of the whole screen (0 = "the whole screen").
                 screen = NativeMethods.GetDC(IntPtr.Zero);
                 if (screen == IntPtr.Zero)
                 {
-                    App.Log("Capture : GetDC a échoué");
+                    App.Log("Capture: GetDC failed");
                     return null;
                 }
 
-                // 2. Une image vide de la bonne taille, et un contexte en mémoire pour y dessiner.
+                // 2. An empty image of the right size, and an in-memory context to draw into it.
                 memory = NativeMethods.CreateCompatibleDC(screen);
                 image = NativeMethods.CreateCompatibleBitmap(screen, width, height);
                 if (memory == IntPtr.Zero || image == IntPtr.Zero)
                 {
-                    App.Log("Capture : impossible de préparer l'image en mémoire");
+                    App.Log("Capture: cannot prepare the image in memory");
                     return null;
                 }
 
-                // 3. On pose l'image dans le contexte en mémoire (on garde l'ancienne pour la remettre).
+                // 3. Put the image into the in-memory context (keep the old one to restore it).
                 oldOne = NativeMethods.SelectObject(memory, image);
 
-                // 4. La copie des pixels : de l'écran (x, y) vers l'image (0, 0).
+                // 4. Copy the pixels: from the screen (x, y) to the image (0, 0).
                 if (!NativeMethods.BitBlt(memory, 0, 0, width, height, screen, x, y, NativeMethods.SRCCOPY))
                 {
-                    App.Log("Capture : BitBlt a échoué (erreur Windows " +
+                    App.Log("Capture: BitBlt failed (Windows error " +
                             System.Runtime.InteropServices.Marshal.GetLastWin32Error() + ")");
                     return null;
                 }
 
-                // On retire l'image du contexte avant de la convertir.
+                // Remove the image from the context before converting it.
                 NativeMethods.SelectObject(memory, oldOne);
                 oldOne = IntPtr.Zero;
 
-                // Conversion en image WPF. « Freeze » la rend non modifiable : elle peut alors
-                // être affichée plus vite et partagée sans risque.
+                // Conversion to a WPF image. "Freeze" makes it read-only: it can then be
+                // displayed faster and shared safely.
                 BitmapSource result = Imaging.CreateBitmapSourceFromHBitmap(
                     image, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
                 result.Freeze();
@@ -72,12 +72,12 @@ namespace GazeBar
             }
             catch (Exception ex)
             {
-                App.Log("Capture : erreur " + ex.Message);
+                App.Log("Capture: error " + ex.Message);
                 return null;
             }
             finally
             {
-                // 5. On rend tout à Windows, dans l'ordre inverse, même en cas d'erreur.
+                // 5. Give everything back to Windows, in reverse order, even on error.
                 if (oldOne != IntPtr.Zero)
                 {
                     NativeMethods.SelectObject(memory, oldOne);

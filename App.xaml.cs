@@ -7,19 +7,19 @@ using System.Windows;
 namespace GazeBar
 {
     /// <summary>
-    /// Classe de l'application : point d'entrée du programme.
+    /// The application class: entry point of the program.
     ///
-    /// Étape 7 : une seule instance de GazeBar à la fois, et l'option [DemarrerAvecWindows].
+    /// Step 7: only one instance of GazeBar at a time, and the [StartWithWindows] option.
     ///
-    /// Elle lit les réglages, crée les objets « modèle » partagés (curseur, regard),
-    /// ouvre le calque plein écran et le gestionnaire de modes, et surveille la touche Échap.
-    /// Depuis l'étape 4, il n'y a plus de barre d'outils : tout passe par le regard, et la
-    /// barre de menu s'ouvre en regardant en bas, hors de l'écran.
-    /// Elle s'assure aussi, en toute circonstance, que les boutons de la souris sont
-    /// relâchés à la fermeture.
+    /// It reads the settings, creates the shared "model" objects (cursor, gaze), opens the
+    /// full-screen overlay and the mode manager, and watches the Escape key.
+    /// Since step 4, there is no toolbar any more: everything goes through the gaze, and the
+    /// menu bar opens by looking down, below the screen.
+    /// It also makes sure, in all circumstances, that the mouse buttons are released when
+    /// closing.
     ///
-    /// Rappel : « partial » signifie que la classe est écrite en deux morceaux, celui-ci
-    /// et un autre généré automatiquement à partir de App.xaml.
+    /// Reminder: "partial" means the class is written in two pieces, this one and another
+    /// one generated automatically from App.xaml.
     /// </summary>
     public partial class App : Application
     {
@@ -31,107 +31,105 @@ namespace GazeBar
         private DiagnosticWindow _diagnostic;
 
         /// <summary>
-        /// Le « verrou » d'instance unique (étape 7). Un Mutex est un objet de Windows qui porte
-        /// un nom ; un seul programme à la fois peut le posséder. Le premier GazeBar le prend ;
-        /// un deuxième GazeBar voit qu'il est déjà pris, et se ferme aussitôt.
-        /// « Local\ » : le nom vaut pour la session Windows de l'utilisateur.
+        /// The single-instance "lock" (step 7). A Mutex is a named Windows object; only one
+        /// program at a time can own it. The first GazeBar takes it; a second GazeBar sees it
+        /// is already taken, and closes at once.
+        /// "Local\": the name applies to the user's Windows session.
         /// </summary>
         private const string LockName = "Local\\GazeBar-InstanceUnique";
         private Mutex _singleInstanceMutex;
 
-        // Vrai pour un deuxième GazeBar, qui se ferme sans rien faire (voir OnStartup / OnExit).
+        // True for a second GazeBar, which closes without doing anything (see OnStartup / OnExit).
         private bool _extraInstance;
 
         /// <summary>
-        /// Appelée par WPF au démarrage du programme.
+        /// Called by WPF when the program starts.
         /// </summary>
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            // Une seule instance (cahier des charges, « Fonctionnement général ») : deux GazeBar
-            // en même temps dessineraient deux cercles et enverraient des clics en double.
-            // Si GazeBar tourne déjà, celui-ci se ferme aussitôt, sans rien afficher.
+            // A single instance (specification, "General operation"): two GazeBars at the same
+            // time would draw two circles and send double clicks.
+            // If GazeBar is already running, this one closes at once, without showing anything.
             bool isFirst;
             _singleInstanceMutex = new Mutex(true, LockName, out isFirst);
             if (!isFirst)
             {
                 _extraInstance = true;
-                Log("Deuxième lancement de GazeBar : une instance tourne déjà, fermeture");
+                Log("Second launch of GazeBar: an instance is already running, closing");
                 Shutdown();
                 return;
             }
 
-            Log("Démarrage de GazeBar");
+            Log("GazeBar starting");
 
-            // Filets de sécurité : quelle que soit l'erreur, on relâche les boutons de la
-            // souris et les touches Ctrl, Maj, Alt (un bouton ou une touche resté enfoncé
-            // gênerait tout le reste de l'ordinateur),
-            // et on note l'erreur dans le journal.
+            // Safety nets: whatever the error, release the mouse buttons and the Ctrl, Shift,
+            // Alt keys (a button or key left pressed would disturb the whole computer),
+            // and write the error to the log.
             DispatcherUnhandledException += (sender, args) =>
             {
                 MouseInjector.ReleaseAll();
                 KeyboardInjector.ReleaseAll();
-                Log("ERREUR NON GÉRÉE (interface) : " + args.Exception);
-                args.Handled = true;   // on évite que le programme se ferme brutalement
+                Log("UNHANDLED ERROR (UI): " + args.Exception);
+                args.Handled = true;   // prevents the program from closing abruptly
             };
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 MouseInjector.ReleaseAll();
                 KeyboardInjector.ReleaseAll();
-                Log("ERREUR NON GÉRÉE (.NET) : " + args.ExceptionObject);
+                Log("UNHANDLED ERROR (.NET): " + args.ExceptionObject);
             };
 
-            // Les réglages d'abord : tout le reste s'en sert.
+            // The settings first: everything else uses them.
             AppSettings.Initialize();
 
-            // Démarrage avec Windows : le registre est mis d'accord avec le fichier de réglages
-            // (et le chemin du programme est mis à jour s'il a été déplacé).
+            // Start with Windows: the registry is made to match the settings file
+            // (and the program path is updated if it was moved).
             WindowsStartup.Apply(AppSettings.Current.StartWithWindows);
 
-            // Défilement des fenêtres inactives (02/11/2026) : le réglage de Windows est mis
-            // d'accord avec le fichier de réglages (voir MoletteWindows).
+            // Scrolling inactive windows (2026-11-02): the Windows setting is made to match the
+            // settings file (see WheelScroller).
             WheelScroller.Apply(AppSettings.Current.ScrollInactiveWindows);
 
             _sampler = new CursorSampler();
             _sampler.Start();
 
-            // Le regard réel, fourni par le moteur de l'eyetracker. S'il est indisponible,
-            // le programme démarre quand même (voir GazeSource.ErrorMessage).
-            // Depuis le 02/11/2026, les DLL de l'eyetracker ne sont plus livrées avec GazeBar : on les
-            // cherche d'abord sur le PC (voir ChargeurEyetracker.cs), avant tout usage du regard.
+            // The real gaze, provided by the eyetracker engine. If it is unavailable, the
+            // program still starts (see GazeSource.ErrorMessage).
+            // Since 2026-11-02, the eyetracker DLLs are no longer shipped with GazeBar: they are
+            // first searched for on the PC (see EyetrackerLoader.cs), before any use of the gaze.
             EyetrackerLoader.Install();
             _gaze = new GazeSource();
             _gaze.Start();
 
-            // Le programme ne s'arrête que sur demande (bouton « Quitter GazeBar » du menu) :
-            // fermer la fenêtre Diagnostic ne doit pas tout fermer.
+            // The program only stops on request ("Quit GazeBar" button of the menu): closing
+            // the Diagnostic window must not close everything.
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            // Le calque plein écran, transparent aux clics, et le gestionnaire de modes.
-            // On démarre dans le mode mouvement (le mode par défaut du cahier des charges).
+            // The full-screen overlay, transparent to clicks, and the mode manager.
+            // We start in movement mode (the default mode of the specification).
             _layer = new OverlayWindow();
             _modes = new ModeManager(_gaze, _layer);
             _layer.Show();
             _layer.BringToFront();
             _modes.Start(new MovementMode());
 
-            // Correction du 29/10/2026 : si Windows a caché le curseur (GazeBar lancé seul au
-            // démarrage, sans souris physique), on le fait réapparaître (voir ReveilCurseur).
+            // Fix of 2026-10-29: if Windows hid the cursor (GazeBar started alone at startup,
+            // without a physical mouse), make it reappear (see CursorWaker).
             CursorWaker.Check();
 
-            // La touche Échap de l'aidant : retour au mode mouvement, depuis n'importe quel mode.
+            // The caregiver's Escape key: back to movement mode, from any mode.
             _keyboard = new KeyboardHook();
             _keyboard.EscapePressed += OnEscape;
             _keyboard.Install();
         }
 
         /// <summary>
-        /// Touche Échap (pour l'aidant) : on relâche les boutons de la souris et les touches
-        /// modificatrices par sécurité (un glisser-déposer en cours est interrompu) et on
-        /// revient au mode mouvement, sauf si l'on y est déjà. Dans le mode mouvement, elle
-        /// ferme le clavier au regard (étape 12). La touche arrive aussi normalement
-        /// au programme actif (elle n'est pas « mangée » par GazeBar).
+        /// Escape key (for the caregiver): the mouse buttons and modifier keys are released for
+        /// safety (a drag and drop in progress is interrupted) and we return to movement mode,
+        /// unless we are already there. In movement mode, it closes the gaze keyboard (step 12).
+        /// The key also reaches the active program normally (it is not "eaten" by GazeBar).
         /// </summary>
         private void OnEscape()
         {
@@ -140,49 +138,49 @@ namespace GazeBar
                 return;
             }
 
-            // Étape 12 : en mode mouvement, Échap ferme le clavier au regard s'il est ouvert.
-            // (La touche Échap du clavier au regard, elle, est simulée : elle n'arrive pas ici,
-            // voir CrochetClavier.)
+            // Step 12: in movement mode, Escape closes the gaze keyboard if it is open.
+            // (The Escape key of the gaze keyboard is simulated: it does not arrive here, see
+            // KeyboardHook.)
             if (_modes.CurrentMode is MovementMode)
             {
                 if (_modes.Keyboard.IsOpen)
                 {
-                    App.Log("Touche Échap : fermeture du clavier au regard");
+                    App.Log("Escape key: closing the gaze keyboard");
                     _modes.Keyboard.Close();
                 }
                 return;
             }
 
-            // Mode paramètres : pendant une saisie au clavier, Échap annule seulement la saisie.
+            // Settings mode: during keyboard input, Escape only cancels the input.
             SettingsMode settings = _modes.CurrentMode as SettingsMode;
             if (settings != null && settings.CancelInput())
             {
                 return;
             }
 
-            // Écran de configuration des icônes (étape 10) : Échap ramène aux paramètres.
+            // Icon configuration screen (step 10): Escape returns to the settings.
             IconConfigMode configuration = _modes.CurrentMode as IconConfigMode;
             if (configuration != null)
             {
                 configuration.BackToSettings();
                 return;
             }
-            // Listes du clavier (étape 14) : Échap fait comme « Retour » (Mes mots → paramètres).
+            // Keyboard lists (step 14): Escape acts like "Back" (My words → settings).
             KeyboardListMode list = _modes.CurrentMode as KeyboardListMode;
             if (list != null)
             {
                 list.Back();
                 return;
             }
-            App.Log("Touche Échap : retour au mode mouvement");
+            App.Log("Escape key: back to movement mode");
             MouseInjector.ReleaseAll();
             KeyboardInjector.ReleaseAll();
             _modes.ChangeMode(new MovementMode());
         }
 
         /// <summary>
-        /// Ouvre la fenêtre Diagnostic (bouton du menu). Une seule à la fois : si elle est déjà
-        /// ouverte, on la remet simplement devant.
+        /// Opens the Diagnostic window (menu button). Only one at a time: if it is already open,
+        /// it is simply brought to the front.
         /// </summary>
         internal void OpenDiagnostic()
         {
@@ -196,14 +194,14 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Appelée par WPF à la fermeture du programme.
+        /// Called by WPF when the program closes.
         /// </summary>
         protected override void OnExit(ExitEventArgs e)
         {
             if (_extraInstance)
             {
-                // Deuxième GazeBar : il n'a rien démarré, il ne touche à rien (surtout pas aux
-                // boutons de la souris, que le premier GazeBar est peut-être en train de tenir).
+                // Second GazeBar: it started nothing, it touches nothing (above all not the
+                // mouse buttons, which the first GazeBar may be holding).
                 _singleInstanceMutex.Dispose();
                 base.OnExit(e);
                 return;
@@ -217,8 +215,8 @@ namespace GazeBar
             }
             if (_modes != null)
             {
-                // Étape 13 : les nombres d'utilisations des mots du clavier en attente sont
-                // enregistrés dans le dictionnaire personnel.
+                // Step 13: the pending word usage counts of the keyboard are saved in the
+                // personal dictionary.
                 _modes.Keyboard.Stop();
                 _modes.Stop();
             }
@@ -230,7 +228,7 @@ namespace GazeBar
             {
                 _gaze.Dispose();
             }
-            Log("Arrêt de GazeBar");
+            Log("GazeBar stopping");
             if (_singleInstanceMutex != null)
             {
                 _singleInstanceMutex.ReleaseMutex();
@@ -240,10 +238,10 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Écrit un message dans le journal, à deux endroits :
-        ///  1. la fenêtre « Sortie » de Visual Studio (préfixe [GazeBar]) ;
-        ///  2. le fichier gazebar.log dans %LOCALAPPDATA%\GazeBar
-        ///     (utile quand le programme est lancé sans le débogueur).
+        /// Writes a message to the log, in two places:
+        ///  1. the Visual Studio "Output" window (prefix [GazeBar]);
+        ///  2. the gazebar.log file in %LOCALAPPDATA%\GazeBar
+        ///     (useful when the program is started without the debugger).
         /// </summary>
         internal static void Log(string message)
         {
@@ -259,8 +257,8 @@ namespace GazeBar
             }
             catch
             {
-                // Le journal ne doit jamais lui-même faire planter le programme :
-                // si l'écriture échoue, on ignore silencieusement.
+                // The log must never crash the program itself:
+                // if writing fails, ignore it silently.
             }
         }
     }

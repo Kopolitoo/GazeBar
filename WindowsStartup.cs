@@ -5,19 +5,19 @@ using Microsoft.Win32;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : l'option [DemarrerAvecWindows] (étape 7).
+    /// MODEL: the [StartWithWindows] option (step 7).
     ///
-    /// Comment Windows lance-t-il un programme à l'ouverture de la session ? Il lit la liste
-    /// rangée dans le registre (la base de réglages de Windows), à cet endroit :
+    /// How does Windows start a program when the session opens? It reads the list stored
+    /// in the registry (the Windows settings database), at this location:
     ///     HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run
-    /// Chaque valeur de cette « clé » est un programme à lancer : son nom (ici « GazeBar »)
-    /// et le chemin complet du .exe, entre guillemets.
+    /// Each value of this "key" is a program to start: its name (here "GazeBar") and the
+    /// full path of the .exe, in quotes.
     ///
-    /// HKEY_CURRENT_USER : seulement pour l'utilisateur actuel, et sans droits
-    /// d'administrateur. Conséquence (voir le cahier des charges) : GazeBar lancé ainsi n'est
-    /// pas administrateur, et les fenêtres administrateur continueront d'ignorer ses clics.
+    /// HKEY_CURRENT_USER: only for the current user, and without administrator rights.
+    /// Consequence (see the specification): GazeBar started this way is not administrator,
+    /// and administrator windows will keep ignoring its clicks.
     ///
-    /// Microsoft.Win32.Registry est fourni avec .NET Framework : aucune dépendance nouvelle.
+    /// Microsoft.Win32.Registry ships with .NET Framework: no new dependency.
     /// </summary>
     internal static class WindowsStartup
     {
@@ -25,48 +25,48 @@ namespace GazeBar
         private const string ValueName = "GazeBar";
 
         /// <summary>
-        /// Inscrit GazeBar dans la liste de démarrage de Windows (actif = vrai) ou l'en retire.
-        /// Ne fait jamais planter le programme : une erreur est seulement notée dans le journal.
+        /// Adds GazeBar to the Windows startup list (active = true) or removes it.
+        /// Never crashes the program: an error is only written to the log.
         ///
-        /// Appelée au démarrage de GazeBar (pour que le registre corresponde au fichier de
-        /// réglages, et pour mettre à jour le chemin si le .exe a été déplacé) et à chaque
-        /// changement de l'option dans le mode paramètres.
+        /// Called when GazeBar starts (so that the registry matches the settings file, and
+        /// to update the path if the .exe was moved) and each time the option is changed
+        /// in settings mode.
         /// </summary>
         public static void Apply(bool active)
         {
             try
             {
-                // « using » : la clé est refermée automatiquement à la fin du bloc.
+                // "using": the key is closed automatically at the end of the block.
                 using (RegistryKey key = Registry.CurrentUser.CreateSubKey(RunKey))
                 {
                     if (key == null)
                     {
-                        App.Log("Démarrage avec Windows : clé du registre inaccessible");
+                        App.Log("Start with Windows: registry key unreachable");
                         return;
                     }
 
                     if (active)
                     {
-                        // Le chemin du programme en cours (par exemple
+                        // The path of the running program (for example
                         // D:\TRAVAIL\YEUX\GazeBar\bin\Debug\net48\GazeBar.exe).
                         string path = Process.GetCurrentProcess().MainModule.FileName;
                         string command = "\"" + path + "\"";
                         if (!command.Equals(key.GetValue(ValueName) as string, StringComparison.OrdinalIgnoreCase))
                         {
                             key.SetValue(ValueName, command);
-                            App.Log("Démarrage avec Windows : activé (" + command + ")");
+                            App.Log("Start with Windows: on (" + command + ")");
                         }
                     }
                     else if (key.GetValue(ValueName) != null)
                     {
                         key.DeleteValue(ValueName, false);
-                        App.Log("Démarrage avec Windows : désactivé");
+                        App.Log("Start with Windows: off");
                     }
                 }
             }
             catch (Exception ex)
             {
-                App.Log("Démarrage avec Windows : échec : " + ex.Message);
+                App.Log("Start with Windows: failed: " + ex.Message);
             }
         }
     }

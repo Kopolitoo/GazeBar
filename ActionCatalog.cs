@@ -4,16 +4,15 @@ using System.Collections.Generic;
 namespace GazeBar
 {
     /// <summary>
-    /// Les actions qu'on peut placer sur les icônes du choix d'action (étape 10).
+    /// The actions that can be placed on the icons of the action choice (step 10).
     ///
-    /// Jusqu'à l'étape 9, cette liste était cachée à l'intérieur de ModeChoixAction. L'écran
-    /// de configuration des icônes (ModeConfigIcones) et les paramètres (parametres.json) en
-    /// ont besoin aussi : elle est donc sortie ici, avec tout ce qui décrit une action
-    /// (son groupe, son bouton, son nom).
+    /// Up to step 9, this list was hidden inside ActionChoiceMode. The icon configuration
+    /// screen (IconConfigMode) and the settings (settings.json) need it too: so it was moved
+    /// here, with everything that describes an action (its group, its button, its name).
     ///
-    /// Attention : les NOMS de cette liste sont écrits tels quels dans parametres.json
-    /// (par exemple "ClicGauche"). Renommer une valeur rendrait illisible l'emplacement
-    /// correspondant d'un fichier déjà enregistré (il deviendrait vide).
+    /// Note: the NAMES of this list are written as is in settings.json (for example
+    /// "LeftClick"). Renaming a value would make the matching slot of an already saved file
+    /// unreadable (it would become empty).
     /// </summary>
     internal enum ChoiceAction
     {
@@ -34,49 +33,49 @@ namespace GazeBar
         Back,
 
         /// <summary>
-        /// Ouvre (ou ferme) le clavier au regard (étape 12, demande de l'utilisateur du
-        /// 01/11/2026). Ajouté à la fin : les noms déjà écrits dans parametres.json ne changent pas.
+        /// Opens (or closes) the gaze keyboard (step 12, user request of 2026-11-01). Added at
+        /// the end: the names already written in settings.json do not change.
         /// </summary>
         Keyboard
     }
 
     /// <summary>
-    /// Les trois groupes d'emplacements du choix d'action. Chaque groupe a sa propre liste
-    /// d'actions : une action de la couronne ne peut pas aller à gauche, par exemple (le
-    /// cahier des charges sépare les listes : « les trois emplacements de gauche pour les
-    /// modificateurs, les huit emplacements du centre pour les actions »).
+    /// The three groups of slots of the action choice. Each group has its own list of
+    /// actions: a crown action cannot go on the left, for example (the specification
+    /// separates the lists: "the three slots on the left for the modifiers, the eight slots
+    /// in the center for the actions").
     /// </summary>
     internal enum IconGroup
     {
-        /// <summary>Les huit emplacements autour de la photo.</summary>
+        /// <summary>The eight slots around the photo.</summary>
         Crown,
 
-        /// <summary>Les trois emplacements collés au bord gauche (Ctrl, Maj, Alt).</summary>
+        /// <summary>The three slots stuck to the left edge (Ctrl, Shift, Alt).</summary>
         Modifiers,
 
-        /// <summary>Les trois emplacements collés au bord haut (Copier, Couper, Coller).</summary>
+        /// <summary>The three slots stuck to the top edge (Copy, Cut, Paste).</summary>
         Utilities
     }
 
     /// <summary>
-    /// LE CATALOGUE DES ACTIONS : pour chaque groupe, les actions qu'on peut y placer, leur
-    /// disposition par défaut, et pour chaque action son bouton et son nom.
+    /// THE ACTION CATALOG: for each group, the actions that can be placed there, their default
+    /// layout, and for each action its button and its name.
     ///
-    /// Pour ajouter une action plus tard : l'ajouter dans ActionChoix (à la fin, de
-    /// préférence), dans la liste de son groupe (Actions), dans CreerBouton et NomCourt,
-    /// puis programmer ce qu'elle fait dans ModeChoixAction.
+    /// To add an action later: add it to ChoiceAction (preferably at the end), to the list of
+    /// its group (Actions), to CreateButton and ShortName, then program what it does in
+    /// ActionChoiceMode.
     /// </summary>
     internal static class ActionCatalog
     {
-        /// <summary>Nombre d'emplacements de chaque groupe.</summary>
+        /// <summary>Number of slots of each group.</summary>
         public static int SlotCount(IconGroup group)
         {
             return group == IconGroup.Crown ? 8 : 3;
         }
 
         /// <summary>
-        /// Les actions qu'on peut placer dans ce groupe, dans l'ordre où la liste de
-        /// l'écran de configuration les présente.
+        /// The actions that can be placed in this group, in the order the list of the
+        /// configuration screen shows them.
         /// </summary>
         public static ChoiceAction[] Actions(IconGroup group)
         {
@@ -93,8 +92,8 @@ namespace GazeBar
                         ChoiceAction.DragRight,
                         ChoiceAction.DragAndroid,
                         ChoiceAction.Scroll,
-                        // Étape 12 (01/11/2026) : proposé dans la liste de l'écran de
-                        // configuration, mais pas placé par défaut (les huit places sont prises).
+                        // Step 12 (2026-11-01): offered in the list of the configuration
+                        // screen, but not placed by default (the eight slots are taken).
                         ChoiceAction.Keyboard
                     };
                 case IconGroup.Modifiers:
@@ -105,21 +104,20 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// La disposition par défaut de chaque groupe (ordre choisi par l'utilisateur le
-        /// 28/10/2026 pour la couronne). Couronne, en partant du haut à droite, dans le sens
-        /// des aiguilles d'une montre (voir DispositionChoixAction) :
-        ///   0 : en haut, à droite   → défilement
-        ///   1 : à droite, en haut   → clic droit
-        ///   2 : à droite, en bas    → glisser-déposer gauche
-        ///   3 : en bas, à droite    → glisser-déposer droit
-        ///   4 : en bas, à gauche    → loupe
-        ///   5 : à gauche, en bas    → glisser-déposer android
-        ///   6 : à gauche, en haut   → double clic
-        ///   7 : en haut, à gauche   → clic gauche
-        /// Modificateurs, de haut en bas : Ctrl, Maj, Alt.
-        /// Utilitaires, de gauche à droite : Copier, Couper, Coller.
-        /// L'action Clavier (étape 12) n'est pas placée par défaut : on l'ajoute soi-même à la
-        /// place d'une autre, dans l'écran de configuration des icônes.
+        /// The default layout of each group (order chosen by the user on 2026-10-28 for the
+        /// crown). Crown, starting from the top right, clockwise (see ActionChoiceLayout):
+        ///   0: top, right      → scroll
+        ///   1: right, top      → right click
+        ///   2: right, bottom   → left drag and drop
+        ///   3: bottom, right   → right drag and drop
+        ///   4: bottom, left    → magnifier
+        ///   5: left, bottom    → android drag and drop
+        ///   6: left, top       → double click
+        ///   7: top, left       → left click
+        /// Modifiers, from top to bottom: Ctrl, Shift, Alt.
+        /// Utilities, from left to right: Copy, Cut, Paste.
+        /// The Keyboard action (step 12) is not placed by default: one adds it oneself instead
+        /// of another one, in the icon configuration screen.
         /// </summary>
         public static ChoiceAction[] DefaultLayout(IconGroup group)
         {
@@ -137,20 +135,20 @@ namespace GazeBar
                     ChoiceAction.LeftClick
                 };
             }
-            // Pour les deux autres groupes, la disposition par défaut est la liste elle-même.
+            // For the two other groups, the default layout is the list itself.
             return Actions(group);
         }
 
-        /// <summary>Vrai si cette action peut être placée dans ce groupe.</summary>
+        /// <summary>True if this action can be placed in this group.</summary>
         public static bool BelongsTo(ChoiceAction action, IconGroup group)
         {
             return Array.IndexOf(Actions(group), action) >= 0;
         }
 
         /// <summary>
-        /// Lit un nom d'action écrit dans parametres.json (par exemple "ClicGauche").
-        /// Renvoie null pour un emplacement vide ("" ou null), un nom inconnu (faute de
-        /// frappe, action supprimée) ou une action qui n'appartient pas à ce groupe.
+        /// Reads an action name written in settings.json (for example "LeftClick").
+        /// Returns null for an empty slot ("" or null), an unknown name (typo, removed action)
+        /// or an action that does not belong to this group.
         /// </summary>
         public static ChoiceAction? Read(string name, IconGroup group)
         {
@@ -159,7 +157,7 @@ namespace GazeBar
                 return null;
             }
             ChoiceAction action;
-            // « true » : les majuscules ne comptent pas (« clicgauche » est accepté).
+            // "true": case does not matter ("leftclick" is accepted).
             if (!Enum.TryParse(name.Trim(), true, out action) || !Enum.IsDefined(typeof(ChoiceAction), action))
             {
                 return null;
@@ -167,19 +165,19 @@ namespace GazeBar
             return BelongsTo(action, group) ? action : (ChoiceAction?)null;
         }
 
-        /// <summary>Le nom écrit dans parametres.json : "" pour un emplacement vide.</summary>
+        /// <summary>The name written in settings.json: "" for an empty slot.</summary>
         public static string Write(ChoiceAction? action)
         {
             return action.HasValue ? action.Value.ToString() : "";
         }
 
-        /// <summary>Vrai pour les modificateurs Ctrl, Maj, Alt.</summary>
+        /// <summary>True for the Ctrl, Shift, Alt modifiers.</summary>
         public static bool IsModifier(ChoiceAction action)
         {
             return action == ChoiceAction.Ctrl || action == ChoiceAction.Shift || action == ChoiceAction.Alt;
         }
 
-        /// <summary>Le modificateur qui correspond à l'action Ctrl, Maj ou Alt.</summary>
+        /// <summary>The modifier matching the Ctrl, Shift or Alt action.</summary>
         public static Modifier ToModifier(ChoiceAction action)
         {
             switch (action)
@@ -194,8 +192,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Un nom court, affiché sous chaque action dans la liste de l'écran de configuration
-        /// (le libellé du bouton, plus long, est parfois trop large pour la grille).
+        /// A short name, shown under each action in the list of the configuration screen (the
+        /// button label, longer, is sometimes too wide for the grid).
         /// </summary>
         public static string ShortName(ChoiceAction action)
         {
@@ -221,16 +219,16 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Le bouton d'une action : son symbole, sa pastille et son libellé.
-        /// Symboles de la police Windows (Segoe MDL2 Assets / Segoe Fluent Icons) :
-        ///   E962 = souris, E71E = loupe, E7C2 = déplacer (quatre flèches), E72B = flèche « retour »,
-        ///   EC8F = défilement (flèches haut et bas ; symbole à vérifier à l'écran),
-        ///   E8C8 = copier, E8C6 = ciseaux (couper), E77F = presse-papiers (coller),
-        ///   E765 = clavier (étape 12).
-        /// Les trois clics partagent le symbole de la souris, les trois glisser-déposer celui des
-        /// quatre flèches ; la pastille les distingue (G = gauche, D = droit, A = android).
-        /// Les modificateurs affichent simplement leur nom (« Ctrl », « Maj », « Alt »).
-        /// (Déplacé depuis ModeChoixAction à l'étape 10, sans changement.)
+        /// The button of an action: its symbol, its badge and its label.
+        /// Symbols of the Windows font (Segoe MDL2 Assets / Segoe Fluent Icons):
+        ///   E962 = mouse, E71E = magnifier, E7C2 = move (four arrows), E72B = "back" arrow,
+        ///   EC8F = scroll (up and down arrows; symbol to check on screen),
+        ///   E8C8 = copy, E8C6 = scissors (cut), E77F = clipboard (paste),
+        ///   E765 = keyboard (step 12).
+        /// The three clicks share the mouse symbol, the three drag and drops the four arrows;
+        /// the badge tells them apart (G = left, D = right, A = android).
+        /// The modifiers simply show their name ("Ctrl", "Maj", "Alt").
+        /// (Moved from ActionChoiceMode in step 10, unchanged.)
         /// </summary>
         public static GazeButton CreateButton(ChoiceAction action)
         {
@@ -265,7 +263,7 @@ namespace GazeBar
                 case ChoiceAction.Paste:
                     return new GazeButton("", null, "Coller ici (clic, puis Ctrl + V)");
                 case ChoiceAction.Keyboard:
-                    // Pastille vide : le même bouton ouvre le clavier, ou le ferme s'il est ouvert.
+                    // Empty badge: the same button opens the keyboard, or closes it if it is open.
                     return new GazeButton("\uE765", null, "Clavier (ouvrir / fermer)");
                 default:
                     return new GazeButton("", null, "Retour");
