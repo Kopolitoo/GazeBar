@@ -38,7 +38,7 @@ namespace GazeBar
         private double _y;
         private bool _hasData;
         private double _lastSampleMs = -1;
-        private long _numeroMesure;   // compteur : +1 à chaque nouvelle mesure reçue
+        private long _measureNumber;   // compteur : +1 à chaque nouvelle mesure reçue
 
         // Calcul de la cadence : on compte les mesures reçues pendant une fenêtre d'une seconde.
         private int _countInWindow;
@@ -56,7 +56,7 @@ namespace GazeBar
         /// l'outil de calibration (voir Calibration.cs, étape 4). Son type est « object »
         /// pour que le reste du programme n'ait pas à connaître Tobii.Interaction.
         /// </summary>
-        public object Hote
+        public object Host
         {
             get { return _host; }
         }
@@ -96,17 +96,17 @@ namespace GazeBar
         public void Start()
         {
             // Les DLL de l'eyetracker ont-elles été trouvées sur le PC ? (voir ChargeurEyetracker.cs)
-            if (!ChargeurEyetracker.Disponible)
+            if (!EyetrackerLoader.Available)
             {
                 IsRunning = false;
-                ErrorMessage = ChargeurEyetracker.Message;
+                ErrorMessage = EyetrackerLoader.Message;
                 App.Log("Regard : pas de connexion : " + ErrorMessage);
                 return;
             }
 
             try
             {
-                ConnecterEyetracker();
+                ConnectEyetracker();
                 IsRunning = true;
                 App.Log("Regard : connecté");
             }
@@ -124,15 +124,15 @@ namespace GazeBar
         /// manquante ferait échouer Start elle-même, hors de son try.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ConnecterEyetracker()
+        private void ConnectEyetracker()
         {
-            Host hote = new Host();
-            _host = hote;
-            GazePointDataStream flux = hote.Streams.CreateGazePointDataStream();
-            _stream = flux;
+            Host host = new Host();
+            _host = host;
+            GazePointDataStream stream = host.Streams.CreateGazePointDataStream();
+            _stream = stream;
 
             // Appelée par Tobii.Interaction, sur l'un de ses threads, à chaque nouvelle mesure.
-            flux.Next += (sender, mesure) => OnGaze(mesure.Data.X, mesure.Data.Y);
+            stream.Next += (sender, measure) => OnGaze(measure.Data.X, measure.Data.Y);
         }
 
         private void OnGaze(double x, double y)
@@ -144,7 +144,7 @@ namespace GazeBar
                 _y = y;
                 _hasData = true;
                 _lastSampleMs = now;
-                _numeroMesure++;
+                _measureNumber++;
 
                 _countInWindow++;
                 double elapsed = now - _windowStartMs;
@@ -166,9 +166,9 @@ namespace GazeBar
                 y = _y;
             }
             // Correction de l'échelle (étape 11, voir Ecran.FacteurRegard) : 1 d'habitude.
-            double facteur = Ecran.FacteurRegard;
-            x *= facteur;
-            y *= facteur;
+            double factor = ScreenMetrics.GazeFactor;
+            x *= factor;
+            y *= factor;
         }
 
         /// <summary>
@@ -181,23 +181,23 @@ namespace GazeBar
         /// L'instant (en millisecondes, sur l'horloge de GazeSource) permet de calculer une
         /// vitesse ou une durée en vrai temps, quelle que soit la cadence.
         /// </summary>
-        public void GetLatest(out double x, out double y, out long numero, out double instantMs)
+        public void GetLatest(out double x, out double y, out long num, out double instantMs)
         {
             lock (_lock)
             {
                 x = _x;
                 y = _y;
-                numero = _numeroMesure;
+                num = _measureNumber;
                 instantMs = _lastSampleMs;
             }
             // Correction de l'échelle (étape 11, voir Ecran.FacteurRegard) : 1 d'habitude.
-            double facteur = Ecran.FacteurRegard;
-            x *= facteur;
-            y *= facteur;
+            double factor = ScreenMetrics.GazeFactor;
+            x *= factor;
+            y *= factor;
         }
 
         /// <summary>L'heure actuelle sur l'horloge de GazeSource, en millisecondes (même échelle que instantMs).</summary>
-        public double MaintenantMs
+        public double NowMs
         {
             get { return _clock.Elapsed.TotalMilliseconds; }
         }

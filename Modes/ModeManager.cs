@@ -39,31 +39,31 @@ namespace GazeBar
         /// seconde, la cadence de la plupart des écrans). Ce n'est qu'un ordre de grandeur :
         /// l'horloge suit l'écran, et les modes mesurent toujours le temps réel (MaintenantMs).
         /// </summary>
-        public const int IntervalleMs = 16;
+        public const int IntervalMs = 16;
 
         // Vrai entre Demarrer et Arreter (l'horloge est branchée sur CompositionTarget.Rendering).
-        private bool _enMarche;
+        private bool _running;
 
         // Heure de l'image déjà traitée : WPF appelle parfois Rendering deux fois pour la même
         // image ; on ne la traite qu'une fois.
-        private TimeSpan _derniereImage = TimeSpan.Zero;
+        private TimeSpan _lastImage = TimeSpan.Zero;
 
         // Instant (ms) où le regard est passé en bas hors de l'écran ; -1 = il n'y est pas.
-        private double _debutEnBasMs = -1;
+        private double _belowStartMs = -1;
 
         // Pour le journal : où était le regard au tic précédent (voir NoterOuEstLeRegard).
-        private string _situationRegard = "";
-        private double _dernierX;
-        private double _dernierY;
+        private string _gazeSituation = "";
+        private double _lastX;
+        private double _lastY;
 
-        public ModeManager(GazeSource regard, OverlayWindow calque)
+        public ModeManager(GazeSource gaze, OverlayWindow layer)
         {
-            Regard = regard;
-            Calque = calque;
-            Clavier = new ClavierRegard(calque);
+            Gaze = gaze;
+            Layer = layer;
+            Keyboard = new GazeKeyboard(layer);
 
             // Étape 11 : l'écran peut changer pendant que GazeBar tourne.
-            Ecran.Change += OnEcranChange;
+            ScreenMetrics.Change += OnScreenChanged;
         }
 
         /// <summary>
@@ -72,87 +72,87 @@ namespace GazeBar
         /// revient au mode mouvement, comme avec la touche Échap : boutons de la souris et
         /// touches Ctrl, Maj, Alt relâchés par sécurité (un glisser-déposer est interrompu).
         /// </summary>
-        private void OnEcranChange()
+        private void OnScreenChanged()
         {
-            if (ModeCourant == null)
+            if (CurrentMode == null)
             {
                 return;
             }
             // Le clavier au regard (étape 12) se redessine aux nouvelles tailles.
-            Clavier.AdapterEcran();
-            if (ModeCourant.AdapterEcran())
+            Keyboard.AdaptToScreen();
+            if (CurrentMode.AdaptToScreen())
             {
-                App.Log("Écran changé : le mode " + ModeCourant.Nom + " continue avec les nouvelles tailles");
+                App.Log("Écran changé : le mode " + CurrentMode.Name + " continue avec les nouvelles tailles");
                 return;
             }
-            App.Log("Écran changé : retour au mode mouvement (le mode " + ModeCourant.Nom + " était placé pour l'ancien écran)");
+            App.Log("Écran changé : retour au mode mouvement (le mode " + CurrentMode.Name + " était placé pour l'ancien écran)");
             MouseInjector.ReleaseAll();
-            InjecteurClavier.RelacherTout();
-            ChangerMode(new ModeMouvement());
+            KeyboardInjector.ReleaseAll();
+            ChangeMode(new MovementMode());
         }
 
         /// <summary>La source du regard (eyetracker).</summary>
-        public GazeSource Regard { get; private set; }
+        public GazeSource Gaze { get; private set; }
 
         /// <summary>La fenêtre transparente plein écran où les modes dessinent.</summary>
-        public OverlayWindow Calque { get; private set; }
+        public OverlayWindow Layer { get; private set; }
 
         /// <summary>
         /// Le clavier au regard (étape 12). Ce n'est pas un mode : il reste affiché pendant les
         /// modes mouvement et regard fixe (voir ClavierRegard).
         /// </summary>
-        public ClavierRegard Clavier { get; private set; }
+        public GazeKeyboard Keyboard { get; private set; }
 
         /// <summary>Le mode en cours (null avant Demarrer).</summary>
-        public Mode ModeCourant { get; private set; }
+        public Mode CurrentMode { get; private set; }
 
         /// <summary>Le mode d'avant, pour pouvoir y revenir (par exemple en fermant le menu).</summary>
-        public Mode ModePrecedent { get; private set; }
+        public Mode PreviousMode { get; private set; }
 
         /// <summary>Déclenché après chaque changement de mode. L'interface peut s'en servir pour s'afficher à jour.</summary>
-        public event Action<Mode> ModeChange;
+        public event Action<Mode> ModeChanged;
 
         /// <summary>
         /// Largeur de l'écran principal, en pixels réels, mesurée par Ecran (étape 11 :
         /// GetSystemMetrics ne voyait pas un changement de résolution fait pendant que GazeBar
         /// tourne, voir NativeMethods.TailleEcranPrincipal).
         /// </summary>
-        public double LargeurEcran
+        public double ScreenWidth
         {
-            get { return Ecran.LargeurPixels; }
+            get { return ScreenMetrics.WidthPixels; }
         }
 
         /// <summary>Hauteur de l'écran principal, en pixels réels, mesurée par Ecran.</summary>
-        public double HauteurEcran
+        public double ScreenHeight
         {
-            get { return Ecran.HauteurPixels; }
+            get { return ScreenMetrics.HeightPixels; }
         }
 
         // ───────────────────────── Commandes ─────────────────────────
 
         /// <summary>Entre dans le premier mode et lance l'horloge.</summary>
-        public void Demarrer(Mode premierMode)
+        public void Start(Mode firstMode)
         {
-            ChangerMode(premierMode);
-            if (!_enMarche)
+            ChangeMode(firstMode);
+            if (!_running)
             {
                 CompositionTarget.Rendering += OnImage;
-                _enMarche = true;
+                _running = true;
             }
         }
 
         /// <summary>Arrête l'horloge et quitte proprement le mode courant (à la fermeture du programme).</summary>
-        public void Arreter()
+        public void Stop()
         {
-            if (_enMarche)
+            if (_running)
             {
                 CompositionTarget.Rendering -= OnImage;
-                _enMarche = false;
+                _running = false;
             }
-            if (ModeCourant != null)
+            if (CurrentMode != null)
             {
-                ModeCourant.Quitter();
-                ModeCourant = null;
+                CurrentMode.Quit();
+                CurrentMode = null;
             }
         }
 
@@ -160,44 +160,44 @@ namespace GazeBar
         /// Passe au mode indiqué : l'ancien mode est rangé (Quitter), puis le nouveau
         /// commence (Entrer). Peut être appelée par un mode lui-même, depuis son Actualiser.
         /// </summary>
-        public void ChangerMode(Mode nouveau)
+        public void ChangeMode(Mode newVal)
         {
-            if (nouveau == null || nouveau == ModeCourant)
+            if (newVal == null || newVal == CurrentMode)
             {
                 return;
             }
 
-            Mode ancien = ModeCourant;
-            if (ancien != null)
+            Mode old = CurrentMode;
+            if (old != null)
             {
-                ancien.Quitter();
+                old.Quit();
             }
 
-            ModePrecedent = ancien;
-            ModeCourant = nouveau;
-            nouveau.Attacher(this);
+            PreviousMode = old;
+            CurrentMode = newVal;
+            newVal.Attach(this);
 
             // Le clavier au regard s'affiche ou se cache selon le nouveau mode (étape 12).
             // AVANT Entrer : la loupe photographie l'écran dès son entrée, sans le clavier.
-            Clavier.SurChangementMode(nouveau);
+            Keyboard.OnModeChange(newVal);
 
-            App.Log("Mode : " + (ancien == null ? "(aucun)" : ancien.Nom) + " → " + nouveau.Nom);
+            App.Log("Mode : " + (old == null ? "(aucun)" : old.Name) + " → " + newVal.Name);
             // Le nouveau mode reçoit la position actuelle du regard pour s'initialiser.
-            nouveau.Entrer(LireRegard());
+            newVal.Enter(ReadGaze());
 
-            Action<Mode> abonnes = ModeChange;
-            if (abonnes != null)
+            Action<Mode> subscribers = ModeChanged;
+            if (subscribers != null)
             {
-                abonnes(nouveau);
+                subscribers(newVal);
             }
         }
 
         /// <summary>Revient au mode d'avant, s'il existe.</summary>
-        public void RevenirAuModePrecedent()
+        public void ReturnToPreviousMode()
         {
-            if (ModePrecedent != null)
+            if (PreviousMode != null)
             {
-                ChangerMode(ModePrecedent);
+                ChangeMode(PreviousMode);
             }
         }
 
@@ -212,18 +212,18 @@ namespace GazeBar
             RenderingEventArgs image = e as RenderingEventArgs;
             if (image != null)
             {
-                if (image.RenderingTime == _derniereImage)
+                if (image.RenderingTime == _lastImage)
                 {
                     return;
                 }
-                _derniereImage = image.RenderingTime;
+                _lastImage = image.RenderingTime;
             }
             OnTick();
         }
 
         private void OnTick()
         {
-            if (ModeCourant == null)
+            if (CurrentMode == null)
             {
                 return;
             }
@@ -233,38 +233,38 @@ namespace GazeBar
             // (Show, Activate), laissent WPF traiter d'autres messages en attendant : l'image
             // suivante pouvait alors arriver, et actualiser le nouveau mode avant la fin de son
             // Entrer (ModeParametres : viseur encore vide → NullReferenceException).
-            if (_dansTic)
+            if (_inTick)
             {
                 return;
             }
-            _dansTic = true;
+            _inTick = true;
             try
             {
-                Tic();
+                Tick();
             }
             finally
             {
-                _dansTic = false;
+                _inTick = false;
             }
         }
 
         // Vrai pendant un tic (voir OnTick).
-        private bool _dansTic;
+        private bool _inTick;
 
-        private void Tic()
+        private void Tick()
         {
 
-            EtatRegard etat = LireRegard();
+            GazeState state = ReadGaze();
 
             try
             {
                 // Le menu s'ouvre-t-il ? Si oui, le mode courant n'est pas actualisé à ce tic.
-                if (SurveillerMenu(etat))
+                if (WatchMenu(state))
                 {
                     return;
                 }
 
-                ModeCourant.Actualiser(etat);
+                CurrentMode.Update(state);
             }
             catch (Exception ex)
             {
@@ -272,8 +272,8 @@ namespace GazeBar
                 // les boutons de la souris et les touches du clavier par sécurité, et
                 // l'horloge continue.
                 MouseInjector.ReleaseAll();
-                InjecteurClavier.RelacherTout();
-                App.Log("ERREUR dans le mode " + ModeCourant.Nom + " : " + ex);
+                KeyboardInjector.ReleaseAll();
+                App.Log("ERREUR dans le mode " + CurrentMode.Name + " : " + ex);
             }
         }
 
@@ -282,30 +282,30 @@ namespace GazeBar
         /// Le minuteur repart de zéro dès que le regard est ailleurs, ou perdu : on ne compte
         /// que ce qu'on voit vraiment. Renvoie vrai si le menu vient de s'ouvrir.
         /// </summary>
-        private bool SurveillerMenu(EtatRegard etat)
+        private bool WatchMenu(GazeState state)
         {
-            NoterOuEstLeRegard(etat);
+            NoteGazePosition(state);
 
-            if (!etat.Disponible || !etat.EnBasHorsEcran)
+            if (!state.Available || !state.BelowScreen)
             {
-                _debutEnBasMs = -1;
+                _belowStartMs = -1;
                 return false;
             }
 
-            if (_debutEnBasMs < 0)
+            if (_belowStartMs < 0)
             {
-                _debutEnBasMs = etat.MaintenantMs;
+                _belowStartMs = state.NowMs;
                 return false;
             }
 
-            if (etat.MaintenantMs - _debutEnBasMs >= Parametres.Courants.DelaiMenu * 1000.0 &&
-                ModeCourant.MenuAutorise)
+            if (state.NowMs - _belowStartMs >= AppSettings.Current.MenuDelay * 1000.0 &&
+                CurrentMode.MenuAllowed)
             {
-                _debutEnBasMs = -1;
+                _belowStartMs = -1;
                 // Étape 12 : clavier affiché (donc mode mouvement) → la barre de menu du
                 // clavier, et non la barre classique (choix de l'utilisateur du 31/10/2026).
-                bool menuClavier = Clavier.Ouvert && ModeCourant is ModeMouvement;
-                ChangerMode(new ModeMenu(menuClavier));
+                bool keyboardMenu = Keyboard.IsOpen && CurrentMode is MovementMode;
+                ChangeMode(new MenuMode(keyboardMenu));
                 return true;
             }
             return false;
@@ -317,18 +317,18 @@ namespace GazeBar
         /// dernière position connue. Sert à vérifier que le PCEye 5 mesure bien le regard
         /// SOUS l'écran (condition pour ouvrir le menu), au lieu de le perdre.
         /// </summary>
-        private void NoterOuEstLeRegard(EtatRegard etat)
+        private void NoteGazePosition(GazeState state)
         {
             string situation;
-            if (!etat.Disponible)
+            if (!state.Available)
             {
                 situation = "perdu";
             }
-            else if (etat.EnBasHorsEcran)
+            else if (state.BelowScreen)
             {
                 situation = "sous l'écran";
             }
-            else if (etat.HorsEcran)
+            else if (state.OffScreen)
             {
                 situation = "hors de l'écran (pas en bas)";
             }
@@ -337,17 +337,17 @@ namespace GazeBar
                 situation = "sur l'écran";
             }
 
-            if (etat.Disponible)
+            if (state.Available)
             {
-                _dernierX = etat.X;
-                _dernierY = etat.Y;
+                _lastX = state.X;
+                _lastY = state.Y;
             }
 
-            if (situation != _situationRegard)
+            if (situation != _gazeSituation)
             {
-                _situationRegard = situation;
-                App.Log("Regard : " + situation + " (dernière position X " + _dernierX.ToString("F0") +
-                        ", Y " + _dernierY.ToString("F0") + " ; écran " + LargeurEcran + " × " + HauteurEcran + ")");
+                _gazeSituation = situation;
+                App.Log("Regard : " + situation + " (dernière position X " + _lastX.ToString("F0") +
+                        ", Y " + _lastY.ToString("F0") + " ; écran " + ScreenWidth + " × " + ScreenHeight + ")");
             }
         }
 
@@ -359,48 +359,48 @@ namespace GazeBar
         /// regard franchement hors de l'écran (pour ouvrir le menu, par exemple) ne déclenche
         /// pas de regard fixe.
         /// </summary>
-        private const double MargeBords4K = 120;
+        private const double EdgesMargin4K = 120;
 
         /// <summary>Prépare la « photo » du regard pour le mode courant.</summary>
-        private EtatRegard LireRegard()
+        private GazeState ReadGaze()
         {
-            EtatRegard etat = new EtatRegard();
-            etat.MaintenantMs = Regard.MaintenantMs;
+            GazeState state = new GazeState();
+            state.NowMs = Gaze.NowMs;
 
-            if (!Regard.IsRunning || !Regard.HasData ||
-                Regard.MsSinceLastSample > Parametres.Courants.AgeMaxMesure)
+            if (!Gaze.IsRunning || !Gaze.HasData ||
+                Gaze.MsSinceLastSample > AppSettings.Current.MaxMeasureAge)
             {
-                etat.Disponible = false;
-                return etat;
+                state.Available = false;
+                return state;
             }
 
             double x;
             double y;
-            long numero;
+            long num;
             double instantMs;
-            Regard.GetLatest(out x, out y, out numero, out instantMs);
+            Gaze.GetLatest(out x, out y, out num, out instantMs);
 
-            double largeur = LargeurEcran;
-            double hauteur = HauteurEcran;
+            double width = ScreenWidth;
+            double height = ScreenHeight;
 
-            etat.Disponible = true;
-            etat.X = x;
-            etat.Y = y;
-            etat.Numero = numero;
-            etat.InstantMesureMs = instantMs;
-            etat.HorsEcran = GazeSource.IsOffScreen(x, y, largeur, hauteur);
-            etat.EnBasHorsEcran = y >= hauteur;
+            state.Available = true;
+            state.X = x;
+            state.Y = y;
+            state.Number = num;
+            state.MeasureTimeMs = instantMs;
+            state.OffScreen = GazeSource.IsOffScreen(x, y, width, height);
+            state.BelowScreen = y >= height;
 
             // La même position, mais ramenée dans l'écran (de 0 à largeur − 1, de 0 à hauteur − 1).
             // Math.Max / Math.Min « bloquent » la valeur entre deux bornes.
-            etat.XEcran = Math.Max(0, Math.Min(largeur - 1, x));
-            etat.YEcran = Math.Max(0, Math.Min(hauteur - 1, y));
+            state.XScreen = Math.Max(0, Math.Min(width - 1, x));
+            state.YScreen = Math.Max(0, Math.Min(height - 1, y));
 
             // Tout près de l'écran ? (Sur l'écran, ou hors de l'écran de moins de la marge.)
-            double marge = Ecran.PxRegard(MargeBords4K);
-            etat.PresDeLEcran = x >= -marge && y >= -marge &&
-                                x < largeur + marge && y < hauteur + marge;
-            return etat;
+            double margin = ScreenMetrics.GazePx(EdgesMargin4K);
+            state.NearScreen = x >= -margin && y >= -margin &&
+                                x < width + margin && y < height + margin;
+            return state;
         }
     }
 }

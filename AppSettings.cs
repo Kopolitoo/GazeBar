@@ -1,0 +1,971 @@
+using System;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Xml;
+
+namespace GazeBar
+{
+    /// <summary>
+    /// MODÈLE : tous les réglages de GazeBar, au même endroit.
+    ///
+    /// Ils remplacent les constantes qui étaient écrites en haut des premiers fichiers
+    /// (GazeMouse.cs et HoldSession.cs, supprimés à l'étape 6). Ils sont lus au démarrage et
+    /// enregistrés dans le fichier :
+    ///     %APPDATA%\GazeBar\parametres.json
+    /// (par exemple C:\Users\Nom\AppData\Roaming\GazeBar\parametres.json).
+    ///
+    /// Le format JSON est du texte lisible, qu'on peut ouvrir avec le Bloc-notes. Attention :
+    /// dans ce fichier, les nombres décimaux s'écrivent avec un POINT (0.3) et non une virgule.
+    ///
+    /// Pour lire et écrire le JSON, on utilise DataContractJsonSerializer, fourni avec
+    /// .NET Framework 4.8 : aucune bibliothèque supplémentaire n'est nécessaire.
+    /// Le principe : on marque la classe avec [DataContract] et chaque réglage à enregistrer
+    /// avec [DataMember]. Le sérialiseur s'occupe du reste.
+    ///
+    /// Les noms des réglages reprennent ceux du cahier des charges, SANS accents
+    /// (DelaiFixation au lieu de DélaiFixation) : ils sont plus faciles à taper et à chercher.
+    ///
+    /// Utilisation dans le code : Parametres.Courants.Lissage, Parametres.Courants.RayonCercle, etc.
+    /// </summary>
+    [DataContract(Name = "Parametres", Namespace = "")]
+    internal sealed class AppSettings
+    {
+        // ───────────────────────── Accès global ─────────────────────────
+
+        /// <summary>
+        /// Les réglages en cours d'utilisation, partagés par tout le programme.
+        /// « static » : il n'en existe qu'un seul exemplaire. Remplacé au démarrage par
+        /// Initialiser(), qui lit le fichier.
+        /// </summary>
+        public static AppSettings Current { get; private set; } = new AppSettings();
+
+        /// <summary>
+        /// Version actuelle du fichier de réglages.
+        ///   1 : étape 1 ;
+        ///   2 : étape 2 — ClicDirect et SuiviSouris passent à « non » par défaut (choix de
+        ///       l'utilisateur du 22/10/2026). Un fichier de version 1 est mis à jour une fois
+        ///       (voir MettreAJour) ;
+        ///   3 : étape 6 — nouveau glisser-déposer : DureePauseAndroid et DureeGlisser
+        ///       remplacent DureeAppuiLong, DelaiDepot, DistanceMinGlisser et DureeMaxAppui,
+        ///       supprimés (règle de l'utilisateur : un réglage qui ne sert plus est retiré) ;
+        ///   4 : étape 9 — LissageJeu passe de 0.7 à 0.16 par défaut (essai de l'utilisateur
+        ///       du 28/10/2026 : à 0.7, le curseur saccadait en souris directe) ;
+        ///   5 : VitesseMaxDefilement passe de 10 à 15 crans/s par défaut (vitesse maximale du
+        ///       défilement augmentée de moitié, demande de l'utilisateur du 28/10/2026) ;
+        ///   6 : étape 10 — disposition des icônes du choix d'action (IconesCouronne,
+        ///       IconesModificateurs, IconesUtilitaires). Rien à corriger : un fichier plus
+        ///       ancien n'a pas ces listes, elles gardent donc la disposition par défaut ;
+        ///   7 : étape 11 — les tailles passent des pixels au POURCENTAGE DE LA HAUTEUR DE
+        ///       L'ÉCRAN (ZoneMorteCurseur, RayonFixation, VitesseMaxFixation, RayonCercle,
+        ///       TailleIcones), et nouveau réglage TailleInterface. Les anciennes valeurs, réglées
+        ///       sur l'écran 4K de l'utilisateur (2160 px de haut), sont converties une fois ;
+        ///   8 : étape 12 — clavier au regard : DelaiTouche, RepetitionTouche, MajusculeAuto et
+        ///       HauteurClavier. Rien à corriger : absents d'un fichier plus ancien, ils
+        ///       gardent leur valeur par défaut ;
+        ///   9 : étape 12 (remarques de l'utilisateur du 01/11/2026) — TailleClavier et
+        ///       ClavierEnHaut. Rien à corriger : absents d'un fichier plus ancien, ils
+        ///       gardent leur valeur par défaut ;
+        ///  10 : étape 14 (« clavier-options ») — DispositionClavier et ZoneSaisie. Rien à
+        ///       corriger : absents d'un fichier plus ancien, ils gardent leur valeur par défaut ;
+        ///  11 : VitesseMaxDefilement passe de 15 à 5 crans/s par défaut (demande de
+        ///       l'utilisateur du 02/11/2026, après le passage au défilement fin), et nouveau
+        ///       réglage DefilerFenetresInactives (oui par défaut ; absent d'un fichier plus
+        ///       ancien, il garde sa valeur par défaut).
+        /// </summary>
+        public const int CurrentVersion = 11;
+
+        /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
+        [DataMember(Order = 0)]
+        public int FileVersion { get; set; }
+
+        // ───────────────────────── Regard ─────────────────────────
+
+        /// <summary>Fraction du chemin parcourue en 16 ms (un tic), entre 0 et 1 (0 = immobile, 1 = regard brut, tremblant). Lissage double, en temps réel : voir Modes/Lisseur.cs.</summary>
+        [DataMember(Order = 10)]
+        public double Smoothing { get; set; }
+
+        /// <summary>
+        /// Anti-tremblement du curseur, en % DE LA HAUTEUR DE L'ÉCRAN (étape 11 ; en pixels
+        /// avant) : en dessous, le curseur ne bouge pas. 0.4 % = 4 px sur un écran de 1080 px.
+        /// Dans le code, utiliser ZoneMorteCurseurPx (la valeur en pixels de l'écran actuel).
+        /// </summary>
+        [DataMember(Order = 11)]
+        public double CursorDeadZone { get; set; }
+
+        /// <summary>Âge maximal d'une mesure du regard, en MILLISECONDES. Au-delà, le regard est considéré comme perdu.</summary>
+        [DataMember(Order = 12)]
+        public double MaxMeasureAge { get; set; }
+
+        // ───────────────────────── Fixation ─────────────────────────
+
+        /// <summary>
+        /// Le regard est « immobile » tant qu'il reste dans ce rayon, en % de la hauteur de
+        /// l'écran (étape 11). 1.4 % = 15 px sur un écran de 1080 px. Dans le code : RayonFixationPx.
+        /// </summary>
+        [DataMember(Order = 20)]
+        public double FixationRadius { get; set; }
+
+        /// <summary>Durée d'immobilité avant le passage en mode regard fixe, en secondes.</summary>
+        [DataMember(Order = 21)]
+        public double FixationDelay { get; set; }
+
+        /// <summary>
+        /// Vitesse maximale du regard pendant une fixation, en % DE LA HAUTEUR DE L'ÉCRAN PAR
+        /// SECONDE (étape 11 ; en pixels par seconde avant). Dans le code : VitesseMaxFixationPx.
+        /// Entre deux mesures, on calcule la vitesse du regard (distance ÷ temps écoulé) :
+        /// au-dessus de cette valeur, l'œil est en train de sauter vers un autre point
+        /// (une « saccade »), ce n'est pas une fixation.
+        /// Réglage ajouté à l'étape 2 (il ne figure pas dans la première version du cahier des
+        /// charges). 42 %/s = 907 px/s sur l'écran 4K (l'ancienne valeur, 900 px/s), soit
+        /// 30 pixels entre deux mesures du PCEye (≈ 30 par seconde).
+        /// </summary>
+        [DataMember(Order = 24)]
+        public double MaxFixationSpeed { get; set; }
+
+        /// <summary>Clic gauche automatique si la fixation se prolonge (oui / non). Non par défaut.</summary>
+        [DataMember(Order = 22)]
+        public bool DirectClick { get; set; }
+
+        /// <summary>Délai supplémentaire après l'entrée en regard fixe avant le clic direct, en secondes.</summary>
+        [DataMember(Order = 23)]
+        public double DirectClickDelay { get; set; }
+
+        // ───────────────────────── Affichage ─────────────────────────
+
+        /// <summary>
+        /// Rayon du cercle du mode mouvement (et zone de sortie du regard fixe), en % de la
+        /// hauteur de l'écran (étape 11). 8.8 % = 190 px en 4K, 95 px en 1080p.
+        /// Dans le code : RayonCerclePx (qui tient compte aussi de [TailleInterface]).
+        /// </summary>
+        [DataMember(Order = 30)]
+        public double CircleRadius { get; set; }
+
+        /// <summary>
+        /// Côté des icônes activables au regard, en % de la hauteur de l'écran (étape 11).
+        /// 5.6 % = 121 px en 4K, 60 px en 1080p. Dans le code : TailleIconesPx.
+        /// </summary>
+        [DataMember(Order = 31)]
+        public double IconSize { get; set; }
+
+        /// <summary>
+        /// Taille de l'interface, en % (étape 11) : 75 (petite), 100 (normale, par défaut),
+        /// 125 (grande) ou 150 (très grande). Agrandit ou réduit tout ce qui est dessiné
+        /// sur le calque (cercle, icônes, barre de menu, textes…), mais pas les réglages du
+        /// regard (rayon de fixation, vitesse maximale, anti-tremblement). Voir Ecran.cs.
+        /// </summary>
+        [DataMember(Order = 33)]
+        public double InterfaceSize { get; set; }
+
+        // ── Les mêmes réglages en PIXELS de l'écran actuel (étape 11). Calculés à chaque
+        //    lecture (l'écran peut changer pendant que GazeBar tourne) et pas enregistrés dans
+        //    le fichier (pas de [DataMember]). C'est eux que les modes utilisent.
+
+        /// <summary>[ZoneMorteCurseur] en pixels de l'écran actuel.</summary>
+        public double CursorDeadZonePx
+        {
+            get { return ScreenMetrics.Percent(CursorDeadZone); }
+        }
+
+        /// <summary>[RayonFixation] en pixels de l'écran actuel.</summary>
+        public double FixationRadiusPx
+        {
+            get { return ScreenMetrics.Percent(FixationRadius); }
+        }
+
+        /// <summary>[VitesseMaxFixation] en pixels par seconde sur l'écran actuel.</summary>
+        public double MaxFixationSpeedPx
+        {
+            get { return ScreenMetrics.Percent(MaxFixationSpeed); }
+        }
+
+        /// <summary>[RayonCercle] en pixels de l'écran actuel, multiplié par [TailleInterface].</summary>
+        public double CircleRadiusPx
+        {
+            get { return ScreenMetrics.InterfacePercent(CircleRadius); }
+        }
+
+        /// <summary>[TailleIcones] en pixels de l'écran actuel, multiplié par [TailleInterface].</summary>
+        public double IconSizePx
+        {
+            get { return ScreenMetrics.InterfacePercent(IconSize); }
+        }
+
+        /// <summary>Afficher le libellé d'une action au survol de son icône (mode apprentissage).</summary>
+        [DataMember(Order = 32)]
+        public bool ShowLabels { get; set; }
+
+        // ───────────────────────── Délais ─────────────────────────
+
+        /// <summary>Durée du regard sur une icône avant son activation, en secondes.</summary>
+        [DataMember(Order = 40)]
+        public double ActivationDelay { get; set; }
+
+        /// <summary>
+        /// Durée du regard sur l'icône d'options du mode regard fixe avant son activation, en
+        /// secondes. Beaucoup plus courte que [DelaiActivation] (demande de l'utilisateur du
+        /// 22/10/2026) : c'est l'icône qu'on regarde le plus souvent, et la regarder par erreur
+        /// n'a pas de conséquence (le choix d'action propose toujours « retour »).
+        /// </summary>
+        [DataMember(Order = 43)]
+        public double OptionsIconDelay { get; set; }
+
+        /// <summary>Durée du regard en bas hors de l'écran avant l'ouverture du menu, en secondes.</summary>
+        [DataMember(Order = 41)]
+        public double MenuDelay { get; set; }
+
+        /// <summary>Durée du regard hors de la barre de menu avant sa fermeture, en secondes.</summary>
+        [DataMember(Order = 42)]
+        public double MenuCloseDelay { get; set; }
+
+        // ───────────────────────── Loupe ─────────────────────────
+
+        /// <summary>Passer par la loupe avant le choix d'action.</summary>
+        [DataMember(Order = 50)]
+        public bool MagnifierBeforeAction { get; set; }
+
+        /// <summary>Agrandissement de la capture en mode loupe (4 = quatre fois plus grand).</summary>
+        [DataMember(Order = 51)]
+        public double MagnifierZoom { get; set; }
+
+        // ───────────────────────── Actions ─────────────────────────
+
+        /// <summary>
+        /// Glisser-déposer « android » : pause entre l'appui du bouton et le début du
+        /// déplacement, en secondes (comme pour déplacer une icône sur un téléphone).
+        /// Remplace l'ancien DureeAppuiLong (étape 6).
+        /// </summary>
+        [DataMember(Order = 60)]
+        public double AndroidPauseDuration { get; set; }
+
+        /// <summary>
+        /// Durée du déplacement du curseur pendant un glisser-déposer, en secondes : le curseur
+        /// va du point de départ au point d'arrivée en ce temps-là, bouton enfoncé.
+        /// Remplace l'ancien DelaiDepot (étape 6) : l'arrivée se fixe maintenant avec [DelaiFixation].
+        /// </summary>
+        [DataMember(Order = 61)]
+        public double DragDuration { get; set; }
+
+        // ───────────────────────── Défilement ─────────────────────────
+
+        // (Étape 8 : l'ancien réglage ZoneNeutreDefilement est supprimé, la zone où rien ne
+        //  défile est maintenant le cercle lui-même, de rayon [RayonCercle]. S'il est encore
+        //  dans parametres.json, il est simplement ignoré à la lecture.)
+
+        /// <summary>
+        /// Vitesse maximale du mode défilement, en crans de molette par seconde (étape 8).
+        /// La vitesse vaut 0 au bord de la zone morte (la moitié de [RayonCercle]) et atteint
+        /// 5 par défaut depuis le 02/11/2026 (15 depuis le 28/10/2026, 10 au début).
+        /// 15 par défaut depuis le 28/10/2026 (10 avant).
+        /// </summary>
+        [DataMember(Order = 71)]
+        public double MaxScrollSpeed { get; set; }
+
+        /// <summary>
+        /// Réglage de Windows « Faire défiler les fenêtres inactives lorsque je pointe dessus »
+        /// (02/11/2026). Oui par défaut : la molette va à la fenêtre sous le curseur, sans avoir
+        /// à cliquer dedans avant. Le fichier de réglages garde le choix ; c'est MoletteWindows
+        /// qui l'applique réellement à Windows (au démarrage et à chaque changement).
+        /// </summary>
+        [DataMember(Order = 72)]
+        public bool ScrollInactiveWindows { get; set; }
+
+        // ───────────────────────── Jeu ─────────────────────────
+
+        /// <summary>
+        /// Lissage du mode jeu, même sens et même calcul que [Lissage] (voir Modes/Lisseur.cs),
+        /// mais réglé à part (demande de l'utilisateur du 28/10/2026). 0.16 par défaut, comme
+        /// le mode mouvement (0.7 au départ : le curseur saccadait beaucoup trop).
+        /// </summary>
+        [DataMember(Order = 80)]
+        public double GameSmoothing { get; set; }
+
+        /// <summary>Multiplicateur des déplacements relatifs en mode jeu.</summary>
+        [DataMember(Order = 81)]
+        public double GameSensitivity { get; set; }
+
+        /// <summary>
+        /// Variante du mode jeu (étape 9, choix de l'utilisateur du 27/10/2026) :
+        ///   « directe »  : le curseur suit le regard (par défaut, pour Mindball Play) ;
+        ///   « relative » : des déplacements sont envoyés au jeu (pour d'autres jeux).
+        /// Écrit en toutes lettres dans parametres.json, pour qu'on le lise facilement.
+        /// </summary>
+        [DataMember(Order = 82)]
+        public string GameMouse { get; set; }
+
+        /// <summary>
+        /// Souris relative du mode jeu : comment traduire le regard en déplacement (étape 9).
+        ///   « suivi »   : le déplacement suit celui du regard (par défaut) ;
+        ///   « manette » : l'écart entre le regard et le centre de l'écran donne la vitesse.
+        /// Réglage ajouté à l'étape 9 : le cahier des charges propose ces deux façons « à tester ».
+        /// </summary>
+        [DataMember(Order = 83)]
+        public string GameRelative { get; set; }
+
+        // Les valeurs possibles de SourisJeu et RelativeJeu, écrites une seule fois.
+        public const string DirectMouseText = "directe";
+        public const string RelativeMouseText = "relative";
+        public const string TrackingRelativeText = "suivi";
+        public const string GamepadRelativeText = "manette";
+
+        /// <summary>Vrai si le mode jeu envoie des déplacements (SourisJeu = « relative »). Pas enregistré dans le fichier.</summary>
+        public bool RelativeMouse
+        {
+            get { return GameMouse == RelativeMouseText; }
+            set { GameMouse = value ? RelativeMouseText : DirectMouseText; }
+        }
+
+        /// <summary>Vrai si la souris relative fonctionne comme une manette (RelativeJeu = « manette »). Pas enregistré.</summary>
+        public bool GamepadRelative
+        {
+            get { return GameRelative == GamepadRelativeText; }
+            set { GameRelative = value ? GamepadRelativeText : TrackingRelativeText; }
+        }
+
+        // ───────────────────────── Général ─────────────────────────
+
+        /// <summary>
+        /// En mode mouvement, le curseur de la souris suit aussi le regard. Non par défaut :
+        /// le curseur ne rejoint alors le regard qu'une fois celui-ci fixé (mode regard fixe).
+        /// </summary>
+        [DataMember(Order = 90)]
+        public bool MouseTracking { get; set; }
+
+        /// <summary>
+        /// Lancer GazeBar à l'ouverture de la session Windows (étape 7). Non par défaut.
+        /// Le fichier de réglages garde le choix ; c'est DemarrageWindows qui l'applique
+        /// réellement, dans le registre de Windows.
+        /// </summary>
+        [DataMember(Order = 91)]
+        public bool StartWithWindows { get; set; }
+
+        // ───────────────────────── Icônes du choix d'action (étape 10) ─────────────────────────
+
+        /// <summary>
+        /// Les actions placées sur les huit emplacements de la couronne du choix d'action, en
+        /// partant du haut à droite dans le sens des aiguilles d'une montre (voir
+        /// DispositionChoixAction). Chaque action est écrite par son nom (par exemple
+        /// "ClicGauche", voir ActionChoix) ; "" = emplacement vide. Se règle dans l'écran de
+        /// configuration des icônes (onglet « Icônes » du mode paramètres).
+        /// </summary>
+        [DataMember(Order = 100)]
+        public string[] CrownIcons { get; set; }
+
+        /// <summary>Les trois emplacements du bord gauche, de haut en bas ("Ctrl", "Maj", "Alt" ou "").</summary>
+        [DataMember(Order = 101)]
+        public string[] ModifierIcons { get; set; }
+
+        /// <summary>Les trois emplacements du bord haut, de gauche à droite ("Copier", "Couper", "Coller" ou "").</summary>
+        [DataMember(Order = 102)]
+        public string[] UtilityIcons { get; set; }
+
+        // ───────────────────────── Clavier au regard (étape 12) ─────────────────────────
+
+        /// <summary>
+        /// Durée du regard sur une touche du clavier avant qu'elle s'active, en secondes.
+        /// Séparée de [DelaiActivation] : on tape souvent plus vite qu'on ne clique.
+        /// </summary>
+        [DataMember(Order = 110)]
+        public double KeyDelay { get; set; }
+
+        /// <summary>
+        /// En gardant le regard sur une touche, elle se retape après un nouveau [DelaiTouche]
+        /// (pour « ll », « ss »…). Non : il faut quitter la touche pour la retaper.
+        /// </summary>
+        [DataMember(Order = 111)]
+        public bool KeyRepeat { get; set; }
+
+        /// <summary>Majuscule automatique après « . », « ? » ou « ! » suivi d'une espace.</summary>
+        [DataMember(Order = 112)]
+        public bool AutoCapitalize { get; set; }
+
+        /// <summary>Hauteur du clavier au regard, en % de la hauteur de l'écran.</summary>
+        [DataMember(Order = 113)]
+        public double KeyboardHeight { get; set; }
+
+        /// <summary>
+        /// Taille du clavier au regard, en % : 100, 75 ou 50 (demande de l'utilisateur du
+        /// 01/11/2026). Largeur ET hauteur sont réduites ensemble : à 50 %, le clavier fait la
+        /// moitié de la largeur de l'écran et la moitié de [HauteurClavier], centré.
+        /// Se règle aussi avec le bouton « Taille » de la barre de menu du clavier.
+        /// </summary>
+        [DataMember(Order = 114)]
+        public double KeyboardSize { get; set; }
+
+        /// <summary>
+        /// Vrai : le clavier est en haut de l'écran ; faux : en bas. Changé par le bouton
+        /// « Haut / bas » de la barre de menu du clavier, et retenu pour la prochaine ouverture
+        /// (demande de l'utilisateur du 01/11/2026).
+        /// </summary>
+        [DataMember(Order = 115)]
+        public bool KeyboardAtTop { get; set; }
+
+        /// <summary>
+        /// La disposition du clavier au regard : le nom d'un fichier du dossier Claviers, sans
+        /// « .json » (par exemple « fr-azerty »). Choisie avec le bouton « Langue » de la barre
+        /// de menu du clavier (étape 14).
+        /// </summary>
+        [DataMember(Order = 116)]
+        public string KeyboardLayout { get; set; }
+
+        /// <summary>
+        /// Vrai : une bande au-dessus des touches montre les derniers mots tapés (la « zone de
+        /// saisie », simple aperçu : le texte part toujours directement dans l'application).
+        /// Bouton « Zone de saisie » de la barre du clavier (étape 14). Pas dans l'onglet Clavier
+        /// des paramètres : il a déjà cinq lignes, le maximum qui tient sur la page.
+        /// </summary>
+        [DataMember(Order = 117)]
+        public bool InputBox { get; set; }
+
+        /// <summary>
+        /// La disposition d'un groupe, lue dans les listes ci-dessus : un tableau avec une
+        /// case par emplacement, null pour un emplacement vide. Pas enregistré tel quel.
+        /// </summary>
+        public ChoiceAction?[] Layout(IconGroup group)
+        {
+            string[] names = Names(group) ?? new string[0];
+            ChoiceAction?[] result = new ChoiceAction?[ActionCatalog.SlotCount(group)];
+            for (int i = 0; i < result.Length && i < names.Length; i++)
+            {
+                result[i] = ActionCatalog.Read(names[i], group);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Place une action sur un emplacement (null = le vider). La même action peut être
+        /// placée sur plusieurs emplacements du groupe (demande de l'utilisateur du
+        /// 28/10/2026). N'enregistre pas le fichier (voir Enregistrer).
+        /// </summary>
+        public void SetSlot(IconGroup group, int num, ChoiceAction? action)
+        {
+            ChoiceAction?[] layout = Layout(group);
+            if (num < 0 || num >= layout.Length)
+            {
+                return;
+            }
+            layout[num] = action;
+            WriteLayout(group, layout);
+        }
+
+        /// <summary>Remet la disposition d'origine des trois groupes (bouton « Défaut » de l'onglet « Icônes »).</summary>
+        public void DefaultIcons()
+        {
+            CrownIcons = DefaultNames(IconGroup.Crown);
+            ModifierIcons = DefaultNames(IconGroup.Modifiers);
+            UtilityIcons = DefaultNames(IconGroup.Utilities);
+        }
+
+        /// <summary>La liste de noms d'un groupe, telle qu'enregistrée dans le fichier.</summary>
+        private string[] Names(IconGroup group)
+        {
+            switch (group)
+            {
+                case IconGroup.Crown:
+                    return CrownIcons;
+                case IconGroup.Modifiers:
+                    return ModifierIcons;
+                default:
+                    return UtilityIcons;
+            }
+        }
+
+        /// <summary>Écrit une disposition (une case par emplacement) dans la liste de noms du groupe.</summary>
+        private void WriteLayout(IconGroup group, ChoiceAction?[] layout)
+        {
+            string[] names = new string[layout.Length];
+            for (int i = 0; i < names.Length; i++)
+            {
+                names[i] = ActionCatalog.Write(layout[i]);
+            }
+            switch (group)
+            {
+                case IconGroup.Crown:
+                    CrownIcons = names;
+                    break;
+                case IconGroup.Modifiers:
+                    ModifierIcons = names;
+                    break;
+                default:
+                    UtilityIcons = names;
+                    break;
+            }
+        }
+
+        private static string[] DefaultNames(IconGroup group)
+        {
+            ChoiceAction[] actions = ActionCatalog.DefaultLayout(group);
+            string[] names = new string[actions.Length];
+            for (int i = 0; i < names.Length; i++)
+            {
+                names[i] = actions[i].ToString();
+            }
+            return names;
+        }
+
+        /// <summary>
+        /// Remet en ordre la liste d'un groupe lue dans le fichier : le bon nombre de cases,
+        /// et les noms inconnus ou d'un autre groupe vidés (une action peut figurer plusieurs
+        /// fois). Une liste absente reprend la disposition par défaut.
+        /// </summary>
+        private void FixIcons(IconGroup group)
+        {
+            if (Names(group) == null)
+            {
+                WriteLayout(group, Convert(ActionCatalog.DefaultLayout(group)));
+                return;
+            }
+            WriteLayout(group, Layout(group));
+        }
+
+        private static ChoiceAction?[] Convert(ChoiceAction[] actions)
+        {
+            ChoiceAction?[] result = new ChoiceAction?[actions.Length];
+            for (int i = 0; i < actions.Length; i++)
+            {
+                result[i] = actions[i];
+            }
+            return result;
+        }
+
+        // ───────────────────────── Valeurs par défaut ─────────────────────────
+
+        /// <summary>Le constructeur : un objet neuf contient les valeurs par défaut.</summary>
+        public AppSettings()
+        {
+            DefaultValues();
+        }
+
+        /// <summary>
+        /// Remet tous les réglages à leur valeur de départ (celles du cahier des charges).
+        /// Le bouton « Défaut » de chaque onglet du mode paramètres (étape 7) ne remet que
+        /// les réglages de son onglet : il lit ces valeurs dans un objet neuf (new Parametres()).
+        /// </summary>
+        public void DefaultValues()
+        {
+            FileVersion = CurrentVersion;
+
+            Smoothing = 0.16;
+            // Tailles en % de la hauteur de l'écran (étape 11) : ce sont les anciennes valeurs
+            // en pixels de l'écran 4K (8, 30, 900, 190, 120) divisées par 21.6, arrondies.
+            CursorDeadZone = 0.4;
+            MaxMeasureAge = 300;
+
+            FixationRadius = 1.4;
+            FixationDelay = 0.8;
+            MaxFixationSpeed = 42;
+            DirectClick = false;
+            DirectClickDelay = 1.5;
+
+            CircleRadius = 8.8;
+            IconSize = 5.6;
+            InterfaceSize = 100;
+            ShowLabels = true;
+
+            ActivationDelay = 0.6;
+            OptionsIconDelay = 0.3;
+            MenuDelay = 0.5;
+            MenuCloseDelay = 1.0;
+
+            MagnifierBeforeAction = true;
+            MagnifierZoom = 4;
+
+            AndroidPauseDuration = 1.0;
+            DragDuration = 0.5;
+
+            MaxScrollSpeed = 5;
+            ScrollInactiveWindows = true;
+
+            GameSmoothing = 0.16;
+            GameSensitivity = 1.0;
+            GameMouse = DirectMouseText;
+            GameRelative = TrackingRelativeText;
+
+            MouseTracking = false;
+            StartWithWindows = false;
+
+            KeyDelay = 0.6;
+            KeyRepeat = true;
+            AutoCapitalize = true;
+            KeyboardHeight = 50;
+            KeyboardSize = 100;
+            KeyboardAtTop = false;
+            KeyboardLayout = GazeBar.KeyboardLayout.DefaultName;
+            InputBox = false;
+
+            DefaultIcons();
+        }
+
+        /// <summary>
+        /// Appelée par le sérialiseur JUSTE AVANT de lire le fichier.
+        ///
+        /// Piège à connaître : à la lecture, DataContractJsonSerializer n'appelle PAS le
+        /// constructeur. Un réglage absent du fichier (par exemple un réglage ajouté dans une
+        /// nouvelle version de GazeBar) vaudrait alors 0 ou « non ». En remplissant d'abord les
+        /// valeurs par défaut ici, un réglage absent garde sa valeur par défaut.
+        /// </summary>
+        [OnDeserializing]
+        private void BeforeReading(StreamingContext context)
+        {
+            DefaultValues();
+        }
+
+        /// <summary>
+        /// Ramène chaque valeur dans des limites raisonnables. Protège contre une faute de
+        /// frappe dans le fichier (un lissage de 30 au lieu de 0.30, un délai négatif…).
+        /// </summary>
+        public void Fix()
+        {
+            Smoothing = Clamp(Smoothing, 0.01, 1);
+            // Limites des tailles en % de la hauteur de l'écran (étape 11).
+            CursorDeadZone = Clamp(CursorDeadZone, 0, 5);
+            MaxMeasureAge = Clamp(MaxMeasureAge, 50, 5000);
+
+            FixationRadius = Clamp(FixationRadius, 0.2, 14);
+            FixationDelay = Clamp(FixationDelay, 0.1, 10);
+            MaxFixationSpeed = Clamp(MaxFixationSpeed, 2, 900);
+            DirectClickDelay = Clamp(DirectClickDelay, 0.1, 10);
+
+            CircleRadius = Clamp(CircleRadius, 1, 23);
+            IconSize = Clamp(IconSize, 2, 19);
+            InterfaceSize = Clamp(InterfaceSize, 75, 150);
+
+            ActivationDelay = Clamp(ActivationDelay, 0.1, 10);
+            OptionsIconDelay = Clamp(OptionsIconDelay, 0.1, 10);
+            MenuDelay = Clamp(MenuDelay, 0.1, 10);
+            MenuCloseDelay = Clamp(MenuCloseDelay, 0.1, 10);
+
+            MagnifierZoom = Clamp(MagnifierZoom, 1, 10);
+
+            AndroidPauseDuration = Clamp(AndroidPauseDuration, 0, 10);
+            DragDuration = Clamp(DragDuration, 0.05, 10);
+
+            MaxScrollSpeed = Clamp(MaxScrollSpeed, 1, 100);
+
+            GameSmoothing = Clamp(GameSmoothing, 0.01, 1);
+            GameSensitivity = Clamp(GameSensitivity, 0.1, 10);
+
+            // Un mot inconnu (faute de frappe, majuscules…) redevient la valeur par défaut.
+            string mouse = (GameMouse ?? "").Trim().ToLowerInvariant();
+            GameMouse = mouse == RelativeMouseText ? RelativeMouseText : DirectMouseText;
+            string relative = (GameRelative ?? "").Trim().ToLowerInvariant();
+            GameRelative = relative == GamepadRelativeText ? GamepadRelativeText : TrackingRelativeText;
+
+            KeyDelay = Clamp(KeyDelay, 0.1, 5);
+            KeyboardHeight = Clamp(KeyboardHeight, 25, 75);
+            // Seulement 50, 75 ou 100 : une autre valeur va à la plus proche (60 → 50, 90 → 100).
+            KeyboardSize = Math.Round(Clamp(KeyboardSize, 50, 100) / 25) * 25;
+            // Un nom de fichier vide ou qui contient un chemin (« ..\ », « C:\ »…) redevient la
+            // disposition par défaut : on ne lit que des fichiers du dossier Claviers.
+            if (string.IsNullOrWhiteSpace(KeyboardLayout) ||
+                KeyboardLayout.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                KeyboardLayout.Contains(".."))
+            {
+                KeyboardLayout = GazeBar.KeyboardLayout.DefaultName;
+            }
+            KeyboardLayout = KeyboardLayout.Trim();
+
+            FixIcons(IconGroup.Crown);
+            FixIcons(IconGroup.Modifiers);
+            FixIcons(IconGroup.Utilities);
+        }
+
+        /// <summary>
+        /// Met à jour un fichier écrit par une version plus ancienne de GazeBar.
+        /// Renvoie vrai si quelque chose a changé (il faut alors réenregistrer le fichier).
+        ///
+        /// Pourquoi ? Changer une valeur par défaut ne suffit pas : le fichier déjà présent sur
+        /// l'ordinateur contient l'ancienne valeur (par exemple ClicDirect = true), et c'est
+        /// elle qui serait lue. On la corrige donc une seule fois, puis le numéro de version
+        /// est augmenté : ensuite, un choix fait par l'utilisateur dans le fichier est respecté.
+        /// </summary>
+        public bool Refresh()
+        {
+            if (FileVersion >= CurrentVersion)
+            {
+                return false;
+            }
+
+            if (FileVersion < 2)
+            {
+                DirectClick = false;
+                MouseTracking = false;
+                App.Log("Paramètres : mise à jour en version 2 (ClicDirect et SuiviSouris désactivés)");
+            }
+
+            if (FileVersion < 3)
+            {
+                // Rien à corriger : les anciens réglages du glisser (DureeAppuiLong, DelaiDepot…)
+                // sont simplement ignorés à la lecture, et les nouveaux ont déjà leur valeur par
+                // défaut (voir AvantLecture). Réenregistrer le fichier les fait disparaître.
+                App.Log("Paramètres : mise à jour en version 3 (réglages du glisser-déposer remplacés)");
+            }
+
+            if (FileVersion < 4)
+            {
+                // Seul l'ancien défaut est remplacé : une valeur choisie par l'utilisateur reste.
+                if (Math.Abs(GameSmoothing - 0.7) < 0.001)
+                {
+                    GameSmoothing = 0.16;
+                }
+                App.Log("Paramètres : mise à jour en version 4 (LissageJeu 0.7 → 0.16)");
+            }
+
+            if (FileVersion < 5)
+            {
+                // Seul l'ancien défaut est remplacé : une valeur choisie par l'utilisateur reste.
+                if (Math.Abs(MaxScrollSpeed - 10) < 0.001)
+                {
+                    MaxScrollSpeed = 15;
+                }
+                App.Log("Paramètres : mise à jour en version 5 (VitesseMaxDefilement 10 → 15)");
+            }
+
+            if (FileVersion < 6)
+            {
+                // Rien à corriger : les listes d'icônes absentes du fichier ont gardé la
+                // disposition par défaut (voir AvantLecture). Réenregistrer le fichier les ajoute.
+                App.Log("Paramètres : mise à jour en version 6 (disposition des icônes du choix d'action)");
+            }
+
+            if (FileVersion < 7)
+            {
+                // Les tailles étaient en pixels, réglées sur l'écran 4K de l'utilisateur
+                // (2160 px de haut). Elles deviennent des % de la hauteur de l'écran :
+                // pourcentage = pixels ÷ 2160 × 100 = pixels ÷ 21.6.
+                // On divise TOUJOURS par 2160, et non par la hauteur de l'écran actuel : les
+                // valeurs ont été réglées en 4K, même si l'écran est maintenant en 1920 × 1080.
+                // Exemple : RayonCercle 190 px → 8.8 %.
+                CursorDeadZone = PixelsToPercent(CursorDeadZone, 1);
+                FixationRadius = PixelsToPercent(FixationRadius, 1);
+                MaxFixationSpeed = PixelsToPercent(MaxFixationSpeed, 0);
+                CircleRadius = PixelsToPercent(CircleRadius, 1);
+                IconSize = PixelsToPercent(IconSize, 1);
+                App.Log("Paramètres : mise à jour en version 7 (tailles en % de la hauteur de l'écran)");
+            }
+
+            if (FileVersion < 8)
+            {
+                // Rien à corriger : les réglages du clavier absents du fichier ont gardé leur
+                // valeur par défaut (voir AvantLecture). Réenregistrer le fichier les ajoute.
+                App.Log("Paramètres : mise à jour en version 8 (réglages du clavier au regard)");
+            }
+
+            if (FileVersion < 9)
+            {
+                // Rien à corriger : TailleClavier et ClavierEnHaut, absents du fichier, ont
+                // gardé leur valeur par défaut (voir AvantLecture).
+                App.Log("Paramètres : mise à jour en version 9 (taille et position du clavier)");
+            }
+
+            if (FileVersion < 10)
+            {
+                // Rien à corriger : DispositionClavier et ZoneSaisie, absents du fichier, ont
+                // gardé leur valeur par défaut (voir AvantLecture).
+                App.Log("Paramètres : mise à jour en version 10 (langue du clavier et zone de saisie)");
+            }
+
+            if (FileVersion < 11)
+            {
+                // Seul l'ancien défaut est remplacé : une valeur choisie par l'utilisateur reste.
+                // (Un fichier de version 4 ou moins vient de passer de 10 à 15 juste au-dessus :
+                // il arrive donc lui aussi à 5.)
+                if (Math.Abs(MaxScrollSpeed - 15) < 0.001)
+                {
+                    MaxScrollSpeed = 5;
+                }
+                App.Log("Paramètres : mise à jour en version 11 (VitesseMaxDefilement 15 → 5)");
+            }
+            FileVersion = CurrentVersion;
+            return true;
+        }
+
+        /// <summary>
+        /// Conversion de la version 7 : des pixels de l'écran 4K en % de sa hauteur, arrondi
+        /// à « decimales » chiffres après le point (comme dans le mode paramètres).
+        /// </summary>
+        private static double PixelsToPercent(double pixels, int decimals)
+        {
+            return Math.Round(pixels / ScreenMetrics.ReferenceHeightPixels * 100, decimals);
+        }
+
+        /// <summary>Renvoie la valeur, ramenée entre min et max. Une valeur illisible (NaN) devient min.</summary>
+        private static double Clamp(double val, double min, double max)
+        {
+            if (double.IsNaN(val) || val < min)
+            {
+                return min;
+            }
+            if (val > max)
+            {
+                return max;
+            }
+            return val;
+        }
+
+        // ───────────────────────── Lecture et enregistrement ─────────────────────────
+
+        /// <summary>Chemin complet du fichier de réglages.</summary>
+        public static string FilePath
+        {
+            get
+            {
+                string folder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GazeBar");
+                return Path.Combine(folder, "settings.json");
+            }
+        }
+
+        /// <summary>À appeler une fois au démarrage : lit le fichier et remplit Parametres.Courants.</summary>
+        public static void Initialize()
+        {
+            Current = Load();
+        }
+
+        /// <summary>
+        /// Étape 15 (profils) : remplace d'un coup tous les réglages en cours par « nouveaux »
+        /// (un profil qu'on vient de lire). Rien dans le programme ne garde de copie de
+        /// l'ancien objet : chaque mode relit Parametres.Courants à chaque tic, donc tout
+        /// suit tout de suite. N'enregistre rien : c'est à l'appelant de le faire.
+        /// </summary>
+        public static void Replace(AppSettings newItems)
+        {
+            if (newItems != null)
+            {
+                Current = newItems;
+            }
+        }
+
+        /// <summary>
+        /// Lit un fichier de réglages, met à jour un fichier d'une ancienne version
+        /// (MettreAJour) puis ramène les valeurs dans leurs limites (Corriger).
+        ///
+        /// Utilisée au démarrage (parametres.json) et à l'étape 15 pour charger un profil.
+        /// « misAJour » dit si le fichier venait d'une version plus ancienne.
+        /// En cas de fichier absent ou illisible, une exception est LANCÉE (« throw ») :
+        /// l'appelant décide quoi faire (repartir des valeurs par défaut, afficher un message…).
+        /// </summary>
+        public static AppSettings ReadFile(string path, out bool updated)
+        {
+            AppSettings result;
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AppSettings));
+            using (FileStream file = File.OpenRead(path))
+            {
+                result = (AppSettings)serializer.ReadObject(file);
+            }
+            if (result == null)
+            {
+                // Un fichier qui contient seulement « null » : on le traite comme illisible.
+                throw new InvalidDataException("le fichier ne contient pas de réglages");
+            }
+            // La mise à jour d'un ancien fichier passe AVANT Corriger (étape 11) : les
+            // anciennes tailles en pixels (190…) dépasseraient les nouvelles limites en %
+            // (23 au plus) et seraient abîmées avant d'être converties.
+            updated = result.Refresh();
+            result.Fix();
+            return result;
+        }
+
+        /// <summary>
+        /// Lit le fichier de réglages.
+        ///  - S'il n'existe pas encore (premier lancement), on le crée avec les valeurs par défaut.
+        ///  - S'il est illisible (fichier abîmé, faute de syntaxe), on le met de côté sous le nom
+        ///    parametres.json.illisible, et on repart des valeurs par défaut.
+        /// Dans tous les cas, le programme démarre.
+        /// </summary>
+        public static AppSettings Load()
+        {
+            string path = FilePath;
+            AppSettings result;
+
+            if (!File.Exists(path))
+            {
+                App.Log("Paramètres : premier lancement, création de " + path);
+                result = new AppSettings();
+                result.Save();
+                return result;
+            }
+
+            try
+            {
+                bool updated;
+                result = ReadFile(path, out updated);
+                App.Log("Paramètres : lus depuis " + path);
+                if (updated)
+                {
+                    result.Save();
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                App.Log("Paramètres : fichier illisible, valeurs par défaut utilisées. " + ex.Message);
+                try
+                {
+                    File.Copy(path, path + ".illisible", true);
+                }
+                catch
+                {
+                    // Tant pis pour la copie de secours : l'important est de démarrer.
+                }
+                result = new AppSettings();
+                result.Save();
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Enregistre les réglages dans le fichier, joliment présenté (un réglage par ligne).
+        ///
+        /// On écrit d'abord dans un fichier temporaire, puis on le met à la place de l'ancien :
+        /// si l'ordinateur s'éteint en pleine écriture, l'ancien fichier reste intact.
+        /// </summary>
+        public void Save()
+        {
+            SaveTo(FilePath);
+        }
+
+        /// <summary>
+        /// Enregistre les réglages dans le fichier « chemin » (étape 15 : sert aussi à écrire
+        /// un profil dans Documents\GazeBar\Profils). Le dossier est créé s'il n'existe pas.
+        /// Renvoie faux si l'écriture a échoué (disque plein, dossier protégé…).
+        /// </summary>
+        public bool SaveTo(string path)
+        {
+            string temp = path + ".tmp";
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AppSettings));
+                using (FileStream file = File.Create(temp))
+                using (XmlDictionaryWriter writer = JsonReaderWriterFactory.CreateJsonWriter(
+                           file, new UTF8Encoding(false), false, true, "  "))
+                {
+                    // Paramètres de CreateJsonWriter : le fichier, l'encodage (UTF-8 sans BOM),
+                    // « ne pas fermer le fichier nous-mêmes », « indenter », et l'indentation (2 espaces).
+                    serializer.WriteObject(writer, this);
+                    writer.Flush();
+                }
+
+                if (File.Exists(path))
+                {
+                    File.Replace(temp, path, null);
+                }
+                else
+                {
+                    File.Move(temp, path);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Ne jamais faire planter le programme pour un fichier de réglages.
+                App.Log("Paramètres : échec de l'enregistrement de " + path + " : " + ex.Message);
+                return false;
+            }
+        }
+    }
+}

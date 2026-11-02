@@ -22,7 +22,7 @@ namespace GazeBar
     internal abstract class Mode
     {
         /// <summary>Nom lisible du mode, pour le journal et l'affichage.</summary>
-        public abstract string Nom { get; }
+        public abstract string Name { get; }
 
         /// <summary>
         /// Vrai si le regard en bas hors de l'écran peut ouvrir le menu pendant ce mode.
@@ -33,29 +33,29 @@ namespace GazeBar
         /// La réponse par défaut est donc « non » ; seuls ModeMouvement, ModePause et ModeJeu (étape 9) la
         /// remplacent par « oui » (avec override).
         /// </summary>
-        public virtual bool MenuAutorise
+        public virtual bool MenuAllowed
         {
             get { return false; }
         }
 
         /// <summary>Le gestionnaire qui pilote ce mode. Donné par le ModeManager avant Entrer(regard).</summary>
-        protected ModeManager Gestionnaire { get; private set; }
+        protected ModeManager Manager { get; private set; }
 
         /// <summary>Appelée par le ModeManager uniquement (d'où « internal »).</summary>
-        internal void Attacher(ModeManager gestionnaire)
+        internal void Attach(ModeManager manager)
         {
-            Gestionnaire = gestionnaire;
+            Manager = manager;
         }
 
-        public virtual void Entrer(EtatRegard regard)
-        {
-        }
-
-        public virtual void Actualiser(EtatRegard regard)
+        public virtual void Enter(GazeState gaze)
         {
         }
 
-        public virtual void Quitter()
+        public virtual void Update(GazeState gaze)
+        {
+        }
+
+        public virtual void Quit()
         {
         }
 
@@ -67,7 +67,7 @@ namespace GazeBar
         /// si le mode ne peut pas continuer : ses boutons et sa photo ont été placés pour
         /// l'ancien écran. Le gestionnaire revient alors au mode mouvement.
         /// </summary>
-        public virtual bool AdapterEcran()
+        public virtual bool AdaptToScreen()
         {
             return false;
         }

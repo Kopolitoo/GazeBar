@@ -86,7 +86,7 @@ namespace GazeBar
         /// résolution, quelle que soit la mise à l'échelle. En cas d'échec, on se rabat sur
         /// GetSystemMetrics.
         /// </summary>
-        internal static void TailleEcranPrincipal(out double largeur, out double hauteur)
+        internal static void PrimaryScreenSize(out double width, out double height)
         {
             DEVMODE mode = new DEVMODE();
             mode.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
@@ -94,12 +94,12 @@ namespace GazeBar
             if (EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref mode) &&
                 mode.dmPelsWidth > 0 && mode.dmPelsHeight > 0)
             {
-                largeur = mode.dmPelsWidth;
-                hauteur = mode.dmPelsHeight;
+                width = mode.dmPelsWidth;
+                height = mode.dmPelsHeight;
                 return;
             }
-            largeur = GetSystemMetrics(SM_CXSCREEN);
-            hauteur = GetSystemMetrics(SM_CYSCREEN);
+            width = GetSystemMetrics(SM_CXSCREEN);
+            height = GetSystemMetrics(SM_CYSCREEN);
         }
 
         private const int ENUM_CURRENT_SETTINGS = -1;
@@ -114,7 +114,7 @@ namespace GazeBar
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool EnumDisplaySettings(string nomEcran, int numeroMode, ref DEVMODE mode);
+        private static extern bool EnumDisplaySettings(string screenName, int modeNumber, ref DEVMODE mode);
 
         /// <summary>
         /// Description d'un mode d'affichage (structure DEVMODE de Windows). Seuls dmSize (à
@@ -196,7 +196,7 @@ namespace GazeBar
         [StructLayout(LayoutKind.Explicit)]
         internal struct INPUTUNION
         {
-            [FieldOffset(0)] public MOUSEINPUT mi;
+            [FieldOffset(0)] public MOUSEINPUT mid;
             [FieldOffset(0)] public KEYBDINPUT ki;
         }
 
@@ -249,7 +249,7 @@ namespace GazeBar
         /// 4 Alt. Renvoie -1 si aucune touche ne produit ce caractère.
         /// </summary>
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        internal static extern short VkKeyScanW(char caractere);
+        internal static extern short VkKeyScanW(char character);
 
         /// <summary>Convertit un code de touche en « code matériel » (mode 0 = MAPVK_VK_TO_VSC).</summary>
         [DllImport("user32.dll")]
@@ -453,7 +453,7 @@ namespace GazeBar
         /// 8 octets après le début) : ce drapeau dit que la touche a été SIMULÉE par un
         /// programme (SendInput), et non tapée sur un vrai clavier (étape 12).
         /// </summary>
-        internal const int DecalageDrapeauxCrochet = 8;
+        internal const int HookFlagsOffset = 8;
         internal const int LLKHF_INJECTED = 0x10;
 
         // ───────────────────────── Précision de l'horloge ─────────────────────────
@@ -474,6 +474,6 @@ namespace GazeBar
         /// ChargeurEyetracker.cs). Renvoie IntPtr.Zero en cas d'échec (voir GetLastWin32Error).
         /// </summary>
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern IntPtr LoadLibrary(string cheminDll);
+        internal static extern IntPtr LoadLibrary(string dllPath);
     }
 }

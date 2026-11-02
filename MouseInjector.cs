@@ -79,7 +79,7 @@ namespace GazeBar
         }
 
         /// <summary>Un clic simple : appui puis relâchement, à l'endroit où est le curseur.</summary>
-        public static void Clic(MouseSide side)
+        public static void Click(MouseSide side)
         {
             Press(side);
             Release(side);
@@ -91,10 +91,10 @@ namespace GazeBar
         /// clic » réglé dans Windows (500 ms par défaut) et au même endroit : c'est le cas ici,
         /// puisqu'ils partent à quelques microsecondes d'intervalle sans bouger le curseur.
         /// </summary>
-        public static void DoubleClic()
+        public static void DoubleClick()
         {
-            Clic(MouseSide.Left);
-            Clic(MouseSide.Left);
+            Click(MouseSide.Left);
+            Click(MouseSide.Left);
         }
 
         /// <summary>Relâche tous les boutons que nous avons enfoncés.</summary>
@@ -105,7 +105,7 @@ namespace GazeBar
         }
 
         /// <summary>Vrai si l'un des deux boutons est enfoncé par GazeBar.</summary>
-        public static bool AuMoinsUnEnfonce
+        public static bool AnyPressed
         {
             get
             {
@@ -126,22 +126,22 @@ namespace GazeBar
         /// L'arrondi peut décaler le curseur d'un pixel : à la fin d'un glisser, le mode
         /// remet le curseur exactement en place avec SetCursorPos avant de relâcher.
         /// </summary>
-        public static void DeplacerVers(double x, double y)
+        public static void MoveTo(double x, double y)
         {
             // Taille mesurée par Ecran (la vraie résolution, même après un changement, étape 11).
-            double largeur = Ecran.LargeurPixels;
-            double hauteur = Ecran.HauteurPixels;
-            if (largeur < 2 || hauteur < 2)
+            double width = ScreenMetrics.WidthPixels;
+            double height = ScreenMetrics.HeightPixels;
+            if (width < 2 || height < 2)
             {
                 return;
             }
 
             NativeMethods.INPUT input = new NativeMethods.INPUT();
             input.type = NativeMethods.INPUT_MOUSE;
-            input.u.mi.dx = (int)Math.Round(x * 65535.0 / (largeur - 1));
-            input.u.mi.dy = (int)Math.Round(y * 65535.0 / (hauteur - 1));
-            input.u.mi.dwFlags = NativeMethods.MOUSEEVENTF_MOVE | NativeMethods.MOUSEEVENTF_ABSOLUTE;
-            Envoyer(input);
+            input.u.mid.dx = (int)Math.Round(x * 65535.0 / (width - 1));
+            input.u.mid.dy = (int)Math.Round(y * 65535.0 / (height - 1));
+            input.u.mid.dwFlags = NativeMethods.MOUSEEVENTF_MOVE | NativeMethods.MOUSEEVENTF_ABSOLUTE;
+            SendOne(input);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace GazeBar
         /// l'accélération de la souris (option « Améliorer la précision du pointeur ») : le
         /// curseur peut alors aller un peu plus loin que l'écart demandé.
         /// </summary>
-        public static void DeplacerDe(int dx, int dy)
+        public static void MoveBy(int dx, int dy)
         {
             if (dx == 0 && dy == 0)
             {
@@ -162,10 +162,10 @@ namespace GazeBar
 
             NativeMethods.INPUT input = new NativeMethods.INPUT();
             input.type = NativeMethods.INPUT_MOUSE;
-            input.u.mi.dx = dx;
-            input.u.mi.dy = dy;
-            input.u.mi.dwFlags = NativeMethods.MOUSEEVENTF_MOVE;
-            Envoyer(input);
+            input.u.mid.dx = dx;
+            input.u.mid.dy = dy;
+            input.u.mid.dwFlags = NativeMethods.MOUSEEVENTF_MOVE;
+            SendOne(input);
         }
 
         /// <summary>
@@ -182,18 +182,18 @@ namespace GazeBar
         /// mouseData est déclaré « uint » (nombre sans signe) mais Windows le lit comme un
         /// nombre signé : « unchecked » permet d'y ranger un nombre négatif tel quel.
         /// </summary>
-        public static void Molette(int quantite, bool horizontale)
+        public static void Wheel(int amount, bool horizontal)
         {
-            if (quantite == 0)
+            if (amount == 0)
             {
                 return;
             }
 
             NativeMethods.INPUT input = new NativeMethods.INPUT();
             input.type = NativeMethods.INPUT_MOUSE;
-            input.u.mi.mouseData = unchecked((uint)quantite);
-            input.u.mi.dwFlags = horizontale ? NativeMethods.MOUSEEVENTF_HWHEEL : NativeMethods.MOUSEEVENTF_WHEEL;
-            Envoyer(input);
+            input.u.mid.mouseData = unchecked((uint)amount);
+            input.u.mid.dwFlags = horizontal ? NativeMethods.MOUSEEVENTF_HWHEEL : NativeMethods.MOUSEEVENTF_WHEEL;
+            SendOne(input);
         }
 
         private static bool IsDown(MouseSide side)
@@ -218,12 +218,12 @@ namespace GazeBar
         {
             NativeMethods.INPUT input = new NativeMethods.INPUT();
             input.type = NativeMethods.INPUT_MOUSE;
-            input.u.mi.dwFlags = buttonFlag;   // les autres champs restent à 0 : pas de déplacement
-            return Envoyer(input);
+            input.u.mid.dwFlags = buttonFlag;   // les autres champs restent à 0 : pas de déplacement
+            return SendOne(input);
         }
 
         /// <summary>Envoie une entrée simulée à Windows. Renvoie true si Windows l'a acceptée.</summary>
-        private static bool Envoyer(NativeMethods.INPUT input)
+        private static bool SendOne(NativeMethods.INPUT input)
         {
             NativeMethods.INPUT[] inputs = new NativeMethods.INPUT[] { input };
             uint sent = NativeMethods.SendInput(1, inputs, Marshal.SizeOf(typeof(NativeMethods.INPUT)));

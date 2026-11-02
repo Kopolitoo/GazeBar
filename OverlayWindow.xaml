@@ -73,36 +73,36 @@
         <!-- Surface du clavier au regard (étape 12). Placée EN PREMIER : elle est dessinée
              sous tout le reste (cercle, icône d'options, barre de menu…). Sa taille et son
              contenu sont réglés dans le code (ClavierRegard). -->
-        <Canvas x:Name="SurfaceClavier" Visibility="Collapsed" />
+        <Canvas x:Name="KeyboardSurface" Visibility="Collapsed" />
 
-        <Ellipse x:Name="CercleFond" Stroke="LightGray" StrokeThickness="2" Opacity="0.5" Visibility="Collapsed" />
-        <Ellipse x:Name="Cercle" Stroke="DarkGray" StrokeThickness="1" Opacity="0.3" Visibility="Collapsed" />
+        <Ellipse x:Name="CircleBackground" Stroke="LightGray" StrokeThickness="2" Opacity="0.5" Visibility="Collapsed" />
+        <Ellipse x:Name="Circle" Stroke="DarkGray" StrokeThickness="1" Opacity="0.3" Visibility="Collapsed" />
 
         <!-- Anneau de progression du cercle. Sa forme (Data) est calculée dans le code. -->
-        <Path x:Name="Anneau" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"
+        <Path x:Name="Ring" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"
               StrokeEndLineCap="Round" Visibility="Collapsed" />
 
         <!-- Icône d'options du mode regard fixe. Sa taille et sa place sont réglées dans le code. -->
-        <Border x:Name="Icone" Background="#D0202124" BorderBrush="White" BorderThickness="2"
+        <Border x:Name="OptionsIcon" Background="#D0202124" BorderBrush="White" BorderThickness="2"
                 CornerRadius="12" Visibility="Collapsed">
-            <TextBlock x:Name="IconeSymbole" Text="&#xE712;" Foreground="White"
+            <TextBlock x:Name="OptionsIconSymbol" Text="&#xE712;" Foreground="White"
                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                        HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Border>
-        <Path x:Name="AnneauIcone" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"
+        <Path x:Name="OptionsIconRing" Stroke="#FF00C853" StrokeThickness="6" StrokeStartLineCap="Round"
               StrokeEndLineCap="Round" Visibility="Collapsed" />
-        <Border x:Name="Libelle" Background="#E0202124" CornerRadius="6" Padding="8,2"
+        <Border x:Name="OptionsLabel" Background="#E0202124" CornerRadius="6" Padding="8,2"
                 Visibility="Collapsed">
-            <TextBlock x:Name="LibelleTexte" Text="Options" Foreground="White" FontSize="20" />
+            <TextBlock x:Name="OptionsLabelText" Text="Options" Foreground="White" FontSize="20" />
         </Border>
 
         <!-- Surface du glisser-déposer (étape 6). Sa taille et son contenu sont réglés dans le code. -->
-        <Canvas x:Name="SurfaceGlisser" Visibility="Collapsed" />
+        <Canvas x:Name="DragSurface" Visibility="Collapsed" />
 
         <!-- Surface de la barre de menu (étape 4). Sa taille et son contenu sont réglés dans le code. -->
-        <Canvas x:Name="BarreMenu" Visibility="Collapsed" />
+        <Canvas x:Name="MenuBar" Visibility="Collapsed" />
 
         <!-- Écran noir du mode choix d'action (étape 3). Sa taille est réglée dans le code. -->
-        <Canvas x:Name="EcranChoix" Background="Black" Visibility="Collapsed" />
+        <Canvas x:Name="ChoiceScreen" Background="Black" Visibility="Collapsed" />
     </Canvas>
 </Window>

@@ -27,16 +27,16 @@ namespace GazeBar
     internal static class Calibration
     {
         /// <summary>Les noms d'outil essayés, dans l'ordre (valeurs de l'énumération de Tobii.Interaction).</summary>
-        private static readonly string[] NomsOutil = { "Recalibrate", "RetailCalibration", "Calibrate", "Calibration" };
+        private static readonly string[] ToolNames = { "Recalibrate", "RetailCalibration", "Calibrate", "Calibration" };
 
         /// <summary>
         /// Essaie de lancer la calibration. Renvoie vrai si un appel a été fait sans erreur.
         /// message : ce qui s'est passé, en clair (affiché dans la barre de menu si échec).
         /// </summary>
-        public static bool Lancer(GazeSource regard, out string message)
+        public static bool Launch(GazeSource gaze, out string message)
         {
-            object hote = regard == null ? null : regard.Hote;
-            if (hote == null)
+            object host = gaze == null ? null : gaze.Host;
+            if (host == null)
             {
                 message = "Calibration impossible : le moteur de l'eyetracker n'est pas connecté.";
                 App.Log(message);
@@ -46,37 +46,37 @@ namespace GazeBar
             try
             {
                 // Où chercher : l'objet Host lui-même, puis son « Context » (s'il existe).
-                List<object> cibles = new List<object>();
-                cibles.Add(hote);
-                PropertyInfo proprieteContexte = hote.GetType().GetProperty("Context");
-                if (proprieteContexte != null)
+                List<object> targets = new List<object>();
+                targets.Add(host);
+                PropertyInfo contextProperty = host.GetType().GetProperty("Context");
+                if (contextProperty != null)
                 {
-                    object contexte = proprieteContexte.GetValue(hote, null);
-                    if (contexte != null)
+                    object context = contextProperty.GetValue(host, null);
+                    if (context != null)
                     {
-                        cibles.Add(contexte);
+                        targets.Add(context);
                     }
                 }
 
                 // 1. Pour le diagnostic : on note toutes les méthodes qui ressemblent à ce
                 //    qu'on cherche (« Launch… », « …Calibrat… », « …Configuration… »).
-                foreach (object cible in cibles)
+                foreach (object target in targets)
                 {
-                    foreach (MethodInfo methode in cible.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                    foreach (MethodInfo method in target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
                     {
-                        if (Ressemble(methode.Name))
+                        if (Resembles(method.Name))
                         {
-                            App.Log("Calibration : méthode trouvée : " + cible.GetType().Name + "." + Decrire(methode));
+                            App.Log("Calibration : méthode trouvée : " + target.GetType().Name + "." + Describe(method));
                         }
                     }
                 }
 
                 // 2. L'appel le plus probable : LaunchConfigurationTool(outil, …).
-                foreach (object cible in cibles)
+                foreach (object target in targets)
                 {
-                    foreach (MethodInfo methode in cible.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                    foreach (MethodInfo method in target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
                     {
-                        if (methode.Name == "LaunchConfigurationTool" && EssayerOutil(cible, methode))
+                        if (method.Name == "LaunchConfigurationTool" && TryTool(target, method))
                         {
                             message = "Calibration lancée.";
                             return true;
@@ -85,13 +85,13 @@ namespace GazeBar
                 }
 
                 // 3. À défaut : une méthode dont le nom contient « Recalibrat » ou « Calibrat ».
-                foreach (object cible in cibles)
+                foreach (object target in targets)
                 {
-                    foreach (MethodInfo methode in cible.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                    foreach (MethodInfo method in target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
                     {
-                        if (methode.Name.IndexOf("Calibrat", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                            methode.Name.StartsWith("Launch", StringComparison.OrdinalIgnoreCase) &&
-                            Appeler(cible, methode, null))
+                        if (method.Name.IndexOf("Calibrat", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                            method.Name.StartsWith("Launch", StringComparison.OrdinalIgnoreCase) &&
+                            Call(target, method, null))
                         {
                             message = "Calibration lancée.";
                             return true;
@@ -115,27 +115,27 @@ namespace GazeBar
         /// Essaie d'appeler une méthode du type LaunchConfigurationTool(outil, …) avec chacun
         /// des noms d'outil de NomsOutil. Renvoie vrai au premier appel réussi.
         /// </summary>
-        private static bool EssayerOutil(object cible, MethodInfo methode)
+        private static bool TryTool(object target, MethodInfo method)
         {
             // Le paramètre « outil » est une énumération : on cherche lequel.
-            ParameterInfo parametreOutil = methode.GetParameters().FirstOrDefault(pi => pi.ParameterType.IsEnum);
-            if (parametreOutil == null)
+            ParameterInfo toolParameter = method.GetParameters().FirstOrDefault(pi => pi.ParameterType.IsEnum);
+            if (toolParameter == null)
             {
                 return false;
             }
 
-            Type typeOutil = parametreOutil.ParameterType;
-            App.Log("Calibration : outils proposés (" + typeOutil.Name + ") : " +
-                    string.Join(", ", Enum.GetNames(typeOutil)));
+            Type toolType = toolParameter.ParameterType;
+            App.Log("Calibration : outils proposés (" + toolType.Name + ") : " +
+                    string.Join(", ", Enum.GetNames(toolType)));
 
-            foreach (string nom in NomsOutil)
+            foreach (string name in ToolNames)
             {
-                if (Enum.GetNames(typeOutil).Contains(nom))
+                if (Enum.GetNames(toolType).Contains(name))
                 {
-                    object outil = Enum.Parse(typeOutil, nom);
-                    if (Appeler(cible, methode, outil))
+                    object tool = Enum.Parse(toolType, name);
+                    if (Call(target, method, tool))
                     {
-                        App.Log("Calibration : lancée avec " + typeOutil.Name + "." + nom);
+                        App.Log("Calibration : lancée avec " + toolType.Name + "." + name);
                         return true;
                     }
                 }
@@ -151,50 +151,50 @@ namespace GazeBar
         ///  - le reste reçoit la valeur « vide » de son type (0, faux, null…).
         /// Renvoie vrai si l'appel n'a pas provoqué d'erreur.
         /// </summary>
-        private static bool Appeler(object cible, MethodInfo methode, object outil)
+        private static bool Call(object target, MethodInfo method, object tool)
         {
-            ParameterInfo[] parametres = methode.GetParameters();
-            object[] valeurs = new object[parametres.Length];
+            ParameterInfo[] settings = method.GetParameters();
+            object[] values = new object[settings.Length];
 
-            for (int i = 0; i < parametres.Length; i++)
+            for (int i = 0; i < settings.Length; i++)
             {
-                Type type = parametres[i].ParameterType;
-                if (type.IsEnum && outil != null && type == outil.GetType())
+                Type type = settings[i].ParameterType;
+                if (type.IsEnum && tool != null && type == tool.GetType())
                 {
-                    valeurs[i] = outil;
+                    values[i] = tool;
                 }
                 else if (typeof(Delegate).IsAssignableFrom(type))
                 {
-                    valeurs[i] = CreerFonctionVide(type);
+                    values[i] = CreateEmptyFunction(type);
                 }
-                else if (parametres[i].HasDefaultValue)
+                else if (settings[i].HasDefaultValue)
                 {
-                    valeurs[i] = parametres[i].DefaultValue;
+                    values[i] = settings[i].DefaultValue;
                 }
                 else if (type.IsValueType)
                 {
-                    valeurs[i] = Activator.CreateInstance(type);
+                    values[i] = Activator.CreateInstance(type);
                 }
                 else
                 {
-                    valeurs[i] = null;
+                    values[i] = null;
                 }
             }
 
             try
             {
-                methode.Invoke(cible, valeurs);
+                method.Invoke(target, values);
                 return true;
             }
             catch (TargetInvocationException ex)
             {
                 // L'erreur « vraie » est à l'intérieur (InnerException).
-                App.Log("Calibration : " + Decrire(methode) + " a échoué : " + ex.InnerException);
+                App.Log("Calibration : " + Describe(method) + " a échoué : " + ex.InnerException);
                 return false;
             }
             catch (Exception ex)
             {
-                App.Log("Calibration : appel impossible de " + Decrire(methode) + " : " + ex.Message);
+                App.Log("Calibration : appel impossible de " + Describe(method) + " : " + ex.Message);
                 return false;
             }
         }
@@ -204,30 +204,30 @@ namespace GazeBar
         /// cela les « expressions » de .NET : on décrit la fonction (ses paramètres, un corps
         /// vide) puis on la compile pendant que le programme tourne.
         /// </summary>
-        private static Delegate CreerFonctionVide(Type typeDelegue)
+        private static Delegate CreateEmptyFunction(Type delegateType)
         {
-            MethodInfo invoke = typeDelegue.GetMethod("Invoke");
-            ParameterExpression[] parametres = invoke.GetParameters()
+            MethodInfo invoke = delegateType.GetMethod("Invoke");
+            ParameterExpression[] settings = invoke.GetParameters()
                 .Select(pi => Expression.Parameter(pi.ParameterType, pi.Name))
                 .ToArray();
-            Expression corps = invoke.ReturnType == typeof(void)
+            Expression body = invoke.ReturnType == typeof(void)
                 ? (Expression)Expression.Empty()
                 : Expression.Default(invoke.ReturnType);
-            return Expression.Lambda(typeDelegue, corps, parametres).Compile();
+            return Expression.Lambda(delegateType, body, settings).Compile();
         }
 
-        private static bool Ressemble(string nom)
+        private static bool Resembles(string name)
         {
-            return nom.StartsWith("Launch", StringComparison.OrdinalIgnoreCase) ||
-                   nom.IndexOf("Calibrat", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   nom.IndexOf("Configuration", StringComparison.OrdinalIgnoreCase) >= 0;
+            return name.StartsWith("Launch", StringComparison.OrdinalIgnoreCase) ||
+                   name.IndexOf("Calibrat", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   name.IndexOf("Configuration", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         /// <summary>Écrit une méthode comme « Nom(TypeParam1, TypeParam2) », pour le journal.</summary>
-        private static string Decrire(MethodInfo methode)
+        private static string Describe(MethodInfo method)
         {
-            return methode.Name + "(" +
-                   string.Join(", ", methode.GetParameters().Select(pi => pi.ParameterType.Name)) + ")";
+            return method.Name + "(" +
+                   string.Join(", ", method.GetParameters().Select(pi => pi.ParameterType.Name)) + ")";
         }
     }
 }

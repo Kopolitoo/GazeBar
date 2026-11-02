@@ -45,18 +45,18 @@
          Alt+Tab et les raccourcis. Le fichier .ico contient la même image en plusieurs tailles
          (16, 24, 32, 48, 64 et 256 pixels) : Windows choisit la plus adaptée à l'écran.
          Les fenêtres WPF qui ne précisent pas d'icône reprennent automatiquement celle-ci. -->
-    <ApplicationIcon>Ressources\GazeBar.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\GazeBar.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Étape 12 : les dispositions du clavier au regard (fichiers JSON du dossier Claviers)
          sont copiées à côté de GazeBar.exe à chaque compilation, si elles ont changé.
          GazeBar les lit là (voir DispositionClavier.cs). -->
-    <None Update="Claviers\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Keyboards\*.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- Étape 13 : le dictionnaire de la prédiction de mots (Dictionnaires/fr.txt, tiré de
          Lexique 3.83) et sa licence sont copiés de même à côté de GazeBar.exe
          (voir PredicteurMots.cs). -->
-    <None Update="Dictionnaires\*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Dictionaries\*.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

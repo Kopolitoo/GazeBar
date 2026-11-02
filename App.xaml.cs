@@ -25,9 +25,9 @@ namespace GazeBar
     {
         private CursorSampler _sampler;
         private GazeSource _gaze;
-        private OverlayWindow _calque;
+        private OverlayWindow _layer;
         private ModeManager _modes;
-        private CrochetClavier _clavier;
+        private KeyboardHook _keyboard;
         private DiagnosticWindow _diagnostic;
 
         /// <summary>
@@ -36,11 +36,11 @@ namespace GazeBar
         /// un deuxième GazeBar voit qu'il est déjà pris, et se ferme aussitôt.
         /// « Local\ » : le nom vaut pour la session Windows de l'utilisateur.
         /// </summary>
-        private const string NomVerrou = "Local\\GazeBar-InstanceUnique";
-        private Mutex _verrou;
+        private const string LockName = "Local\\GazeBar-InstanceUnique";
+        private Mutex _singleInstanceMutex;
 
         // Vrai pour un deuxième GazeBar, qui se ferme sans rien faire (voir OnStartup / OnExit).
-        private bool _instanceEnTrop;
+        private bool _extraInstance;
 
         /// <summary>
         /// Appelée par WPF au démarrage du programme.
@@ -52,11 +52,11 @@ namespace GazeBar
             // Une seule instance (cahier des charges, « Fonctionnement général ») : deux GazeBar
             // en même temps dessineraient deux cercles et enverraient des clics en double.
             // Si GazeBar tourne déjà, celui-ci se ferme aussitôt, sans rien afficher.
-            bool premier;
-            _verrou = new Mutex(true, NomVerrou, out premier);
-            if (!premier)
+            bool isFirst;
+            _singleInstanceMutex = new Mutex(true, LockName, out isFirst);
+            if (!isFirst)
             {
-                _instanceEnTrop = true;
+                _extraInstance = true;
                 Log("Deuxième lancement de GazeBar : une instance tourne déjà, fermeture");
                 Shutdown();
                 return;
@@ -71,27 +71,27 @@ namespace GazeBar
             DispatcherUnhandledException += (sender, args) =>
             {
                 MouseInjector.ReleaseAll();
-                InjecteurClavier.RelacherTout();
+                KeyboardInjector.ReleaseAll();
                 Log("ERREUR NON GÉRÉE (interface) : " + args.Exception);
                 args.Handled = true;   // on évite que le programme se ferme brutalement
             };
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 MouseInjector.ReleaseAll();
-                InjecteurClavier.RelacherTout();
+                KeyboardInjector.ReleaseAll();
                 Log("ERREUR NON GÉRÉE (.NET) : " + args.ExceptionObject);
             };
 
             // Les réglages d'abord : tout le reste s'en sert.
-            Parametres.Initialiser();
+            AppSettings.Initialize();
 
             // Démarrage avec Windows : le registre est mis d'accord avec le fichier de réglages
             // (et le chemin du programme est mis à jour s'il a été déplacé).
-            DemarrageWindows.Appliquer(Parametres.Courants.DemarrerAvecWindows);
+            WindowsStartup.Apply(AppSettings.Current.StartWithWindows);
 
             // Défilement des fenêtres inactives (02/11/2026) : le réglage de Windows est mis
             // d'accord avec le fichier de réglages (voir MoletteWindows).
-            MoletteWindows.Appliquer(Parametres.Courants.DefilerFenetresInactives);
+            WheelScroller.Apply(AppSettings.Current.ScrollInactiveWindows);
 
             _sampler = new CursorSampler();
             _sampler.Start();
@@ -100,7 +100,7 @@ namespace GazeBar
             // le programme démarre quand même (voir GazeSource.ErrorMessage).
             // Depuis le 02/11/2026, les DLL de l'eyetracker ne sont plus livrées avec GazeBar : on les
             // cherche d'abord sur le PC (voir ChargeurEyetracker.cs), avant tout usage du regard.
-            ChargeurEyetracker.Installer();
+            EyetrackerLoader.Install();
             _gaze = new GazeSource();
             _gaze.Start();
 
@@ -110,20 +110,20 @@ namespace GazeBar
 
             // Le calque plein écran, transparent aux clics, et le gestionnaire de modes.
             // On démarre dans le mode mouvement (le mode par défaut du cahier des charges).
-            _calque = new OverlayWindow();
-            _modes = new ModeManager(_gaze, _calque);
-            _calque.Show();
-            _calque.RemettreAuPremierPlan();
-            _modes.Demarrer(new ModeMouvement());
+            _layer = new OverlayWindow();
+            _modes = new ModeManager(_gaze, _layer);
+            _layer.Show();
+            _layer.BringToFront();
+            _modes.Start(new MovementMode());
 
             // Correction du 29/10/2026 : si Windows a caché le curseur (GazeBar lancé seul au
             // démarrage, sans souris physique), on le fait réapparaître (voir ReveilCurseur).
-            ReveilCurseur.Verifier();
+            CursorWaker.Check();
 
             // La touche Échap de l'aidant : retour au mode mouvement, depuis n'importe quel mode.
-            _clavier = new CrochetClavier();
-            _clavier.EchapAppuye += OnEchap;
-            _clavier.Installer();
+            _keyboard = new KeyboardHook();
+            _keyboard.EscapePressed += OnEscape;
+            _keyboard.Install();
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace GazeBar
         /// ferme le clavier au regard (étape 12). La touche arrive aussi normalement
         /// au programme actif (elle n'est pas « mangée » par GazeBar).
         /// </summary>
-        private void OnEchap()
+        private void OnEscape()
         {
             if (_modes == null)
             {
@@ -143,48 +143,48 @@ namespace GazeBar
             // Étape 12 : en mode mouvement, Échap ferme le clavier au regard s'il est ouvert.
             // (La touche Échap du clavier au regard, elle, est simulée : elle n'arrive pas ici,
             // voir CrochetClavier.)
-            if (_modes.ModeCourant is ModeMouvement)
+            if (_modes.CurrentMode is MovementMode)
             {
-                if (_modes.Clavier.Ouvert)
+                if (_modes.Keyboard.IsOpen)
                 {
                     App.Log("Touche Échap : fermeture du clavier au regard");
-                    _modes.Clavier.Fermer();
+                    _modes.Keyboard.Close();
                 }
                 return;
             }
 
             // Mode paramètres : pendant une saisie au clavier, Échap annule seulement la saisie.
-            ModeParametres parametres = _modes.ModeCourant as ModeParametres;
-            if (parametres != null && parametres.AnnulerSaisie())
+            SettingsMode settings = _modes.CurrentMode as SettingsMode;
+            if (settings != null && settings.CancelInput())
             {
                 return;
             }
 
             // Écran de configuration des icônes (étape 10) : Échap ramène aux paramètres.
-            ModeConfigIcones configuration = _modes.ModeCourant as ModeConfigIcones;
+            IconConfigMode configuration = _modes.CurrentMode as IconConfigMode;
             if (configuration != null)
             {
-                configuration.RetourParametres();
+                configuration.BackToSettings();
                 return;
             }
             // Listes du clavier (étape 14) : Échap fait comme « Retour » (Mes mots → paramètres).
-            ModeListeClavier liste = _modes.ModeCourant as ModeListeClavier;
-            if (liste != null)
+            KeyboardListMode list = _modes.CurrentMode as KeyboardListMode;
+            if (list != null)
             {
-                liste.Retour();
+                list.Back();
                 return;
             }
             App.Log("Touche Échap : retour au mode mouvement");
             MouseInjector.ReleaseAll();
-            InjecteurClavier.RelacherTout();
-            _modes.ChangerMode(new ModeMouvement());
+            KeyboardInjector.ReleaseAll();
+            _modes.ChangeMode(new MovementMode());
         }
 
         /// <summary>
         /// Ouvre la fenêtre Diagnostic (bouton du menu). Une seule à la fois : si elle est déjà
         /// ouverte, on la remet simplement devant.
         /// </summary>
-        internal void OuvrirDiagnostic()
+        internal void OpenDiagnostic()
         {
             if (_diagnostic == null)
             {
@@ -200,27 +200,27 @@ namespace GazeBar
         /// </summary>
         protected override void OnExit(ExitEventArgs e)
         {
-            if (_instanceEnTrop)
+            if (_extraInstance)
             {
                 // Deuxième GazeBar : il n'a rien démarré, il ne touche à rien (surtout pas aux
                 // boutons de la souris, que le premier GazeBar est peut-être en train de tenir).
-                _verrou.Dispose();
+                _singleInstanceMutex.Dispose();
                 base.OnExit(e);
                 return;
             }
 
             MouseInjector.ReleaseAll();
-            InjecteurClavier.RelacherTout();
-            if (_clavier != null)
+            KeyboardInjector.ReleaseAll();
+            if (_keyboard != null)
             {
-                _clavier.Dispose();
+                _keyboard.Dispose();
             }
             if (_modes != null)
             {
                 // Étape 13 : les nombres d'utilisations des mots du clavier en attente sont
                 // enregistrés dans le dictionnaire personnel.
-                _modes.Clavier.Arreter();
-                _modes.Arreter();
+                _modes.Keyboard.Stop();
+                _modes.Stop();
             }
             if (_sampler != null)
             {
@@ -231,10 +231,10 @@ namespace GazeBar
                 _gaze.Dispose();
             }
             Log("Arrêt de GazeBar");
-            if (_verrou != null)
+            if (_singleInstanceMutex != null)
             {
-                _verrou.ReleaseMutex();
-                _verrou.Dispose();
+                _singleInstanceMutex.ReleaseMutex();
+                _singleInstanceMutex.Dispose();
             }
             base.OnExit(e);
         }
