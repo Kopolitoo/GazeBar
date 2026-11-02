@@ -18,7 +18,7 @@
     <!-- .NET Framework 4.8, fourni avec Windows. -->
     <TargetFramework>net48</TargetFramework>
 
-    <!-- 32 bits : la bibliothèque native de Tobii est copiée en 32 bits par défaut.
+    <!-- 32 bits : la bibliothèque native de l'eyetracker est chargée en 32 bits.
          Cela fonctionne très bien sur un Windows 64 bits. -->
     <PlatformTarget>x86</PlatformTarget>
 
@@ -60,24 +60,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Le regard, via le moteur Tobii (même source que Mill Mouse).
-         02/11/2026 : les DLL de Tobii sont du code propriétaire, on ne les livre PAS avec
+    <!-- Le regard, via le moteur de l'eyetracker (même source que Mill Mouse).
+         02/11/2026 : les DLL de l'eyetracker (Tobii) sont du code propriétaire, on ne les livre PAS avec
          GazeBar. Le paquet sert seulement à COMPILER :
-         - ExcludeAssets="runtime" : les DLL .NET de Tobii ne sont plus copiées à côté de GazeBar.exe ;
+         - ExcludeAssets="runtime" : les DLL .NET de l'eyetracker ne sont plus copiées à côté de GazeBar.exe ;
          - ExcludeAssets="build" : le petit script du paquet, qui copiait la DLL native
            Tobii.EyeX.Client.dll, n'est plus exécuté.
-         Au démarrage, GazeBar va chercher ces DLL sur le PC (voir ChargeurTobii.cs). -->
+         Au démarrage, GazeBar va chercher ces DLL sur le PC (voir ChargeurEyetracker.cs). -->
     <PackageReference Include="Tobii.Interaction" Version="0.7.3" ExcludeAssets="runtime;build" />
   </ItemGroup>
 
-  <!-- Ceinture et bretelles : si une DLL de Tobii se retrouvait quand même à côté de
+  <!-- Ceinture et bretelles : si une DLL de l'eyetracker se retrouvait quand même à côté de
        GazeBar.exe (ancienne compilation, autre réglage…), on l'efface après chaque
        compilation, pour qu'elle ne parte jamais avec ce qu'on distribue.
-       Le sous-dossier « Tobii » (copie faite par l'utilisateur lui-même) n'est pas touché. -->
-  <Target Name="SupprimerDllTobii" AfterTargets="Build">
+       Le sous-dossier « Eyetracker » (copie faite par l'utilisateur lui-même) n'est pas touché. -->
+  <Target Name="SupprimerDllEyetracker" AfterTargets="Build">
     <ItemGroup>
-      <DllTobiiASupprimer Include="$(OutDir)Tobii.*.dll" />
+      <DllEyetrackerASupprimer Include="$(OutDir)Tobii.*.dll" />
     </ItemGroup>
-    <Delete Files="@(DllTobiiASupprimer)" />
+    <Delete Files="@(DllEyetrackerASupprimer)" />
   </Target>
 </Project>

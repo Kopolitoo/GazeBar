@@ -21,7 +21,6 @@ positions-*.csv
 
 # Journaux et résumés de test
 *.log
-tobiiprobe.txt
 
 # Données personnelles : le dictionnaire personnel du futur clavier prédictif ne doit
 # jamais être publié (il peut contenir des noms, adresses, mots de passe tapés...).

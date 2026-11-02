@@ -134,11 +134,11 @@ namespace GazeBar
 
             if (!_gaze.IsRunning)
             {
-                GazeReadText.Text = "Regard Tobii indisponible : " + _gaze.ErrorMessage;
+                GazeReadText.Text = "Regard de l'eyetracker indisponible : " + _gaze.ErrorMessage;
             }
             else if (!_gaze.HasData)
             {
-                GazeReadText.Text = "Regard Tobii : en attente de mesures…";
+                GazeReadText.Text = "Regard de l'eyetracker : en attente de mesures…";
             }
             else
             {
