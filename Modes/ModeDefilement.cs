@@ -59,7 +59,8 @@ namespace GazeBar
     /// défiler ») : en entrant dans ce mode, GazeBar rend active la fenêtre qui est sous P, sans
     /// cliquer (donc sans risque d'ouvrir un lien). Certains logiciels ignorent la molette tant
     /// que leur fenêtre n'est pas active, et si le réglage Windows ci-dessus est désactivé, la
-    /// molette va toujours à la fenêtre active. Le journal note l'état de ce réglage.
+    /// molette va toujours à la fenêtre active. Le journal note l'état de ce réglage, que
+    /// l'on peut changer dans l'onglet « Défilement » des paramètres (voir MoletteWindows).
     ///
     /// Le regard utilisé est lissé ([Lissage]), comme le cercle du mode mouvement : sans cela,
     /// le petit tremblement naturel de l'œil ferait hésiter la vitesse et la direction.
@@ -365,11 +366,8 @@ namespace GazeBar
         {
             try
             {
-                // À quelle fenêtre va la molette ? (réglage Windows, voir NativeMethods)
-                uint routage = 0;
-                bool routageLu = NativeMethods.SystemParametersInfo(NativeMethods.SPI_GETMOUSEWHEELROUTING, 0, ref routage, 0);
-                App.Log("Défilement : réglage Windows « défiler les fenêtres inactives » = " +
-                        (routageLu ? (routage == 2 ? "activé" : "désactivé (" + routage + ")") : "inconnu"));
+                // À quelle fenêtre va la molette ? (réglage Windows, voir MoletteWindows)
+                App.Log("Défilement : réglage Windows « défiler les fenêtres inactives » = " + MoletteWindows.Description());
 
                 NativeMethods.POINT point;
                 point.X = (int)Math.Round(_px);

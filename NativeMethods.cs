@@ -410,6 +410,17 @@ namespace GazeBar
         /// </summary>
         internal const uint SPI_GETMOUSEWHEELROUTING = 0x201C;
 
+        /// <summary>Change ce même réglage (option « Défiler les fenêtres inactives », voir MoletteWindows).</summary>
+        internal const uint SPI_SETMOUSEWHEELROUTING = 0x201D;
+
+        /// <summary>Même fonction, la valeur étant passée directement à la place de son adresse (voir MoletteWindows).</summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SystemParametersInfo(uint action, uint param, IntPtr value, uint winIni);
+
+        internal const uint SPIF_UPDATEINIFILE = 0x01;   // Windows enregistre le changement
+        internal const uint SPIF_SENDCHANGE = 0x02;      // et prévient les programmes ouverts
+
         // ───────────────────────── Touche Échap de l'aidant (étape 4) ─────────────────────────
         //
         // Un « crochet clavier » (hook) permet d'être prévenu de chaque touche appuyée, dans

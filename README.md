@@ -182,6 +182,8 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   Depuis le 02/11/2026 : défilement fin (petites quantités de molette, jusqu'à une fois par
   image, et vitesse lissée qui monte et descend en douceur) ; en entrant, GazeBar rend active la
   fenêtre sous le curseur (sans cliquer), pour ne plus avoir à cliquer avant de défiler.
+  Onglet « Défilement » : option « Défiler les fenêtres inactives » (oui par défaut), qui
+  règle l'option Windows du même nom (`MoletteWindows`, appliquée au démarrage et à chaque changement).
 - `Modes/ModeConfigIcones` (étape 10) : onglet « Icônes » des paramètres, bouton « Configurer les
   icônes ». Même mise en page que le choix d'action (`DispositionChoixAction`, partagée par les
   deux modes), avec un cadre gris à la place de la photo. Les quatorze emplacements (huit de la

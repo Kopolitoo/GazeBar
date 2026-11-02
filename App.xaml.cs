@@ -89,6 +89,10 @@ namespace GazeBar
             // (et le chemin du programme est mis à jour s'il a été déplacé).
             DemarrageWindows.Appliquer(Parametres.Courants.DemarrerAvecWindows);
 
+            // Défilement des fenêtres inactives (02/11/2026) : le réglage de Windows est mis
+            // d'accord avec le fichier de réglages (voir MoletteWindows).
+            MoletteWindows.Appliquer(Parametres.Courants.DefilerFenetresInactives);
+
             _sampler = new CursorSampler();
             _sampler.Start();
 

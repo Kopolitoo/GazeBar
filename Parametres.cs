@@ -70,7 +70,9 @@ namespace GazeBar
         ///  10 : étape 14 (« clavier-options ») — DispositionClavier et ZoneSaisie. Rien à
         ///       corriger : absents d'un fichier plus ancien, ils gardent leur valeur par défaut ;
         ///  11 : VitesseMaxDefilement passe de 15 à 5 crans/s par défaut (demande de
-        ///       l'utilisateur du 02/11/2026, après le passage au défilement fin).
+        ///       l'utilisateur du 02/11/2026, après le passage au défilement fin), et nouveau
+        ///       réglage DefilerFenetresInactives (oui par défaut ; absent d'un fichier plus
+        ///       ancien, il garde sa valeur par défaut).
         /// </summary>
         public const int VersionActuelle = 11;
 
@@ -259,6 +261,15 @@ namespace GazeBar
         /// </summary>
         [DataMember(Order = 71)]
         public double VitesseMaxDefilement { get; set; }
+
+        /// <summary>
+        /// Réglage de Windows « Faire défiler les fenêtres inactives lorsque je pointe dessus »
+        /// (02/11/2026). Oui par défaut : la molette va à la fenêtre sous le curseur, sans avoir
+        /// à cliquer dedans avant. Le fichier de réglages garde le choix ; c'est MoletteWindows
+        /// qui l'applique réellement à Windows (au démarrage et à chaque changement).
+        /// </summary>
+        [DataMember(Order = 72)]
+        public bool DefilerFenetresInactives { get; set; }
 
         // ───────────────────────── Jeu ─────────────────────────
 
@@ -564,6 +575,7 @@ namespace GazeBar
             DureeGlisser = 0.5;
 
             VitesseMaxDefilement = 5;
+            DefilerFenetresInactives = true;
 
             LissageJeu = 0.16;
             SensibiliteJeu = 1.0;
