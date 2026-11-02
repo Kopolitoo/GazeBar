@@ -35,8 +35,8 @@ namespace GazeBar
     /// <summary>
     /// MODÈLE : lit en permanence la position du curseur de la souris.
     ///
-    /// Rappel du principe : TD Control déplace le curseur de Windows là où vous regardez.
-    /// Lire le curseur revient donc à lire un « regard » filtré par TD Control, sur tout
+    /// Rappel du principe : le logiciel de l'eyetracker déplace le curseur de Windows là où vous regardez.
+    /// Lire le curseur revient donc à lire un « regard » filtré par ce logiciel, sur tout
     /// l'écran (contrairement à l'API UWP, limitée à sa propre fenêtre).
     ///
     /// Fonctionnement : un fil d'exécution (« thread ») dédié interroge Windows environ

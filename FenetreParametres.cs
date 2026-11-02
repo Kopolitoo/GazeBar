@@ -680,7 +680,7 @@ namespace GazeBar
             StackPanel textes = new StackPanel();
             textes.Children.Add(Texte("Outils", 36, Blanc, true));
             TextBlock explication = Texte(
-                "Calibration : lance l'outil de calibration Tobii ; GazeBar revient en mode mouvement " +
+                "Calibration : lance l'outil de calibration de l'eyetracker ; GazeBar revient en mode mouvement " +
                 "quand il se ferme. Diagnostic : ouvre la fenêtre qui suit le regard et le curseur.",
                 23, Doux, false);
             explication.TextWrapping = TextWrapping.Wrap;

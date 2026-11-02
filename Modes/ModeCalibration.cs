@@ -8,14 +8,14 @@ namespace GazeBar
     /// MODE CALIBRATION (étape 4 du cahier des charges).
     ///
     /// On y arrive depuis l'onglet « Outils » des paramètres (avant le 29/10/2026 : depuis la
-    /// barre de menu), une fois l'outil de calibration Tobii lancé (voir
-    /// CalibrationTobii.cs). Pendant la calibration, GazeBar ne doit rien faire : le calque
+    /// barre de menu), une fois l'outil de calibration de l'eyetracker lancé (voir
+    /// Calibration.cs). Pendant la calibration, GazeBar ne doit rien faire : le calque
     /// est vide, rien ne suit le regard (sinon le cercle gênerait et une fixation sur un point
     /// de calibration pourrait déclencher une action).
     ///
-    /// « Retour au mode mouvement à la fermeture de l'outil » : Tobii ne nous prévient pas de
+    /// « Retour au mode mouvement à la fermeture de l'outil » : l'eyetracker ne nous prévient pas de
     /// cette fermeture. On la devine ainsi :
-    ///  1. au lancement, l'outil Tobii ouvre sa fenêtre, qui devient la fenêtre active. On
+    ///  1. au lancement, l'outil de l'eyetracker ouvre sa fenêtre, qui devient la fenêtre active. On
     ///     note donc la fenêtre active au début (celle de l'application qu'on utilisait), puis
     ///     on attend qu'une AUTRE fenêtre devienne active, qui n'est pas à GazeBar, et on la
     ///     retient (son titre est noté dans le journal) ;
@@ -56,7 +56,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// L'écran a changé (étape 11) : ce mode continue, car la calibration de Tobii ne doit pas être
+        /// L'écran a changé (étape 11) : ce mode continue, car la calibration de l'eyetracker ne doit pas être
         /// interrompue.
         /// </summary>
         public override bool AdapterEcran()

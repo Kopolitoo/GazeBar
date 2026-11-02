@@ -75,12 +75,12 @@ namespace GazeBar
         public static double EchelleDemarrage { get; } = LireEchelleDemarrage();
 
         /// <summary>
-        /// Correction du regard Tobii (étape 11, correction du 29/10/2026).
+        /// Correction du regard de l'eyetracker (étape 11, correction du 29/10/2026).
         ///
         /// Essai de l'utilisateur : GazeBar lancé en 1920 × 1080 à 100 %, puis écran passé en
-        /// 3840 × 2160 à 150 %. Le journal montre que le regard reçu de Tobii ne dépassait plus
+        /// 3840 × 2160 à 150 %. Le journal montre que le regard reçu de l'eyetracker ne dépassait plus
         /// X 1830 environ (au lieu de 3840) ; revenu à 100 %, il atteignait de nouveau 3802.
-        /// Tobii donne donc le regard dans les unités de l'échelle du DÉMARRAGE : il est réduit
+        /// L'eyetracker donne donc le regard dans les unités de l'échelle du DÉMARRAGE : il est réduit
         /// de 150 ÷ 100 = 1.5. On le multiplie par ce rapport pour retrouver les vrais pixels.
         /// Quand l'échelle n'a pas changé depuis le démarrage (cas habituel), le rapport vaut 1
         /// et rien ne change (c'est pourquoi tout marchait en 4K à 200 % dès le lancement).
@@ -211,7 +211,7 @@ namespace GazeBar
             TexteWindows = texte;
             App.Log("Écran : " + Description() + (premiere ? "" : " (changement détecté)") +
                     " ; échelle au démarrage " + (EchelleDemarrage * 100).ToString("F0") +
-                    " %, regard Tobii × " + FacteurRegard.ToString("0.###"));
+                    " %, regard × " + FacteurRegard.ToString("0.###"));
 
             if (premiere)
             {

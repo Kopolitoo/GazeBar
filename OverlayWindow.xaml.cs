@@ -14,7 +14,7 @@ namespace GazeBar
     ///
     /// Les modes (classes Mode…) n'y dessinent pas directement : ils appellent des méthodes
     /// simples comme AfficherCercle ou MasquerCercle, en PIXELS D'ÉCRAN (les mêmes unités que
-    /// le regard Tobii et le curseur). C'est cette fenêtre qui fait la conversion vers les
+    /// le regard de l'eyetracker et le curseur). C'est cette fenêtre qui fait la conversion vers les
     /// unités de WPF.
     ///
     /// Pourquoi une conversion ? Quand Windows agrandit l'affichage (125 %, 150 %…), WPF ne

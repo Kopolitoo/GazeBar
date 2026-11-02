@@ -23,7 +23,7 @@ Avantage : si un essai échoue, `main` reste intact, et on peut toujours revenir
 3. Se connecter à son compte GitHub si demandé.
 4. Remplir :
    - Nom du dépôt : `GazeBar`
-   - Description : courte phrase (ex. « Barre d'outils de commande oculaire pour Tobii PCEye 5 »)
+   - Description : courte phrase (ex. « Commande de l’ordinateur au regard avec un eyetracker »)
    - Visibilité : **Public** (projet open source)
    - Modèle .gitignore : **Aucun** (le projet a déjà le sien)
    - Licence : à choisir (**MIT** = très permissive ; **GPL-3.0** = les versions dérivées

@@ -29,7 +29,7 @@ namespace GazeBar
     /// au clavier (ModeListeClavier), qui revient ici, sur cet onglet.
     ///
     /// Onglet « Outils » (29/10/2026, boutons déplacés de la barre de menu) :
-    ///   - « Calibration » lance l'outil Tobii puis passe en mode calibration (qui revient au
+    ///   - « Calibration » lance l'outil de l'eyetracker puis passe en mode calibration (qui revient au
     ///     mode mouvement quand l'outil se ferme). Si le lancement échoue, on reste ici et le
     ///     message s'affiche dans l'onglet ;
     ///   - « Diagnostic » revient au mode mouvement et ouvre la fenêtre Diagnostic.
@@ -280,7 +280,7 @@ namespace GazeBar
         /// Bouton « Calibration » de l'onglet « Outils ».
         ///
         /// Difficulté : la fenêtre des paramètres est plein écran et « toujours devant »
-        /// (Topmost). Si on lançait l'outil Tobii sans rien faire, sa fenêtre serait cachée
+        /// (Topmost). Si on lançait l'outil de l'eyetracker sans rien faire, sa fenêtre serait cachée
         /// derrière. On CACHE donc d'abord la fenêtre des paramètres (Hide : elle existe
         /// toujours, elle n'est simplement plus affichée).
         ///
@@ -302,7 +302,7 @@ namespace GazeBar
             IntPtr fenetreAvant = NativeMethods.GetForegroundWindow();
 
             string message;
-            if (CalibrationTobii.Lancer(Gestionnaire.Regard, out message))
+            if (Calibration.Lancer(Gestionnaire.Regard, out message))
             {
                 // Quitter() fermera la fenêtre des paramètres (déjà cachée).
                 Gestionnaire.ChangerMode(new ModeCalibration(fenetreAvant));

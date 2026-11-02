@@ -96,11 +96,11 @@ namespace GazeBar
             _sampler = new CursorSampler();
             _sampler.Start();
 
-            // Le regard réel, fourni par le moteur Tobii. S'il est indisponible,
+            // Le regard réel, fourni par le moteur de l'eyetracker. S'il est indisponible,
             // le programme démarre quand même (voir GazeSource.ErrorMessage).
-            // Depuis le 02/11/2026, les DLL de Tobii ne sont plus livrées avec GazeBar : on les
-            // cherche d'abord sur le PC (voir ChargeurTobii.cs), avant tout usage du regard.
-            ChargeurTobii.Installer();
+            // Depuis le 02/11/2026, les DLL de l'eyetracker ne sont plus livrées avec GazeBar : on les
+            // cherche d'abord sur le PC (voir ChargeurEyetracker.cs), avant tout usage du regard.
+            ChargeurEyetracker.Installer();
             _gaze = new GazeSource();
             _gaze.Start();
 

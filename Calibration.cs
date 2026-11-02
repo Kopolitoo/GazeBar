@@ -7,7 +7,7 @@ using System.Reflection;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : lance l'outil de calibration du moteur Tobii (étape 4, bouton « Calibration »
+    /// MODÈLE : lance l'outil de calibration du moteur de l'eyetracker (étape 4, bouton « Calibration »
     /// de l'onglet « Outils » des paramètres ; avant le 29/10/2026, de la barre de menu).
     ///
     /// Le problème : le paquet Tobii.Interaction 0.7.3 n'a presque pas de documentation, et
@@ -20,13 +20,13 @@ namespace GazeBar
     /// par leur nom (une simple chaîne de caractères). Avantages ici :
     ///  - si le nom est faux, le programme compile quand même : la calibration échoue
     ///    simplement, avec un message dans le journal, au lieu d'empêcher toute la compilation ;
-    ///  - le journal liste les méthodes et les outils réellement proposés par Tobii : il
+    ///  - le journal liste les méthodes et les outils réellement proposés par l'eyetracker : il
     ///    suffira de le lire pour corriger le nom si besoin, puis d'écrire l'appel directement.
     /// Une fois le bon appel trouvé, on pourra remplacer tout ce fichier par une ligne normale.
     /// </summary>
-    internal static class CalibrationTobii
+    internal static class Calibration
     {
-        /// <summary>Les noms d'outil essayés, dans l'ordre (valeurs de l'énumération de Tobii).</summary>
+        /// <summary>Les noms d'outil essayés, dans l'ordre (valeurs de l'énumération de Tobii.Interaction).</summary>
         private static readonly string[] NomsOutil = { "Recalibrate", "RetailCalibration", "Calibrate", "Calibration" };
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace GazeBar
             object hote = regard == null ? null : regard.Hote;
             if (hote == null)
             {
-                message = "Calibration impossible : le moteur Tobii n'est pas connecté.";
+                message = "Calibration impossible : le moteur de l'eyetracker n'est pas connecté.";
                 App.Log(message);
                 return false;
             }
@@ -66,7 +66,7 @@ namespace GazeBar
                     {
                         if (Ressemble(methode.Name))
                         {
-                            App.Log("Calibration : méthode Tobii trouvée : " + cible.GetType().Name + "." + Decrire(methode));
+                            App.Log("Calibration : méthode trouvée : " + cible.GetType().Name + "." + Decrire(methode));
                         }
                     }
                 }
@@ -99,7 +99,7 @@ namespace GazeBar
                     }
                 }
 
-                message = "Calibration : commande Tobii introuvable (voir le journal).";
+                message = "Calibration : commande de calibration introuvable (voir le journal).";
                 App.Log(message);
                 return false;
             }
@@ -125,7 +125,7 @@ namespace GazeBar
             }
 
             Type typeOutil = parametreOutil.ParameterType;
-            App.Log("Calibration : outils proposés par Tobii (" + typeOutil.Name + ") : " +
+            App.Log("Calibration : outils proposés (" + typeOutil.Name + ") : " +
                     string.Join(", ", Enum.GetNames(typeOutil)));
 
             foreach (string nom in NomsOutil)

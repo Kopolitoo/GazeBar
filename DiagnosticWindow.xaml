@@ -1,7 +1,7 @@
 <!--
   DiagnosticWindow.xaml : fenêtre de diagnostic du « regard par le curseur ».
 
-  Elle répond à la question : le curseur piloté par TD Control est-il un bon substitut
+  Elle répond à la question : le curseur piloté par le logiciel de l'eyetracker est-il un bon substitut
   du regard ? Elle montre :
     - la position du curseur (valable sur TOUT l'écran, même hors de cette fenêtre) ;
     - combien de fois par seconde elle change (la cadence réelle) ;

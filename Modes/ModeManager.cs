@@ -91,7 +91,7 @@ namespace GazeBar
             ChangerMode(new ModeMouvement());
         }
 
-        /// <summary>La source du regard Tobii.</summary>
+        /// <summary>La source du regard (eyetracker).</summary>
         public GazeSource Regard { get; private set; }
 
         /// <summary>La fenêtre transparente plein écran où les modes dessinent.</summary>

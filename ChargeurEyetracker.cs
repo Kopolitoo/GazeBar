@@ -7,10 +7,13 @@ using System.Runtime.InteropServices;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : trouve et charge les DLL de Tobii au démarrage, SANS qu'elles soient livrées
+    /// MODÈLE : trouve et charge les DLL de l'eyetracker au démarrage, SANS qu'elles soient livrées
     /// avec GazeBar (02/11/2026).
     ///
-    /// Pourquoi ? Les DLL de Tobii sont du code propriétaire : on ne veut pas les distribuer
+    /// L'eyetracker est lu avec la bibliothèque Tobii.Interaction (Tobii Core SDK) : les noms de
+    /// fichiers et de dossiers ci-dessous sont donc ceux de Tobii, ils ne peuvent pas changer.
+    ///
+    /// Pourquoi ? Les DLL de l'eyetracker sont du code propriétaire : on ne veut pas les distribuer
     /// avec GazeBar. Le paquet NuGet Tobii.Interaction sert donc seulement à COMPILER
     /// (voir GazeBar.csproj : ses DLL ne sont plus copiées à côté de GazeBar.exe). Au
     /// lancement, c'est ce fichier qui va les chercher là où elles sont déjà sur le PC.
@@ -22,25 +25,25 @@ namespace GazeBar
     ///    (Assembly.LoadFrom).
     ///  - Tobii.EyeX.Client.dll : une DLL « native » (écrite en C), appelée par
     ///    Tobii.Interaction.Net.dll avec [DllImport]. On la charge nous-mêmes à l'avance avec
-    ///    la fonction LoadLibrary de Windows : quand Tobii la demandera ensuite par son nom,
-    ///    Windows verra qu'elle est déjà chargée et la réutilisera.
+    ///    la fonction LoadLibrary de Windows : quand Tobii.Interaction.Net.dll la demandera
+    ///    ensuite par son nom, Windows verra qu'elle est déjà chargée et la réutilisera.
     ///
     /// Où chercher, dans l'ordre :
-    ///  1. le sous-dossier « Tobii » à côté de GazeBar.exe (si l'utilisateur y a copié les DLL
+    ///  1. le sous-dossier « Eyetracker » à côté de GazeBar.exe (si l'utilisateur y a copié les DLL
     ///     lui-même, voir le README) ;
-    ///  2. les dossiers d'installation des logiciels Tobii (Program Files) ;
+    ///  2. les dossiers d'installation des logiciels du fabricant de l'eyetracker (Program Files) ;
     ///  3. le « cache NuGet » de Visual Studio (%USERPROFILE%\.nuget\packages) : c'est là que
     ///     Visual Studio range le paquet téléchargé, donc toujours présent sur le PC de
     ///     développement.
     ///
     /// Important : ce code n'a pas pu être compilé ni essayé.
     /// </summary>
-    internal static class ChargeurTobii
+    internal static class ChargeurEyetracker
     {
-        /// <summary>Les deux DLL .NET de Tobii (sans l'extension).</summary>
+        /// <summary>Les deux DLL .NET de l'eyetracker (sans l'extension).</summary>
         private static readonly string[] DllNet = { "Tobii.Interaction.Net", "Tobii.Interaction.Model" };
 
-        /// <summary>La DLL native de Tobii.</summary>
+        /// <summary>La DLL native de l'eyetracker.</summary>
         private const string DllNative = "Tobii.EyeX.Client.dll";
 
         /// <summary>Le dossier où les DLL .NET ont été trouvées (null si introuvables).</summary>
@@ -52,7 +55,7 @@ namespace GazeBar
 
         private static bool _installe;
 
-        /// <summary>Vrai si les DLL de Tobii ont été trouvées.</summary>
+        /// <summary>Vrai si les DLL de l'eyetracker ont été trouvées.</summary>
         public static bool Disponible { get; private set; }
 
         /// <summary>Ce qui s'est passé, en clair (affiché dans Diagnostic si les DLL manquent).</summary>
@@ -85,12 +88,12 @@ namespace GazeBar
                 if (_dossierNet == null)
                 {
                     Disponible = false;
-                    Message = "DLL de Tobii introuvables (Tobii.Interaction.Net.dll). Voir le README, " +
+                    Message = "DLL de l'eyetracker introuvables (Tobii.Interaction.Net.dll). Voir le README, " +
                               "section « Installation ».";
-                    App.Log("Tobii : " + Message);
+                    App.Log("Eyetracker : " + Message);
                     return;
                 }
-                App.Log("Tobii : DLL .NET trouvées dans " + _dossierNet);
+                App.Log("Eyetracker : DLL .NET trouvées dans " + _dossierNet);
 
                 // 2. La DLL native, en 32 bits (GazeBar est un programme 32 bits : une DLL
                 //    64 bits ne peut pas s'y charger). On la cherche d'abord à côté des DLL .NET
@@ -101,19 +104,19 @@ namespace GazeBar
                     // Pas forcément grave : Windows la cherchera aussi de lui-même (dossiers
                     // système, PATH). Si elle manque vraiment, la connexion au regard échouera
                     // avec un message dans le journal.
-                    App.Log("Tobii : " + DllNative + " (32 bits) introuvable, Windows la cherchera lui-même");
+                    App.Log("Eyetracker : " + DllNative + " (32 bits) introuvable, Windows la cherchera lui-même");
                 }
                 else if (NativeMethods.LoadLibrary(native) == IntPtr.Zero)
                 {
-                    App.Log("Tobii : échec du chargement de " + native + " (erreur Windows " +
+                    App.Log("Eyetracker : échec du chargement de " + native + " (erreur Windows " +
                             Marshal.GetLastWin32Error() + ")");
                 }
                 else
                 {
-                    App.Log("Tobii : DLL native chargée : " + native);
+                    App.Log("Eyetracker : DLL native chargée : " + native);
                 }
 
-                // 3. On répond désormais à .NET quand il cherche une DLL de Tobii.
+                // 3. On répond désormais à .NET quand il cherche une DLL de l'eyetracker.
                 AppDomain.CurrentDomain.AssemblyResolve += SurAssemblyResolve;
                 Disponible = true;
                 Message = "";
@@ -121,14 +124,14 @@ namespace GazeBar
             catch (Exception ex)
             {
                 Disponible = false;
-                Message = "Erreur en cherchant les DLL de Tobii : " + ex.Message;
-                App.Log("Tobii : " + Message + " : " + ex);
+                Message = "Erreur en cherchant les DLL de l'eyetracker : " + ex.Message;
+                App.Log("Eyetracker : " + Message + " : " + ex);
             }
         }
 
         /// <summary>
         /// Appelée par .NET quand il ne trouve pas une DLL .NET à côté de GazeBar.exe.
-        /// On ne répond que pour les DLL de Tobii ; pour les autres on renvoie null
+        /// On ne répond que pour les DLL de l'eyetracker ; pour les autres on renvoie null
         /// (« je ne sais pas »), et .NET continue comme d'habitude.
         /// </summary>
         private static Assembly SurAssemblyResolve(object sender, ResolveEventArgs args)
@@ -153,13 +156,13 @@ namespace GazeBar
                 string chemin = Path.Combine(_dossierNet, nom + ".dll");
                 if (!File.Exists(chemin))
                 {
-                    App.Log("Tobii : " + nom + ".dll absente de " + _dossierNet);
+                    App.Log("Eyetracker : " + nom + ".dll absente de " + _dossierNet);
                     return null;
                 }
 
                 Assembly assemblage = Assembly.LoadFrom(chemin);
                 _chargees[nom] = assemblage;
-                App.Log("Tobii : chargé " + chemin + " (version " + assemblage.GetName().Version + ")");
+                App.Log("Eyetracker : chargé " + chemin + " (version " + assemblage.GetName().Version + ")");
                 return assemblage;
             }
         }
@@ -171,11 +174,11 @@ namespace GazeBar
         {
             List<string> dossiers = new List<string>();
 
-            // 1. Le sous-dossier « Tobii » à côté de GazeBar.exe.
-            dossiers.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Tobii"));
+            // 1. Le sous-dossier « Eyetracker » à côté de GazeBar.exe.
+            dossiers.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Eyetracker"));
 
-            // 2. Les installations Tobii (on fouille quelques niveaux de sous-dossiers).
-            foreach (string racine in RacinesTobii())
+            // 2. Les installations du fabricant (on fouille quelques niveaux de sous-dossiers).
+            foreach (string racine in RacinesFabricant())
             {
                 ChercherDossiers(racine, DllNet[0] + ".dll", 4, dossiers);
             }
@@ -188,14 +191,14 @@ namespace GazeBar
 
         /// <summary>
         /// Cherche Tobii.EyeX.Client.dll en 32 bits : à côté des DLL .NET, dans le dossier
-        /// « Tobii » de GazeBar, dans les installations Tobii, puis dans le cache NuGet.
+        /// « Eyetracker » de GazeBar, dans les installations du fabricant, puis dans le cache NuGet.
         /// </summary>
         private static string TrouverNative32()
         {
             List<string> dossiers = new List<string>();
             dossiers.Add(_dossierNet);
-            dossiers.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Tobii"));
-            foreach (string racine in RacinesTobii())
+            dossiers.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Eyetracker"));
+            foreach (string racine in RacinesFabricant())
             {
                 ChercherDossiers(racine, DllNative, 4, dossiers);
             }
@@ -213,8 +216,8 @@ namespace GazeBar
             return null;
         }
 
-        /// <summary>Les dossiers où les logiciels Tobii s'installent d'habitude.</summary>
-        private static IEnumerable<string> RacinesTobii()
+        /// <summary>Les dossiers où les logiciels du fabricant s'installent d'habitude.</summary>
+        private static IEnumerable<string> RacinesFabricant()
         {
             string[] programmes =
             {

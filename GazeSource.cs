@@ -6,21 +6,22 @@ using Tobii.Interaction;
 namespace GazeBar
 {
     /// <summary>
-    /// MODÈLE : la vraie position du regard, fournie par le moteur Tobii (« Tobii Interaction »),
-    /// le même que celui utilisé par Mill Mouse. Elle ne dépend plus du curseur de TD Control.
+    /// MODÈLE : la vraie position du regard, fournie par l'eyetracker via la
+    /// bibliothèque Tobii.Interaction (la même que Mill Mouse). Elle ne dépend plus du curseur
+    /// piloté par le logiciel du fabricant.
     ///
     /// Les coordonnées sont en pixels d'écran. Elles peuvent être NÉGATIVES ou dépasser la
     /// taille de l'écran quand on regarde en dehors : c'est utile (menu hors écran, etc.).
     ///
-    /// Si le moteur Tobii n'est pas disponible, le programme continue de fonctionner :
+    /// Si le moteur de l'eyetracker n'est pas disponible, le programme continue de fonctionner :
     /// IsRunning reste faux et ErrorMessage explique pourquoi.
     ///
-    /// Depuis le 02/11/2026, les DLL de Tobii ne sont plus livrées avec GazeBar : elles sont
-    /// cherchées sur le PC au démarrage (voir ChargeurTobii.cs). Pour que GazeBar démarre
-    /// même quand elles sont introuvables, les types de Tobii (Host, GazePointDataStream)
-    /// n'apparaissent plus que dans la méthode ConnecterTobii : .NET ne cherche une DLL qu'au
+    /// Depuis le 02/11/2026, les DLL de l'eyetracker ne sont plus livrées avec GazeBar : elles sont
+    /// cherchées sur le PC au démarrage (voir ChargeurEyetracker.cs). Pour que GazeBar démarre
+    /// même quand elles sont introuvables, les types de Tobii.Interaction (Host, GazePointDataStream)
+    /// n'apparaissent plus que dans la méthode ConnecterEyetracker : .NET ne cherche une DLL qu'au
     /// moment où il prépare (« compile à la volée ») une méthode qui s'en sert. Si la DLL
-    /// manque, l'erreur arrive donc à l'appel de ConnecterTobii, à l'intérieur du try de Start,
+    /// manque, l'erreur arrive donc à l'appel de ConnecterEyetracker, à l'intérieur du try de Start,
     /// au lieu de faire planter tout le programme.
     /// </summary>
     internal sealed class GazeSource : IDisposable
@@ -28,7 +29,7 @@ namespace GazeBar
         private readonly object _lock = new object();
         private readonly Stopwatch _clock = Stopwatch.StartNew();
 
-        // L'objet Host et le flux de regard de Tobii. Volontairement rangés sous des types
+        // L'objet Host et le flux de regard (types de Tobii.Interaction). Volontairement rangés sous des types
         // « neutres » (IDisposable, object) : voir le commentaire en tête de la classe.
         private IDisposable _host;
         private object _stream;
@@ -44,15 +45,15 @@ namespace GazeBar
         private double _windowStartMs;
         private double _samplesPerSecond;
 
-        /// <summary>Vrai si la connexion au moteur Tobii a réussi.</summary>
+        /// <summary>Vrai si la connexion au moteur de l'eyetracker a réussi.</summary>
         public bool IsRunning { get; private set; }
 
         /// <summary>Message d'erreur si la connexion a échoué (sinon vide).</summary>
         public string ErrorMessage { get; private set; }
 
         /// <summary>
-        /// L'objet Host de Tobii (null si la connexion a échoué). Sert uniquement à lancer
-        /// l'outil de calibration (voir CalibrationTobii.cs, étape 4). Son type est « object »
+        /// L'objet Host (Tobii.Interaction) (null si la connexion a échoué). Sert uniquement à lancer
+        /// l'outil de calibration (voir Calibration.cs, étape 4). Son type est « object »
         /// pour que le reste du programme n'ait pas à connaître Tobii.Interaction.
         /// </summary>
         public object Hote
@@ -91,46 +92,46 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Se connecte au moteur Tobii et commence à recevoir le regard.</summary>
+        /// <summary>Se connecte au moteur de l'eyetracker et commence à recevoir le regard.</summary>
         public void Start()
         {
-            // Les DLL de Tobii ont-elles été trouvées sur le PC ? (voir ChargeurTobii.cs)
-            if (!ChargeurTobii.Disponible)
+            // Les DLL de l'eyetracker ont-elles été trouvées sur le PC ? (voir ChargeurEyetracker.cs)
+            if (!ChargeurEyetracker.Disponible)
             {
                 IsRunning = false;
-                ErrorMessage = ChargeurTobii.Message;
-                App.Log("Regard Tobii : pas de connexion : " + ErrorMessage);
+                ErrorMessage = ChargeurEyetracker.Message;
+                App.Log("Regard : pas de connexion : " + ErrorMessage);
                 return;
             }
 
             try
             {
-                ConnecterTobii();
+                ConnecterEyetracker();
                 IsRunning = true;
-                App.Log("Regard Tobii : connecté");
+                App.Log("Regard : connecté");
             }
             catch (Exception ex)
             {
                 IsRunning = false;
                 ErrorMessage = ex.Message;
-                App.Log("Regard Tobii : échec de la connexion : " + ex);
+                App.Log("Regard : échec de la connexion : " + ex);
             }
         }
 
         /// <summary>
-        /// Le seul endroit qui utilise directement les types de Tobii. « NoInlining » interdit
+        /// Le seul endroit qui utilise directement les types de Tobii.Interaction. « NoInlining » interdit
         /// au compilateur de recopier cette méthode à l'intérieur de Start : sinon, une DLL
         /// manquante ferait échouer Start elle-même, hors de son try.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ConnecterTobii()
+        private void ConnecterEyetracker()
         {
             Host hote = new Host();
             _host = hote;
             GazePointDataStream flux = hote.Streams.CreateGazePointDataStream();
             _stream = flux;
 
-            // Appelée par Tobii, sur l'un de ses threads, à chaque nouvelle mesure.
+            // Appelée par Tobii.Interaction, sur l'un de ses threads, à chaque nouvelle mesure.
             flux.Next += (sender, mesure) => OnGaze(mesure.Data.X, mesure.Data.Y);
         }
 

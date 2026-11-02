@@ -1,8 +1,9 @@
 # GazeBar
 
-Logiciel de commande de l'ordinateur au regard pour le Tobii Dynavox PCEye 5, organisé en
-modes (mouvement, regard fixe, choix d'action, menu…). Application WPF (.NET Framework 4.8,
-32 bits), code commenté en français. TD Control est mis en pause pendant l'utilisation de GazeBar.
+Logiciel de commande de l'ordinateur au regard avec un eyetracker (développé et testé avec le
+Tobii Dynavox PCEye 5), organisé en modes (mouvement, regard fixe, choix d'action, menu…).
+Application WPF (.NET Framework 4.8, 32 bits), code commenté en français.
+Le logiciel de commande au regard fourni avec l'eyetracker est mis en pause pendant l'utilisation de GazeBar.
 
 > Depuis l'étape 4, l'ancienne barre d'outils en haut de l'écran a disparu : tout se fait au
 > regard, et la barre de menu s'ouvre en regardant **en bas, hors de l'écran**. Les parties
@@ -13,26 +14,27 @@ modes (mouvement, regard fixe, choix d'action, menu…). Application WPF (.NET F
 
 ## But de cette première version
 
-1. **Vérifier que le curseur piloté par TD Control est un bon substitut du regard** :
+1. **Vérifier que le curseur piloté par le logiciel de l'eyetracker est un bon substitut du regard** :
    cadence, régularité, couverture de tout l'écran.
-2. Offrir trois actions que TD Control ne propose pas :
+2. Offrir trois actions que ce logiciel ne propose pas :
    - **Appui long** (bouton gauche maintenu 1,5 s) ;
    - **Glisser-déposer avec le bouton gauche** ;
    - **Glisser-déposer avec le bouton droit**.
 
 ## Installation
 
-**Prérequis : Téléchargez et installez le pilote officiel Tobii sur le site du constructeur.**
+**Prérequis : un eyetracker compatible (Tobii) ; téléchargez et installez son pilote officiel sur le
+site du constructeur.**
 
 - Visual Studio 2026 avec la charge de travail « Développement d'applications de bureau .NET »
   et le kit de développement .NET Framework 4.8.
-- Le moteur Tobii doit tourner (processus tobii.service / tobii interaction engine), comme pour Mill Mouse.
+- Le moteur de l'eyetracker doit tourner (processus tobii.service / tobii interaction engine), comme pour Mill Mouse.
 - Ouvrir `GazeBar.slnx`, puis F5.
 
 Ce code n'a pas pu être compilé par son auteur : si Visual Studio signale une erreur,
 envoyez-en le texte, elle sera corrigée.
 
-### Les DLL de Tobii ne sont pas livrées avec GazeBar
+### Les DLL de l'eyetracker ne sont pas livrées avec GazeBar
 
 Le regard est lu par trois DLL de Tobii (`Tobii.Interaction.Net.dll`, `Tobii.Interaction.Model.dll`
 et `Tobii.EyeX.Client.dll`). C'est du code propriétaire de Tobii AB : GazeBar ne les contient pas
@@ -40,28 +42,28 @@ et ne les distribue pas. Le paquet NuGet `Tobii.Interaction` sert seulement à c
 ne sont pas copiées à côté de `GazeBar.exe` (et sont effacées du dossier de sortie si elles s'y
 trouvaient).
 
-Au démarrage, GazeBar les cherche lui-même sur le PC (`ChargeurTobii`), dans cet ordre :
+Au démarrage, GazeBar les cherche lui-même sur le PC (`ChargeurEyetracker`), dans cet ordre :
 
-1. le sous-dossier `Tobii` à côté de `GazeBar.exe` ;
-2. les dossiers d'installation des logiciels Tobii (`Program Files\Tobii`, `Program Files\Tobii Dynavox`) ;
+1. le sous-dossier `Eyetracker` à côté de `GazeBar.exe` ;
+2. les dossiers d'installation des logiciels du fabricant (`Program Files\Tobii`, `Program Files\Tobii Dynavox`) ;
 3. le cache NuGet de Visual Studio (`%USERPROFILE%\.nuget\packages\tobii.interaction\0.7.3`) :
    sur le PC où l'on compile GazeBar, il n'y a donc rien à faire.
 
 Sur un autre PC, si elles sont introuvables, la fenêtre Diagnostic l'indique. Il faut alors les
 récupérer soi-même, en acceptant la licence de Tobii : télécharger le paquet `Tobii.Interaction`
 version 0.7.3 sur nuget.org (« Download package »), renommer le fichier `.nupkg` en `.zip`,
-l'ouvrir, et copier dans le sous-dossier `Tobii` de GazeBar les deux DLL de `lib\net45` et
+l'ouvrir, et copier dans le sous-dossier `Eyetracker` de GazeBar les deux DLL de `lib\net45` et
 celle de `build\x86`. Le journal (`gazebar.log`) note où chaque DLL a été trouvée.
 
 ## Principe
 
-Le regard réel est lu par le moteur Tobii (paquet NuGet Tobii.Interaction, classe GazeSource) :
+Le regard réel est lu par le moteur de l'eyetracker (paquet NuGet Tobii.Interaction, classe GazeSource) :
 ~30 mesures/s, y compris hors de l'écran (coordonnées négatives ou supérieures à la taille de l'écran).
-La barre et la fenêtre Diagnostic l'affichent en vert, à côté du curseur de TD Control.
+La barre et la fenêtre Diagnostic l'affichent en vert, à côté du curseur piloté par le logiciel de l'eyetracker.
 
-Pour les boutons : TD Control déplace le curseur de Windows avec le regard. GazeBar lit la position de ce
-curseur (`GetCursorPos`) et injecte seulement des appuis/relâchements de boutons
-(`SendInput`), jamais de déplacement. Pendant qu'un bouton est maintenu, TD Control continue
+Pour les boutons : le logiciel de l'eyetracker déplace le curseur de Windows avec le regard. GazeBar lit
+la position de ce curseur (`GetCursorPos`) et injecte seulement des appuis/relâchements de boutons
+(`SendInput`), jamais de déplacement. Pendant qu'un bouton est maintenu, ce logiciel continue
 de déplacer le curseur : c'est ce qui produit le glisser.
 
 La barre ne prend jamais le focus, pour ne pas perturber la fenêtre où l'on agit.
@@ -234,16 +236,16 @@ personnel.
   fait rien. « Retour » ou Échap ramène à l'onglet « Icônes ». Liste des actions : `CatalogueActions`.
 - `Modes/ModePause` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
   (bouton « Reprendre »).
-- `ChargeurTobii` (02/11/2026) : trouve et charge au démarrage les DLL de Tobii, qui ne sont pas
-  livrées avec GazeBar (voir « Installation »). Les DLL .NET sont fournies à .NET par l'événement
+- `ChargeurEyetracker` (02/11/2026) : trouve et charge au démarrage les DLL de l'eyetracker
+  (Tobii.Interaction), qui ne sont pas livrées avec GazeBar (voir « Installation »). Les DLL .NET sont fournies à .NET par l'événement
   `AssemblyResolve` ; la DLL native est chargée à l'avance par `LoadLibrary`, en 32 bits.
-  `GazeSource` n'utilise les types de Tobii que dans `ConnecterTobii`, pour que GazeBar démarre
+  `GazeSource` n'utilise les types de Tobii.Interaction que dans `ConnecterEyetracker`, pour que GazeBar démarre
   même sans ces DLL.
-- `Modes/ModeCalibration` et `CalibrationTobii` (étape 4) : bouton « Calibration » de l'onglet
+- `Modes/ModeCalibration` et `Calibration` (étape 4) : bouton « Calibration » de l'onglet
   « Outils » des paramètres (avec « Diagnostic » ; tous deux étaient dans la barre de menu avant
-  le 29/10/2026). Lancent l'outil de calibration Tobii
+  le 29/10/2026). Lancent l'outil de calibration de l'eyetracker
   et attendent la fermeture de sa fenêtre pour revenir au mode mouvement. Le nom exact de la
-  commande Tobii n'a pas pu être vérifié : le journal note ce qui a été trouvé et essayé.
+  commande n'a pas pu être vérifié : le journal note ce qui a été trouvé et essayé.
 - `CrochetClavier` (étape 4) : la touche **Échap** ramène au mode mouvement depuis n'importe quel
   mode, pour l'aidant. La touche arrive aussi normalement au programme actif. Depuis l'étape 12,
   en mode mouvement, elle ferme le clavier au regard ; la touche « Esc » du clavier au regard,

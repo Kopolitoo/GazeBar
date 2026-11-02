@@ -26,7 +26,7 @@ namespace GazeBar
             public int Y;
         }
 
-        /// <summary>Lit la position actuelle du curseur de la souris (donc, ici, celle que TD Control pilote avec le regard).</summary>
+        /// <summary>Lit la position actuelle du curseur de la souris (donc, ici, celle que le logiciel de l'eyetracker pilote avec le regard).</summary>
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetCursorPos(out POINT point);
@@ -336,7 +336,7 @@ namespace GazeBar
 
         // ───────────────────────── Fenêtres des autres programmes (étape 4) ─────────────────────────
         //
-        // Pendant la calibration, GazeBar surveille la fenêtre de l'outil Tobii pour savoir
+        // Pendant la calibration, GazeBar surveille la fenêtre de l'outil de l'eyetracker pour savoir
         // quand elle se ferme (voir ModeCalibration).
 
         /// <summary>La fenêtre active (celle qui reçoit le clavier), ou IntPtr.Zero.</summary>
@@ -470,8 +470,8 @@ namespace GazeBar
 
         /// <summary>
         /// Charge une DLL native (écrite en C) à partir de son chemin complet. Sert à charger à
-        /// l'avance la DLL native de Tobii, qui n'est pas livrée avec GazeBar (voir
-        /// ChargeurTobii.cs). Renvoie IntPtr.Zero en cas d'échec (voir GetLastWin32Error).
+        /// l'avance la DLL native de l'eyetracker, qui n'est pas livrée avec GazeBar (voir
+        /// ChargeurEyetracker.cs). Renvoie IntPtr.Zero en cas d'échec (voir GetLastWin32Error).
         /// </summary>
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern IntPtr LoadLibrary(string cheminDll);
