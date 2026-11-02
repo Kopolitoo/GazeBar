@@ -10,7 +10,8 @@ namespace GazeBar
     /// <summary>
     /// MODE LISTE DU CLAVIER (étape 14, « clavier-options »).
     ///
-    /// Deux listes ouvertes depuis la barre de menu du clavier au regard :
+    /// Deux listes : « Langue » s'ouvre depuis la barre de menu du clavier au regard, « Mes
+    /// mots » depuis l'onglet Général des paramètres (demande de l'utilisateur du 02/11/2026) :
     ///   - LANGUE : les dispositions trouvées dans le dossier Claviers (une par fichier JSON).
     ///     Celle qu'on utilise a un bord vert. En regarder une autre la choisit (retenu dans
     ///     parametres.json), puis on revient au clavier ;
@@ -21,13 +22,14 @@ namespace GazeBar
     ///
     /// Mise en page : la même que la liste de la configuration des icônes (étape 10) : écran
     /// noir, rectangle aux bords arrondis sur les trois quarts de l'écran, titre en haut,
-    /// grille d'au plus 4 colonnes × 3 rangées (12 par page), et en bas « Retour au clavier »,
+    /// grille d'au plus 4 colonnes × 3 rangées (12 par page), et en bas « Retour » (au clavier
+    /// pour Langue, aux paramètres pour Mes mots),
     /// entouré de « Page précédente » et « Page suivante » quand la liste ne tient pas sur une
     /// page.
     ///
     /// Le clavier est caché pendant ce mode (ce n'est ni le mode mouvement ni le regard fixe)
     /// et réapparaît au retour en mode mouvement. Le menu du bas ne s'ouvre pas ici ; la
-    /// touche Échap de l'aidant ramène au mode mouvement (App.OnEchap).
+    /// touche Échap de l'aidant fait comme « Retour » (App.OnEchap).
     ///
     /// Les mots sont affichés à l'écran mais jamais écrits dans le journal (vie privée).
     ///
@@ -155,11 +157,21 @@ namespace GazeBar
 
         // ───────────────────────── Les actions ─────────────────────────
 
-        /// <summary>« Retour au clavier » : le mode mouvement, où le clavier réapparaît.</summary>
-        private void RetourClavier()
+        /// <summary>
+        /// Bouton « Retour » ou touche Échap (appelée aussi par App) : Langue → le mode
+        /// mouvement, où le clavier réapparaît ; Mes mots → les paramètres, onglet Général.
+        /// </summary>
+        public void Retour()
         {
-            App.Log(Nom + " : retour au clavier");
-            Gestionnaire.ChangerMode(new ModeMouvement());
+            App.Log(Nom + " : retour");
+            if (_sorte == Sorte.MesMots)
+            {
+                Gestionnaire.ChangerMode(new ModeParametres(CatalogueParametres.NumeroOngletGeneral));
+            }
+            else
+            {
+                Gestionnaire.ChangerMode(new ModeMouvement());
+            }
         }
 
         private void ChangerPage(int decalage)
@@ -278,9 +290,10 @@ namespace GazeBar
             //    E72B / E72A = flèches gauche / droite, E711 = croix (fermer).
             double yBas = haut + h - taille / 2 - policeNom * 2.5;
             double pasBas = taille + 2 * espace;
-            AjouterBouton(calque, ecran, new BoutonRegard("", null, "Retour au clavier"), RetourClavier,
+            string nomRetour = _sorte == Sorte.MesMots ? "Retour aux paramètres" : "Retour au clavier";
+            AjouterBouton(calque, ecran, new BoutonRegard("", null, nomRetour), Retour,
                           centreX, yBas, taille);
-            AjouterTexteCentre(calque, ecran, "Retour au clavier", centreX, yBas + taille / 2 + policeNom * 0.4,
+            AjouterTexteCentre(calque, ecran, nomRetour, centreX, yBas + taille / 2 + policeNom * 0.4,
                                pasBas, policeNom, Doux, false);
             if (_page > 0)
             {

@@ -241,14 +241,14 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   cases proposent les mots qui ont le plus souvent suivi le mot d'avant, et pendant la frappe
   ces mots passent devant (+ 200 par fois). Lexique n'a pas de paires : ces propositions
   apparaissent au fil des phrases écrites. Une ponctuation ou une fin de ligne coupe le lien.
-- Options du clavier (étape 14, `ModeListeClavier`) : trois boutons de plus dans la barre du
-  clavier. « Zone de saisie » (interrupteur, bord vert, `ZoneSaisie`) : une bande au-dessus des
+- Options du clavier (étape 14, `ModeListeClavier`) : deux boutons de plus dans la barre du
+  clavier, et un bouton « Mes mots » dans l'onglet Général des paramètres. « Zone de saisie » (interrupteur, bord vert, `ZoneSaisie`) : une bande au-dessus des
   touches montre les derniers mots tapés (simple aperçu : le texte part toujours dans le
   logiciel ; elle se vide quand le curseur de texte a pu bouger : flèche, Tab, raccourci, clic
   ailleurs). « Langue » : liste des dispositions du dossier `Claviers` (bord vert = celle
   utilisée) ; le choix est retenu (`DispositionClavier`) et charge le dictionnaire de sa langue
-  (`Dictionnaires/<langue>.txt`). « Mes mots » : liste des mots ajoutés avec « + », par pages de
-  12 ; regarder un mot le retire du dictionnaire personnel (avec ses utilisations et ses paires).
+  (`Dictionnaires/<langue>.txt`). « Mes mots » (onglet Général des paramètres) : liste des mots
+  ajoutés avec « + », par pages de 12 ; regarder un mot le retire du dictionnaire personnel (avec ses utilisations et ses paires).
   `parametres.json` version 10.
 - Le calque se remet au-dessus de toutes les fenêtres deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
@@ -324,11 +324,12 @@ proposé. On écrit deux fois « je suis » (en tapant « suis » en entier puis
 « je » et une espace, la 1re case propose « suis ». Après avoir fermé GazeBar, `%APPDATA%\GazeBar\dictionnaire-perso.json` contient le mot.
 
 Test de l'étape 14 : clavier ouvert, on regarde sous l'écran : la barre du clavier montre aussi
-« Zone de saisie », « Langue » et « Mes mots ». « Zone de saisie » : le bord devient vert, une
+« Zone de saisie » et « Langue ». « Zone de saisie » : le bord devient vert, une
 bande apparaît au-dessus des touches ; on tape « bonjour à tous » : la bande le montre ; une
 flèche la vide. « Langue » : la liste montre « Français AZERTY » avec un bord vert ; « Retour au
-clavier » ramène au clavier. « Mes mots » : « zorglub » (ajouté à l'étape 13) est dans la liste ;
-on le regarde : il disparaît, et en tapant « zo » il n'est plus proposé.
+clavier » ramène au clavier. Paramètres, onglet Général, « Mes mots » : « zorglub » (ajouté à
+l'étape 13) est dans la liste ; on le regarde : il disparaît ; « Retour aux paramètres » ramène à
+l'onglet Général. En tapant « zo », il n'est plus proposé.
 
 ## Limites connues
 
