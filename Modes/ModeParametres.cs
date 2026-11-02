@@ -77,20 +77,24 @@ namespace GazeBar
             // Rien sur le calque pendant ce mode : tout est dans la fenêtre.
             Gestionnaire.Calque.MasquerTout();
 
-            _fenetre = new FenetreParametres(_ongletDepart);
-            _fenetre.RetourDemande += Retour;
-            _fenetre.ConfigurationIconesDemandee += OuvrirConfigurationIcones;
-            _fenetre.CalibrationDemandee += LancerCalibration;
-            _fenetre.DiagnosticDemande += OuvrirDiagnostic;
-            _fenetre.Show();
+            // La fenêtre est rangée dans _fenetre SEULEMENT quand tout est prêt (viseur
+            // compris) : Actualiser ne fait rien tant que _fenetre est vide (bogue du
+            // 02/11/2026 : un tic arrivé pendant Show trouvait un viseur vide).
+            FenetreParametres fenetre = new FenetreParametres(_ongletDepart);
+            fenetre.RetourDemande += Retour;
+            fenetre.ConfigurationIconesDemandee += OuvrirConfigurationIcones;
+            fenetre.CalibrationDemandee += LancerCalibration;
+            fenetre.DiagnosticDemande += OuvrirDiagnostic;
+            _viseur = new ViseurBoutons(fenetre.Cibles);
+            _version = -1;
+            _cibleRepetee = -1;
+
+            fenetre.Show();
             // Activate : la fenêtre prend le clavier, pour que l'aidant puisse taper une valeur.
             // (Windows peut le refuser si un autre programme est au premier plan ; un clic de
             // l'aidant dans la fenêtre suffit alors.)
-            _fenetre.Activate();
-
-            _viseur = new ViseurBoutons(_fenetre.Cibles);
-            _version = -1;
-            _cibleRepetee = -1;
+            fenetre.Activate();
+            _fenetre = fenetre;
 
             _cerclePlace = regard.SurEcran;
             if (_cerclePlace)
@@ -101,7 +105,7 @@ namespace GazeBar
 
         public override void Actualiser(EtatRegard regard)
         {
-            if (_fenetre == null)
+            if (_fenetre == null || _viseur == null)
             {
                 return;
             }

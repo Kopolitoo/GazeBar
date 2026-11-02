@@ -228,6 +228,32 @@ namespace GazeBar
                 return;
             }
 
+            // Pas de tic À L'INTÉRIEUR d'un autre tic (bogue du 02/11/2026). Certaines
+            // opérations faites pendant un tic, comme l'ouverture de la fenêtre des paramètres
+            // (Show, Activate), laissent WPF traiter d'autres messages en attendant : l'image
+            // suivante pouvait alors arriver, et actualiser le nouveau mode avant la fin de son
+            // Entrer (ModeParametres : viseur encore vide → NullReferenceException).
+            if (_dansTic)
+            {
+                return;
+            }
+            _dansTic = true;
+            try
+            {
+                Tic();
+            }
+            finally
+            {
+                _dansTic = false;
+            }
+        }
+
+        // Vrai pendant un tic (voir OnTick).
+        private bool _dansTic;
+
+        private void Tic()
+        {
+
             EtatRegard etat = LireRegard();
 
             try
