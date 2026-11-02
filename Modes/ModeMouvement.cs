@@ -22,6 +22,11 @@ namespace GazeBar
     /// Regard perdu (pas de mesure) : le cercle et le curseur restent où ils sont.
     ///
     /// C'est l'un des seuls modes d'où le menu peut s'ouvrir (avec la pause, étape 6).
+    ///
+    /// Étape 12, clavier au regard (voir ClavierRegard) : quand il est affiché et que le
+    /// regard est DESSUS, ce mode lui passe la main : le curseur ne bouge pas, le cercle est
+    /// masqué, aucune fixation ne démarre, et ce sont les touches qui réagissent. Le cercle
+    /// continue de suivre le regard en cachette : il réapparaît sans saut en sortant du clavier.
     /// </summary>
     internal sealed class ModeMouvement : Mode
     {
@@ -114,6 +119,10 @@ namespace GazeBar
         {
             Parametres p = Parametres.Courants;
 
+            // Le regard est-il sur le clavier au regard (étape 12) ? Vrai regard, sur l'écran.
+            ClavierRegard clavier = Gestionnaire.Clavier;
+            bool surClavier = regard.SurEcran && clavier.Contient(regard.X, regard.Y);
+
             if (regard.Disponible)
             {
                 // 1. Le cercle se rapproche du regard, en douceur (voir Lisseur.cs).
@@ -128,7 +137,7 @@ namespace GazeBar
 
                 // 2. Le curseur suit le cercle, seulement si l'option [SuiviSouris] est
                 //    activée. Sinon, il ne bouge pas : il rejoindra le regard une fois fixé.
-                if (p.SuiviSouris)
+                if (p.SuiviSouris && !surClavier)
                 {
                     DeplacerCurseur(p.ZoneMorteCurseurPx);
                 }
@@ -148,10 +157,15 @@ namespace GazeBar
             //    Pas d'anneau de progression ici (choix de l'utilisateur) : l'anneau est
             //    réservé aux boutons (icône d'options, choix d'action, barre de menu).
             _fixation.Ajouter(regard);
-            if (_zoneIgnoree)
+            if (_zoneIgnoree || surClavier)
             {
+                // Sur le clavier, pas de fixation : ce sont les touches qui réagissent.
                 _fixation.Reinitialiser();
             }
+
+            // 4 bis. Le clavier au regard (étape 12) : touche survolée, activée… S'il n'est pas
+            //        affiché, il ne fait rien.
+            clavier.Actualiser(regard);
 
             if (_fixation.Atteinte)
             {
@@ -160,9 +174,18 @@ namespace GazeBar
             }
 
             // 5. Le dessin du cercle (dès qu'on a une position).
+            //    Il est masqué au-dessus du clavier (étape 12), y compris quand le regard est
+            //    sous l'écran : le cercle, bloqué au bord du bas, serait alors sur le clavier.
             if (_place)
             {
-                Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCerclePx, false);
+                if (surClavier || clavier.Contient(_lisse.X, _lisse.Y))
+                {
+                    Gestionnaire.Calque.MasquerCercle();
+                }
+                else
+                {
+                    Gestionnaire.Calque.AfficherCercle(_lisse.X, _lisse.Y, p.RayonCerclePx, false);
+                }
             }
         }
 

@@ -45,6 +45,10 @@
     SurfaceGlisser  la surface du choix du point d'arrivée d'un glisser-déposer : la ligne en
                   pointillés du trajet et le bouton « retour » au bord droit. Transparente,
                   comme la barre de menu : on voit l'écran réel en dessous.
+  Élément ajouté à l'étape 12 (clavier au regard) :
+    SurfaceClavier  le clavier, en bas de l'écran (voir ClavierRegard). Il est opaque, mais
+                  comme tout le calque, il laisse passer les clics d'une vraie souris et ne
+                  prend jamais le focus : l'application où l'on écrit garde son curseur de texte.
   Les symboles viennent de la police « Segoe Fluent Icons » (Windows 11) ou, à défaut,
   « Segoe MDL2 Assets » (Windows 10) : WPF prend la première présente sur l'ordinateur.
 -->
@@ -66,6 +70,11 @@
 
     <!-- Canvas : une surface où l'on place les éléments par coordonnées (Canvas.Left / Canvas.Top). -->
     <Canvas x:Name="Surface">
+        <!-- Surface du clavier au regard (étape 12). Placée EN PREMIER : elle est dessinée
+             sous tout le reste (cercle, icône d'options, barre de menu…). Sa taille et son
+             contenu sont réglés dans le code (ClavierRegard). -->
+        <Canvas x:Name="SurfaceClavier" Visibility="Collapsed" />
+
         <Ellipse x:Name="CercleFond" Stroke="LightGray" StrokeThickness="2" Opacity="0.5" Visibility="Collapsed" />
         <Ellipse x:Name="Cercle" Stroke="DarkGray" StrokeThickness="1" Opacity="0.3" Visibility="Collapsed" />
 

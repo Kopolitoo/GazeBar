@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -21,7 +19,8 @@ namespace GazeBar
     ///   Paramètres   ouvre le mode paramètres (étape 7) ;
     ///   Jeu          passe en mode jeu (étape 9). Si l'on vient du mode jeu, ce bouton devient
     ///                « Quitter le jeu » et ramène au mode mouvement ;
-    ///   Clavier      ouvre le clavier visuel de Windows, puis ferme le menu ;
+    ///   Clavier      ouvre le clavier au regard de GazeBar (étape 12, voir ClavierRegard),
+    ///                puis ferme le menu. S'il est déjà ouvert (caché par le mode jeu), le ferme ;
     ///   Pause        passe en mode pause ;
     ///   Suivi souris interrupteur : bord vert quand l'option est activée. Le menu reste
     ///                ouvert ; il faut quitter le bouton du regard pour pouvoir l'actionner
@@ -43,6 +42,19 @@ namespace GazeBar
     /// demande de l'utilisateur du 28/10/2026 ; avant, il était réduit de moitié). Il est
     /// caché tant que le regard est dans la zone de la barre.
     ///
+    /// BARRE DE MENU DU CLAVIER (étape 12, choix de l'utilisateur du 31/10/2026) : quand le
+    /// clavier au regard est affiché, regarder sous l'écran n'ouvre PAS la barre classique,
+    /// mais celle du clavier (MenuClavier = vrai). Depuis le 01/11/2026 (remarques de
+    /// l'utilisateur), de gauche à droite :
+    ///   Haut / bas   met le clavier en haut de l'écran, ou le ramène en bas (retenu) ;
+    ///   Taille       100 % → 75 % → 50 % → 100 %… (le bouton affiche la taille actuelle) ;
+    ///   Pause        passe en mode pause (le clavier est caché, et revient à la reprise) ;
+    ///   Fermer       ferme le clavier.
+    /// Haut / bas et Taille laissent le menu ouvert, comme « Suivi souris ». Les autres
+    /// boutons (langue, zone de saisie, mes mots) viendront à l'étape 14. Le clavier reste
+    /// affiché, et s'il est en bas il REMONTE au-dessus de la barre au lieu d'être recouvert
+    /// (ClavierRegard.DefinirReserveBas) ; il redescend à la fermeture du menu.
+    ///
     /// Sortie : quand le regard quitte la barre pendant [DelaiFermetureMenu], elle disparaît
     /// et on revient au mode précédent. Le regard en bas, hors de l'écran, compte comme
     /// « dans la barre » : c'est là qu'il est au moment où le menu s'ouvre. Un regard perdu ne
@@ -57,6 +69,9 @@ namespace GazeBar
             Jeu,
             QuitterJeu,
             Clavier,
+            FermerClavier,
+            PositionClavier,
+            TailleClavier,
             Pause,
             Reprendre,
             SuiviSouris,
@@ -120,10 +135,23 @@ namespace GazeBar
         private readonly Lisseur _lisse = new Lisseur();
         private bool _cerclePlace;
 
-        public ModeMenu()
+        /// <summary>La barre de menu classique.</summary>
+        public ModeMenu() : this(false)
         {
+        }
+
+        /// <summary>
+        /// menuClavier = vrai : la barre de menu du clavier au regard (étape 12) au lieu de la
+        /// barre classique.
+        /// </summary>
+        public ModeMenu(bool menuClavier)
+        {
+            MenuClavier = menuClavier;
             _viseur = new ViseurBoutons(_boutons);
         }
+
+        /// <summary>Vrai pour la barre de menu du clavier (le clavier reste alors affiché dessous).</summary>
+        public bool MenuClavier { get; private set; }
 
         public override string Nom
         {
@@ -207,7 +235,8 @@ namespace GazeBar
                     _cerclePlace = true;
                 }
                 _lisse.Suivre(regard.XEcran, regard.YEcran, regard.MaintenantMs);
-                if (DansLaBarre(regard))
+                // Barre du clavier (étape 12) : le cercle est aussi caché au-dessus du clavier.
+                if (DansLaBarre(regard) || (MenuClavier && Gestionnaire.Clavier.Contient(_lisse.X, _lisse.Y)))
                 {
                     Gestionnaire.Calque.MasquerCercle();
                 }
@@ -225,6 +254,12 @@ namespace GazeBar
             Gestionnaire.Calque.MasquerBarreMenu(true);
             _boutons.Clear();
             _actions.Clear();
+
+            // Barre du clavier : le clavier peut redescendre (il était remonté au-dessus d'elle).
+            if (MenuClavier)
+            {
+                Gestionnaire.Clavier.DefinirReserveBas(0);
+            }
         }
 
         // ───────────────────────── Les actions ─────────────────────────
@@ -249,15 +284,42 @@ namespace GazeBar
                     break;
 
                 case ActionMenu.Clavier:
-                    string messageClavier;
-                    if (OuvrirClavierVisuel(out messageClavier))
+                    // Le clavier au regard (étape 12). Déjà ouvert (caché pendant le jeu) :
+                    // le bouton le ferme. Sinon, il s'ouvre et apparaît au retour en mode
+                    // mouvement. Fichier de disposition absent ou incorrect : message.
+                    if (Gestionnaire.Clavier.Ouvert)
                     {
+                        Gestionnaire.Clavier.Fermer();
                         Revenir();
+                        break;
+                    }
+                    string messageClavier;
+                    if (Gestionnaire.Clavier.Ouvrir(out messageClavier))
+                    {
+                        // Depuis le jeu, on revient au mode mouvement : c'est là que le clavier s'affiche.
+                        Gestionnaire.ChangerMode(new ModeMouvement());
                     }
                     else
                     {
                         AfficherMessage(messageClavier);
                     }
+                    break;
+
+                case ActionMenu.FermerClavier:
+                    Gestionnaire.Clavier.Fermer();
+                    Gestionnaire.ChangerMode(new ModeMouvement());
+                    break;
+
+                case ActionMenu.PositionClavier:
+                    // Le menu reste ouvert ; la barre est reconstruite (le symbole change) et le
+                    // bouton attend que le regard le quitte avant de pouvoir resservir.
+                    Gestionnaire.Clavier.BasculerPosition();
+                    Construire();
+                    break;
+
+                case ActionMenu.TailleClavier:
+                    Gestionnaire.Clavier.ChangerTaille();
+                    Construire();
                     break;
 
                 case ActionMenu.Pause:
@@ -316,50 +378,6 @@ namespace GazeBar
             Construire();
         }
 
-        /// <summary>
-        /// Ouvre le clavier visuel de Windows (osk.exe), en attendant le clavier de GazeBar.
-        ///
-        /// Piège : GazeBar est un programme 32 bits. Sur un Windows 64 bits, quand un programme
-        /// 32 bits demande le dossier System32, Windows le redirige en douce vers SysWOW64… où
-        /// osk.exe n'existe pas. Le dossier « Sysnative » (invisible dans l'Explorateur) donne
-        /// aux programmes 32 bits l'accès au vrai System32. On essaie donc d'abord Sysnative.
-        /// </summary>
-        private static bool OuvrirClavierVisuel(out string message)
-        {
-            string windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-            string[] chemins =
-            {
-                Path.Combine(windows, "Sysnative", "osk.exe"),
-                Path.Combine(windows, "System32", "osk.exe")
-            };
-
-            foreach (string chemin in chemins)
-            {
-                if (!File.Exists(chemin))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    ProcessStartInfo demarrage = new ProcessStartInfo(chemin);
-                    demarrage.UseShellExecute = true;
-                    Process.Start(demarrage);
-                    App.Log("Clavier visuel ouvert : " + chemin);
-                    message = null;
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    App.Log("Clavier visuel : échec avec " + chemin + " : " + ex.Message);
-                }
-            }
-
-            message = "Clavier visuel introuvable (voir le journal).";
-            App.Log(message);
-            return false;
-        }
-
         // ───────────────────────── La barre ─────────────────────────
 
         /// <summary>
@@ -392,6 +410,25 @@ namespace GazeBar
                 // Pendant la pause : seul le bouton « Reprendre » (E768 = lecture).
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Reprendre"), ActionMenu.Reprendre);
             }
+            else if (MenuClavier && !_confirmation)
+            {
+                // Barre de menu du clavier (étape 12, voir le commentaire de la classe).
+                //   E70E / E70D = chevron vers le haut / vers le bas, E769 = pause,
+                //   E765 = clavier (avec une petite croix « × » en pastille pour « Fermer »).
+                if (p.ClavierEnHaut)
+                {
+                    Ajouter(boutons, actions, new BoutonRegard("\uE70D", null, "Clavier en bas de l'écran"), ActionMenu.PositionClavier);
+                }
+                else
+                {
+                    Ajouter(boutons, actions, new BoutonRegard("\uE70E", null, "Clavier en haut de l'écran"), ActionMenu.PositionClavier);
+                }
+                Ajouter(boutons, actions,
+                        BoutonRegard.Texte(p.TailleClavier.ToString("F0") + " %", "Taille du clavier (100, 75, 50 %)"),
+                        ActionMenu.TailleClavier);
+                Ajouter(boutons, actions, new BoutonRegard("\uE769", null, "Pause"), ActionMenu.Pause);
+                Ajouter(boutons, actions, new BoutonRegard("\uE765", "\u00D7", "Fermer le clavier"), ActionMenu.FermerClavier);
+            }
             else if (_confirmation)
             {
                 // « Non » est à droite, « Oui » à gauche. La barre est plus courte et centrée :
@@ -417,7 +454,7 @@ namespace GazeBar
                 {
                     Ajouter(boutons, actions, new BoutonRegard("\uE7FC", null, "Jeu"), ActionMenu.Jeu);
                 }
-                Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier visuel"), ActionMenu.Clavier);
+                Ajouter(boutons, actions, new BoutonRegard("", null, "Clavier"), ActionMenu.Clavier);
                 // (Depuis la pause, seul « Reprendre » est affiché : ici, on n'est donc
                 // jamais en pause.)
                 Ajouter(boutons, actions, new BoutonRegard("", null, "Pause"), ActionMenu.Pause);
@@ -498,6 +535,13 @@ namespace GazeBar
             _zoneGauche = gauche - margeZone;
             _zoneDroite = gauche + largeurBarre + margeZone;
             _zoneHaut = hautZone - margeZone;
+
+            // Barre du clavier : le clavier (s'il est en bas) remonte au-dessus de la barre et
+            // de son message éventuel, avec un petit espace (demande du 01/11/2026).
+            if (MenuClavier)
+            {
+                Gestionnaire.Clavier.DefinirReserveBas(hauteur - hautZone + Ecran.Px(20));
+            }
 
             // Les boutons ont changé : on repart de zéro, et le bouton éventuellement sous le
             // regard ne s'active pas tant que le regard ne l'a pas quitté.

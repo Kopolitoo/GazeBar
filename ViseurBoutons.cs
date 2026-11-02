@@ -12,7 +12,7 @@ namespace GazeBar
     ///
     /// Les règles :
     ///  - à chaque NOUVELLE mesure du regard, on cherche le bouton qui est dessous ;
-    ///  - pour passer à un autre bouton (ou à « aucun »), il faut [MesuresPourChanger] mesures
+    ///  - pour passer à un autre bouton (ou à « aucun »), il faut [_mesuresPourChanger] mesures
     ///    de suite au même endroit : une mesure isolée (un petit sursaut du regard) est ignorée ;
     ///  - le regard posé sur un bouton actif pendant le délai d'activation l'active ; son anneau
     ///    de progression se remplit pendant ce temps ;
@@ -28,8 +28,11 @@ namespace GazeBar
     /// </summary>
     internal sealed class ViseurBoutons
     {
-        /// <summary>Nombre de mesures de suite qu'il faut sur un nouveau bouton pour le viser.</summary>
-        private const int MesuresPourChanger = 2;
+        /// <summary>
+        /// Nombre de mesures de suite qu'il faut sur un nouveau bouton pour le viser : 2 par
+        /// défaut ; 1 pour le clavier au regard (survol plus rapide, 02/11/2026).
+        /// </summary>
+        private readonly int _mesuresPourChanger;
 
         // La liste des boutons, partagée avec le mode (qui peut la remplir après coup).
         // IReadOnlyList<ICibleRegard> (étape 7) : une liste qu'on peut lire mais pas modifier,
@@ -51,9 +54,15 @@ namespace GazeBar
         // Vrai après ReinitialiserEtBloquer, jusqu'à la première nouvelle mesure.
         private bool _bloquerPremier;
 
-        public ViseurBoutons(IReadOnlyList<ICibleRegard> boutons)
+        public ViseurBoutons(IReadOnlyList<ICibleRegard> boutons) : this(boutons, 2)
+        {
+        }
+
+        /// <summary>mesuresPourChanger : voir _mesuresPourChanger (au moins 1).</summary>
+        public ViseurBoutons(IReadOnlyList<ICibleRegard> boutons, int mesuresPourChanger)
         {
             _boutons = boutons;
+            _mesuresPourChanger = mesuresPourChanger < 1 ? 1 : mesuresPourChanger;
             Reinitialiser();
         }
 
@@ -161,7 +170,7 @@ namespace GazeBar
 
         /// <summary>
         /// Change de bouton visé seulement si le nouveau est confirmé par
-        /// [MesuresPourChanger] mesures de suite. Changer de bouton remet le minuteur à zéro
+        /// [_mesuresPourChanger] mesures de suite. Changer de bouton remet le minuteur à zéro
         /// et lève le blocage.
         /// </summary>
         private void ChangerViseSiBesoin(int vu)
@@ -182,7 +191,7 @@ namespace GazeBar
                 _mesuresCandidat = 1;
             }
 
-            if (_mesuresCandidat >= MesuresPourChanger)
+            if (_mesuresCandidat >= _mesuresPourChanger)
             {
                 Vise = vu;
                 _mesuresCandidat = 0;

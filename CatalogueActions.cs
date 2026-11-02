@@ -31,7 +31,13 @@ namespace GazeBar
         Copier,
         Couper,
         Coller,
-        Retour
+        Retour,
+
+        /// <summary>
+        /// Ouvre (ou ferme) le clavier au regard (étape 12, demande de l'utilisateur du
+        /// 01/11/2026). Ajouté à la fin : les noms déjà écrits dans parametres.json ne changent pas.
+        /// </summary>
+        Clavier
     }
 
     /// <summary>
@@ -86,7 +92,10 @@ namespace GazeBar
                         ActionChoix.GlisserGauche,
                         ActionChoix.GlisserDroit,
                         ActionChoix.GlisserAndroid,
-                        ActionChoix.Defilement
+                        ActionChoix.Defilement,
+                        // Étape 12 (01/11/2026) : proposé dans la liste de l'écran de
+                        // configuration, mais pas placé par défaut (les huit places sont prises).
+                        ActionChoix.Clavier
                     };
                 case GroupeIcones.Modificateurs:
                     return new[] { ActionChoix.Ctrl, ActionChoix.Maj, ActionChoix.Alt };
@@ -109,6 +118,8 @@ namespace GazeBar
         ///   7 : en haut, à gauche   → clic gauche
         /// Modificateurs, de haut en bas : Ctrl, Maj, Alt.
         /// Utilitaires, de gauche à droite : Copier, Couper, Coller.
+        /// L'action Clavier (étape 12) n'est pas placée par défaut : on l'ajoute soi-même à la
+        /// place d'une autre, dans l'écran de configuration des icônes.
         /// </summary>
         public static ActionChoix[] DispositionParDefaut(GroupeIcones groupe)
         {
@@ -204,6 +215,7 @@ namespace GazeBar
                 case ActionChoix.Copier: return "Copier";
                 case ActionChoix.Couper: return "Couper";
                 case ActionChoix.Coller: return "Coller";
+                case ActionChoix.Clavier: return "Clavier";
                 default: return "Retour";
             }
         }
@@ -213,7 +225,8 @@ namespace GazeBar
         /// Symboles de la police Windows (Segoe MDL2 Assets / Segoe Fluent Icons) :
         ///   E962 = souris, E71E = loupe, E7C2 = déplacer (quatre flèches), E72B = flèche « retour »,
         ///   EC8F = défilement (flèches haut et bas ; symbole à vérifier à l'écran),
-        ///   E8C8 = copier, E8C6 = ciseaux (couper), E77F = presse-papiers (coller).
+        ///   E8C8 = copier, E8C6 = ciseaux (couper), E77F = presse-papiers (coller),
+        ///   E765 = clavier (étape 12).
         /// Les trois clics partagent le symbole de la souris, les trois glisser-déposer celui des
         /// quatre flèches ; la pastille les distingue (G = gauche, D = droit, A = android).
         /// Les modificateurs affichent simplement leur nom (« Ctrl », « Maj », « Alt »).
@@ -251,6 +264,9 @@ namespace GazeBar
                     return new BoutonRegard("", null, "Couper (Ctrl + X)");
                 case ActionChoix.Coller:
                     return new BoutonRegard("", null, "Coller ici (clic, puis Ctrl + V)");
+                case ActionChoix.Clavier:
+                    // Pastille vide : le même bouton ouvre le clavier, ou le ferme s'il est ouvert.
+                    return new BoutonRegard("\uE765", null, "Clavier (ouvrir / fermer)");
                 default:
                     return new BoutonRegard("", null, "Retour");
             }

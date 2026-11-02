@@ -376,6 +376,7 @@ namespace GazeBar
             MasquerEcranChoix();
             MasquerBarreMenu();
             MasquerSurfaceGlisser();
+            MasquerSurfaceClavier();
         }
 
         // ───────────────────────── Écran noir du choix d'action (étape 3) ─────────────────────────
@@ -590,6 +591,60 @@ namespace GazeBar
         public void MasquerSurfaceGlisser()
         {
             SurfaceGlisser.Visibility = Visibility.Collapsed;
+        }
+
+        // ───────────────────────── Surface du clavier au regard (étape 12) ─────────────────────────
+
+        /// <summary>
+        /// Vide la surface du clavier et lui donne la taille du calque.
+        /// Elle reste cachée : ClavierRegard la remplit, puis appelle AfficherSurfaceClavier.
+        /// </summary>
+        public void PreparerSurfaceClavier()
+        {
+            SurfaceClavier.Children.Clear();
+            SurfaceClavier.Width = ActualWidth;
+            SurfaceClavier.Height = ActualHeight;
+            Canvas.SetLeft(SurfaceClavier, 0);
+            Canvas.SetTop(SurfaceClavier, 0);
+        }
+
+        public void AfficherSurfaceClavier()
+        {
+            SurfaceClavier.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// Fait glisser le clavier jusqu'à sa nouvelle place (demande de l'utilisateur du
+        /// 02/11/2026) : il vient d'être redessiné à sa place finale, et on le décale d'abord
+        /// de « depuisPixels » (pixels d'écran, positif = plus bas), puis ce décalage revient à
+        /// zéro. Monter : à la vitesse de l'apparition de la barre de menu, en ralentissant à la
+        /// fin. Descendre : à la vitesse de sa fermeture, en accélérant. Comme pour la barre, un
+        /// TranslateTransform décale le dessin sans changer les positions calculées.
+        /// </summary>
+        public void AnimerSurfaceClavier(double depuisPixels)
+        {
+            TranslateTransform decalage = SurfaceClavier.RenderTransform as TranslateTransform;
+            if (decalage == null)
+            {
+                decalage = new TranslateTransform();
+                SurfaceClavier.RenderTransform = decalage;
+            }
+
+            bool monte = depuisPixels > 0;
+            Duration duree = new Duration(TimeSpan.FromMilliseconds(monte ? DureeApparitionMenuMs : DureeFermetureMenuMs));
+            CubicEase courbe = new CubicEase();
+            courbe.EasingMode = monte ? EasingMode.EaseOut : EasingMode.EaseIn;
+
+            DoubleAnimation glissement = new DoubleAnimation(LongueurVersWpf(depuisPixels), 0, duree);
+            glissement.EasingFunction = courbe;
+            // BeginAnimation remplace une animation déjà en cours (barre rouverte très vite).
+            decalage.BeginAnimation(TranslateTransform.YProperty, glissement);
+        }
+
+        /// <summary>Cache le clavier (son contenu est gardé jusqu'au prochain PreparerSurfaceClavier).</summary>
+        public void MasquerSurfaceClavier()
+        {
+            SurfaceClavier.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>

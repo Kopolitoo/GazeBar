@@ -231,7 +231,7 @@ namespace GazeBar
     /// Pour ajouter un réglage plus tard : l'ajouter dans Parametres.cs (avec sa valeur par
     /// défaut et ses limites dans Corriger), puis ici, dans l'onglet voulu (cinq au plus par
     /// onglet, pour que rien ne défile). L'onglet « Défilement » est ajouté à l'étape 8,
-    /// l'onglet « Jeu » à l'étape 9, l'onglet « Icônes » à l'étape 10.
+    /// l'onglet « Jeu » à l'étape 9, l'onglet « Icônes » à l'étape 10, l'onglet « Clavier » à l'étape 12.
     ///
     /// L'onglet « Icônes » est particulier : il n'a pas de réglage « − / + », mais un gros
     /// bouton qui ouvre l'écran de configuration des icônes du choix d'action
@@ -338,6 +338,20 @@ namespace GazeBar
             // E71D = grille de carrés (« Icônes », étape 10) : pas de réglage, un bouton
             // « Configurer les icônes » (voir FenetreParametres.ConstruireOngletIcones).
             new Onglet(NomOngletIcones, "\uE71D"),
+
+            // E765 = clavier (« Clavier », étape 12)
+            new Onglet("Clavier", "\uE765",
+                Reglage.Nombre("Délai de frappe", "Regard sur une touche avant qu'elle s'active", " s", 0.1,
+                               p => p.DelaiTouche, (p, v) => p.DelaiTouche = v),
+                Reglage.OuiOuNon("Répétition", "Garder le regard sur une touche la retape",
+                                 p => p.RepetitionTouche, (p, v) => p.RepetitionTouche = v),
+                Reglage.OuiOuNon("Majuscule automatique", "Après . ? ! suivi d'une espace",
+                                 p => p.MajusculeAuto, (p, v) => p.MajusculeAuto = v),
+                Reglage.Nombre("Hauteur du clavier", "En pourcentage de la hauteur de l'écran", " %", 5,
+                               p => p.HauteurClavier, (p, v) => p.HauteurClavier = v),
+                // 50, 75 ou 100 % (Corriger arrondit au quart) ; aussi dans la barre du clavier.
+                Reglage.Nombre("Taille du clavier", "Largeur et hauteur ensemble : 50, 75 ou 100 %", " %", 25,
+                               p => p.TailleClavier, (p, v) => p.TailleClavier = v)),
 
             // E713 = engrenage (« Général »)
             new Onglet("Général", "",

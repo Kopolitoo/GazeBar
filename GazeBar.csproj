@@ -49,6 +49,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Étape 12 : les dispositions du clavier au regard (fichiers JSON du dossier Claviers)
+         sont copiées à côté de GazeBar.exe à chaque compilation, si elles ont changé.
+         GazeBar les lit là (voir DispositionClavier.cs). -->
+    <None Update="Claviers\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Le regard, via le moteur Tobii (même source que Mill Mouse). -->
     <PackageReference Include="Tobii.Interaction" Version="0.7.3" />
   </ItemGroup>

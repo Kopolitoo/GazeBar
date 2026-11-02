@@ -231,6 +231,30 @@ namespace GazeBar
         internal const ushort VK_V = 0x56;        // touche V (coller, avec Ctrl)
         internal const ushort VK_X = 0x58;        // touche X (couper, avec Ctrl)
 
+        // Étape 12 (clavier au regard).
+        //  KEYEVENTF_EXTENDEDKEY : touche « étendue » (flèches, Début, Fin, Suppr, Page…,
+        //                          touche Windows) : sans ce drapeau, certaines applications
+        //                          les confondent avec les touches du pavé numérique ;
+        //  KEYEVENTF_UNICODE     : on envoie un CARACTÈRE (dans wScan) et non une touche.
+        //                          Windows le livre tel quel à l'application, quelle que soit
+        //                          la disposition du clavier réglée dans Windows.
+        internal const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+        internal const uint KEYEVENTF_UNICODE = 0x0004;
+        internal const ushort VK_BACK = 0x08;     // Retour arrière (effacer)
+        internal const ushort VK_LWIN = 0x5B;     // touche Windows de gauche
+
+        /// <summary>
+        /// Donne la touche (et les modificateurs) qui produit un caractère avec la disposition
+        /// du clavier de Windows. Octet bas = code de la touche ; octet haut = 1 Maj, 2 Ctrl,
+        /// 4 Alt. Renvoie -1 si aucune touche ne produit ce caractère.
+        /// </summary>
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern short VkKeyScanW(char caractere);
+
+        /// <summary>Convertit un code de touche en « code matériel » (mode 0 = MAPVK_VK_TO_VSC).</summary>
+        [DllImport("user32.dll")]
+        internal static extern uint MapVirtualKeyW(uint code, uint mode);
+
         /// <summary>Simule des actions de souris ou de clavier, comme si elles venaient du matériel.</summary>
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern uint SendInput(uint inputCount, INPUT[] inputs, int sizeOfInput);
@@ -363,6 +387,14 @@ namespace GazeBar
         internal const int WM_KEYDOWN = 0x0100;     // une touche est enfoncée
         internal const int WM_SYSKEYDOWN = 0x0104;  // idem, avec Alt
         internal const int VK_ESCAPE = 0x1B;        // code de la touche Échap
+
+        /// <summary>
+        /// Dans la structure reçue par le crochet clavier, le champ « flags » (3e nombre, donc
+        /// 8 octets après le début) : ce drapeau dit que la touche a été SIMULÉE par un
+        /// programme (SendInput), et non tapée sur un vrai clavier (étape 12).
+        /// </summary>
+        internal const int DecalageDrapeauxCrochet = 8;
+        internal const int LLKHF_INJECTED = 0x10;
 
         // ───────────────────────── Précision de l'horloge ─────────────────────────
 

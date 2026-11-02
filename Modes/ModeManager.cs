@@ -60,6 +60,7 @@ namespace GazeBar
         {
             Regard = regard;
             Calque = calque;
+            Clavier = new ClavierRegard(calque);
 
             // Étape 11 : l'écran peut changer pendant que GazeBar tourne.
             Ecran.Change += OnEcranChange;
@@ -77,6 +78,8 @@ namespace GazeBar
             {
                 return;
             }
+            // Le clavier au regard (étape 12) se redessine aux nouvelles tailles.
+            Clavier.AdapterEcran();
             if (ModeCourant.AdapterEcran())
             {
                 App.Log("Écran changé : le mode " + ModeCourant.Nom + " continue avec les nouvelles tailles");
@@ -93,6 +96,12 @@ namespace GazeBar
 
         /// <summary>La fenêtre transparente plein écran où les modes dessinent.</summary>
         public OverlayWindow Calque { get; private set; }
+
+        /// <summary>
+        /// Le clavier au regard (étape 12). Ce n'est pas un mode : il reste affiché pendant les
+        /// modes mouvement et regard fixe (voir ClavierRegard).
+        /// </summary>
+        public ClavierRegard Clavier { get; private set; }
 
         /// <summary>Le mode en cours (null avant Demarrer).</summary>
         public Mode ModeCourant { get; private set; }
@@ -168,6 +177,10 @@ namespace GazeBar
             ModeCourant = nouveau;
             nouveau.Attacher(this);
 
+            // Le clavier au regard s'affiche ou se cache selon le nouveau mode (étape 12).
+            // AVANT Entrer : la loupe photographie l'écran dès son entrée, sans le clavier.
+            Clavier.SurChangementMode(nouveau);
+
             App.Log("Mode : " + (ancien == null ? "(aucun)" : ancien.Nom) + " → " + nouveau.Nom);
             // Le nouveau mode reçoit la position actuelle du regard pour s'initialiser.
             nouveau.Entrer(LireRegard());
@@ -214,6 +227,32 @@ namespace GazeBar
             {
                 return;
             }
+
+            // Pas de tic À L'INTÉRIEUR d'un autre tic (bogue du 02/11/2026). Certaines
+            // opérations faites pendant un tic, comme l'ouverture de la fenêtre des paramètres
+            // (Show, Activate), laissent WPF traiter d'autres messages en attendant : l'image
+            // suivante pouvait alors arriver, et actualiser le nouveau mode avant la fin de son
+            // Entrer (ModeParametres : viseur encore vide → NullReferenceException).
+            if (_dansTic)
+            {
+                return;
+            }
+            _dansTic = true;
+            try
+            {
+                Tic();
+            }
+            finally
+            {
+                _dansTic = false;
+            }
+        }
+
+        // Vrai pendant un tic (voir OnTick).
+        private bool _dansTic;
+
+        private void Tic()
+        {
 
             EtatRegard etat = LireRegard();
 
@@ -263,7 +302,10 @@ namespace GazeBar
                 ModeCourant.MenuAutorise)
             {
                 _debutEnBasMs = -1;
-                ChangerMode(new ModeMenu());
+                // Étape 12 : clavier affiché (donc mode mouvement) → la barre de menu du
+                // clavier, et non la barre classique (choix de l'utilisateur du 31/10/2026).
+                bool menuClavier = Clavier.Ouvert && ModeCourant is ModeMouvement;
+                ChangerMode(new ModeMenu(menuClavier));
                 return true;
             }
             return false;
