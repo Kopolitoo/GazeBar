@@ -17,8 +17,10 @@ namespace GazeBar
     /// Regard hors de l'écran : le cercle continue de suivre le regard, mais bloqué aux bords
     /// de l'écran (chaque axe séparément, voir EtatRegard.XEcran). Regard au-dessus de l'écran :
     /// le cercle glisse de gauche à droite le long du bord du haut ; regard à droite : il glisse
-    /// de haut en bas le long du bord droit. La fixation, elle, est oubliée : on ne passe
-    /// jamais en regard fixe sur un bord à cause d'un regard hors de l'écran.
+    /// de haut en bas le long du bord droit. La fixation, elle, est oubliée dès que le regard
+    /// s'éloigne de l'écran ; mais un regard JUSTE à côté de l'écran (bande étroite, voir
+    /// EtatRegard.PresDeLEcran) compte encore, ramené au bord : sinon, dans les coins, les
+    /// mesures qui débordent un peu empêchaient le regard fixe (02/11/2026).
     /// Regard perdu (pas de mesure) : le cercle et le curseur restent où ils sont.
     ///
     /// C'est l'un des seuls modes d'où le menu peut s'ouvrir (avec la pause, étape 6).
@@ -152,8 +154,8 @@ namespace GazeBar
             }
 
             // 4. La fixation. Dans la zone ignorée, on ne la laisse pas progresser.
-            //    Elle utilise le VRAI regard (pas la position ramenée dans l'écran) : un regard
-            //    hors de l'écran remet la fixation à zéro (voir DetecteurFixation.Ajouter).
+            //    Un regard franchement hors de l'écran la remet à zéro ; juste à côté de
+            //    l'écran, il est ramené au bord (voir DetecteurFixation.Ajouter).
             //    Pas d'anneau de progression ici (choix de l'utilisateur) : l'anneau est
             //    réservé aux boutons (icône d'options, choix d'action, barre de menu).
             _fixation.Ajouter(regard);

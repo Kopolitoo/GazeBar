@@ -29,6 +29,9 @@ namespace GazeBar
     /// déplacement : la fixation repart de zéro à partir de cette nouvelle mesure.
     ///
     /// Le temps est mesuré en millisecondes réelles (DelaiFixation), et non en nombre de tics.
+    ///
+    /// Bords et coins de l'écran (02/11/2026) : une mesure juste hors de l'écran (voir
+    /// EtatRegard.PresDeLEcran) n'interrompt plus la fixation ; elle est ramenée au bord.
     /// </summary>
     internal sealed class DetecteurFixation
     {
@@ -91,7 +94,9 @@ namespace GazeBar
         /// </summary>
         public void Ajouter(EtatRegard regard)
         {
-            if (!regard.SurEcran)
+            // Regard perdu, ou franchement hors de l'écran : on oublie la fixation.
+            // Regard juste à côté de l'écran (dans la bande de PresDeLEcran) : on le garde.
+            if (!regard.PresDeLEcran)
             {
                 Reinitialiser();
                 return;
@@ -100,7 +105,13 @@ namespace GazeBar
             if (regard.Numero != _dernierNumero)
             {
                 _dernierNumero = regard.Numero;
-                AnalyserMesure(regard.X, regard.Y, regard.InstantMesureMs);
+
+                // On analyse la position RAMENÉE DANS L'ÉCRAN (XEcran, YEcran). Sur l'écran,
+                // c'est exactement le vrai regard. Juste à côté, c'est le point du bord le plus
+                // proche : dans un coin, les mesures qui débordent sont ramenées dans le coin,
+                // elles restent groupées et la fixation peut aboutir. Le point fixé est donc
+                // toujours sur l'écran (on peut cliquer tout au bord, ou dans le coin).
+                AnalyserMesure(regard.XEcran, regard.YEcran, regard.InstantMesureMs);
             }
 
             CalculerProgression(regard.MaintenantMs);
