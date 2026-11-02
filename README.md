@@ -226,7 +226,8 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
 - Prédiction de mots (étape 13, `PredicteurMots`) : les trois cases du haut du clavier
   proposent les trois mots les plus probables qui commencent par le mot en cours (lettres tapées
   depuis la dernière espace, ponctuation, Entrée, Tab ou flèche), sans tenir compte des accents
-  ni des majuscules (« ete » propose « été »). En regarder une écrit le mot entier suivi d'une
+  ni des majuscules (« ete » propose « été »). Si ce qui est tapé est déjà un mot connu, il est
+  en 1re case : le regarder écrit juste l'espace après lui. En regarder une écrit le mot entier suivi d'une
   espace (pas d'espace après « l' », « qu' »…) ; le mot garde la majuscule de départ. Classement :
   fréquence dans Lexique + 20 par utilisation. Un mot inconnu de 2 lettres ou plus s'affiche dans
   la 1re case avec un « + » (en ambre) : la regarder l'ajoute au dictionnaire personnel. Fichiers :

@@ -252,8 +252,9 @@ namespace GazeBar
         /// <summary>
         /// Les (au plus) 3 mots les plus probables qui commencent par « tape » (sans tenir
         /// compte des accents ni des majuscules), du plus probable au moins probable.
-        /// Seuls les mots au moins aussi longs que ce qui est tapé sont proposés, sauf le mot
-        /// exactement tapé (« ete » propose « été », règle validée le 02/11/2026). Les mots sont rendus tels qu'ils sont
+        /// Seuls les mots au moins aussi longs que ce qui est tapé sont proposés (« ete » propose
+        /// « été », règle validée le 02/11/2026). Si ce qui est tapé est lui-même un mot connu,
+        /// il est mis en 1re case (pour écrire l'espace après lui en le regardant). Les mots sont rendus tels qu'ils sont
         /// rangés : c'est le clavier qui ajoute la majuscule si besoin.
         ///
         /// motInconnu : vrai si « tape » (2 lettres ou plus) ne correspond à aucun mot connu,
@@ -329,6 +330,21 @@ namespace GazeBar
             }
 
             motInconnu = !connu && prefixe.Length >= 2;
+
+            // Demande de l'utilisateur du 02/11/2026 : si ce qui est tapé est déjà un mot connu,
+            // il vient EN PREMIER. Le regarder écrit simplement l'espace après lui (c'est plus
+            // rapide que de chercher la touche Espace). Les autres cases gardent les meilleurs.
+            string exact = FormeConnue(tape);
+            if (exact != null)
+            {
+                resultat.Add(exact);
+                for (int i = 0; i < meilleurs.Count && resultat.Count < NombrePropositions; i++)
+                {
+                    resultat.Add(meilleurs[i]);
+                }
+                return resultat;
+            }
+
             resultat.AddRange(meilleurs);
             return resultat;
         }
@@ -343,8 +359,8 @@ namespace GazeBar
                              List<string> meilleurs, List<double> scores)
         {
             // Règle validée par l'utilisateur le 02/11/2026 : un mot AU MOINS AUSSI LONG que ce
-            // qui est tapé (« été » pour « ete »), mais pas le mot déjà tapé en entier (il
-            // n'apporterait rien).
+            // qui est tapé (« été » pour « ete »). Le mot déjà tapé en entier est écarté ici :
+            // Proposer le remet lui-même en 1re case.
             if (mot.Length < tape.Length || string.Equals(mot, tape, StringComparison.OrdinalIgnoreCase))
             {
                 return;
