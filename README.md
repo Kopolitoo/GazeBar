@@ -174,7 +174,7 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   fixé sur le curseur. Regard dans le cercle : rien ne défile (zone morte). Regard au-dessus, en
   dessous, à droite ou à gauche : la fenêtre sous le curseur défile dans ce sens (molette Windows,
   un seul sens à la fois), d'autant plus vite que le regard est loin du cercle, jusqu'à
-  `VitesseMaxDefilement` (10 crans/s) trois `RayonCercle` au-delà du bord. Un petit arc vert sur le
+  `VitesseMaxDefilement` (5 crans/s par défaut depuis le 02/11/2026) trois `RayonCercle` au-delà du bord. Un petit arc vert sur le
   cercle montre la direction. Rien ne défile avant un premier passage du regard dans le cercle,
   ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
   l'écran compte, pour agrandir la plage de vitesse) ou sur le bouton « retour » (bord droit, centré),
