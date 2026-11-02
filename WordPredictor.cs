@@ -18,9 +18,13 @@ namespace GazeBar
     /// words that start this way?" (method Suggest).
     ///
     /// Two word sources:
-    ///   1. the PRIMARY DICTIONARY, Dictionaries/fr.txt (taken from Lexique 3.83, CC BY-SA
-    ///      licence, see Dictionaries/LICENSE-Lexique.txt): about 125,000 words, each with its
-    ///      frequency (occurrences per million words in films and books). It is copied next to
+    ///   1. the PRIMARY DICTIONARY of the keyboard layout's language, Dictionaries/<language>.txt:
+    ///      fr.txt (taken from Lexique 3.83, CC BY-SA licence, see
+    ///      Dictionaries/LICENSE-Lexique.txt, about 125,000 words) or en.txt (taken from
+    ///      FrequencyWords / OpenSubtitles, CC BY-SA licence, see
+    ///      Dictionaries/LICENSE-FrequencyWords.txt, about 62,000 words). Each word has its
+    ///      frequency (occurrences per million words: films and books for French, film
+    ///      subtitles for English). It is copied next to
     ///      GazeBar.exe and read once, at startup, in the background (about half a second,
     ///      without blocking the gaze);
     ///   2. the PERSONAL DICTIONARY, %APPDATA%\GazeBar\personal-dictionary.json, next to
@@ -138,13 +142,13 @@ namespace GazeBar
         // ───────────────────────── Loading the primary dictionary ─────────────────────────
 
         /// <summary>
-        /// Starts reading a language's dictionary in the background ("fr" →
-        /// Dictionaries/fr.txt). Does nothing if this language is already loaded or loading.
+        /// Starts reading a language's dictionary in the background ("en" →
+        /// Dictionaries/en.txt, "fr" → Dictionaries/fr.txt; English if no language is given). Does nothing if this language is already loaded or loading.
         /// Meanwhile, Suggest suggests nothing.
         /// </summary>
         public void LoadLanguage(string language)
         {
-            language = string.IsNullOrWhiteSpace(language) ? "fr" : language.Trim().ToLowerInvariant();
+            language = string.IsNullOrWhiteSpace(language) ? "en" : language.Trim().ToLowerInvariant();
             if (language == _requestedLanguage)
             {
                 return;

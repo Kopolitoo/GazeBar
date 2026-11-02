@@ -147,10 +147,23 @@ namespace GazeBar
             // 2026-11-02.
             _aimer = new ButtonAimer(_targets, 1);
 
-            // The French dictionary is read as soon as GazeBar starts, in the background
-            // (specification): it is ready when the keyboard opens.
+            // The dictionary of the chosen layout's language is read as soon as GazeBar
+            // starts, in the background (specification): it is ready when the keyboard opens.
             _predictor = new WordPredictor();
-            _predictor.LoadLanguage("fr");
+            _predictor.LoadLanguage(StartupLanguage());
+        }
+
+        /// <summary>
+        /// The dictionary language of the layout saved in settings.json ("en" for
+        /// en-qwerty.json), read from its file; the default layout's if that file is missing
+        /// or unreadable.
+        /// </summary>
+        private static string StartupLanguage()
+        {
+            string message;
+            KeyboardLayout layout = KeyboardLayout.Load(AppSettings.Current.KeyboardLayout, out message)
+                                    ?? KeyboardLayout.Load(KeyboardLayout.DefaultName, out message);
+            return layout != null ? layout.Language : null;
         }
 
         /// <summary>
@@ -181,7 +194,7 @@ namespace GazeBar
         public bool Open(out string message)
         {
             // Step 14: the layout chosen with the "Langue" button. If its file disappeared or
-            // contains an error, the default layout (fr-azerty) is tried rather than not
+            // contains an error, the default layout (en-qwerty) is tried rather than not
             // opening the keyboard at all; the saved choice does not change.
             string name = AppSettings.Current.KeyboardLayout;
             KeyboardLayout layout = KeyboardLayout.Load(name, out message);
@@ -770,7 +783,9 @@ namespace GazeBar
         /// <summary>
         /// Keeps track of what has just been written:
         ///  - the current word: letters, digits and hyphen ("peut-être"); any other character
-        ///    (space, punctuation, apostrophe, line end) ends the word;
+        ///    (space, punctuation, apostrophe, line end) ends the word. Except, for a layout
+        ///    with "apostropheInWord" (English): an apostrophe after a letter stays in the word
+        ///    ("don't");
         ///  - the last two characters, for automatic capitalisation: after ".", "?" or "!"
         ///    followed by a space or a line end, Shift turns on by itself for the next letter
         ///    ([AutoCapitalize]). Shift is shown on: it can be turned off.
@@ -779,7 +794,9 @@ namespace GazeBar
         {
             foreach (char c in text)
             {
-                if (char.IsLetterOrDigit(c) || c == '-')
+                bool apostrophe = c == '\'' || c == '’';
+                if (char.IsLetterOrDigit(c) || c == '-' ||
+                    (apostrophe && _currentWord.Length > 0 && _layout != null && _layout.ApostropheInWord))
                 {
                     _currentWord.Append(c);
                 }
@@ -788,7 +805,6 @@ namespace GazeBar
                     // The current word is finished (step 13): if it is known, the prediction
                     // remembers it was used once more, and that it followed the previous word
                     // (learning). With an apostrophe, the elided form counts: "l'", "qu'".
-                    bool apostrophe = c == '\'' || c == '’';
                     if (_currentWord.Length > 0)
                     {
                         string word = _currentWord.ToString();

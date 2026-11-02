@@ -1,0 +1,27 @@
+Dictionaries/en.txt — list of English words and their frequencies
+=================================================================
+
+This file is derived from the English frequency list of FrequencyWords (2018 version):
+    https://github.com/hermitdave/FrequencyWords
+by Hermit Dave, built from the OpenSubtitles 2018 corpus (http://opus.nlpl.eu/OpenSubtitles2018.php):
+    P. Lison and J. Tiedemann (2016). OpenSubtitles2016: Extracting Large Parallel Corpora
+    from Movie and TV Subtitles. Proceedings of LREC 2016.
+
+Licence of the FrequencyWords content: Creative Commons Attribution-ShareAlike 4.0
+International (CC BY-SA 4.0): https://creativecommons.org/licenses/by-sa/4.0/
+
+Changes made for GazeBar (2026-11-02):
+  - only words seen at least 20 times in the corpus are kept (words with a hyphen: at
+    least 200 times);
+  - only words accepted by the en_US Hunspell spelling dictionary (SCOWL, version
+    2020.12.07, http://wordlist.aspell.net) are kept, with the casing of that dictionary
+    ("i" → "I", "london" → "London"). The Hunspell dictionary was only used as a filter:
+    none of its words were added;
+  - pieces of split contractions ("don", "t", "ll", "re", "ve", "m", "s", "d") are removed;
+  - the corpus splits contractions ("don" + "'t"), so 69 common contractions ("don't",
+    "I'm", "it's", "can't"…) are added with an estimated frequency;
+  - frequency = number of occurrences per million words of the corpus (decimal point);
+  - format: one line per word, "word<Tab>frequency", sorted.
+
+The file en.txt, a derived work, is distributed under the same CC BY-SA 4.0 licence.
+The rest of GazeBar stays under the MIT licence (see LICENSE.txt at the root of the repository).
