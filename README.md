@@ -233,7 +233,11 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   `Dictionnaires/fr.txt` (environ 125 000 mots tirés de Lexique 3.83, copié à côté de
   GazeBar.exe, lu en arrière-plan au démarrage) et `%APPDATA%\GazeBar\dictionnaire-perso.json`
   (mots ajoutés et nombres d'utilisations ; jamais dans le dépôt), enregistré après chaque ajout
-  et, pour les utilisations, une fois par minute et à la fermeture.
+  et, pour les utilisations, une fois par minute et à la fermeture. Mot suivant : GazeBar retient les
+  paires de mots écrits l'un après l'autre (« je » → « suis ») ; juste après une espace, les
+  cases proposent les mots qui ont le plus souvent suivi le mot d'avant, et pendant la frappe
+  ces mots passent devant (+ 200 par fois). Lexique n'a pas de paires : ces propositions
+  apparaissent au fil des phrases écrites. Une ponctuation ou une fin de ligne coupe le lien.
 - Le calque se remet au-dessus de toutes les fenêtres deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
@@ -304,7 +308,8 @@ Test de l'étape 13 : dans le Bloc-notes, on ouvre le clavier et on tape « bo �
 proposent « bon », « bonne »… ; on regarde « bonjour » (après « bonj ») : « bonjour » et une espace
 s'écrivent. « ete » propose « été ». On tape un mot inventé (« zorglub ») : la 1re case montre
 « + zorglub » en ambre ; on la regarde : une espace s'écrit, et en tapant « zo » le mot est
-proposé. Après avoir fermé GazeBar, `%APPDATA%\GazeBar\dictionnaire-perso.json` contient le mot.
+proposé. On écrit deux fois « je suis » (en tapant « suis » en entier puis une espace) : après
+« je » et une espace, la 1re case propose « suis ». Après avoir fermé GazeBar, `%APPDATA%\GazeBar\dictionnaire-perso.json` contient le mot.
 
 ## Limites connues
 

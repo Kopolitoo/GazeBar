@@ -32,6 +32,13 @@ namespace GazeBar
     ///     score = fréquence dans Lexique + [BonusUtilisation] × nombre d'utilisations
     /// Les mots habituels remontent donc vite. Un mot ajouté (absent de Lexique) part de 0.
     ///
+    /// MOT SUIVANT (demande de l'utilisateur du 02/11/2026) : la prédiction retient aussi les
+    /// PAIRES de mots écrits l'un après l'autre (« je » → « suis », « l' » → « homme »), dans le
+    /// dictionnaire personnel. Juste après une espace, les 3 cases montrent les mots qui ont le
+    /// plus souvent suivi le mot précédent ; pendant la frappe, ces mots gagnent
+    /// [BonusSuite] par fois. Lexique ne contient pas de paires : au début, il n'y a donc rien
+    /// à proposer après une espace, la prédiction s'enrichit au fil des phrases écrites.
+    ///
     /// Recherche SANS tenir compte des accents ni des majuscules : chaque mot a une « clé »
     /// (minuscules, sans accents, voir Cle) ; « ete » trouve « été ». Les clés sont rangées
     /// dans l'ordre alphabétique : on trouve la première qui commence par ce qui est tapé par
@@ -58,6 +65,14 @@ namespace GazeBar
         /// À ajuster après essai si les mots habituels montent trop vite ou trop lentement.
         /// </summary>
         private const double BonusUtilisation = 20;
+
+        /// <summary>
+        /// Ce que vaut UNE fois où le mot a suivi le mot précédent, pendant la frappe : 10 fois
+        /// plus qu'une simple utilisation, car le mot d'avant en dit beaucoup. Exemple : après
+        /// « je », en tapant « s », « suis » déjà écrit 5 fois après « je » gagne 1 000.
+        /// À ajuster après essai.
+        /// </summary>
+        private const double BonusSuite = 200;
 
         /// <summary>Nombre de cases de proposition.</summary>
         public const int NombrePropositions = 3;
@@ -87,6 +102,11 @@ namespace GazeBar
         private readonly Dictionary<string, int> _utilisations = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly List<string> _motsAjoutes = new List<string>();
         private readonly List<string> _clesAjoutees = new List<string>();
+
+        // Les paires de mots : pour chaque mot (forme rangée), les mots écrits juste après lui
+        // et le nombre de fois. Exemple : _suites["je"]["suis"] = 12.
+        private readonly Dictionary<string, Dictionary<string, int>> _suites =
+            new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal);
 
         // Vrai quand des nombres d'utilisations ont changé depuis le dernier enregistrement.
         private bool _aEnregistrer;
@@ -240,13 +260,38 @@ namespace GazeBar
         /// motInconnu : vrai si « tape » (2 lettres ou plus) ne correspond à aucun mot connu,
         /// ni en entier ni en début de mot : le clavier propose alors de l'ajouter. Toujours
         /// faux tant que le dictionnaire principal n'est pas chargé.
+        ///
+        /// precedent : le mot écrit juste avant (forme rangée, rendue par NoterUtilisation),
+        /// ou null (début de texte, après une ponctuation ou un déplacement du curseur). Avec
+        /// « tape » vide, les propositions sont les mots qui l'ont le plus souvent suivi.
         /// </summary>
-        public List<string> Proposer(string tape, out bool motInconnu)
+        public List<string> Proposer(string tape, string precedent, out bool motInconnu)
         {
             List<string> resultat = new List<string>(NombrePropositions);
             motInconnu = false;
             Tableaux t = _principal;
-            if (t == null || string.IsNullOrEmpty(tape))
+            Dictionary<string, int> suites = null;
+            if (precedent != null)
+            {
+                _suites.TryGetValue(precedent, out suites);
+            }
+
+            if (string.IsNullOrEmpty(tape))
+            {
+                // Mot suivant : rien de tapé, on propose ce qui a déjà suivi le mot précédent.
+                if (suites != null)
+                {
+                    List<string> meilleursSuivants = new List<string>(NombrePropositions + 1);
+                    List<double> scoresSuivants = new List<double>(NombrePropositions + 1);
+                    foreach (KeyValuePair<string, int> suite in suites)
+                    {
+                        Retenir(suite.Key, BonusSuite * suite.Value, "", null, meilleursSuivants, scoresSuivants);
+                    }
+                    resultat.AddRange(meilleursSuivants);
+                }
+                return resultat;
+            }
+            if (t == null)
             {
                 return resultat;
             }
@@ -271,7 +316,7 @@ namespace GazeBar
                     break;
                 }
                 connu = true;
-                Retenir(t.Mots[i], t.Frequences[i], tape, meilleurs, scores);
+                Retenir(t.Mots[i], t.Frequences[i], tape, suites, meilleurs, scores);
             }
 
             // 2. Les mots ajoutés par l'utilisateur (quelques dizaines au plus : on les lit tous).
@@ -280,7 +325,7 @@ namespace GazeBar
                 if (_clesAjoutees[i].StartsWith(prefixe, StringComparison.Ordinal))
                 {
                     connu = true;
-                    Retenir(_motsAjoutes[i], 0, tape, meilleurs, scores);
+                    Retenir(_motsAjoutes[i], 0, tape, suites, meilleurs, scores);
                 }
             }
 
@@ -291,9 +336,12 @@ namespace GazeBar
 
         /// <summary>
         /// Ajoute un candidat à la liste des meilleurs s'il y a sa place (score = fréquence +
-        /// bonus d'utilisation). La liste reste triée et ne dépasse pas 3 mots.
+        /// bonus d'utilisation + bonus de suite si ce mot a déjà suivi le mot précédent). La
+        /// liste reste triée et ne dépasse pas 3 mots. suites : les mots qui ont suivi le mot
+        /// précédent (ou null).
         /// </summary>
-        private void Retenir(string mot, double frequence, string tape, List<string> meilleurs, List<double> scores)
+        private void Retenir(string mot, double frequence, string tape, Dictionary<string, int> suites,
+                             List<string> meilleurs, List<double> scores)
         {
             // Le mot déjà tapé en entier n'est pas proposé (il n'apporterait rien).
             if (string.Equals(mot, tape, StringComparison.OrdinalIgnoreCase))
@@ -304,6 +352,11 @@ namespace GazeBar
             int utilisations;
             _utilisations.TryGetValue(mot, out utilisations);
             double score = frequence + BonusUtilisation * utilisations;
+            int fois;
+            if (suites != null && suites.TryGetValue(mot, out fois))
+            {
+                score += BonusSuite * fois;
+            }
 
             // On cherche sa place : avant le premier qui a un score plus petit. À score égal,
             // le mot le plus court passe devant.
@@ -390,18 +443,37 @@ namespace GazeBar
         /// espace, d'une ponctuation ou d'Entrée). S'il est connu, son nombre d'utilisations
         /// augmente de 1 (enregistré dans la minute). Un mot inconnu n'est PAS retenu : seul le
         /// choix de la case « + » ajoute un mot (cahier des charges).
+        ///
+        /// precedent : le mot écrit juste avant (ce que rendait l'appel précédent), ou null.
+        /// Si les deux sont connus, la paire « precedent → mot » est retenue (mot suivant).
+        /// Renvoie la forme rangée du mot (« Bonjour » → « bonjour »), ou null s'il est
+        /// inconnu : c'est le « precedent » du prochain appel.
         /// </summary>
-        public void NoterUtilisation(string mot)
+        public string NoterUtilisation(string mot, string precedent)
         {
             string forme = FormeConnue(mot);
             if (forme == null)
             {
-                return;
+                return null;
             }
             int n;
             _utilisations.TryGetValue(forme, out n);
             _utilisations[forme] = n + 1;
+
+            if (precedent != null)
+            {
+                Dictionary<string, int> suites;
+                if (!_suites.TryGetValue(precedent, out suites))
+                {
+                    suites = new Dictionary<string, int>(StringComparer.Ordinal);
+                    _suites[precedent] = suites;
+                }
+                int fois;
+                suites.TryGetValue(forme, out fois);
+                suites[forme] = fois + 1;
+            }
             _aEnregistrer = true;
+            return forme;
         }
 
         /// <summary>
@@ -513,8 +585,27 @@ namespace GazeBar
                         }
                     }
                 }
+                if (fichier != null && fichier.Suites != null)
+                {
+                    foreach (PaireMots paire in fichier.Suites)
+                    {
+                        if (paire == null || string.IsNullOrEmpty(paire.Avant) || string.IsNullOrEmpty(paire.Apres) ||
+                            paire.Nombre <= 0)
+                        {
+                            continue;
+                        }
+                        Dictionary<string, int> suites;
+                        if (!_suites.TryGetValue(paire.Avant, out suites))
+                        {
+                            suites = new Dictionary<string, int>(StringComparer.Ordinal);
+                            _suites[paire.Avant] = suites;
+                        }
+                        suites[paire.Apres] = paire.Nombre;
+                    }
+                }
                 App.Log("Prédiction : dictionnaire personnel lu (" + _motsAjoutes.Count + " mots ajoutés, " +
-                        _utilisations.Count + " mots avec des utilisations)");
+                        _utilisations.Count + " mots avec des utilisations, " + _suites.Count +
+                        " mots avec des suites)");
             }
             catch (Exception ex)
             {
@@ -538,7 +629,9 @@ namespace GazeBar
         {
             _aEnregistrer = false;
             FichierPersonnel fichier = new FichierPersonnel();
-            fichier.VersionFichier = 1;
+            // Version 2 (02/11/2026) : ajout des paires de mots (Suites). Un fichier de
+            // version 1 se lit sans rien faire : il n'a simplement pas de paires.
+            fichier.VersionFichier = 2;
             fichier.Mots = new List<MotPersonnel>();
             foreach (string mot in _motsAjoutes)
             {
@@ -551,6 +644,15 @@ namespace GazeBar
                 if (!_motsAjoutes.Contains(u.Key))
                 {
                     fichier.Mots.Add(new MotPersonnel { Mot = u.Key, Ajoute = false, Utilisations = u.Value });
+                }
+            }
+
+            fichier.Suites = new List<PaireMots>();
+            foreach (KeyValuePair<string, Dictionary<string, int>> avant in _suites)
+            {
+                foreach (KeyValuePair<string, int> apres in avant.Value)
+                {
+                    fichier.Suites.Add(new PaireMots { Avant = avant.Key, Apres = apres.Key, Nombre = apres.Value });
                 }
             }
 
@@ -591,6 +693,9 @@ namespace GazeBar
     ///   "Mots": [
     ///     { "Mot": "Kopolito", "Ajoute": true, "Utilisations": 4 },
     ///     { "Mot": "bonjour", "Ajoute": false, "Utilisations": 12 }
+    ///   ],
+    ///   "Suites": [
+    ///     { "Avant": "je", "Apres": "suis", "Nombre": 7 }
     ///   ]
     /// }
     /// « Ajoute » : vrai pour un mot ajouté par la case « + » (absent de Lexique).
@@ -603,6 +708,24 @@ namespace GazeBar
 
         [DataMember(Order = 2)]
         public List<MotPersonnel> Mots { get; set; }
+
+        /// <summary>Les paires de mots (mot suivant), depuis la version 2.</summary>
+        [DataMember(Order = 3)]
+        public List<PaireMots> Suites { get; set; }
+    }
+
+    /// <summary>Une paire de mots : « Apres » a été écrit juste après « Avant », « Nombre » fois.</summary>
+    [DataContract]
+    internal sealed class PaireMots
+    {
+        [DataMember(Order = 1)]
+        public string Avant { get; set; }
+
+        [DataMember(Order = 2)]
+        public string Apres { get; set; }
+
+        [DataMember(Order = 3)]
+        public int Nombre { get; set; }
     }
 
     /// <summary>Un mot du dictionnaire personnel.</summary>

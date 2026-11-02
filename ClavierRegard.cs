@@ -44,6 +44,8 @@ namespace GazeBar
     /// probables qui commencent par le mot en cours (PredicteurMots) ; en regarder une écrit
     /// le mot entier suivi d'une espace. Un mot inconnu (2 lettres ou plus) s'affiche dans la
     /// 1re case avec un « + » : la regarder l'ajoute au dictionnaire personnel.
+    /// Juste après une espace, les cases proposent les mots qui ont déjà suivi le mot d'avant
+    /// (« mot suivant », appris au fil des phrases, demande du 02/11/2026).
     ///
     /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
     /// </summary>
@@ -103,6 +105,11 @@ namespace GazeBar
         private readonly PredicteurMots _predicteur;
         private List<string> _propositions = new List<string>();
         private bool _motInconnu;
+
+        // Le mot écrit juste avant le mot en cours (forme rangée du dictionnaire), pour la
+        // prédiction du mot suivant (02/11/2026) ; null au début, après une ponctuation, ou
+        // quand le curseur de texte a pu bouger (le mot d'avant n'est alors plus sûr).
+        private string _motPrecedent;
 
         // Les deux derniers caractères tapés, pour la majuscule automatique après « . ».
         private string _fin = "";
@@ -203,6 +210,7 @@ namespace GazeBar
                 // On est parti faire autre chose (un clic ailleurs, les paramètres…) : le texte
                 // autour du curseur a pu changer, le mot en cours n'est plus sûr.
                 _motEnCours.Clear();
+                _motPrecedent = null;
                 _fin = "";
             }
             else if (_visible)
@@ -312,6 +320,7 @@ namespace GazeBar
             _alt = false;
             _win = false;
             _motEnCours.Clear();
+            _motPrecedent = null;
             _fin = "";
         }
 
@@ -436,6 +445,7 @@ namespace GazeBar
                     _maj = false;
                     // Un raccourci n'écrit pas de texte : le mot en cours n'est plus sûr.
                     _motEnCours.Clear();
+                    _motPrecedent = null;
                     _fin = "";
                     return;
                 }
@@ -478,6 +488,7 @@ namespace GazeBar
             {
                 // Tab, flèches, Début… : le curseur de texte a bougé, le mot en cours n'est plus sûr.
                 _motEnCours.Clear();
+                _motPrecedent = null;
                 _fin = "";
             }
         }
@@ -522,6 +533,7 @@ namespace GazeBar
             }
             InjecteurClavier.TaperTouche(code, etendue, mods);
             _motEnCours.Clear();
+            _motPrecedent = null;
             _fin = "";
         }
 
@@ -536,6 +548,11 @@ namespace GazeBar
             if (_motEnCours.Length > 0)
             {
                 _motEnCours.Length--;
+            }
+            else
+            {
+                // On efface l'espace ou la fin du mot d'avant : il n'est plus sûr.
+                _motPrecedent = null;
             }
             _fin = _fin.Length > 0 ? _fin.Substring(0, _fin.Length - 1) : "";
         }
@@ -559,6 +576,7 @@ namespace GazeBar
             else
             {
                 InjecteurClavier.TaperTouche(NativeMethods.VK_BACK, false, new List<ushort> { NativeMethods.VK_CONTROL });
+                _motPrecedent = null;   // c'est le mot d'avant qui vient d'être effacé
             }
             _fin = "";
         }
@@ -625,12 +643,20 @@ namespace GazeBar
                 else
                 {
                     // Le mot en cours est terminé (étape 13) : s'il est connu, la prédiction
-                    // retient qu'il a été utilisé une fois de plus (apprentissage). Avec une
-                    // apostrophe, c'est la forme élidée qui compte : « l' », « qu' ».
+                    // retient qu'il a été utilisé une fois de plus, et qu'il a suivi le mot
+                    // d'avant (apprentissage). Avec une apostrophe, c'est la forme élidée qui
+                    // compte : « l' », « qu' ».
+                    bool apostrophe = c == '\'' || c == '’';
                     if (_motEnCours.Length > 0)
                     {
                         string mot = _motEnCours.ToString();
-                        _predicteur.NoterUtilisation(c == '\'' || c == '’' ? mot + "'" : mot);
+                        _motPrecedent = _predicteur.NoterUtilisation(apostrophe ? mot + "'" : mot, _motPrecedent);
+                    }
+                    // Mot suivant : seuls une espace ou une apostrophe gardent le lien avec le
+                    // mot d'avant ; une ponctuation (. , ? ! …) ou une fin de ligne le coupent.
+                    if (c != ' ' && !apostrophe)
+                    {
+                        _motPrecedent = null;
                     }
                     _motEnCours.Clear();
                 }
@@ -665,12 +691,14 @@ namespace GazeBar
         ///    vite et sans clignotement, on n'efface que la fin qui diffère : « bon » → « bonjour »
         ///    écrit seulement « jour » ; « ete » → « été » efface « te » et écrit « té ».
         ///    Après un mot élidé (m' t' n' s' c' l' qu' d' j'…), pas d'espace : le mot suivant
-    ///    s'y colle (demande de l'utilisateur du 02/11/2026).
+        ///    s'y colle (demande de l'utilisateur du 02/11/2026).
         /// </summary>
         private void ChoisirProposition(int numero)
         {
             string tape = _motEnCours.ToString();
-            // Les modificateurs ne s'appliquent pas à un mot entier : on les éteint.
+            // Maj ou Caps Lock allumé avant un mot suivant : sa 1re lettre en majuscule.
+            bool majusculeDemandee = _maj ^ _verrMaj;
+            // Les autres modificateurs ne s'appliquent pas à un mot entier : on les éteint.
             _maj = false;
             _ctrl = false;
             _alt = false;
@@ -685,12 +713,13 @@ namespace GazeBar
             }
 
             int indice = numero - 1;
-            if (tape.Length == 0 || indice < 0 || indice >= _propositions.Count)
+            if (indice < 0 || indice >= _propositions.Count)
             {
                 return;   // case vide (ne devrait pas arriver : elle est inactive)
             }
 
-            string mot = AvecMajuscule(_propositions[indice], tape);
+            // (Avec « tape » vide, c'est une proposition de mot suivant : rien à effacer.)
+            string mot = FormeAffichee(_propositions[indice], tape, majusculeDemandee);
 
             // Les premières lettres identiques restent en place.
             int communes = 0;
@@ -708,8 +737,22 @@ namespace GazeBar
             InjecteurClavier.TaperTexte(ajout);
 
             _motEnCours.Clear();
-            _predicteur.NoterUtilisation(mot);
+            _motPrecedent = _predicteur.NoterUtilisation(mot, _motPrecedent);
             GarderFin(ajout);
+        }
+
+        /// <summary>
+        /// Le mot tel qu'il s'affiche dans sa case et s'écrit : avec les majuscules de ce qui a
+        /// été tapé (AvecMajuscule) ; pour un mot suivant (rien de tapé), avec une majuscule
+        /// au début si Maj ou Caps Lock est allumé.
+        /// </summary>
+        private static string FormeAffichee(string mot, string tape, bool majuscule)
+        {
+            if (string.IsNullOrEmpty(tape) && majuscule && !string.IsNullOrEmpty(mot))
+            {
+                return char.ToUpper(mot[0], CultureInfo.CurrentCulture) + mot.Substring(1);
+            }
+            return AvecMajuscule(mot, tape);
         }
 
         /// <summary>
@@ -938,7 +981,7 @@ namespace GazeBar
         private void MettreAJourEtat()
         {
             string tape = _motEnCours.ToString();
-            _propositions = _predicteur.Proposer(tape, out _motInconnu);
+            _propositions = _predicteur.Proposer(tape, _motPrecedent, out _motInconnu);
 
             bool majuscules = _maj ^ _verrMaj;
             foreach (ToucheClavier touche in _touches)
@@ -960,7 +1003,7 @@ namespace GazeBar
                     }
                     else if (!_motInconnu && indice >= 0 && indice < _propositions.Count)
                     {
-                        touche.AfficherProposition(AvecMajuscule(_propositions[indice], tape), false);
+                        touche.AfficherProposition(FormeAffichee(_propositions[indice], tape, _maj ^ _verrMaj), false);
                     }
                     else
                     {
