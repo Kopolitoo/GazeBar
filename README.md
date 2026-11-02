@@ -300,6 +300,16 @@ Pour ajouter une langue : copier `en.json` en `xx.json`, traduire les valeurs (j
   cases proposent les mots qui ont le plus souvent suivi le mot d'avant, et pendant la frappe
   ces mots passent devant (+ 200 par fois). Lexique n'a pas de paires : ces propositions
   apparaissent au fil des phrases écrites. Une ponctuation ou une fin de ligne coupe le lien.
+- Clavier anglais (étape clavier-anglais) : `Keyboards/en-qwerty.json` (« English QWERTY »,
+  lettres QWERTY, page d'accents É,Ü,Ñ) et son dictionnaire `Dictionaries/en.txt` (environ
+  62 000 mots tirés de FrequencyWords, sous-titres OpenSubtitles 2018, filtrés par le
+  dictionnaire orthographique Hunspell en_US ; les contractions « don't », « I'm »… ont une
+  fréquence estimée). Le dictionnaire suit la langue de l'INTERFACE (bouton « Langue » des
+  paramètres, demande du 2026-11-02), pas la disposition : le bouton « Disposition du clavier »
+  change seulement les touches. Un dictionnaire dont la première ligne est `#apostropheInWord`
+  (anglais) garde l'apostrophe après une lettre dans le mot (« don' » propose « don't ») ; sinon
+  (français) l'apostrophe termine le mot élidé (« l' »). Une nouvelle installation démarre avec le
+  clavier anglais ; un ancien fichier de réglages (avant la version 10) garde le clavier français.
 - Options du clavier (étape 14, `KeyboardListMode`) : deux boutons de plus dans la barre du
   clavier, et un bouton « Mes mots » dans l'onglet Général des paramètres. « Zone de saisie » (interrupteur, bord vert, `InputBox`) : une bande au-dessus des
   touches montre les derniers mots tapés (simple aperçu : le texte part toujours dans le
@@ -393,6 +403,12 @@ clavier » ramène au clavier. Paramètres, onglet Général, « Mes mots » : �
 l'étape 13) est dans la liste ; on le regarde : il disparaît ; « Retour aux paramètres » ramène à
 l'onglet Général. En tapant « zo », il n'est plus proposé.
 
+Test de l'étape clavier-anglais : clavier ouvert, « Disposition du clavier » : la liste montre
+« English QWERTY » et « Français AZERTY » ; on choisit « English QWERTY » : lettres en QWERTY, et
+avec l'interface en français, « bonj » propose toujours « bonjour ». Paramètres, Général,
+« Langue » → English ; retour au clavier : « th » propose « the », « that », « this » (ou proches),
+« don » et « don' » proposent « don't ».
+
 Test de l'étape 15 : Paramètres, Système, Profils, « Enregistrer les réglages actuels » : le
 message donne le nom du profil, et le fichier apparaît dans `Documents\GazeBar\Profiles`. On
 change le rayon du cercle (Affichage). Profils, « Charger un profil » : la liste montre le profil ;
@@ -412,9 +428,12 @@ GazeBar est distribué sous licence MIT : chacun peut l'utiliser, le modifier et
 librement, à condition de conserver la mention de copyright. Le logiciel est fourni sans garantie.
 Texte complet : [LICENSE.txt](LICENSE.txt).
 
-Exception : le dictionnaire `Dictionaries/fr.txt` est tiré de [Lexique 3.83](http://www.lexique.org)
+Exceptions : le dictionnaire `Dictionaries/fr.txt` est tiré de [Lexique 3.83](http://www.lexique.org)
 (B. New, C. Pallier et coll.) et reste sous licence CC BY-SA 4.0 : voir
-[Dictionaries/LICENSE-Lexique.txt](Dictionaries/LICENSE-Lexique.txt).
+[Dictionaries/LICENSE-Lexique.txt](Dictionaries/LICENSE-Lexique.txt). Le dictionnaire
+`Dictionaries/en.txt` est tiré de [FrequencyWords](https://github.com/hermitdave/FrequencyWords)
+(H. Dave, d'après OpenSubtitles 2018) et reste sous licence CC BY-SA 4.0 : voir
+[Dictionaries/LICENSE-FrequencyWords.txt](Dictionaries/LICENSE-FrequencyWords.txt).
 
 ## Mentions légales
 

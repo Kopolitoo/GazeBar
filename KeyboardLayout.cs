@@ -8,7 +8,7 @@ namespace GazeBar
 {
     /// <summary>
     /// MODEL: a gaze keyboard layout (step 12, "clavier-base"), read from a JSON file of the
-    /// Keyboards folder (for example Keyboards/fr-azerty.json).
+    /// Keyboards folder (for example Keyboards/en-qwerty.json, Keyboards/fr-azerty.json).
     ///
     /// Why a file and not code? To be able to add a language or change a key later WITHOUT
     /// recompiling: it is enough to edit or add a file (user request of 2026-10-31). The file
@@ -48,16 +48,20 @@ namespace GazeBar
         public const string FolderName = "Keyboards";
 
         /// <summary>
-        /// The default layout. Since step 14, another one is chosen with the "Language" button
-        /// of the keyboard bar ([KeyboardLayout] in settings.json).
+        /// The default layout (English since step clavier-anglais; fr-azerty before). Since
+        /// step 14, another one is chosen with the "Language" button of the keyboard bar
+        /// ([KeyboardLayout] in settings.json).
         /// </summary>
-        public const string DefaultName = "fr-azerty";
+        public const string DefaultName = "en-qwerty";
 
         /// <summary>The displayed name, for example "Français AZERTY".</summary>
         [DataMember(Name = "name", Order = 0)]
         public string Name { get; set; }
 
-        /// <summary>The language of the word dictionary ("fr"), for the prediction (step 13).</summary>
+        /// <summary>
+        /// The language of the layout ("fr"), for information only: since step clavier-anglais
+        /// the prediction dictionary follows the interface language, not the layout.
+        /// </summary>
         [DataMember(Name = "language", Order = 1)]
         public string Language { get; set; }
 

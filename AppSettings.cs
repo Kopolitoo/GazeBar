@@ -62,8 +62,9 @@ namespace GazeBar
         ///      default value;
         ///   9: step 12 (user remarks of 2026-11-01) — KeyboardSize and KeyboardAtTop. Nothing
         ///      to fix: missing from an older file, they keep their default value;
-        ///  10: step 14 ("clavier-options") — KeyboardLayout and InputBox. Nothing to fix:
-        ///      missing from an older file, they keep their default value;
+        ///  10: step 14 ("clavier-options") — KeyboardLayout and InputBox. Missing from an
+        ///      older file: InputBox keeps its default value; KeyboardLayout gets "fr-azerty"
+        ///      (since step clavier-anglais the default is "en-qwerty", for new installations);
         ///  11: MaxScrollSpeed goes from 15 to 5 notches/s by default (user request of
         ///      2026-11-02, after the switch to fine scrolling), and new setting
         ///      ScrollInactiveWindows (yes by default; missing from an older file, it keeps
@@ -401,7 +402,7 @@ namespace GazeBar
 
         /// <summary>
         /// The gaze keyboard layout: the name of a file of the Keyboards folder, without
-        /// ".json" (for example "fr-azerty"). Chosen with the "Langue" button of the keyboard
+        /// ".json" (for example "en-qwerty", "fr-azerty"). Chosen with the "Langue" button of the keyboard
         /// menu bar (step 14).
         /// </summary>
         [DataMember(Order = 116)]
@@ -778,8 +779,10 @@ namespace GazeBar
 
             if (FileVersion < 10)
             {
-                // Nothing to fix: KeyboardLayout and InputBox, missing from the file, kept
-                // their default value (see BeforeReading).
+                // KeyboardLayout is missing from the file: it belongs to an existing French
+                // user, who keeps the French keyboard (the default is English since step
+                // clavier-anglais). InputBox kept its default value (see BeforeReading).
+                KeyboardLayout = "fr-azerty";
                 App.Log("Settings: updated to version 10 (keyboard language and input box)");
             }
 
