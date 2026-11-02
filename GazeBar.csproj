@@ -53,6 +53,10 @@
          sont copiées à côté de GazeBar.exe à chaque compilation, si elles ont changé.
          GazeBar les lit là (voir DispositionClavier.cs). -->
     <None Update="Claviers\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Étape 13 : le dictionnaire de la prédiction de mots (Dictionnaires/fr.txt, tiré de
+         Lexique 3.83) et sa licence sont copiés de même à côté de GazeBar.exe
+         (voir PredicteurMots.cs). -->
+    <None Update="Dictionnaires\*.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

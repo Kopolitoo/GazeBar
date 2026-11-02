@@ -221,9 +221,24 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   dans les paramètres), Pause, Fermer. Quand elle s'ouvre, le clavier en bas remonte au-dessus
   d'elle en glissant (et redescend de même). Fermeture : bouton à droite au-dessus du clavier (en dessous s'il est en haut), barre
   du clavier, ou Échap. Tab est une vraie tabulation : sa largeur (2 ou 4 espaces) se règle
-  dans le logiciel où l'on écrit. Les trois cases de proposition
-  de mots restent vides jusqu'à l'étape 13. Le texte tapé n'est jamais écrit dans le journal.
+  dans le logiciel où l'on écrit. Le texte tapé n'est jamais écrit dans le journal.
   Réglages : onglet « Clavier » des paramètres (`parametres.json` version 9).
+- Prédiction de mots (étape 13, `PredicteurMots`) : les trois cases du haut du clavier
+  proposent les trois mots les plus probables qui commencent par le mot en cours (lettres tapées
+  depuis la dernière espace, ponctuation, Entrée, Tab ou flèche), sans tenir compte des accents
+  ni des majuscules (« ete » propose « été »). Si ce qui est tapé est déjà un mot connu, il est
+  en 1re case : le regarder écrit juste l'espace après lui. En regarder une écrit le mot entier suivi d'une
+  espace (pas d'espace après « l' », « qu' »…) ; le mot garde la majuscule de départ. Classement :
+  fréquence dans Lexique + 20 par utilisation. Un mot inconnu de 2 lettres ou plus s'affiche dans
+  la 1re case avec un « + » (en ambre) : la regarder l'ajoute au dictionnaire personnel. Fichiers :
+  `Dictionnaires/fr.txt` (environ 125 000 mots tirés de Lexique 3.83, copié à côté de
+  GazeBar.exe, lu en arrière-plan au démarrage) et `%APPDATA%\GazeBar\dictionnaire-perso.json`
+  (mots ajoutés et nombres d'utilisations ; jamais dans le dépôt), enregistré après chaque ajout
+  et, pour les utilisations, une fois par minute et à la fermeture. Mot suivant : GazeBar retient les
+  paires de mots écrits l'un après l'autre (« je » → « suis ») ; juste après une espace, les
+  cases proposent les mots qui ont le plus souvent suivi le mot d'avant, et pendant la frappe
+  ces mots passent devant (+ 200 par fois). Lexique n'a pas de paires : ces propositions
+  apparaissent au fil des phrases écrites. Une ponctuation ou une fin de ligne coupe le lien.
 - Le calque se remet au-dessus de toutes les fenêtres deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
@@ -290,6 +305,13 @@ On regarde sous l'écran : la barre du clavier s'ouvre et le clavier remonte au-
 « Pause » le cache jusqu'à la reprise. Dans la configuration des icônes, on place « Clavier » sur la couronne : dans le choix
 d'action, ce bouton ouvre le clavier.
 
+Test de l'étape 13 : dans le Bloc-notes, on ouvre le clavier et on tape « bo » : les cases
+proposent « bon », « bonne »… ; on regarde « bonjour » (après « bonj ») : « bonjour » et une espace
+s'écrivent. « ete » propose « été ». On tape un mot inventé (« zorglub ») : la 1re case montre
+« + zorglub » en ambre ; on la regarde : une espace s'écrit, et en tapant « zo » le mot est
+proposé. On écrit deux fois « je suis » (en tapant « suis » en entier puis une espace) : après
+« je » et une espace, la 1re case propose « suis ». Après avoir fermé GazeBar, `%APPDATA%\GazeBar\dictionnaire-perso.json` contient le mot.
+
 ## Limites connues
 
 - Une fenêtre lancée « en tant qu'administrateur » ignore les clics injectés et les touches du
@@ -302,3 +324,7 @@ d'action, ce bouton ouvre le clavier.
 GazeBar est distribué sous licence MIT : chacun peut l'utiliser, le modifier et le redistribuer
 librement, à condition de conserver la mention de copyright. Le logiciel est fourni sans garantie.
 Texte complet : [LICENSE.txt](LICENSE.txt).
+
+Exception : le dictionnaire `Dictionnaires/fr.txt` est tiré de [Lexique 3.83](http://www.lexique.org)
+(B. New, C. Pallier et coll.) et reste sous licence CC BY-SA 4.0 : voir
+[Dictionnaires/LICENCE-Lexique.txt](Dictionnaires/LICENCE-Lexique.txt).

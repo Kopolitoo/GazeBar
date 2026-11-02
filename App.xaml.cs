@@ -203,6 +203,9 @@ namespace GazeBar
             }
             if (_modes != null)
             {
+                // Étape 13 : les nombres d'utilisations des mots du clavier en attente sont
+                // enregistrés dans le dictionnaire personnel.
+                _modes.Clavier.Arreter();
                 _modes.Arreter();
             }
             if (_sampler != null)
