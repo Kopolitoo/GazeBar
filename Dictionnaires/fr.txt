@@ -16715,6 +16715,7 @@ bûché	0.14
 bûmes	1.92
 bût	0.01
 c	125.84
+c'	15000.00
 c'est-à-dire	52.03
 cab	0.60
 cabale	1.14
@@ -64661,6 +64662,7 @@ ivrognesse	0.08
 ixe	0.34
 ixième	0.07
 j	71.26
+j'	12000.00
 jabadao	0.20
 jabot	2.04
 jaboter	0.07
@@ -68887,6 +68889,7 @@ lézardés	0.54
 lûmes	0.21
 lût	0.47
 m	104.48
+m'	7000.00
 m'as-tu-vu	0.03
 ma	4014.25
 ma-jong	0.09
@@ -90669,6 +90672,7 @@ pût	43.20
 pûtes	0.04
 q	4.10
 qu	46.74
+qu'	9000.00
 qu'en-dira-t-on	0.51
 quadra	0.03
 quadragénaire	1.41

@@ -21,6 +21,8 @@ Modifications faites pour GazeBar (le 02/11/2026) :
   - les lignes d'un même mot écrit (homographes : « a » nom et « a » verbe…) sont fusionnées,
     leurs fréquences additionnées ;
   - les expressions de plusieurs mots séparés par une espace sont retirées ;
+  - ajout de quatre formes élidées absentes de Lexique, avec une fréquence estimée :
+    c' (15000), j' (12000), qu' (9000), m' (7000) ;
   - format : une ligne par mot, « mot<Tabulation>fréquence » (point décimal), triée.
 
 Le fichier fr.txt, œuvre dérivée, est distribué sous la même licence CC BY-SA 4.0.

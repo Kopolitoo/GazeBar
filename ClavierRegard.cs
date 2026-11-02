@@ -664,7 +664,8 @@ namespace GazeBar
         ///  - sinon : le mot proposé remplace les lettres tapées, suivi d'une espace. Pour aller
         ///    vite et sans clignotement, on n'efface que la fin qui diffère : « bon » → « bonjour »
         ///    écrit seulement « jour » ; « ete » → « été » efface « te » et écrit « té ».
-        ///    Après un mot élidé (« l' », « qu' »), pas d'espace : le mot suivant s'y colle.
+        ///    Après un mot élidé (m' t' n' s' c' l' qu' d' j'…), pas d'espace : le mot suivant
+    ///    s'y colle (demande de l'utilisateur du 02/11/2026).
         /// </summary>
         private void ChoisirProposition(int numero)
         {
