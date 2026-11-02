@@ -252,9 +252,8 @@ namespace GazeBar
         /// <summary>
         /// Les (au plus) 3 mots les plus probables qui commencent par « tape » (sans tenir
         /// compte des accents ni des majuscules), du plus probable au moins probable.
-        /// Le mot exactement tapé n'est pas proposé (cahier des charges : seuls les mots plus
-        /// longs le sont ; un mot de même longueur qui ne diffère que par les accents, comme
-        /// « été » pour « ete », l'est quand même). Les mots sont rendus tels qu'ils sont
+        /// Seuls les mots au moins aussi longs que ce qui est tapé sont proposés, sauf le mot
+        /// exactement tapé (« ete » propose « été », règle validée le 02/11/2026). Les mots sont rendus tels qu'ils sont
         /// rangés : c'est le clavier qui ajoute la majuscule si besoin.
         ///
         /// motInconnu : vrai si « tape » (2 lettres ou plus) ne correspond à aucun mot connu,
@@ -343,8 +342,10 @@ namespace GazeBar
         private void Retenir(string mot, double frequence, string tape, Dictionary<string, int> suites,
                              List<string> meilleurs, List<double> scores)
         {
-            // Le mot déjà tapé en entier n'est pas proposé (il n'apporterait rien).
-            if (string.Equals(mot, tape, StringComparison.OrdinalIgnoreCase))
+            // Règle validée par l'utilisateur le 02/11/2026 : un mot AU MOINS AUSSI LONG que ce
+            // qui est tapé (« été » pour « ete »), mais pas le mot déjà tapé en entier (il
+            // n'apporterait rien).
+            if (mot.Length < tape.Length || string.Equals(mot, tape, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
