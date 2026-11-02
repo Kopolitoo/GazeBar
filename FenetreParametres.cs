@@ -30,6 +30,14 @@ namespace GazeBar
     /// icônes », la fenêtre ne fait que PRÉVENIR le mode (événements CalibrationDemandee et
     /// DiagnosticDemande) : c'est ModeParametres qui lance l'outil et change de mode.
     ///
+    /// Étape 15 : un onglet « Profils » (catégorie Système), avec deux gros boutons :
+    ///   - « Enregistrer les réglages actuels » : fait ici même (ProfilsParametres), un
+    ///     message donne le nom du profil créé ;
+    ///   - « Charger un profil » : prévient le mode (ListeProfilsDemandee), qui ouvre la liste
+    ///     des profils en plein écran. Le profil choisi revient ici sous forme d'une
+    ///     confirmation « Oui / Non » (constructeur, « profilAConfirmer ») ; « Oui » prévient
+    ///     le mode (ChargementProfilDemande), qui charge le profil.
+    ///
     /// POURQUOI UNE VRAIE FENÊTRE, et pas un dessin sur le calque comme les autres modes ?
     /// Le calque laisse passer les clics et ne prend jamais le clavier. Or l'aidant doit
     /// pouvoir cliquer à la souris et taper une valeur au clavier (ou la dicter). Cette
@@ -92,9 +100,13 @@ namespace GazeBar
         private int _onglet;
         private bool _confirmation;
 
-        // Un message affiché dans l'onglet « Outils » (par exemple « Calibration impossible… »),
-        // ou null. Effacé quand on change d'onglet.
-        private string _messageOutils;
+        // Un message affiché dans l'onglet « Outils » (par exemple « Calibration impossible… »)
+        // ou « Profils » (« Profil chargé… »), ou null. Effacé quand on change d'onglet.
+        private string _message;
+
+        // Étape 15 : le profil choisi dans la liste, en attente de confirmation (« Charger le
+        // profil … ? Oui / Non »), ou null.
+        private ProfilTrouve _profilAConfirmer;
 
         // La saisie au clavier en cours (null = aucune).
         private Reglage _reglageEdite;
@@ -106,10 +118,13 @@ namespace GazeBar
         /// <summary>
         /// Crée la fenêtre, ouverte sur l'onglet numéro « onglet » (0 = le premier). Au retour
         /// de l'écran de configuration des icônes, elle s'ouvre sur l'onglet « Icônes ».
+        /// Étape 15 : au retour de la liste des profils, « profilAConfirmer » est le profil
+        /// choisi ; la page montre alors la question « Charger le profil … ? ».
         /// </summary>
-        public FenetreParametres(int onglet = 0)
+        public FenetreParametres(int onglet = 0, ProfilTrouve profilAConfirmer = null)
         {
             _onglet = Math.Max(0, Math.Min(onglet, CatalogueParametres.Onglets.Count - 1));
+            _profilAConfirmer = profilAConfirmer;
 
             Title = "GazeBar — Paramètres";
             WindowStyle = WindowStyle.None;
@@ -162,13 +177,20 @@ namespace GazeBar
         /// <summary>Bouton « Mes mots » de l'onglet « Général » (étape 14).</summary>
         public event Action MesMotsDemandes;
 
+        /// <summary>Bouton « Charger un profil » de l'onglet « Profils » (étape 15).</summary>
+        public event Action ListeProfilsDemandee;
+
+        /// <summary>« Oui » à la question « Charger le profil … ? » (étape 15) : le profil à charger.</summary>
+        public event Action<ProfilTrouve> ChargementProfilDemande;
+
         /// <summary>
-        /// Affiche un message dans l'onglet « Outils » (par exemple si la calibration n'a pas
-        /// pu être lancée). La page est reconstruite pour le montrer.
+        /// Affiche un message dans l'onglet ouvert (« Outils » : la calibration n'a pas pu être
+        /// lancée ; « Profils » : le profil est chargé…). La page est reconstruite pour le
+        /// montrer.
         /// </summary>
-        public void AfficherMessageOutils(string message)
+        public void AfficherMessage(string message)
         {
-            _messageOutils = message;
+            _message = message;
             Construire();
         }
 
@@ -344,10 +366,15 @@ namespace GazeBar
             //    Au plus 4 + 3 = 7 boutons (au lieu de 11 avant), donc des boutons plus hauts.
             ConstruireColonneGauche();
 
-            // ── Le contenu : les réglages, ou la confirmation de « Défaut ».
+            // ── Le contenu : les réglages, ou la confirmation de « Défaut », ou celle du
+            //    chargement d'un profil (étape 15).
             if (_confirmation)
             {
                 ConstruireConfirmation(onglet);
+            }
+            else if (_profilAConfirmer != null)
+            {
+                ConstruireConfirmationProfil();
             }
             else
             {
@@ -372,11 +399,15 @@ namespace GazeBar
                 {
                     ConstruireOngletOutils();
                 }
+                if (onglet.Nom == CatalogueParametres.NomOngletProfils)
+                {
+                    ConstruireOngletProfils();
+                }
             }
 
             // ── La colonne de droite : « Défaut » en haut, « Retour » au milieu du bord.
             //    E72C = flèches circulaires (remettre), E72B = flèche de retour.
-            //    Pas de « Défaut » pour un onglet sans rien à remettre (« Outils ») : un bouton
+            //    Pas de « Défaut » pour un onglet sans rien à remettre (« Outils », « Profils ») : un bouton
             //    qui ne fait rien serait déroutant.
             bool aDesDefauts = onglet.Reglages.Count > 0 || onglet.Nom == CatalogueParametres.NomOngletIcones;
             if (aDesDefauts)
@@ -642,13 +673,113 @@ namespace GazeBar
             AjouterCible(ContenuGauche + 170, 620, 800, 180, GrosBouton("\uE9D9", "Diagnostic"),
                          () => Prevenir(DiagnosticDemande), false, false);
 
-            if (!string.IsNullOrEmpty(_messageOutils))
+            ConstruireMessage();
+        }
+
+        /// <summary>Le message éventuel de l'onglet (sous les gros boutons), en bleu.</summary>
+        private void ConstruireMessage()
+        {
+            if (!string.IsNullOrEmpty(_message))
             {
-                TextBlock message = Texte(_messageOutils, 30, CibleParametre.Accent, true);
+                TextBlock message = Texte(_message, 30, CibleParametre.Accent, true);
                 message.TextWrapping = TextWrapping.Wrap;
                 message.Width = 1140;
                 Placer(message, ContenuGauche, 870);
             }
+        }
+
+        /// <summary>
+        /// Onglet « Profils » (étape 15) : une explication avec le dossier des profils, puis
+        /// deux gros boutons l'un au-dessus de l'autre (même hauteur que ceux de « Outils »,
+        /// mais plus larges pour le long texte,
+        /// avec le même grand écart). E74E = disquette (Enregistrer), E8E5 = dossier ouvert
+        /// (Charger). Sous les boutons : le message (« Réglages enregistrés dans… »).
+        /// </summary>
+        private void ConstruireOngletProfils()
+        {
+            StackPanel textes = new StackPanel();
+            textes.Children.Add(Texte("Profils de réglages", 36, Blanc, true));
+            TextBlock explication = Texte(
+                "Garder plusieurs jeux de réglages et passer de l'un à l'autre. Pour renommer ou " +
+                "supprimer un profil, l'aidant le fait dans l'Explorateur, dans le dossier :",
+                23, Doux, false);
+            explication.TextWrapping = TextWrapping.Wrap;
+            explication.Width = 1140;
+            explication.Margin = new Thickness(0, 6, 0, 0);
+            textes.Children.Add(explication);
+            TextBlock dossier = Texte(ProfilsParametres.Dossier, 22, Doux, false);
+            dossier.FontFamily = new FontFamily("Consolas");
+            dossier.TextWrapping = TextWrapping.Wrap;
+            dossier.Width = 1140;
+            dossier.Margin = new Thickness(0, 4, 0, 0);
+            textes.Children.Add(dossier);
+            Placer(textes, ContenuGauche, LigneHaut + 20);
+
+            AjouterCible(ContenuGauche + 70, 320, 1000, 180, GrosBouton("\uE74E", "Enregistrer les réglages actuels"),
+                         EnregistrerProfil, false, false);
+            AjouterCible(ContenuGauche + 70, 620, 1000, 180, GrosBouton("\uE8E5", "Charger un profil"),
+                         () => Prevenir(ListeProfilsDemandee), false, false);
+
+            ConstruireMessage();
+        }
+
+        /// <summary>
+        /// La question « Charger le profil … ? » (étape 15), comme la confirmation de
+        /// « Défaut » : « Oui » et « Non » au milieu de la page. Pour la sauvegarde
+        /// automatique, la question dit plutôt qu'on revient aux réglages d'avant.
+        /// </summary>
+        private void ConstruireConfirmationProfil()
+        {
+            string texteQuestion = _profilAConfirmer.EstSauvegarde
+                ? "Revenir aux réglages d'avant le dernier chargement de profil ?"
+                : "Charger le profil « " + _profilAConfirmer.Nom + " » ?";
+            TextBlock question = Texte(texteQuestion, 40, Blanc, true);
+            question.TextWrapping = TextWrapping.Wrap;
+            question.Width = 1140;
+            Placer(question, ContenuGauche, 260);
+
+            TextBlock precision = Texte(
+                "Tous les réglages changent tout de suite. Les réglages actuels sont d'abord gardés " +
+                "dans le profil « " + ProfilsParametres.NomSauvegarde + " ».", 23, Doux, false);
+            precision.TextWrapping = TextWrapping.Wrap;
+            precision.Width = 1140;
+            Placer(precision, ContenuGauche, 380);
+
+            AjouterCible(640, 480, 300, BoutonCote, Mot("Oui", 42), ConfirmerProfil, false, false);
+            AjouterCible(1040, 480, 300, BoutonCote, Mot("Non", 42), AnnulerProfil, false, false);
+        }
+
+        /// <summary>Bouton « Enregistrer les réglages actuels » : un nouveau profil daté.</summary>
+        private void EnregistrerProfil()
+        {
+            ValiderSaisie();
+            string message;
+            ProfilsParametres.EnregistrerActuels(out message);
+            AfficherMessage(message);
+        }
+
+        /// <summary>« Oui » : le mode charge le profil (puis affiche le message ici).</summary>
+        private void ConfirmerProfil()
+        {
+            ProfilTrouve profil = _profilAConfirmer;
+            _profilAConfirmer = null;
+            Action<ProfilTrouve> abonnes = ChargementProfilDemande;
+            if (abonnes != null && profil != null)
+            {
+                abonnes(profil);
+            }
+            else
+            {
+                Construire();
+            }
+        }
+
+        /// <summary>« Non » : on revient à l'onglet « Profils », rien ne change.</summary>
+        private void AnnulerProfil()
+        {
+            App.Log("Profils : chargement annulé");
+            _profilAConfirmer = null;
+            Construire();
         }
 
         /// <summary>Le contenu d'un gros bouton : un symbole à gauche, puis un mot.</summary>
@@ -736,7 +867,8 @@ namespace GazeBar
         {
             _onglet = numero;
             _confirmation = false;
-            _messageOutils = null;
+            _profilAConfirmer = null;
+            _message = null;
             App.Log("Paramètres : onglet " + CatalogueParametres.Onglets[numero].Nom);
             Construire();
         }

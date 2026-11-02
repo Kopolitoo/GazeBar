@@ -20,6 +20,13 @@ namespace GazeBar
     ///     tout de suite (comme pour retirer une icône à l'étape 10), et on reste dans la liste
     ///     pour pouvoir en retirer d'autres. Les mots de Lexique ne sont jamais concernés.
     ///
+    /// Étape 15 (« profils-parametres ») : une troisième liste, qui n'a rien à voir avec le
+    /// clavier mais réutilise la même mise en page :
+    ///   - PROFILS : les profils de réglages du dossier Documents\GazeBar\Profils, le plus
+    ///     récent en premier (voir ProfilsParametres). En regarder un revient aux paramètres,
+    ///     onglet Profils, avec la question « Charger le profil … ? » : rien ne change sans
+    ///     ce « Oui ». « Retour aux paramètres » revient au même onglet sans rien changer.
+    ///
     /// Mise en page : la même que la liste de la configuration des icônes (étape 10) : écran
     /// noir, rectangle aux bords arrondis sur les trois quarts de l'écran, titre en haut,
     /// grille d'au plus 4 colonnes × 3 rangées (12 par page). « Retour » (au clavier pour
@@ -41,7 +48,8 @@ namespace GazeBar
         public enum Sorte
         {
             Langue,
-            MesMots
+            MesMots,
+            Profils
         }
 
         /// <summary>Proportion de l'écran occupée par la liste (comme à l'étape 10).</summary>
@@ -66,6 +74,7 @@ namespace GazeBar
         // Le contenu de la liste : les dispositions (Langue) ou les mots (Mes mots).
         private List<DispositionTrouvee> _dispositions = new List<DispositionTrouvee>();
         private List<string> _mots = new List<string>();
+        private List<ProfilTrouve> _profils = new List<ProfilTrouve>();
 
         // La page affichée (0 = la première).
         private int _page;
@@ -90,7 +99,15 @@ namespace GazeBar
 
         public override string Nom
         {
-            get { return _sorte == Sorte.Langue ? "Langue du clavier" : "Mes mots"; }
+            get
+            {
+                switch (_sorte)
+                {
+                    case Sorte.Langue: return "Langue du clavier";
+                    case Sorte.Profils: return "Profils";
+                    default: return "Mes mots";
+                }
+            }
         }
 
         public override void Entrer(EtatRegard regard)
@@ -107,6 +124,10 @@ namespace GazeBar
                 // On commence à la page de la disposition utilisée.
                 int actuelle = IndiceDispositionActuelle();
                 _page = actuelle < 0 ? 0 : actuelle / ParPage;
+            }
+            else if (_sorte == Sorte.Profils)
+            {
+                _profils = ProfilsParametres.Lister();
             }
             else
             {
@@ -159,7 +180,8 @@ namespace GazeBar
 
         /// <summary>
         /// Bouton « Retour » ou touche Échap (appelée aussi par App) : Langue → le mode
-        /// mouvement, où le clavier réapparaît ; Mes mots → les paramètres, onglet Général.
+        /// mouvement, où le clavier réapparaît ; Mes mots → les paramètres, onglet Général ;
+        /// Profils → les paramètres, onglet Profils.
         /// </summary>
         public void Retour()
         {
@@ -167,6 +189,10 @@ namespace GazeBar
             if (_sorte == Sorte.MesMots)
             {
                 Gestionnaire.ChangerMode(new ModeParametres(CatalogueParametres.NumeroOngletGeneral));
+            }
+            else if (_sorte == Sorte.Profils)
+            {
+                Gestionnaire.ChangerMode(new ModeParametres(CatalogueParametres.NumeroOngletProfils));
             }
             else
             {
@@ -194,6 +220,16 @@ namespace GazeBar
                 _message = message;
                 Construire();
             }
+        }
+
+        /// <summary>
+        /// Profils : un profil est choisi. On revient aux paramètres, onglet Profils, qui
+        /// demande confirmation avant de le charger.
+        /// </summary>
+        private void ChoisirProfil(ProfilTrouve profil)
+        {
+            App.Log("Profils : profil choisi « " + profil.Nom + " », confirmation demandée");
+            Gestionnaire.ChangerMode(new ModeParametres(CatalogueParametres.NumeroOngletProfils, profil));
         }
 
         /// <summary>Mes mots : le mot est retiré du dictionnaire personnel, la liste est redessinée.</summary>
@@ -263,7 +299,9 @@ namespace GazeBar
             ecran.Children.Add(cadre);
 
             // ── Le nombre d'éléments et de pages.
-            int nombre = _sorte == Sorte.Langue ? _dispositions.Count : _mots.Count;
+            int nombre = _sorte == Sorte.Langue ? _dispositions.Count
+                       : _sorte == Sorte.Profils ? _profils.Count
+                       : _mots.Count;
             int pages = Math.Max(1, (nombre + ParPage - 1) / ParPage);
             // Après une suppression, la dernière page peut être vide : on recule.
             _page = Math.Max(0, Math.Min(_page, pages - 1));
@@ -272,7 +310,7 @@ namespace GazeBar
             //    Les textes suivent la taille du texte de Windows (étape 11).
             double policeTitre = taille * 0.3 * Ecran.TexteWindows;
             double policeNom = taille * 0.2 * Ecran.TexteWindows;
-            string titre = _sorte == Sorte.Langue ? "Langue du clavier" : "Mes mots";
+            string titre = _sorte == Sorte.Profils ? "Charger un profil" : Nom;
             if (pages > 1)
             {
                 titre += "  (page " + (_page + 1) + " sur " + pages + ")";
@@ -281,6 +319,8 @@ namespace GazeBar
             AjouterTexteCentre(calque, ecran, titre, centreX, yTitre, l, policeTitre, Brushes.White, true);
             string explication = _message ?? (_sorte == Sorte.Langue
                 ? "Regarde une disposition pour la choisir."
+                : _sorte == Sorte.Profils
+                ? "Regarde un profil pour le choisir (une confirmation suit)."
                 : "Regarde un mot pour le retirer de ton dictionnaire.");
             double yExplication = yTitre + policeTitre * 1.5;
             AjouterTexteCentre(calque, ecran, explication, centreX, yExplication, l, policeNom,
@@ -289,7 +329,7 @@ namespace GazeBar
             // ── « Retour » (croix E711) : à droite de l'écran, centré verticalement, EN DEHORS
             //    du rectangle de la liste (au milieu de la marge de droite), pour ne pas le viser
             //    en regardant un mot (demande de l'utilisateur du 02/11/2026).
-            string nomRetour = _sorte == Sorte.MesMots ? "Retour aux paramètres" : "Retour au clavier";
+            string nomRetour = _sorte == Sorte.Langue ? "Retour au clavier" : "Retour aux paramètres";
             double margeDroite = largeur - (gauche + l);
             double xRetour = gauche + l + margeDroite / 2;
             double yRetour = hauteur / 2;
@@ -326,6 +366,8 @@ namespace GazeBar
             {
                 string vide = _sorte == Sorte.Langue
                     ? "Aucune disposition trouvée dans le dossier Claviers."
+                    : _sorte == Sorte.Profils
+                    ? "Aucun profil pour l'instant. Le bouton « Enregistrer les réglages actuels » en crée un."
                     : "Aucun mot ajouté pour l'instant. Un mot inconnu s'ajoute avec la case « + » du clavier.";
                 AjouterTexteCentre(calque, ecran, vide, centreX, (hautGrille + basGrille) / 2 - policeNom,
                                    l * 0.8, policeNom * 1.3, Doux, false);
@@ -359,6 +401,15 @@ namespace GazeBar
                         bouton.DefinirAllume(premier + i == IndiceDispositionActuelle());
                         action = () => ChoisirDisposition(d);
                         nom = d.Nom;
+                    }
+                    else if (_sorte == Sorte.Profils)
+                    {
+                        ProfilTrouve profil = _profils[premier + i];   // copie pour la fonction ci-dessous
+                        // E77B = personne ; E7A7 = flèche « annuler » pour la sauvegarde
+                        // automatique (revenir aux réglages d'avant le dernier chargement).
+                        bouton = new BoutonRegard(profil.EstSauvegarde ? "\uE7A7" : "\uE77B", null, "Charger ce profil");
+                        action = () => ChoisirProfil(profil);
+                        nom = profil.Nom;
                     }
                     else
                     {

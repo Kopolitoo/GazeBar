@@ -267,6 +267,9 @@ namespace GazeBar
     /// L'onglet « Outils » (dernier) n'a pas de réglage non plus : deux gros boutons,
     /// « Calibration » et « Diagnostic », qui étaient avant dans la barre de menu. Il n'a pas
     /// de bouton « Défaut » (il n'y a rien à remettre).
+    ///
+    /// L'onglet « Profils » (étape 15, avant « Outils ») n'a pas de réglage ni de « Défaut » :
+    /// deux gros boutons pour enregistrer les réglages actuels et charger un profil.
     /// </summary>
     internal static class CatalogueParametres
     {
@@ -298,6 +301,18 @@ namespace GazeBar
         public const string NomOngletOutils = "Outils";
 
         /// <summary>
+        /// Le nom de l'onglet « Profils » (étape 15), reconnu par FenetreParametres, qui y met
+        /// deux gros boutons : « Enregistrer les réglages actuels » et « Charger un profil ».
+        /// </summary>
+        public const string NomOngletProfils = "Profils";
+
+        /// <summary>Le numéro de l'onglet « Profils » (pour y revenir après la liste des profils).</summary>
+        public static int NumeroOngletProfils
+        {
+            get { return Math.Max(0, Onglets.FindIndex(o => o.Nom == NomOngletProfils)); }
+        }
+
+        /// <summary>
         /// LES CATÉGORIES de la colonne de gauche (02/11/2026), dans l'ordre d'affichage, avec
         /// les noms de leurs onglets. Chaque onglet de « Onglets » doit être dans une catégorie
         /// et une seule (sinon il ne serait plus atteignable au regard).
@@ -309,7 +324,7 @@ namespace GazeBar
             new CategorieParametres("Regard", "\uE890", "Regard", "Fixation", "Délais"),
             new CategorieParametres("Actions", "\uE7C9", "Loupe, glisser", "Défilement", NomOngletIcones),
             new CategorieParametres("Affichage", "\uE7F4", "Affichage", "Clavier", "Jeu"),
-            new CategorieParametres("Système", "\uE770", NomOngletGeneral, NomOngletOutils)
+            new CategorieParametres("Système", "\uE770", NomOngletGeneral, NomOngletProfils, NomOngletOutils)
         };
 
         /// <summary>
@@ -448,6 +463,11 @@ namespace GazeBar
                 Reglage.OuiOuNon("Démarrer avec Windows", "Lancer GazeBar à l'ouverture de session",
                                  p => p.DemarrerAvecWindows, (p, v) => p.DemarrerAvecWindows = v,
                                  p => DemarrageWindows.Appliquer(p.DemarrerAvecWindows))),
+
+            // E77B = personne (« Profils », étape 15) : pas de réglage, deux gros boutons
+            // « Enregistrer les réglages actuels » et « Charger un profil » (voir
+            // FenetreParametres.ConstruireOngletProfils).
+            new Onglet(NomOngletProfils, "\uE77B"),
 
             // E90F = clé à molette (« Outils », 29/10/2026) : pas de réglage, deux gros boutons
             // « Calibration » et « Diagnostic » (voir FenetreParametres.ConstruireOngletOutils).

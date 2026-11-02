@@ -34,6 +34,11 @@ namespace GazeBar
     ///     message s'affiche dans l'onglet ;
     ///   - « Diagnostic » revient au mode mouvement et ouvre la fenêtre Diagnostic.
     ///
+    /// Étape 15 (profils) : onglet « Profils ». « Charger un profil » ouvre la liste des
+    /// profils (ModeListeClavier, sorte Profils), qui revient ici avec le profil choisi : la
+    /// fenêtre demande alors confirmation. « Oui » : ChargerProfil (ci-dessous) applique le
+    /// profil, puis le clavier relit sa disposition (la langue a pu changer).
+    ///
     /// Sortie : bouton « Retour » (au milieu du bord droit) ou touche Échap de l'aidant,
     /// vers le mode mouvement. Le menu du bas ne s'ouvre pas ici (Mode.MenuAutorise reste
     /// « non », règle du 25/10/2026).
@@ -51,6 +56,9 @@ namespace GazeBar
         // L'onglet affiché à l'ouverture (0 = le premier).
         private readonly int _ongletDepart;
 
+        // Étape 15 : le profil choisi dans la liste, à confirmer à l'ouverture (ou null).
+        private readonly ProfilTrouve _profilAConfirmer;
+
         private FenetreParametres _fenetre;
         private ViseurBoutons _viseur;
 
@@ -64,10 +72,15 @@ namespace GazeBar
         private readonly Lisseur _lisse = new Lisseur();
         private bool _cerclePlace;
 
-        /// <summary>Ouvre les paramètres sur l'onglet numéro « onglet » (le premier si on ne le donne pas).</summary>
-        public ModeParametres(int onglet = 0)
+        /// <summary>
+        /// Ouvre les paramètres sur l'onglet numéro « onglet » (le premier si on ne le donne
+        /// pas). Étape 15 : « profilAConfirmer » = profil choisi dans la liste des profils ;
+        /// la page s'ouvre alors sur la question « Charger le profil … ? ».
+        /// </summary>
+        public ModeParametres(int onglet = 0, ProfilTrouve profilAConfirmer = null)
         {
             _ongletDepart = onglet;
+            _profilAConfirmer = profilAConfirmer;
         }
 
         public override string Nom
@@ -83,12 +96,14 @@ namespace GazeBar
             // La fenêtre est rangée dans _fenetre SEULEMENT quand tout est prêt (viseur
             // compris) : Actualiser ne fait rien tant que _fenetre est vide (bogue du
             // 02/11/2026 : un tic arrivé pendant Show trouvait un viseur vide).
-            FenetreParametres fenetre = new FenetreParametres(_ongletDepart);
+            FenetreParametres fenetre = new FenetreParametres(_ongletDepart, _profilAConfirmer);
             fenetre.RetourDemande += Retour;
             fenetre.ConfigurationIconesDemandee += OuvrirConfigurationIcones;
             fenetre.CalibrationDemandee += LancerCalibration;
             fenetre.DiagnosticDemande += OuvrirDiagnostic;
             fenetre.MesMotsDemandes += OuvrirMesMots;
+            fenetre.ListeProfilsDemandee += OuvrirListeProfils;
+            fenetre.ChargementProfilDemande += ChargerProfil;
             _viseur = new ViseurBoutons(fenetre.Cibles);
             _version = -1;
             _cibleRepetee = -1;
@@ -186,6 +201,8 @@ namespace GazeBar
                 fenetre.CalibrationDemandee -= LancerCalibration;
                 fenetre.DiagnosticDemande -= OuvrirDiagnostic;
                 fenetre.MesMotsDemandes -= OuvrirMesMots;
+                fenetre.ListeProfilsDemandee -= OuvrirListeProfils;
+                fenetre.ChargementProfilDemande -= ChargerProfil;
                 fenetre.Fermer();
             }
         }
@@ -231,6 +248,35 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// Bouton « Charger un profil » de l'onglet « Profils » (étape 15) : la liste des
+        /// profils en plein écran, qui revient ici (onglet Profils) avec ou sans choix.
+        /// </summary>
+        private void OuvrirListeProfils()
+        {
+            App.Log("Paramètres : liste des profils");
+            Gestionnaire.ChangerMode(new ModeListeClavier(ModeListeClavier.Sorte.Profils));
+        }
+
+        /// <summary>
+        /// « Oui » à « Charger le profil … ? » (étape 15) : le profil devient les réglages en
+        /// cours (ProfilsParametres.Charger). Le clavier, s'il est ouvert, relit sa
+        /// disposition, car le profil peut avoir une autre langue. On reste dans les
+        /// paramètres : la page est reconstruite avec les nouvelles valeurs et le message.
+        /// </summary>
+        private void ChargerProfil(ProfilTrouve profil)
+        {
+            string message;
+            if (ProfilsParametres.Charger(profil.Chemin, out message))
+            {
+                Gestionnaire.Clavier.ReglagesRemplaces();
+            }
+            if (_fenetre != null)
+            {
+                _fenetre.AfficherMessage(message);
+            }
+        }
+
+        /// <summary>
         /// Bouton « Calibration » de l'onglet « Outils ».
         ///
         /// Difficulté : la fenêtre des paramètres est plein écran et « toujours devant »
@@ -265,7 +311,7 @@ namespace GazeBar
             {
                 _fenetre.Show();
                 _fenetre.Activate();
-                _fenetre.AfficherMessageOutils(message);
+                _fenetre.AfficherMessage(message);
             }
         }
 

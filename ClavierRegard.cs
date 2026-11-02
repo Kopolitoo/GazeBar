@@ -387,6 +387,29 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// Étape 15 : un profil de paramètres vient d'être chargé (appelée par ModeParametres).
+        /// La taille, la position et la zone de saisie sont relues à chaque dessin : rien à
+        /// faire pour elles. Mais la disposition (et donc la langue du dictionnaire) a pu
+        /// changer : si le clavier est ouvert, on le rouvre, ce qui relit la disposition
+        /// enregistrée dans les réglages. S'il ne peut pas l'être (fichier absent), il se ferme.
+        /// Pendant les paramètres, le clavier est masqué : il réapparaîtra au retour en mode
+        /// mouvement.
+        /// </summary>
+        public void ReglagesRemplaces()
+        {
+            if (!Ouvert)
+            {
+                return;
+            }
+            string message;
+            if (!Ouvrir(out message))
+            {
+                App.Log("Clavier : disposition du profil inutilisable, clavier fermé (" + message + ")");
+                Fermer();
+            }
+        }
+
+        /// <summary>
         /// Vrai si le point du regard (pixels d'écran, VRAI regard et non ramené dans l'écran)
         /// est sur le clavier ou sur son bouton Fermer. Faux si le clavier n'est pas affiché.
         /// </summary>
