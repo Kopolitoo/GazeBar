@@ -22,6 +22,8 @@ modes (mouvement, regard fixe, choix d'action, menu…). Application WPF (.NET F
 
 ## Installation
 
+**Prérequis : Téléchargez et installez le pilote officiel Tobii sur le site du constructeur.**
+
 - Visual Studio 2026 avec la charge de travail « Développement d'applications de bureau .NET »
   et le kit de développement .NET Framework 4.8.
 - Le moteur Tobii doit tourner (processus tobii.service / tobii interaction engine), comme pour Mill Mouse.
@@ -328,3 +330,8 @@ Texte complet : [LICENSE.txt](LICENSE.txt).
 Exception : le dictionnaire `Dictionnaires/fr.txt` est tiré de [Lexique 3.83](http://www.lexique.org)
 (B. New, C. Pallier et coll.) et reste sous licence CC BY-SA 4.0 : voir
 [Dictionnaires/LICENCE-Lexique.txt](Dictionnaires/LICENCE-Lexique.txt).
+
+## Mentions légales
+
+Ce projet est un logiciel indépendant et open source. Il n'est ni affilié, ni approuvé, ni soutenu
+par Tobii Dynavox. TD Control, Tobii et Dynavox sont des marques déposées de Tobii AB.
