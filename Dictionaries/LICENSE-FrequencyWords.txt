@@ -21,7 +21,8 @@ Changes made for GazeBar (2026-11-02):
   - the corpus splits contractions ("don" + "'t"), so 69 common contractions ("don't",
     "I'm", "it's", "can't"…) are added with an estimated frequency;
   - frequency = number of occurrences per million words of the corpus (decimal point);
-  - format: one line per word, "word<Tab>frequency", sorted.
+  - format: one line per word, "word<Tab>frequency", sorted; the first line,
+    "#apostropheInWord", tells GazeBar that an apostrophe stays inside English words.
 
 The file en.txt, a derived work, is distributed under the same CC BY-SA 4.0 licence.
 The rest of GazeBar stays under the MIT licence (see LICENSE.txt at the root of the repository).

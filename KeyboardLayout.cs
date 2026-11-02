@@ -58,7 +58,10 @@ namespace GazeBar
         [DataMember(Name = "name", Order = 0)]
         public string Name { get; set; }
 
-        /// <summary>The language of the word dictionary ("fr"), for the prediction (step 13).</summary>
+        /// <summary>
+        /// The language of the layout ("fr"), for information only: since step clavier-anglais
+        /// the prediction dictionary follows the interface language, not the layout.
+        /// </summary>
         [DataMember(Name = "language", Order = 1)]
         public string Language { get; set; }
 
@@ -76,15 +79,6 @@ namespace GazeBar
 
         [DataMember(Name = "pages", Order = 5)]
         public List<KeyboardPage> Pages { get; set; }
-
-        /// <summary>
-        /// Optional ("apostropheInWord": true), step clavier-anglais: an apostrophe typed after
-        /// a letter stays INSIDE the word, for English contractions ("don't", "I'm"): the
-        /// prediction keeps suggesting "don't" after "don'". Absent or false (French): the
-        /// apostrophe ends an elided word ("l'", "qu'") and the next word starts.
-        /// </summary>
-        [DataMember(Name = "apostropheInWord", Order = 6)]
-        public bool ApostropheInWord { get; set; }
 
         /// <summary>The page with this name, or null.</summary>
         public KeyboardPage Page(string name)

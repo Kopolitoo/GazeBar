@@ -1,3 +1,4 @@
+#apostropheInWord
 a	19712.85
 a-a	4.36
 a-a-a	0.31

@@ -437,7 +437,7 @@ namespace GazeBar
                 GazeButton zone = new GazeButton("\uE70F", null, Texts.Get("menu.inputBox"));
                 zone.SetLit(p.InputBox);
                 Add(buttons, actions, zone, MenuAction.InputBox);
-                Add(buttons, actions, new GazeButton("\uE774", null, Texts.Get("menu.keyboardLanguage")), MenuAction.Language);
+                Add(buttons, actions, new GazeButton("\uE774", null, Texts.Get("menu.keyboardLayout")), MenuAction.Language);
                 Add(buttons, actions, new GazeButton("\uE769", null, Texts.Get("menu.pause")), MenuAction.Pause);
             }
             else if (_confirmation)

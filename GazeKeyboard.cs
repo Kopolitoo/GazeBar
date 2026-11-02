@@ -147,23 +147,14 @@ namespace GazeBar
             // 2026-11-02.
             _aimer = new ButtonAimer(_targets, 1);
 
-            // The dictionary of the chosen layout's language is read as soon as GazeBar
-            // starts, in the background (specification): it is ready when the keyboard opens.
+            // The dictionary is the one of the INTERFACE language (Language setting, user
+            // request of 2026-11-02): the keyboard layout does not change it. It is read as
+            // soon as GazeBar starts, in the background (specification): it is ready when the
+            // keyboard opens. When the interface language changes ("Langue" button of the
+            // settings), the dictionary of the new language is loaded.
             _predictor = new WordPredictor();
-            _predictor.LoadLanguage(StartupLanguage());
-        }
-
-        /// <summary>
-        /// The dictionary language of the layout saved in settings.json ("en" for
-        /// en-qwerty.json), read from its file; the default layout's if that file is missing
-        /// or unreadable.
-        /// </summary>
-        private static string StartupLanguage()
-        {
-            string message;
-            KeyboardLayout layout = KeyboardLayout.Load(AppSettings.Current.KeyboardLayout, out message)
-                                    ?? KeyboardLayout.Load(KeyboardLayout.DefaultName, out message);
-            return layout != null ? layout.Language : null;
+            _predictor.LoadLanguage(Texts.Language);
+            Texts.Changed += () => _predictor.LoadLanguage(Texts.Language);
         }
 
         /// <summary>
@@ -215,9 +206,6 @@ namespace GazeBar
             }
 
             _layout = layout;
-            // The dictionary of the layout's language ("fr" for fr-azerty.json): already
-            // loaded at startup in the usual case.
-            _predictor.LoadLanguage(layout.Language);
             _page = layout.StartPage;
             _previousPage = null;
             IsOpen = true;
@@ -367,9 +355,9 @@ namespace GazeBar
         /// <summary>
         /// "Langue" button (step 14): switches to another layout of the Keyboards folder
         /// (file name without ".json"). It is read at once; if missing or invalid, nothing
-        /// changes and "message" explains why. Otherwise the choice is saved, the dictionary
-        /// of its language is loaded (in the background), and the keyboard restarts from the
-        /// new layout's start page.
+        /// changes and "message" explains why. Otherwise the choice is saved and the keyboard
+        /// restarts from the new layout's start page. The dictionary does not change: it
+        /// follows the interface language.
         /// </summary>
         public bool ChangeLayout(string name, out string message)
         {
@@ -383,7 +371,6 @@ namespace GazeBar
             p.Save();
 
             _layout = layout;
-            _predictor.LoadLanguage(layout.Language);
             _page = layout.StartPage;
             _previousPage = null;
             ForgetState();
@@ -398,7 +385,7 @@ namespace GazeBar
         /// <summary>
         /// Step 15: a settings profile has just been loaded (called by SettingsMode).
         /// Size, position and input box are read again at each drawing: nothing to do for
-        /// them. But the layout (and therefore the dictionary language) may have changed: if
+        /// them. But the layout may have changed: if
         /// the keyboard is open, it is reopened, which reads the layout saved in the
         /// settings again. If it cannot be (missing file), it closes.
         /// During settings, the keyboard is hidden: it will come back on return to movement
@@ -783,9 +770,9 @@ namespace GazeBar
         /// <summary>
         /// Keeps track of what has just been written:
         ///  - the current word: letters, digits and hyphen ("peut-être"); any other character
-        ///    (space, punctuation, apostrophe, line end) ends the word. Except, for a layout
-        ///    with "apostropheInWord" (English): an apostrophe after a letter stays in the word
-        ///    ("don't");
+        ///    (space, punctuation, apostrophe, line end) ends the word. Except when the
+        ///    dictionary says so (English, see WordPredictor.ApostropheInWord): an apostrophe
+        ///    after a letter stays in the word ("don't");
         ///  - the last two characters, for automatic capitalisation: after ".", "?" or "!"
         ///    followed by a space or a line end, Shift turns on by itself for the next letter
         ///    ([AutoCapitalize]). Shift is shown on: it can be turned off.
@@ -796,7 +783,7 @@ namespace GazeBar
             {
                 bool apostrophe = c == '\'' || c == '’';
                 if (char.IsLetterOrDigit(c) || c == '-' ||
-                    (apostrophe && _currentWord.Length > 0 && _layout != null && _layout.ApostropheInWord))
+                    (apostrophe && _currentWord.Length > 0 && _predictor.ApostropheInWord))
                 {
                     _currentWord.Append(c);
                 }

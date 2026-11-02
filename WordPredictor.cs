@@ -90,6 +90,7 @@ namespace GazeBar
             public string[] Keys;
             public string[] Words;
             public double[] Frequencies;
+            public bool ApostropheInWord;
         }
 
         private volatile Tables _primary;
@@ -137,6 +138,24 @@ namespace GazeBar
         public bool Ready
         {
             get { return _primary != null; }
+        }
+
+        /// <summary>
+        /// The line written in a dictionary file to say that, in its language, an apostrophe
+        /// after a letter stays INSIDE the word (English contractions: "don't", "I'm"); the
+        /// prediction then keeps suggesting "don't" after "don'". Without it (French), the
+        /// apostrophe ends an elided word ("l'", "qu'") and the next word starts.
+        /// </summary>
+        public const string ApostropheInWordLine = "#apostropheInWord";
+
+        /// <summary>True when the loaded dictionary has the [ApostropheInWordLine] line.</summary>
+        public bool ApostropheInWord
+        {
+            get
+            {
+                Tables t = _primary;
+                return t != null && t.ApostropheInWord;
+            }
         }
 
         // ───────────────────────── Loading the primary dictionary ─────────────────────────
@@ -195,8 +214,14 @@ namespace GazeBar
                 DateTime start = DateTime.Now;
                 List<string> words = new List<string>(130000);
                 List<double> frequencies = new List<double>(130000);
+                bool apostropheInWord = false;
                 foreach (string row in File.ReadLines(path, Encoding.UTF8))
                 {
+                    if (row.Trim() == ApostropheInWordLine)
+                    {
+                        apostropheInWord = true;
+                        continue;
+                    }
                     if (row.Length == 0 || row[0] == '#')
                     {
                         continue;   // empty line or comment
@@ -221,6 +246,7 @@ namespace GazeBar
 
                 // Compute the keys, then sort the three arrays together by key.
                 Tables t = new Tables();
+                t.ApostropheInWord = apostropheInWord;
                 t.Words = words.ToArray();
                 t.Frequencies = frequencies.ToArray();
                 t.Keys = new string[t.Words.Length];

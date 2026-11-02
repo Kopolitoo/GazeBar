@@ -1,7 +1,6 @@
 {
   "name": "English QWERTY",
   "language": "en",
-  "apostropheInWord": true,
   "columns": 12,
   "rows": 4,
   "startPage": "letters",

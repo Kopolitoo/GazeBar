@@ -101,7 +101,7 @@ namespace GazeBar
             {
                 switch (_kind)
                 {
-                    case ListKind.Language: return Texts.Get("menu.keyboardLanguage");
+                    case ListKind.Language: return Texts.Get("menu.keyboardLayout");
                     case ListKind.Profiles: return Texts.Get("tab.profiles");
                     default: return Texts.Get("settings.myWords");
                 }

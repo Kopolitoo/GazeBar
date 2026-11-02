@@ -304,12 +304,12 @@ Pour ajouter une langue : copier `en.json` en `xx.json`, traduire les valeurs (j
   lettres QWERTY, page d'accents É,Ü,Ñ) et son dictionnaire `Dictionaries/en.txt` (environ
   62 000 mots tirés de FrequencyWords, sous-titres OpenSubtitles 2018, filtrés par le
   dictionnaire orthographique Hunspell en_US ; les contractions « don't », « I'm »… ont une
-  fréquence estimée). Chaque disposition donne la langue de son dictionnaire : le bouton
-  « Langue » du clavier change donc aussi les mots proposés. Avec `"apostropheInWord": true`
-  (anglais), une apostrophe après une lettre reste dans le mot (« don' » propose « don't »). Une
-  nouvelle installation démarre avec le clavier anglais ; un ancien fichier de réglages (avant la
-  version 10) garde le clavier français. La langue du clavier et celle de l'interface sont
-  indépendantes.
+  fréquence estimée). Le dictionnaire suit la langue de l'INTERFACE (bouton « Langue » des
+  paramètres, demande du 2026-11-02), pas la disposition : le bouton « Disposition du clavier »
+  change seulement les touches. Un dictionnaire dont la première ligne est `#apostropheInWord`
+  (anglais) garde l'apostrophe après une lettre dans le mot (« don' » propose « don't ») ; sinon
+  (français) l'apostrophe termine le mot élidé (« l' »). Une nouvelle installation démarre avec le
+  clavier anglais ; un ancien fichier de réglages (avant la version 10) garde le clavier français.
 - Options du clavier (étape 14, `KeyboardListMode`) : deux boutons de plus dans la barre du
   clavier, et un bouton « Mes mots » dans l'onglet Général des paramètres. « Zone de saisie » (interrupteur, bord vert, `InputBox`) : une bande au-dessus des
   touches montre les derniers mots tapés (simple aperçu : le texte part toujours dans le
@@ -403,11 +403,11 @@ clavier » ramène au clavier. Paramètres, onglet Général, « Mes mots » : �
 l'étape 13) est dans la liste ; on le regarde : il disparaît ; « Retour aux paramètres » ramène à
 l'onglet Général. En tapant « zo », il n'est plus proposé.
 
-Test de l'étape clavier-anglais : clavier ouvert, « Langue » : la liste montre « English QWERTY »
-et « Français AZERTY » ; on choisit « English QWERTY » : lettres en QWERTY. On tape « th » : les
-cases proposent « the », « that », « this » (ou proches). On tape « don » : « don't » est proposé ;
-on tape « don' » : « don't » est encore proposé. Après quelques secondes, « Langue » →
-« Français AZERTY » : « bonj » propose « bonjour ».
+Test de l'étape clavier-anglais : clavier ouvert, « Disposition du clavier » : la liste montre
+« English QWERTY » et « Français AZERTY » ; on choisit « English QWERTY » : lettres en QWERTY, et
+avec l'interface en français, « bonj » propose toujours « bonjour ». Paramètres, Général,
+« Langue » → English ; retour au clavier : « th » propose « the », « that », « this » (ou proches),
+« don » et « don' » proposent « don't ».
 
 Test de l'étape 15 : Paramètres, Système, Profils, « Enregistrer les réglages actuels » : le
 message donne le nom du profil, et le fichier apparaît dans `Documents\GazeBar\Profiles`. On
