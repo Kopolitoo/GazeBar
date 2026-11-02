@@ -225,8 +225,8 @@ namespace GazeBar
         /// <summary>Readable summary, for the log and the "Display" tab: "1920 × 1080 px, scale 100 %, text 100 %".</summary>
         public static string Description()
         {
-            return WidthPixels.ToString("F0") + " × " + HeightPixels.ToString("F0") + " px, échelle " +
-                   (WindowsScale * 100).ToString("F0") + " %, texte " + (WindowsText * 100).ToString("F0") + " %";
+            return Texts.Format("screen.description", WidthPixels.ToString("F0"), HeightPixels.ToString("F0"),
+                                (WindowsScale * 100).ToString("F0"), (WindowsText * 100).ToString("F0"));
         }
 
         /// <summary>The scaling frozen at startup (see StartupScale). 1 if it cannot be read.</summary>

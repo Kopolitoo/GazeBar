@@ -350,7 +350,7 @@ namespace GazeBar
 
                 case MenuAction.Quit:
                     _confirmation = true;
-                    _message = "Quitter GazeBar ?";
+                    _message = Texts.Get("menu.quitQuestion");
                     Build();
                     break;
 
@@ -415,7 +415,7 @@ namespace GazeBar
             if (_back is PauseMode && !_confirmation)
             {
                 // During the pause: only the "Resume" button (E768 = play).
-                Add(buttons, actions, new GazeButton("", null, "Reprendre"), MenuAction.Resume);
+                Add(buttons, actions, new GazeButton("", null, Texts.Get("menu.resume")), MenuAction.Resume);
             }
             else if (KeyboardMenu && !_confirmation)
             {
@@ -424,54 +424,54 @@ namespace GazeBar
                 //   E70F = pencil (input box), E774 = globe (language).
                 if (p.KeyboardAtTop)
                 {
-                    Add(buttons, actions, new GazeButton("\uE70D", null, "Clavier en bas de l'écran"), MenuAction.KeyboardPosition);
+                    Add(buttons, actions, new GazeButton("\uE70D", null, Texts.Get("menu.keyboardBottom")), MenuAction.KeyboardPosition);
                 }
                 else
                 {
-                    Add(buttons, actions, new GazeButton("\uE70E", null, "Clavier en haut de l'écran"), MenuAction.KeyboardPosition);
+                    Add(buttons, actions, new GazeButton("\uE70E", null, Texts.Get("menu.keyboardTop")), MenuAction.KeyboardPosition);
                 }
                 Add(buttons, actions,
-                        GazeButton.Text(p.KeyboardSize.ToString("F0") + " %", "Taille du clavier (100, 75, 50 %)"),
+                        GazeButton.Text(p.KeyboardSize.ToString("F0") + " %", Texts.Get("menu.keyboardSize")),
                         MenuAction.KeyboardSize);
                 // Step 14: input box (switch) and language ("My words" is in the settings).
-                GazeButton zone = new GazeButton("\uE70F", null, "Zone de saisie");
+                GazeButton zone = new GazeButton("\uE70F", null, Texts.Get("menu.inputBox"));
                 zone.SetLit(p.InputBox);
                 Add(buttons, actions, zone, MenuAction.InputBox);
-                Add(buttons, actions, new GazeButton("\uE774", null, "Langue du clavier"), MenuAction.Language);
-                Add(buttons, actions, new GazeButton("\uE769", null, "Pause"), MenuAction.Pause);
+                Add(buttons, actions, new GazeButton("\uE774", null, Texts.Get("menu.keyboardLanguage")), MenuAction.Language);
+                Add(buttons, actions, new GazeButton("\uE769", null, Texts.Get("menu.pause")), MenuAction.Pause);
             }
             else if (_confirmation)
             {
                 // "No" is on the right, "Yes" on the left. The bar is shorter and centered:
                 // neither of them is at the place of the old "Quit" button (far right), so that
                 // one never confirms by simply keeping looking at the same place.
-                Add(buttons, actions, new GazeButton("", null, "Oui, quitter GazeBar"), MenuAction.ConfirmQuit);
-                Add(buttons, actions, new GazeButton("", null, "Non, ne pas quitter"), MenuAction.CancelQuit);
+                Add(buttons, actions, new GazeButton("", null, Texts.Get("menu.confirmQuit")), MenuAction.ConfirmQuit);
+                Add(buttons, actions, new GazeButton("", null, Texts.Get("menu.cancelQuit")), MenuAction.CancelQuit);
             }
             else
             {
                 // Symbols of the Windows font (Segoe MDL2 Assets / Segoe Fluent Icons):
                 //   E713 gear, E7FC gamepad, E765 keyboard, E769 pause,
                 //   E768 play, E962 mouse, E7E8 power button.
-                Add(buttons, actions, new GazeButton("", null, "Paramètres"), MenuAction.Settings);
+                Add(buttons, actions, new GazeButton("", null, Texts.Get("menu.settings")), MenuAction.Settings);
                 if (_back is GameMode)
                 {
                     // Green border: game mode is active.
-                    GazeButton quitGame = new GazeButton("\uE7FC", null, "Quitter le jeu");
+                    GazeButton quitGame = new GazeButton("\uE7FC", null, Texts.Get("menu.quitGame"));
                     quitGame.SetLit(true);
                     Add(buttons, actions, quitGame, MenuAction.QuitGame);
                 }
                 else
                 {
-                    Add(buttons, actions, new GazeButton("\uE7FC", null, "Jeu"), MenuAction.Game);
+                    Add(buttons, actions, new GazeButton("\uE7FC", null, Texts.Get("menu.game")), MenuAction.Game);
                 }
-                Add(buttons, actions, new GazeButton("", null, "Clavier"), MenuAction.Keyboard);
+                Add(buttons, actions, new GazeButton("", null, Texts.Get("menu.keyboard")), MenuAction.Keyboard);
                 // (From the pause, only "Resume" is shown: so here, we are never in pause.)
-                Add(buttons, actions, new GazeButton("", null, "Pause"), MenuAction.Pause);
-                GazeButton tracking = new GazeButton("", null, "Suivi souris");
+                Add(buttons, actions, new GazeButton("", null, Texts.Get("menu.pause")), MenuAction.Pause);
+                GazeButton tracking = new GazeButton("", null, Texts.Get("menu.mouseTracking"));
                 tracking.SetLit(p.MouseTracking);
                 Add(buttons, actions, tracking, MenuAction.MouseTracking);
-                Add(buttons, actions, new GazeButton("", null, "Quitter GazeBar"), MenuAction.Quit);
+                Add(buttons, actions, new GazeButton("", null, Texts.Get("menu.quit")), MenuAction.Quit);
             }
 
             // ── Button size: [IconSize], reduced if the bar does not fit in the screen

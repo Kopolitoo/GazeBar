@@ -86,8 +86,7 @@ namespace GazeBar
                 if (_netFolder == null)
                 {
                     Available = false;
-                    Message = "DLL de l'eyetracker introuvables (Tobii.Interaction.Net.dll). Voir le README, " +
-                              "section « Installation ».";
+                    Message = Texts.Get("eyetracker.dllNotFound");
                     App.Log("Eyetracker: " + Message);
                     return;
                 }
@@ -122,7 +121,7 @@ namespace GazeBar
             catch (Exception ex)
             {
                 Available = false;
-                Message = "Erreur en cherchant les DLL de l'eyetracker : " + ex.Message;
+                Message = Texts.Format("eyetracker.searchError", ex.Message);
                 App.Log("Eyetracker: " + Message + ": " + ex);
             }
         }

@@ -80,7 +80,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Configuration des icônes"; }
+            get { return "Icon configuration"; }
         }
 
         public override void Enter(GazeState gaze)
@@ -239,7 +239,7 @@ namespace GazeBar
                     }
                     else
                     {
-                        button = GazeButton.ConfigurableEmpty("Emplacement libre : choisir une action");
+                        button = GazeButton.ConfigurableEmpty(Texts.Get("iconConfig.emptySlot"));
                         button.SetConfigBadge(true);
                         action = () => OpenList(g, num);
                     }
@@ -290,11 +290,11 @@ namespace GazeBar
             StackPanel texts = new StackPanel();
             texts.VerticalAlignment = VerticalAlignment.Center;
             texts.Margin = new Thickness(sideWpf * 0.06);
-            texts.Children.Add(Text("Configuration des icônes", titleFont, Brushes.White, true));
-            TextBlock plus = Text("+ : placer une action", textFont, Soft, false);
+            texts.Children.Add(Text(Texts.Get("iconConfig.title"), titleFont, Brushes.White, true));
+            TextBlock plus = Text(Texts.Get("iconConfig.plusHelp"), textFont, Soft, false);
             plus.Margin = new Thickness(0, textFont, 0, 0);
             texts.Children.Add(plus);
-            texts.Children.Add(Text("− : retirer l'action", textFont, Soft, false));
+            texts.Children.Add(Text(Texts.Get("iconConfig.minusHelp"), textFont, Soft, false));
 
             Border frame = new Border();
             frame.Width = sideWpf;
@@ -347,16 +347,16 @@ namespace GazeBar
             // ── The title, at the top of the rectangle.
             // The texts of the list also follow the Windows text size (step 11).
             double titleFont = size * 0.3 * ScreenMetrics.WindowsText;
-            AddCenteredText(layer, screen, "Choisir l'action à placer", placed.CenterX, top + size * 0.35,
+            AddCenteredText(layer, screen, Texts.Get("iconConfig.chooseAction"), placed.CenterX, top + size * 0.35,
                                l, titleFont, Brushes.White, true);
 
             // ── "Cancel", at the bottom of the rectangle, with its name underneath.
             //    E711 = cross (cancel).
             double nameFont = size * 0.2 * ScreenMetrics.WindowsText;
             double yCancel = top + h - size / 2 - nameFont * 2.5;
-            AddButton(layer, screen, new GazeButton("", null, "Annuler"), CloseList,
+            AddButton(layer, screen, new GazeButton("", null, Texts.Get("common.cancel")), CloseList,
                           placed.CenterX, yCancel, size, true);
-            AddCenteredText(layer, screen, "Annuler", placed.CenterX, yCancel + size / 2 + nameFont * 0.4,
+            AddCenteredText(layer, screen, Texts.Get("common.cancel"), placed.CenterX, yCancel + size / 2 + nameFont * 0.4,
                                size * 3, nameFont, Soft, false);
 
             // ── All the actions of the group, even those already placed elsewhere: an action
@@ -370,7 +370,7 @@ namespace GazeBar
             if (free.Count == 0)
             {
                 // Should not happen: each group has at least one action.
-                AddCenteredText(layer, screen, "Aucune action pour ce groupe.",
+                AddCenteredText(layer, screen, Texts.Get("iconConfig.noAction"),
                                    placed.CenterX, (gridTop + gridBottom) / 2, l, nameFont * 1.3, Soft, false);
                 return;
             }

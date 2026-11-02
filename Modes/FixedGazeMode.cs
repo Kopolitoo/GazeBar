@@ -80,7 +80,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Regard fixe"; }
+            get { return "Fixed gaze"; }
         }
 
         public override void Enter(GazeState gaze)

@@ -159,7 +159,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Loupe"; }
+            get { return "Magnifier"; }
         }
 
         public override void Enter(GazeState gaze)
@@ -441,7 +441,7 @@ namespace GazeBar
             //    place as while choosing the drop point (user's choice of 2026-10-25).
             //    Symbol E72B = "back" arrow of the Windows font.
             double xBack = width - size;
-            string backLabel = _drag != null ? "Annuler le glisser-déposer" : "Retour";
+            string backLabel = _drag != null ? Texts.Get("drag.cancel") : Texts.Get("common.back");
             GazeButton back = new GazeButton("", null, backLabel);
             back.ZoneFactor = BackZoneFactor;
             back.Place(layer, screen, xBack, cyScreen, size);

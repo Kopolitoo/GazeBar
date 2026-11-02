@@ -70,8 +70,10 @@ namespace GazeBar
         ///      its default value).
         /// Since the "code-anglais" step (2026-11-02), the file is settings.json with English
         /// keys: an old parametres.json is no longer read.
+        ///  12: step langues-socle — Language (interface language, "fr" by default). Nothing
+        ///      to fix: missing from an older file, it keeps its default value.
         /// </summary>
-        public const int CurrentVersion = 11;
+        public const int CurrentVersion = 12;
 
         /// <summary>Format number of the file, so it can evolve one day without breaking everything.</summary>
         [DataMember(Order = 0)]
@@ -413,6 +415,16 @@ namespace GazeBar
         [DataMember(Order = 117)]
         public bool InputBox { get; set; }
 
+        // ───────────────────────── Language (step langues-socle) ─────────────────────────
+
+        /// <summary>
+        /// The interface language: the code of a file of the Languages folder, without
+        /// ".json" ("fr", later "en"…). See Texts.cs. Chosen with the "Langue" button of the
+        /// Général settings tab.
+        /// </summary>
+        [DataMember(Order = 130)]
+        public string Language { get; set; }
+
         /// <summary>
         /// A group's layout, read from the lists above: an array with one cell per slot, null
         /// for an empty slot. Not saved as such.
@@ -588,6 +600,7 @@ namespace GazeBar
             KeyboardAtTop = false;
             KeyboardLayout = GazeBar.KeyboardLayout.DefaultName;
             InputBox = false;
+            Language = Texts.FallbackLanguage;
 
             DefaultIcons();
         }
@@ -660,6 +673,15 @@ namespace GazeBar
                 KeyboardLayout = GazeBar.KeyboardLayout.DefaultName;
             }
             KeyboardLayout = KeyboardLayout.Trim();
+
+            // Same rule for the language: a plain file name of the Languages folder.
+            if (string.IsNullOrWhiteSpace(Language) ||
+                Language.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                Language.Contains(".."))
+            {
+                Language = Texts.FallbackLanguage;
+            }
+            Language = Language.Trim().ToLowerInvariant();
 
             FixIcons(IconGroup.Crown);
             FixIcons(IconGroup.Modifiers);
@@ -770,6 +792,13 @@ namespace GazeBar
                     MaxScrollSpeed = 5;
                 }
                 App.Log("Settings: updated to version 11 (MaxScrollSpeed 15 → 5)");
+            }
+
+            if (FileVersion < 12)
+            {
+                // Nothing to fix: Language, missing from the file, kept its default value
+                // (see BeforeReading).
+                App.Log("Settings: updated to version 12 (interface language)");
             }
             FileVersion = CurrentVersion;
             return true;

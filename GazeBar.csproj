@@ -56,6 +56,9 @@
          Lexique 3.83) and its license are copied next to GazeBar.exe in the same way
          (see WordPredictor.cs). -->
     <None Update="Dictionaries\*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Step langues-socle: the interface language files (Languages/fr.json…), read by
+         Texts.cs, are copied the same way. -->
+    <None Update="Languages\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

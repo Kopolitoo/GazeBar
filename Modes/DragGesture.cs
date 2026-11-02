@@ -45,9 +45,9 @@ namespace GazeBar
             {
                 if (WithPause)
                 {
-                    return "glisser-déposer android";
+                    return "android drag and drop";
                 }
-                return Button == MouseSide.Left ? "glisser-déposer gauche" : "glisser-déposer droit";
+                return Button == MouseSide.Left ? "left drag and drop" : "right drag and drop";
             }
         }
     }

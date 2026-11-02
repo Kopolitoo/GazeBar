@@ -130,7 +130,7 @@ namespace GazeBar
             _tab = Math.Max(0, Math.Min(tab, SettingsCatalog.Tabs.Count - 1));
             _profileToConfirm = profileToConfirm;
 
-            Title = "GazeBar — Paramètres";
+            Title = Texts.Get("settings.windowTitle");
             WindowStyle = WindowStyle.None;
             ResizeMode = ResizeMode.NoResize;
             Topmost = true;
@@ -261,7 +261,7 @@ namespace GazeBar
             Setting setting = _editedSetting;
             _editedSetting = null;   // first, so that losing focus does not confirm the input
             RestoreDisplay(setting);
-            App.Log("Settings: input cancelled (" + setting.Name + ")");
+            App.Log("Settings: input cancelled (" + setting.Key + ")");
             return true;
         }
 
@@ -360,7 +360,7 @@ namespace GazeBar
             SettingsTab tab = SettingsCatalog.Tabs[_tab];
 
             // ── The title, at the top.
-            TextBlock title = Text("Paramètres — " + tab.Name, 30, Soft, false);
+            TextBlock title = Text(Texts.Format("settings.title", tab.Label), 30, Soft, false);
             Place(title, LeftContent, 26);
 
             // ── The left column: the "collapsible" CATEGORIES (2026-11-02, user's choice).
@@ -415,11 +415,11 @@ namespace GazeBar
             bool hasDefaults = tab.Settings.Count > 0 || tab.Name == SettingsCatalog.IconsTabName;
             if (hasDefaults)
             {
-                AddTarget(RightLeft, 60, RightSide, RightSide, SymbolAndWord("", "Défaut"),
+                AddTarget(RightLeft, 60, RightSide, RightSide, SymbolAndWord("", Texts.Get("settings.defaults")),
                              RequestDefaults, false, false);
             }
             AddTarget(RightLeft, (PageHeight - RightSide) / 2, RightSide, RightSide,
-                         SymbolAndWord("", "Retour"), RequestBack, false, false);
+                         SymbolAndWord("", Texts.Get("common.back")), RequestBack, false, false);
 
             Version++;
         }
@@ -450,7 +450,7 @@ namespace GazeBar
                 bool open = c == openCategory;
 
                 // The category: symbol (in colour if open) and name.
-                UIElement categoryRow = RowColumn(category.Symbol, category.Name, open, 46, 36, 24);
+                UIElement categoryRow = RowColumn(category.Symbol, category.Label, open, 46, 36, 24);
                 int categoryIndex = c;   // copy for the lambda below
                 AddTarget(LeftTab, y, TabWidth, step - TabGap, categoryRow,
                              () => ChooseCategory(categoryIndex), false, false);
@@ -466,7 +466,7 @@ namespace GazeBar
                 foreach (int tabIndex in openTabs)
                 {
                     SettingsTab o = SettingsCatalog.Tabs[tabIndex];
-                    UIElement tabRow = RowColumn(o.Symbol, o.Name, tabIndex == _tab, 34, 30, 14);
+                    UIElement tabRow = RowColumn(o.Symbol, o.Label, tabIndex == _tab, 34, 30, 14);
                     int num = tabIndex;   // copy for the lambda below
                     AddTarget(LeftTab + TabIndent, y, TabWidth - TabIndent, step - TabGap,
                                  tabRow, () => ChooseTab(num), false, tabIndex == _tab);
@@ -552,7 +552,7 @@ namespace GazeBar
             frame.Value = Text(setting.Text(P), 50, White, true);
             frame.Value.HorizontalAlignment = HorizontalAlignment.Center;
             AppSettings defaults = new AppSettings();
-            TextBlock callbackFn = Text("défaut " + setting.Text(defaults), 20, Soft, false);
+            TextBlock callbackFn = Text(Texts.Format("settings.defaultValue", setting.Text(defaults)), 20, Soft, false);
             callbackFn.HorizontalAlignment = HorizontalAlignment.Center;
             StackPanel display = new StackPanel();
             display.VerticalAlignment = VerticalAlignment.Center;
@@ -568,7 +568,7 @@ namespace GazeBar
             frame.Border.BorderBrush = Border;
             frame.Border.Background = ValueBackground;
             frame.Border.Cursor = Cursors.IBeam;
-            frame.Border.ToolTip = "Cliquer pour taper une valeur (Entrée valide, Échap annule)";
+            frame.Border.ToolTip = Texts.Get("settings.typeValueTooltip");
             frame.Border.Child = display;
             frame.Border.MouseLeftButtonUp += (s, e) =>
             {
@@ -580,7 +580,7 @@ namespace GazeBar
         }
 
         /// <summary>Name of the "Affichage" tab, below which the detected screen is recalled (step 11).</summary>
-        private const string DisplayTabName = "Affichage";
+        private const string DisplayTabName = "tab.display";
 
         /// <summary>
         /// "Affichage" tab (step 11): the screen detected by GazeBar (Windows resolution,
@@ -589,11 +589,11 @@ namespace GazeBar
         private void BuildScreenInfo(double top)
         {
             StackPanel info = new StackPanel();
-            info.Children.Add(Text("Écran détecté", 36, White, true));
+            info.Children.Add(Text(Texts.Get("settings.screenDetected"), 36, White, true));
             TextBlock description = Text(ScreenMetrics.Description(), 24, Soft, false);
             description.Margin = new Thickness(0, 6, 0, 0);
             info.Children.Add(description);
-            info.Children.Add(Text("Tailles en % de la hauteur de l'écran.", 23, Soft, false));
+            info.Children.Add(Text(Texts.Get("settings.sizesInPercent"), 23, Soft, false));
             Place(info, LeftContent, top + 30);
         }
 
@@ -601,14 +601,14 @@ namespace GazeBar
         private void BuildFileInfo(double top)
         {
             StackPanel info = new StackPanel();
-            info.Children.Add(Text("Fichier des réglages", 36, White, true));
+            info.Children.Add(Text(Texts.Get("settings.file"), 36, White, true));
             TextBlock path = Text(AppSettings.FilePath, 24, Soft, false);
             path.FontFamily = new FontFamily("Consolas");
             path.TextWrapping = TextWrapping.Wrap;
             path.Width = 1140;
             path.Margin = new Thickness(0, 6, 0, 0);
             info.Children.Add(path);
-            info.Children.Add(Text("Enregistré à chaque changement.", 23, Soft, false));
+            info.Children.Add(Text(Texts.Get("settings.savedOnChange"), 23, Soft, false));
             Place(info, LeftContent, top + 30);
         }
 
@@ -620,10 +620,16 @@ namespace GazeBar
         /// </summary>
         private void BuildMyWordsButton()
         {
-            AddTarget(LeftContent + 170, 640, 800, 180, BigButton("\uE82D", "Mes mots"),
+            AddTarget(LeftContent, 640, 570, 180, BigButton("\uE82D", Texts.Get("settings.myWords")),
                          () => Notify(MyWordsRequested), false, false);
-            TextBlock explanation = Text("Les mots ajoutés au clavier avec « + » : regarder un mot le retire.",
-                                          23, Soft, false);
+            // Step langues-socle: the interface language, next to "Mes mots". E774 = globe.
+            AddTarget(LeftContent + 630, 640, 570, 180, BigButton("\uE774", Texts.LanguageName),
+                         NextLanguage, false, false);
+            // Below the buttons: the message of the language button if there is one, otherwise
+            // the explanation.
+            TextBlock explanation = string.IsNullOrEmpty(_message)
+                ? Text(Texts.Get("settings.myWordsHelp"), 23, Soft, false)
+                : Text(_message, 30, SettingTarget.Accent, true);
             explanation.TextWrapping = TextWrapping.Wrap;
             explanation.Width = 1140;
             Place(explanation, LeftContent, 840);
@@ -636,10 +642,9 @@ namespace GazeBar
         private void BuildIconsTab()
         {
             StackPanel texts = new StackPanel();
-            texts.Children.Add(Text("Icônes du choix d'action", 36, White, true));
+            texts.Children.Add(Text(Texts.Get("settings.icons.title"), 36, White, true));
             TextBlock explanation = Text(
-                "Choisir les actions de la couronne, des modificateurs (bord gauche) et des boutons " +
-                "Copier, Couper, Coller (bord haut). Un emplacement peut rester vide.", 23, Soft, false);
+                Texts.Get("settings.icons.help"), 23, Soft, false);
             explanation.TextWrapping = TextWrapping.Wrap;
             explanation.Width = 1140;
             explanation.Margin = new Thickness(0, 6, 0, 0);
@@ -655,7 +660,7 @@ namespace GazeBar
             symbol.VerticalAlignment = VerticalAlignment.Center;
             symbol.Margin = new Thickness(0, 0, 30, 0);
             button.Children.Add(symbol);
-            TextBlock word = Text("Configurer les icônes", 42, White, true);
+            TextBlock word = Text(Texts.Get("settings.icons.configure"), 42, White, true);
             word.VerticalAlignment = VerticalAlignment.Center;
             button.Children.Add(word);
 
@@ -671,10 +676,9 @@ namespace GazeBar
         private void BuildToolsTab()
         {
             StackPanel texts = new StackPanel();
-            texts.Children.Add(Text("Outils", 36, White, true));
+            texts.Children.Add(Text(Texts.Get("tab.tools"), 36, White, true));
             TextBlock explanation = Text(
-                "Calibration : lance l'outil de calibration de l'eyetracker ; GazeBar revient en mode mouvement " +
-                "quand il se ferme. Diagnostic : ouvre la fenêtre qui suit le regard et le curseur.",
+                Texts.Get("settings.tools.help"),
                 23, Soft, false);
             explanation.TextWrapping = TextWrapping.Wrap;
             explanation.Width = 1140;
@@ -682,9 +686,9 @@ namespace GazeBar
             texts.Children.Add(explanation);
             Place(texts, LeftContent, TopRow + 20);
 
-            AddTarget(LeftContent + 170, 320, 800, 180, BigButton("\uE890", "Calibration"),
+            AddTarget(LeftContent + 170, 320, 800, 180, BigButton("\uE890", Texts.Get("settings.tools.calibration")),
                          () => Notify(CalibrationRequested), false, false);
-            AddTarget(LeftContent + 170, 620, 800, 180, BigButton("\uE9D9", "Diagnostic"),
+            AddTarget(LeftContent + 170, 620, 800, 180, BigButton("\uE9D9", Texts.Get("settings.tools.diagnostic")),
                          () => Notify(DiagnosticRequested), false, false);
 
             BuildMessage();
@@ -711,10 +715,9 @@ namespace GazeBar
         private void BuildProfilesTab()
         {
             StackPanel texts = new StackPanel();
-            texts.Children.Add(Text("Profils de réglages", 36, White, true));
+            texts.Children.Add(Text(Texts.Get("settings.profiles.title"), 36, White, true));
             TextBlock explanation = Text(
-                "Garder plusieurs jeux de réglages et passer de l'un à l'autre. Pour renommer ou " +
-                "supprimer un profil, l'aidant le fait dans l'Explorateur, dans le dossier :",
+                Texts.Get("settings.profiles.help"),
                 23, Soft, false);
             explanation.TextWrapping = TextWrapping.Wrap;
             explanation.Width = 1140;
@@ -728,9 +731,9 @@ namespace GazeBar
             texts.Children.Add(folder);
             Place(texts, LeftContent, TopRow + 20);
 
-            AddTarget(LeftContent + 70, 320, 1000, 180, BigButton("\uE74E", "Enregistrer les réglages actuels"),
+            AddTarget(LeftContent + 70, 320, 1000, 180, BigButton("\uE74E", Texts.Get("settings.profiles.save")),
                          SaveProfile, false, false);
-            AddTarget(LeftContent + 70, 620, 1000, 180, BigButton("\uE8E5", "Charger un profil"),
+            AddTarget(LeftContent + 70, 620, 1000, 180, BigButton("\uE8E5", Texts.Get("settings.profiles.load")),
                          () => Notify(ProfileListRequested), false, false);
 
             BuildMessage();
@@ -744,22 +747,21 @@ namespace GazeBar
         private void BuildProfileConfirmation()
         {
             string questionText = _profileToConfirm.IsBackup
-                ? "Revenir aux réglages d'avant le dernier chargement de profil ?"
-                : "Charger le profil « " + _profileToConfirm.Name + " » ?";
+                ? Texts.Get("settings.profiles.restoreQuestion")
+                : Texts.Format("settings.profiles.loadQuestion", _profileToConfirm.DisplayName);
             TextBlock question = Text(questionText, 40, White, true);
             question.TextWrapping = TextWrapping.Wrap;
             question.Width = 1140;
             Place(question, LeftContent, 260);
 
             TextBlock precision = Text(
-                "Tous les réglages changent tout de suite. Les réglages actuels sont d'abord gardés " +
-                "dans le profil « " + SettingsProfiles.BackupName + " ».", 23, Soft, false);
+                Texts.Format("settings.profiles.loadHelp", Texts.Get("profiles.backupName")), 23, Soft, false);
             precision.TextWrapping = TextWrapping.Wrap;
             precision.Width = 1140;
             Place(precision, LeftContent, 380);
 
-            AddTarget(640, 480, 300, SideButton, Word("Oui", 42), ConfirmProfile, false, false);
-            AddTarget(1040, 480, 300, SideButton, Word("Non", 42), CancelProfile, false, false);
+            AddTarget(640, 480, 300, SideButton, Word(Texts.Get("common.yes"), 42), ConfirmProfile, false, false);
+            AddTarget(1040, 480, 300, SideButton, Word(Texts.Get("common.no"), 42), CancelProfile, false, false);
         }
 
         /// <summary>"Enregistrer les réglages actuels" button: a new dated profile.</summary>
@@ -844,15 +846,15 @@ namespace GazeBar
         private void BuildConfirmation(SettingsTab tab)
         {
             string questionText = tab.Name == SettingsCatalog.IconsTabName
-                ? "Remettre la disposition d'origine des icônes du choix d'action ?"
-                : "Remettre les valeurs par défaut de l'onglet « " + tab.Name + " » ?";
+                ? Texts.Get("settings.icons.defaultsQuestion")
+                : Texts.Format("settings.defaultsQuestion", tab.Label);
             TextBlock question = Text(questionText, 40, White, true);
             question.TextWrapping = TextWrapping.Wrap;
             question.Width = 1140;
             Place(question, LeftContent, 300);
 
-            AddTarget(640, 480, 300, SideButton, Word("Oui", 42), () => RestoreDefaults(tab), false, false);
-            AddTarget(1040, 480, 300, SideButton, Word("Non", 42), CancelDefaults, false, false);
+            AddTarget(640, 480, 300, SideButton, Word(Texts.Get("common.yes"), 42), () => RestoreDefaults(tab), false, false);
+            AddTarget(1040, 480, 300, SideButton, Word(Texts.Get("common.no"), 42), CancelDefaults, false, false);
         }
 
         // ───────────────────────── Actions ─────────────────────────
@@ -873,6 +875,33 @@ namespace GazeBar
                 App.Log("Settings: category " + SettingsCatalog.Categories[category].Name);
                 ChooseTab(tabs[0]);
             }
+        }
+
+        /// <summary>
+        /// "Langue" button of the Général tab (step langues-socle): switches to the next
+        /// language of the Languages folder (in code order, back to the first after the last).
+        /// The choice is saved and the page is redrawn at once in the new language. With a
+        /// single language file, a message says so.
+        /// </summary>
+        private void NextLanguage()
+        {
+            ConfirmInput();
+            List<KeyValuePair<string, string>> languages = Texts.Available();
+            if (languages.Count < 2)
+            {
+                _message = Texts.Get("settings.language.onlyOne");
+                Build();
+                return;
+            }
+            int index = languages.FindIndex(l => l.Key == Texts.Language);
+            string next = languages[(index + 1) % languages.Count].Key;
+            P.Language = next;
+            P.Save();
+            Texts.Load(next);
+            App.Log("Settings: Language = " + next);
+            _message = null;
+            Title = Texts.Get("settings.windowTitle");
+            Build();
         }
 
         private void ChooseTab(int num)
@@ -951,7 +980,7 @@ namespace GazeBar
                 setting.AfterChange(P);
             }
             P.Save();
-            App.Log("Settings: " + setting.Name + " = " + setting.Text(P));
+            App.Log("Settings: " + setting.Key + " = " + setting.Text(P));
         }
 
         // ───────────────────────── Keyboard input (for the caregiver) ─────────────────────────
@@ -1020,7 +1049,7 @@ namespace GazeBar
             }
             else
             {
-                App.Log("Settings: unreadable input for " + setting.Name + ": \"" + text + "\"");
+                App.Log("Settings: unreadable input for " + setting.Key + ": \"" + text + "\"");
             }
             RestoreDisplay(setting);
         }

@@ -199,22 +199,22 @@ namespace GazeBar
         {
             switch (action)
             {
-                case ChoiceAction.LeftClick: return "Clic gauche";
-                case ChoiceAction.RightClick: return "Clic droit";
-                case ChoiceAction.DoubleClick: return "Double clic";
-                case ChoiceAction.Magnifier: return "Loupe";
-                case ChoiceAction.DragLeft: return "Glisser gauche";
-                case ChoiceAction.DragRight: return "Glisser droit";
-                case ChoiceAction.DragAndroid: return "Glisser android";
-                case ChoiceAction.Scroll: return "Défilement";
-                case ChoiceAction.Ctrl: return "Ctrl";
-                case ChoiceAction.Shift: return "Maj";
-                case ChoiceAction.Alt: return "Alt";
-                case ChoiceAction.Copy: return "Copier";
-                case ChoiceAction.Cut: return "Couper";
-                case ChoiceAction.Paste: return "Coller";
-                case ChoiceAction.Keyboard: return "Clavier";
-                default: return "Retour";
+                case ChoiceAction.LeftClick: return Texts.Get("action.leftClick.short");
+                case ChoiceAction.RightClick: return Texts.Get("action.rightClick.short");
+                case ChoiceAction.DoubleClick: return Texts.Get("action.doubleClick.short");
+                case ChoiceAction.Magnifier: return Texts.Get("action.magnifier.short");
+                case ChoiceAction.DragLeft: return Texts.Get("action.dragLeft.short");
+                case ChoiceAction.DragRight: return Texts.Get("action.dragRight.short");
+                case ChoiceAction.DragAndroid: return Texts.Get("action.dragAndroid.short");
+                case ChoiceAction.Scroll: return Texts.Get("action.scroll.short");
+                case ChoiceAction.Ctrl: return Texts.Get("action.ctrl.short");
+                case ChoiceAction.Shift: return Texts.Get("action.shift.short");
+                case ChoiceAction.Alt: return Texts.Get("action.alt.short");
+                case ChoiceAction.Copy: return Texts.Get("action.copy.short");
+                case ChoiceAction.Cut: return Texts.Get("action.cut.short");
+                case ChoiceAction.Paste: return Texts.Get("action.paste.short");
+                case ChoiceAction.Keyboard: return Texts.Get("action.keyboard.short");
+                default: return Texts.Get("action.back.short");
             }
         }
 
@@ -235,38 +235,38 @@ namespace GazeBar
             switch (action)
             {
                 case ChoiceAction.LeftClick:
-                    return new GazeButton("", "G", "Clic gauche");
+                    return new GazeButton("", Texts.Get("action.badge.left"), Texts.Get("action.leftClick.label"));
                 case ChoiceAction.RightClick:
-                    return new GazeButton("", "D", "Clic droit");
+                    return new GazeButton("", Texts.Get("action.badge.right"), Texts.Get("action.rightClick.label"));
                 case ChoiceAction.DoubleClick:
-                    return new GazeButton("", "2×", "Double clic");
+                    return new GazeButton("", "2×", Texts.Get("action.doubleClick.label"));
                 case ChoiceAction.Magnifier:
-                    return new GazeButton("", null, "Loupe");
+                    return new GazeButton("", null, Texts.Get("action.magnifier.label"));
                 case ChoiceAction.DragLeft:
-                    return new GazeButton("", "G", "Glisser-déposer gauche");
+                    return new GazeButton("", Texts.Get("action.badge.left"), Texts.Get("action.dragLeft.label"));
                 case ChoiceAction.DragRight:
-                    return new GazeButton("", "D", "Glisser-déposer droit");
+                    return new GazeButton("", Texts.Get("action.badge.right"), Texts.Get("action.dragRight.label"));
                 case ChoiceAction.DragAndroid:
-                    return new GazeButton("", "A", "Glisser-déposer android (pause avant de déplacer)");
+                    return new GazeButton("", Texts.Get("action.badge.android"), Texts.Get("action.dragAndroid.label"));
                 case ChoiceAction.Scroll:
-                    return new GazeButton("", null, "Défilement");
+                    return new GazeButton("", null, Texts.Get("action.scroll.label"));
                 case ChoiceAction.Ctrl:
-                    return GazeButton.Text("Ctrl", "Ctrl (activer / désactiver)");
+                    return GazeButton.Text(Texts.Get("action.ctrl.short"), Texts.Get("action.ctrl.label"));
                 case ChoiceAction.Shift:
-                    return GazeButton.Text("Maj", "Maj (activer / désactiver)");
+                    return GazeButton.Text(Texts.Get("action.shift.short"), Texts.Get("action.shift.label"));
                 case ChoiceAction.Alt:
-                    return GazeButton.Text("Alt", "Alt (activer / désactiver)");
+                    return GazeButton.Text(Texts.Get("action.alt.short"), Texts.Get("action.alt.label"));
                 case ChoiceAction.Copy:
-                    return new GazeButton("", null, "Copier (Ctrl + C)");
+                    return new GazeButton("", null, Texts.Get("action.copy.label"));
                 case ChoiceAction.Cut:
-                    return new GazeButton("", null, "Couper (Ctrl + X)");
+                    return new GazeButton("", null, Texts.Get("action.cut.label"));
                 case ChoiceAction.Paste:
-                    return new GazeButton("", null, "Coller ici (clic, puis Ctrl + V)");
+                    return new GazeButton("", null, Texts.Get("action.paste.label"));
                 case ChoiceAction.Keyboard:
                     // Empty badge: the same button opens the keyboard, or closes it if it is open.
-                    return new GazeButton("\uE765", null, "Clavier (ouvrir / fermer)");
+                    return new GazeButton("\uE765", null, Texts.Get("action.keyboard.label"));
                 default:
-                    return new GazeButton("", null, "Retour");
+                    return new GazeButton("", null, Texts.Get("action.back.label"));
             }
         }
     }

@@ -19,6 +19,12 @@ namespace GazeBar
         {
             get { return string.Equals(Name, SettingsProfiles.BackupName, StringComparison.OrdinalIgnoreCase); }
         }
+
+        /// <summary>The name shown to the user: the file name, or "Sauvegarde automatique" (in the current language) for the backup.</summary>
+        public string DisplayName
+        {
+            get { return IsBackup ? Texts.Get("profiles.backupName") : Name; }
+        }
     }
 
     /// <summary>
@@ -47,8 +53,12 @@ namespace GazeBar
     /// </summary>
     internal static class SettingsProfiles
     {
-        /// <summary>The name of the profile written automatically before each load.</summary>
-        public const string BackupName = "Sauvegarde automatique";
+        /// <summary>
+        /// The FILE name of the profile written automatically before each load. It does not
+        /// depend on the language (otherwise changing the language would lose the backup); the
+        /// user sees "profiles.backupName" instead (FoundProfile.DisplayName).
+        /// </summary>
+        public const string BackupName = "auto-backup";
 
         /// <summary>The profiles folder: Documents\GazeBar\Profiles.</summary>
         public static string Folder
@@ -100,7 +110,7 @@ namespace GazeBar
         /// </summary>
         public static bool SaveCurrent(out string message)
         {
-            string name = "Réglages " + DateTime.Now.ToString("yyyy-MM-dd HH'h'mm");
+            string name = Texts.Format("profiles.fileName", DateTime.Now.ToString("yyyy-MM-dd HH'h'mm"));
             string path = Path.Combine(Folder, name + ".json");
             for (int num = 2; File.Exists(path); num++)
             {
@@ -111,10 +121,10 @@ namespace GazeBar
             if (AppSettings.Current.SaveTo(path))
             {
                 App.Log("Profiles: current settings saved in \"" + name + "\"");
-                message = "Réglages enregistrés dans le profil « " + name + " ».";
+                message = Texts.Format("profiles.saved", name);
                 return true;
             }
-            message = "Impossible d'enregistrer le profil (voir le journal).";
+            message = Texts.Get("profiles.saveFailed");
             return false;
         }
 
@@ -146,7 +156,7 @@ namespace GazeBar
             catch (Exception ex)
             {
                 App.Log("Profiles: \"" + name + "\" unreadable: " + ex.Message);
-                message = "Le profil « " + name + " » est illisible : rien n'a changé.";
+                message = Texts.Format("profiles.unreadable", name);
                 return false;
             }
             if (updated)
@@ -166,12 +176,14 @@ namespace GazeBar
             if (!currentValues.SaveTo(backupPath))
             {
                 // Without a backup, we could not go back: we do not insist.
-                message = "Impossible de garder les réglages actuels : le profil n'a pas été chargé.";
+                message = Texts.Get("profiles.backupFailed");
                 return false;
             }
 
-            // 3. The computer setting does not change.
+            // 3. The computer setting does not change, nor the interface language (switching
+            //    language by loading a profile would be a surprise).
             newItems.StartWithWindows = currentValues.StartWithWindows;
+            newItems.Language = currentValues.Language;
 
             // 4. Apply and save.
             AppSettings.Replace(newItems);
@@ -179,7 +191,8 @@ namespace GazeBar
             WheelScroller.Apply(newItems.ScrollInactiveWindows);
 
             App.Log("Profiles: profile \"" + name + "\" loaded");
-            message = "Profil « " + name + " » chargé. Les réglages d'avant sont dans « " + BackupName + " ».";
+            message = Texts.Format("profiles.loaded", name == BackupName ? Texts.Get("profiles.backupName") : name,
+                                   Texts.Get("profiles.backupName"));
             return true;
         }
     }

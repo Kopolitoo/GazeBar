@@ -96,7 +96,7 @@ namespace GazeBar
         private double _stepStartMs;
 
         /// <summary>Label of an empty slot, shown on hover.</summary>
-        private const string EmptyLabel = "Emplacement libre (à configurer dans les paramètres)";
+        private static string EmptyLabel { get { return Texts.Get("actionChoice.emptySlot"); } }
 
         // The buttons shown, and the action of each one (same order; null = empty slot).
         private readonly List<GazeButton> _buttons = new List<GazeButton>();
@@ -125,7 +125,7 @@ namespace GazeBar
 
         public override string Name
         {
-            get { return "Choix d'action"; }
+            get { return "Action choice"; }
         }
 
         public override void Enter(GazeState gaze)

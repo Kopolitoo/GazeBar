@@ -112,11 +112,19 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
 `Documents\GazeBar\Profiles\Réglages AAAA-MM-JJ HHhMM.json` ; l'aidant peut renommer ou
 supprimer ces fichiers dans l'Explorateur. « Charger un profil » montre les fichiers `.json` de ce
 dossier en grands boutons (le plus récent en premier, 12 par page) ; après « Oui », les réglages
-actuels sont gardés dans « Sauvegarde automatique » (remplacé à chaque chargement, pour revenir
-en arrière au regard), puis le profil est appliqué tout de suite et enregistré dans
-`settings.json`. Un profil d'une ancienne version est converti comme `settings.json` au
-démarrage. « Démarrer avec Windows » ne change pas (réglage de l'ordinateur), ni le dictionnaire
-personnel.
+actuels sont gardés dans « Sauvegarde automatique » (fichier `auto-backup.json`, remplacé à
+chaque chargement, pour revenir en arrière au regard), puis le profil est appliqué tout de suite et
+enregistré dans `settings.json`. Un profil d'une ancienne version est converti comme `settings.json`
+au démarrage. « Démarrer avec Windows » ne change pas (réglage de l'ordinateur), ni la langue de
+l'interface, ni le dictionnaire personnel.
+
+**Langue de l'interface** (étape langues-socle, `Texts.cs`) : tous les textes affichés sont dans
+des fichiers de langue, dossier `Languages` copié à côté de GazeBar.exe (`Languages/fr.json` pour
+l'instant). Chaque texte a une clé (`"menu.settings": "Paramètres"`) ; `{0}`, `{1}` sont remplacés
+par des valeurs. Un texte absent de la langue choisie est pris en français, et la clé manquante est
+notée dans le journal. Le bouton « Langue » (onglet Général) passe à la langue suivante du dossier
+et redessine la page tout de suite ; le choix est le réglage `Language` (`settings.json` version 12).
+Pour ajouter une langue : copier `fr.json` en `xx.json`, traduire les valeurs (jamais les clés).
 
 ## Architecture des modes
 
