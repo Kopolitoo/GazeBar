@@ -33,8 +33,10 @@ namespace GazeBar
     /// curseur de texte, et les touches simulées lui arrivent bien.
     ///
     /// Un bouton « Fermer le clavier » est placé au-dessus du clavier, à droite (en dessous
-    /// quand le clavier est en haut). On peut aussi le fermer depuis la barre de menu du clavier (regard sous
-    /// l'écran), ou avec la touche Échap d'un vrai clavier (pour l'aidant).
+    /// quand le clavier est en haut). On peut aussi le fermer avec la touche Échap d'un vrai
+    /// clavier (pour l'aidant), ou avec le bouton « Clavier » de la barre classique s'il est
+    /// caché par le mode jeu. (Le bouton Fermer de la barre du clavier a été retiré à l'étape
+    /// 14 : il faisait double emploi.)
     ///
     /// Les touches viennent d'un fichier de disposition (DispositionClavier, relu à chaque
     /// ouverture). Le texte tapé n'est JAMAIS écrit dans le journal (vie privée) : seules les
@@ -46,6 +48,14 @@ namespace GazeBar
     /// 1re case avec un « + » : la regarder l'ajoute au dictionnaire personnel.
     /// Juste après une espace, les cases proposent les mots qui ont déjà suivi le mot d'avant
     /// (« mot suivant », appris au fil des phrases, demande du 02/11/2026).
+    ///
+    /// Étape 14 (« clavier-options ») : la disposition est celle choisie avec le bouton
+    /// « Langue » ([DispositionClavier], voir ChangerDisposition), et une ZONE DE SAISIE
+    /// facultative ([ZoneSaisie]) montre, dans une bande au-dessus des touches, les derniers
+    /// mots tapés. C'est un simple aperçu : le texte part toujours directement dans
+    /// l'application. Le clavier ne peut pas lire le texte de l'application : l'aperçu est
+    /// donc ce que LE CLAVIER a tapé, et il se vide quand le curseur de texte a pu bouger
+    /// (flèche, Tab, raccourci, clic ailleurs…), comme le mot en cours.
     ///
     /// Code non compilé au moment de l'écriture : à vérifier dans Visual Studio.
     /// </summary>
@@ -60,6 +70,17 @@ namespace GazeBar
 
         /// <summary>Zone d'activation du bouton Fermer : 20 % plus grande que son dessin.</summary>
         private const double FacteurZoneFermer = 1.2;
+
+        /// <summary>Hauteur de la zone de saisie (étape 14), par rapport à une rangée de touches.</summary>
+        private const double ProportionZoneSaisie = 0.7;
+
+        /// <summary>Nombre de caractères gardés pour l'aperçu de la zone de saisie (on n'en montre que la fin).</summary>
+        private const int LongueurMaxApercu = 400;
+
+        // Couleurs de la zone de saisie (figées : WPF les dessine plus vite).
+        private static readonly Brush FondZoneSaisie = Figer(Color.FromArgb(0xFF, 0x26, 0x27, 0x2A));
+        private static readonly Brush TexteZoneSaisie = Figer(Colors.White);
+        private static readonly Brush TexteZoneSaisieVide = Figer(Color.FromArgb(0xFF, 0x80, 0x80, 0x80));
 
         private readonly OverlayWindow _calque;
 
@@ -114,6 +135,14 @@ namespace GazeBar
         // Les deux derniers caractères tapés, pour la majuscule automatique après « . ».
         private string _fin = "";
 
+        // Étape 14 : la zone de saisie. _apercu : ce que le clavier a tapé depuis que le
+        // curseur de texte n'a plus bougé (gardé en mémoire seulement, jamais dans le journal) ;
+        // _texteApercu : son texte affiché (null quand la zone n'est pas affichée) ;
+        // _largeurApercuWpf : la largeur disponible pour ce texte, en unités WPF.
+        private readonly StringBuilder _apercu = new StringBuilder();
+        private TextBlock _texteApercu;
+        private double _largeurApercuWpf;
+
         public ClavierRegard(OverlayWindow calque)
         {
             _calque = calque;
@@ -155,7 +184,22 @@ namespace GazeBar
         /// </summary>
         public bool Ouvrir(out string message)
         {
-            DispositionClavier disposition = DispositionClavier.Charger(DispositionClavier.NomParDefaut, out message);
+            // Étape 14 : la disposition choisie avec le bouton « Langue ». Si son fichier a
+            // disparu ou contient une erreur, on essaie la disposition par défaut (fr-azerty)
+            // plutôt que de ne pas ouvrir le clavier du tout ; le choix enregistré ne change pas.
+            string nom = Parametres.Courants.DispositionClavier;
+            DispositionClavier disposition = DispositionClavier.Charger(nom, out message);
+            if (disposition == null &&
+                !string.Equals(nom, DispositionClavier.NomParDefaut, StringComparison.OrdinalIgnoreCase))
+            {
+                string messageDefaut;
+                disposition = DispositionClavier.Charger(DispositionClavier.NomParDefaut, out messageDefaut);
+                if (disposition != null)
+                {
+                    App.Log("Clavier : disposition « " + nom + " » inutilisable, on prend " + DispositionClavier.NomParDefaut);
+                    message = null;
+                }
+            }
             if (disposition == null)
             {
                 return false;
@@ -209,9 +253,7 @@ namespace GazeBar
                 Masquer();
                 // On est parti faire autre chose (un clic ailleurs, les paramètres…) : le texte
                 // autour du curseur a pu changer, le mot en cours n'est plus sûr.
-                _motEnCours.Clear();
-                _motPrecedent = null;
-                _fin = "";
+                OublierPosition();
             }
             else if (_visible)
             {
@@ -289,6 +331,62 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// Bouton « Zone de saisie » de la barre du clavier (étape 14) : affiche ou cache la
+        /// bande des derniers mots tapés. Enregistré. Le clavier est redessiné (il grandit ou
+        /// rapetisse de la hauteur de la bande).
+        /// </summary>
+        public void BasculerZoneSaisie()
+        {
+            Parametres p = Parametres.Courants;
+            p.ZoneSaisie = !p.ZoneSaisie;
+            p.Enregistrer();
+            App.Log("Clavier : zone de saisie " + (p.ZoneSaisie ? "affichée" : "cachée"));
+            if (_visible)
+            {
+                Construire();
+            }
+        }
+
+        /// <summary>
+        /// La prédiction de mots, pour la liste « Mes mots » (étape 14, voir ModeListeClavier).
+        /// </summary>
+        public PredicteurMots Predicteur
+        {
+            get { return _predicteur; }
+        }
+
+        /// <summary>
+        /// Bouton « Langue » (étape 14) : passe à une autre disposition du dossier Claviers
+        /// (nom du fichier sans « .json »). Elle est lue tout de suite ; si elle est absente ou
+        /// incorrecte, rien ne change et « message » explique pourquoi. Sinon le choix est
+        /// enregistré, le dictionnaire de sa langue est chargé (en arrière-plan), et le clavier
+        /// repart de la page de départ de la nouvelle disposition.
+        /// </summary>
+        public bool ChangerDisposition(string nom, out string message)
+        {
+            DispositionClavier disposition = DispositionClavier.Charger(nom, out message);
+            if (disposition == null)
+            {
+                return false;
+            }
+            Parametres p = Parametres.Courants;
+            p.DispositionClavier = nom;
+            p.Enregistrer();
+
+            _disposition = disposition;
+            _predicteur.ChargerLangue(disposition.Langue);
+            _page = disposition.PageDepart;
+            _pagePrecedente = null;
+            OublierEtat();
+            App.Log("Clavier : disposition choisie : " + nom);
+            if (_visible)
+            {
+                Construire();
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Vrai si le point du regard (pixels d'écran, VRAI regard et non ramené dans l'écran)
         /// est sur le clavier ou sur son bouton Fermer. Faux si le clavier n'est pas affiché.
         /// </summary>
@@ -319,9 +417,20 @@ namespace GazeBar
             _ctrl = false;
             _alt = false;
             _win = false;
+            OublierPosition();
+        }
+
+        /// <summary>
+        /// Le curseur de texte a pu bouger (flèche, Tab, raccourci, clic ailleurs…) : on oublie
+        /// le mot en cours, le mot d'avant, la fin du texte et l'aperçu de la zone de saisie,
+        /// qui ne correspondent peut-être plus au texte autour du curseur.
+        /// </summary>
+        private void OublierPosition()
+        {
             _motEnCours.Clear();
             _motPrecedent = null;
             _fin = "";
+            _apercu.Clear();
         }
 
         // ───────────────────────── Le regard ─────────────────────────
@@ -444,14 +553,13 @@ namespace GazeBar
                     _win = false;
                     _maj = false;
                     // Un raccourci n'écrit pas de texte : le mot en cours n'est plus sûr.
-                    _motEnCours.Clear();
-                    _motPrecedent = null;
-                    _fin = "";
+                    OublierPosition();
                     return;
                 }
             }
 
             InjecteurClavier.TaperTexte(texte);
+            Apercu(0, texte);
             _ctrl = false;
             _alt = false;
             _win = false;
@@ -474,22 +582,25 @@ namespace GazeBar
             }
 
             // Ici, Maj compte (Maj + Tab, Maj + flèche pour sélectionner…).
-            InjecteurClavier.TaperTouche(code, etendue, ModificateursActifs(true));
+            List<ushort> mods = ModificateursActifs(true);
+            // Ctrl, Alt ou Win + Entrée n'est pas une simple fin de ligne (Maj + Entrée, si).
+            bool avecModificateur = _ctrl || _alt || _win;
+            InjecteurClavier.TaperTouche(code, etendue, mods);
             _ctrl = false;
             _alt = false;
             _win = false;
             _maj = false;
 
-            if (code == 0x0D)
+            if (code == 0x0D && !avecModificateur)
             {
                 Suivre("\n");   // Entrée : fin de ligne (compte pour la majuscule automatique)
+                Apercu(0, "\n");
             }
             else
             {
-                // Tab, flèches, Début… : le curseur de texte a bougé, le mot en cours n'est plus sûr.
-                _motEnCours.Clear();
-                _motPrecedent = null;
-                _fin = "";
+                // Tab, flèches, Début, Ctrl + Entrée… : le curseur de texte a pu bouger, le mot
+                // en cours n'est plus sûr.
+                OublierPosition();
             }
         }
 
@@ -532,14 +643,26 @@ namespace GazeBar
                 return;
             }
             InjecteurClavier.TaperTouche(code, etendue, mods);
-            _motEnCours.Clear();
-            _motPrecedent = null;
-            _fin = "";
+            OublierPosition();
         }
 
         /// <summary>Effacer une lettre : Retour arrière (avec Ctrl, Alt, Maj s'ils sont allumés).</summary>
         private void EffacerLettre()
         {
+            // Avec Ctrl, Retour arrière efface un mot entier dans la plupart des applications :
+            // l'aperçu fait de même ; avec Alt ou Win, on ne sait pas ce qui se passe : il se vide.
+            if (_alt || _win)
+            {
+                _apercu.Clear();
+            }
+            else if (_ctrl)
+            {
+                RetirerMotApercu();
+            }
+            else
+            {
+                Apercu(1, "");
+            }
             InjecteurClavier.TaperTouche(NativeMethods.VK_BACK, false, ModificateursActifs(true));
             _ctrl = false;
             _alt = false;
@@ -571,12 +694,14 @@ namespace GazeBar
                 {
                     InjecteurClavier.TaperTouche(NativeMethods.VK_BACK, false, null);
                 }
+                Apercu(_motEnCours.Length, "");
                 _motEnCours.Clear();
             }
             else
             {
                 InjecteurClavier.TaperTouche(NativeMethods.VK_BACK, false, new List<ushort> { NativeMethods.VK_CONTROL });
                 _motPrecedent = null;   // c'est le mot d'avant qui vient d'être effacé
+                RetirerMotApercu();
             }
             _fin = "";
         }
@@ -708,6 +833,7 @@ namespace GazeBar
             {
                 _predicteur.Ajouter(tape);
                 InjecteurClavier.TaperTexte(" ");
+                Apercu(0, " ");
                 Suivre(" ");   // termine le mot : il compte déjà une utilisation
                 return;
             }
@@ -735,6 +861,7 @@ namespace GazeBar
             bool elision = mot.EndsWith("'") || mot.EndsWith("’");
             string ajout = mot.Substring(communes) + (elision ? "" : " ");
             InjecteurClavier.TaperTexte(ajout);
+            Apercu(tape.Length - communes, ajout);
 
             _motEnCours.Clear();
             _motPrecedent = _predicteur.NoterUtilisation(mot, _motPrecedent);
@@ -790,7 +917,114 @@ namespace GazeBar
             return mot;
         }
 
+        // ───────────────────────── La zone de saisie (étape 14) ─────────────────────────
+
+        /// <summary>
+        /// Met à jour l'aperçu de la zone de saisie comme l'application l'a fait : « effaces »
+        /// Retour arrière, puis « ajout » écrit. L'aperçu est tenu à jour même quand la zone est
+        /// cachée : on la voit juste en l'affichant. Seule la fin est gardée.
+        /// </summary>
+        private void Apercu(int effaces, string ajout)
+        {
+            _apercu.Length = Math.Max(0, _apercu.Length - effaces);
+            _apercu.Append(ajout);
+            if (_apercu.Length > LongueurMaxApercu)
+            {
+                _apercu.Remove(0, _apercu.Length - LongueurMaxApercu);
+            }
+        }
+
+        /// <summary>
+        /// Comme Ctrl + Retour arrière dans la plupart des applications : retire les espaces de
+        /// la fin, puis les lettres du dernier mot.
+        /// </summary>
+        private void RetirerMotApercu()
+        {
+            int fin = _apercu.Length;
+            while (fin > 0 && char.IsWhiteSpace(_apercu[fin - 1]))
+            {
+                fin--;
+            }
+            while (fin > 0 && !char.IsWhiteSpace(_apercu[fin - 1]))
+            {
+                fin--;
+            }
+            _apercu.Length = fin;
+        }
+
+        /// <summary>
+        /// Écrit l'aperçu dans la zone de saisie (si elle est affichée). Une fin de ligne est
+        /// montrée par « ↵ ». Quand le texte est trop long, seule la fin est montrée, précédée
+        /// de « … ». Zone vide : un petit texte gris explique à quoi elle sert.
+        /// </summary>
+        private void AfficherApercu()
+        {
+            if (_texteApercu == null)
+            {
+                return;
+            }
+            if (_apercu.Length == 0)
+            {
+                _texteApercu.Text = "Les derniers mots tapés s'affichent ici";
+                _texteApercu.Foreground = TexteZoneSaisieVide;
+                return;
+            }
+            string texte = _apercu.ToString().Replace("\n", " ↵ ");
+            _texteApercu.Foreground = TexteZoneSaisie;
+            _texteApercu.Text = FinQuiTient(texte);
+        }
+
+        /// <summary>
+        /// La plus longue fin de « texte » qui tient dans la largeur de la zone (précédée de
+        /// « … » si elle est coupée). On cherche le point de coupure par dichotomie : on mesure
+        /// une dizaine de fois au lieu d'essayer chaque caractère.
+        /// </summary>
+        private string FinQuiTient(string texte)
+        {
+            if (LargeurTexte(texte) <= _largeurApercuWpf)
+            {
+                return texte;
+            }
+            // On cherche le plus petit « debut » pour lequel « … » + la fin depuis debut tient.
+            int bas = 1;
+            int haut = texte.Length;   // texte vide : tient toujours
+            while (bas < haut)
+            {
+                int milieu = bas + (haut - bas) / 2;
+                if (LargeurTexte("…" + texte.Substring(milieu)) <= _largeurApercuWpf)
+                {
+                    haut = milieu;     // ça tient : on peut peut-être garder plus de texte
+                }
+                else
+                {
+                    bas = milieu + 1;  // trop long : il faut couper plus loin
+                }
+            }
+            return "…" + texte.Substring(bas);
+        }
+
+        /// <summary>Largeur d'un texte dans la police de la zone de saisie, en unités WPF.</summary>
+        private double LargeurTexte(string texte)
+        {
+            FormattedText mesure = new FormattedText(
+                texte,
+                CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                new Typeface(_texteApercu.FontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
+                _texteApercu.FontSize,
+                TexteZoneSaisie,
+                VisualTreeHelper.GetDpi(_calque).PixelsPerDip);
+            return mesure.WidthIncludingTrailingWhitespace;
+        }
+
         // ───────────────────────── Petits outils ─────────────────────────
+
+        private static Brush Figer(Color couleur)
+        {
+            SolidColorBrush pinceau = new SolidColorBrush(couleur);
+            pinceau.Freeze();
+            return pinceau;
+        }
 
         /// <summary>Les codes des modificateurs allumés (Maj seulement si avecMaj).</summary>
         private List<ushort> ModificateursActifs(bool avecMaj)
@@ -901,7 +1135,18 @@ namespace GazeBar
             // les touches gardent donc leur forme ; le clavier est centré horizontalement.
             double taillePourcent = p.TailleClavier / 100.0;
             double largeurClavier = largeur * taillePourcent;
-            double hauteurClavier = hauteur * p.HauteurClavier / 100.0 * taillePourcent;
+            double hauteurTouches = hauteur * p.HauteurClavier / 100.0 * taillePourcent;
+
+            // La grille des touches.
+            double marge = Ecran.Px(Marge4K);
+            double largeurCase = (largeurClavier - 2 * marge) / _disposition.Colonnes;
+            double hauteurCase = (hauteurTouches - 2 * marge) / _disposition.Lignes;
+            double ecart = Math.Min(Ecran.Px(EcartTouches4K), Math.Min(largeurCase, hauteurCase) * 0.15);
+
+            // Étape 14 : la zone de saisie ajoute une bande au-dessus des touches. Le clavier
+            // grandit de sa hauteur : les touches gardent leur taille.
+            double hauteurZone = p.ZoneSaisie ? Math.Round(hauteurCase * ProportionZoneSaisie) : 0;
+            double hauteurClavier = hauteurTouches + hauteurZone;
 
             _gauche = (largeur - largeurClavier) / 2;
             _droite = _gauche + largeurClavier;
@@ -931,18 +1176,44 @@ namespace GazeBar
             Canvas.SetTop(fond, coin.Y);
             surface.Children.Add(fond);
 
-            // ── La grille des touches.
-            double marge = Ecran.Px(Marge4K);
-            double largeurCase = (largeurClavier - 2 * marge) / _disposition.Colonnes;
-            double hauteurCase = (hauteurClavier - 2 * marge) / _disposition.Lignes;
-            double ecart = Math.Min(Ecran.Px(EcartTouches4K), Math.Min(largeurCase, hauteurCase) * 0.15);
+            // ── La zone de saisie (étape 14) : une bande sombre, sur toute la largeur des
+            //    touches, avec le texte aligné à gauche. Ce n'est pas une cible du regard : le
+            //    regard dessus ne fait rien (le curseur de la souris reste immobile).
+            _texteApercu = null;
+            if (hauteurZone > 0)
+            {
+                Border zone = new Border();
+                zone.Background = FondZoneSaisie;
+                zone.CornerRadius = new CornerRadius(Ecran.Unites(4));
+                double largeurZone = largeurClavier - 2 * marge - ecart;
+                zone.Width = _calque.LongueurVersWpf(largeurZone);
+                zone.Height = _calque.LongueurVersWpf(hauteurZone - ecart);
+                double retrait = _calque.LongueurVersWpf(hauteurZone * 0.25);
+                zone.Padding = new Thickness(retrait, 0, retrait, 0);
 
+                _texteApercu = new TextBlock();
+                _texteApercu.FontFamily = new FontFamily("Segoe UI, Segoe UI Symbol");
+                _texteApercu.FontSize = _calque.LongueurVersWpf(hauteurZone * 0.45);
+                _texteApercu.TextWrapping = TextWrapping.NoWrap;
+                _texteApercu.VerticalAlignment = VerticalAlignment.Center;
+                _texteApercu.HorizontalAlignment = HorizontalAlignment.Left;
+                zone.Child = _texteApercu;
+                _largeurApercuWpf = Math.Max(0, zone.Width - 2 * retrait);
+
+                Point coinZone = _calque.VersWpf(_gauche + marge + ecart / 2, _haut + marge + ecart / 2);
+                Canvas.SetLeft(zone, coinZone.X);
+                Canvas.SetTop(zone, coinZone.Y);
+                surface.Children.Add(zone);
+            }
+
+            // ── Les touches, sous la zone de saisie si elle est affichée.
+            double hautTouches = _haut + hauteurZone;
             foreach (ToucheDisposition d in page.Touches)
             {
                 ToucheClavier touche = new ToucheClavier(d);
                 touche.Placer(_calque, surface,
                               _gauche + marge + d.Col * largeurCase,
-                              _haut + marge + d.Ligne * hauteurCase,
+                              hautTouches + marge + d.Ligne * hauteurCase,
                               d.LargeurCases * largeurCase,
                               hauteurCase,
                               ecart);
@@ -953,6 +1224,9 @@ namespace GazeBar
             // ── Le bouton Fermer : à droite, AU-DESSUS du clavier quand il est en bas, EN
             //    DESSOUS quand il est en haut (son libellé est alors sous le bouton). Il reste
             //    sur l'écran même si le clavier est très haut. (E711 = croix « annuler ».)
+            //    Demande de l'utilisateur du 02/11/2026 : il reste contre le BORD DROIT DE
+            //    L'ÉCRAN même quand le clavier est réduit (75 %, 50 %, clavier centré), et sa
+            //    taille ne dépend pas de celle du clavier : c'est toujours [TailleIcones].
             double taille = p.TailleIconesPx;
             double ecartFermer = Ecran.Px(EcartFermer4K);
             double yFermer = p.ClavierEnHaut
@@ -962,7 +1236,7 @@ namespace GazeBar
             _fermer = new BoutonRegard("", null, "Fermer le clavier");
             _fermer.FacteurZone = FacteurZoneFermer;
             _fermer.Placer(_calque, surface,
-                           _droite - marge - taille / 2,
+                           largeur - marge - taille / 2,
                            yFermer,
                            taille, !p.ClavierEnHaut);
             _cibles.Add(_fermer);
@@ -985,6 +1259,7 @@ namespace GazeBar
         {
             string tape = _motEnCours.ToString();
             _propositions = _predicteur.Proposer(tape, _motPrecedent, out _motInconnu);
+            AfficherApercu();
 
             bool majuscules = _maj ^ _verrMaj;
             foreach (ToucheClavier touche in _touches)

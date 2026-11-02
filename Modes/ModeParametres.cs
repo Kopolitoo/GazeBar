@@ -25,6 +25,9 @@ namespace GazeBar
     /// Étape 10 : le bouton « Configurer les icônes » de l'onglet « Icônes » ouvre l'écran de
     /// configuration des icônes (ModeConfigIcones), qui revient ici, sur cet onglet.
     ///
+    /// Étape 14 : le bouton « Mes mots » de l'onglet « Général » ouvre la liste des mots ajoutés
+    /// au clavier (ModeListeClavier), qui revient ici, sur cet onglet.
+    ///
     /// Onglet « Outils » (29/10/2026, boutons déplacés de la barre de menu) :
     ///   - « Calibration » lance l'outil Tobii puis passe en mode calibration (qui revient au
     ///     mode mouvement quand l'outil se ferme). Si le lancement échoue, on reste ici et le
@@ -85,6 +88,7 @@ namespace GazeBar
             fenetre.ConfigurationIconesDemandee += OuvrirConfigurationIcones;
             fenetre.CalibrationDemandee += LancerCalibration;
             fenetre.DiagnosticDemande += OuvrirDiagnostic;
+            fenetre.MesMotsDemandes += OuvrirMesMots;
             _viseur = new ViseurBoutons(fenetre.Cibles);
             _version = -1;
             _cibleRepetee = -1;
@@ -181,6 +185,7 @@ namespace GazeBar
                 fenetre.ConfigurationIconesDemandee -= OuvrirConfigurationIcones;
                 fenetre.CalibrationDemandee -= LancerCalibration;
                 fenetre.DiagnosticDemande -= OuvrirDiagnostic;
+                fenetre.MesMotsDemandes -= OuvrirMesMots;
                 fenetre.Fermer();
             }
         }
@@ -213,6 +218,16 @@ namespace GazeBar
         {
             App.Log("Paramètres : configuration des icônes");
             Gestionnaire.ChangerMode(new ModeConfigIcones());
+        }
+
+        /// <summary>
+        /// Bouton « Mes mots » de l'onglet « Général » (étape 14) : la liste des mots ajoutés
+        /// au clavier, qui revient ici, sur cet onglet.
+        /// </summary>
+        private void OuvrirMesMots()
+        {
+            App.Log("Paramètres : mes mots");
+            Gestionnaire.ChangerMode(new ModeListeClavier(ModeListeClavier.Sorte.MesMots));
         }
 
         /// <summary>

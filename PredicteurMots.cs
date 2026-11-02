@@ -153,7 +153,15 @@ namespace GazeBar
             {
                 return;
             }
+            // Changement de langue (étape 14, bouton « Langue ») : le dictionnaire de l'ancienne
+            // langue est oublié tout de suite. Sans cela, si le fichier de la nouvelle langue
+            // manquait, on continuerait à proposer des mots français.
+            bool changement = _langueDemandee != null;
             _langueDemandee = langue;
+            if (changement)
+            {
+                _principal = null;
+            }
             string chemin = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, NomDossier, langue + ".txt");
 
             // Task.Run : la lecture se fait sur un autre fil d'exécution, le regard continue
@@ -161,7 +169,9 @@ namespace GazeBar
             Task.Run(() =>
             {
                 Tableaux t = LireFichier(chemin);
-                if (t != null)
+                // On ne garde le résultat que si cette langue est toujours celle demandée (on a
+                // pu changer encore de langue pendant la lecture).
+                if (t != null && _langueDemandee == langue)
                 {
                     _principal = t;
                 }
@@ -506,6 +516,43 @@ namespace GazeBar
             _motsAjoutes.Add(mot);
             _clesAjoutees.Add(Cle(mot));
             App.Log("Prédiction : un mot ajouté au dictionnaire personnel (" + _motsAjoutes.Count + " en tout)");
+            EnregistrerPersonnel();
+        }
+
+        /// <summary>
+        /// Étape 14 (bouton « Mes mots ») : une copie de la liste des mots ajoutés par la case
+        /// « + », dans l'ordre alphabétique (sans tenir compte des accents ni des majuscules).
+        /// </summary>
+        public List<string> MotsAjoutes()
+        {
+            List<string> copie = new List<string>(_motsAjoutes);
+            copie.Sort((a, b) => string.Compare(a, b, CultureInfo.CurrentCulture,
+                                                CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace));
+            return copie;
+        }
+
+        /// <summary>
+        /// Étape 14 (bouton « Mes mots ») : retire un mot ajouté par erreur. On oublie aussi son
+        /// nombre d'utilisations et les paires où il apparaît (mot suivant), pour qu'il ne soit
+        /// plus jamais proposé. Le fichier est enregistré tout de suite. Ne touche pas aux mots
+        /// de Lexique. Le mot n'est pas écrit dans le journal (vie privée).
+        /// </summary>
+        public void Supprimer(string mot)
+        {
+            int indice = _motsAjoutes.IndexOf(mot);
+            if (indice < 0)
+            {
+                return;
+            }
+            _motsAjoutes.RemoveAt(indice);
+            _clesAjoutees.RemoveAt(indice);
+            _utilisations.Remove(mot);
+            _suites.Remove(mot);
+            foreach (Dictionary<string, int> suites in _suites.Values)
+            {
+                suites.Remove(mot);
+            }
+            App.Log("Prédiction : un mot retiré du dictionnaire personnel (" + _motsAjoutes.Count + " restants)");
             EnregistrerPersonnel();
         }
 

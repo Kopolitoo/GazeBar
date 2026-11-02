@@ -253,6 +253,18 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// Le nom de l'onglet « Général », reconnu par FenetreParametres (qui y ajoute le bouton
+        /// « Mes mots », étape 14, demande de l'utilisateur du 02/11/2026).
+        /// </summary>
+        public const string NomOngletGeneral = "Général";
+
+        /// <summary>Le numéro de l'onglet « Général » (pour y revenir après la liste « Mes mots »).</summary>
+        public static int NumeroOngletGeneral
+        {
+            get { return Math.Max(0, Onglets.FindIndex(o => o.Nom == NomOngletGeneral)); }
+        }
+
+        /// <summary>
         /// Le nom de l'onglet « Outils » (calibration et diagnostic, déplacés de la barre de
         /// menu le 29/10/2026), reconnu par FenetreParametres.
         /// </summary>
@@ -354,7 +366,7 @@ namespace GazeBar
                                p => p.TailleClavier, (p, v) => p.TailleClavier = v)),
 
             // E713 = engrenage (« Général »)
-            new Onglet("Général", "",
+            new Onglet(NomOngletGeneral, "",
                 Reglage.OuiOuNon("Démarrer avec Windows", "Lancer GazeBar à l'ouverture de session",
                                  p => p.DemarrerAvecWindows, (p, v) => p.DemarrerAvecWindows = v,
                                  p => DemarrageWindows.Appliquer(p.DemarrerAvecWindows))),

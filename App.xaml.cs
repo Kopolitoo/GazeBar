@@ -160,6 +160,13 @@ namespace GazeBar
                 configuration.RetourParametres();
                 return;
             }
+            // Listes du clavier (étape 14) : Échap fait comme « Retour » (Mes mots → paramètres).
+            ModeListeClavier liste = _modes.ModeCourant as ModeListeClavier;
+            if (liste != null)
+            {
+                liste.Retour();
+                return;
+            }
             App.Log("Touche Échap : retour au mode mouvement");
             MouseInjector.ReleaseAll();
             InjecteurClavier.RelacherTout();

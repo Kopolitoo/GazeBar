@@ -158,6 +158,9 @@ namespace GazeBar
         /// <summary>Bouton « Diagnostic » de l'onglet « Outils » (29/10/2026).</summary>
         public event Action DiagnosticDemande;
 
+        /// <summary>Bouton « Mes mots » de l'onglet « Général » (étape 14).</summary>
+        public event Action MesMotsDemandes;
+
         /// <summary>
         /// Affiche un message dans l'onglet « Outils » (par exemple si la calibration n'a pas
         /// pu être lancée). La page est reconstruite pour le montrer.
@@ -373,9 +376,10 @@ namespace GazeBar
                 {
                     ConstruireLigne(onglet.Reglages[i], LigneHaut + i * LignePas);
                 }
-                if (onglet.Nom == "Général")
+                if (onglet.Nom == CatalogueParametres.NomOngletGeneral)
                 {
                     ConstruireInfoFichier(LigneHaut + onglet.Reglages.Count * LignePas);
+                    ConstruireBoutonMesMots();
                 }
                 if (onglet.Nom == NomOngletAffichage)
                 {
@@ -507,6 +511,23 @@ namespace GazeBar
             info.Children.Add(chemin);
             info.Children.Add(Texte("Enregistré à chaque changement.", 23, Doux, false));
             Placer(info, ContenuGauche, haut + 30);
+        }
+
+        /// <summary>
+        /// Onglet « Général » (étape 14, demande de l'utilisateur du 02/11/2026) : un gros bouton
+        /// « Mes mots », sous le rappel du fichier des réglages. Il ouvre la liste des mots
+        /// ajoutés au dictionnaire personnel du clavier (ModeListeClavier), pour en retirer.
+        /// L'onglet Clavier n'avait plus de place (cinq réglages). E82D = dictionnaire.
+        /// </summary>
+        private void ConstruireBoutonMesMots()
+        {
+            AjouterCible(ContenuGauche + 170, 640, 800, 180, GrosBouton("\uE82D", "Mes mots"),
+                         () => Prevenir(MesMotsDemandes), false, false);
+            TextBlock explication = Texte("Les mots ajoutés au clavier avec « + » : regarder un mot le retire.",
+                                          23, Doux, false);
+            explication.TextWrapping = TextWrapping.Wrap;
+            explication.Width = 1140;
+            Placer(explication, ContenuGauche, 840);
         }
 
         /// <summary>

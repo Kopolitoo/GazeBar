@@ -66,9 +66,11 @@ namespace GazeBar
         ///       gardent leur valeur par défaut ;
         ///   9 : étape 12 (remarques de l'utilisateur du 01/11/2026) — TailleClavier et
         ///       ClavierEnHaut. Rien à corriger : absents d'un fichier plus ancien, ils
-        ///       gardent leur valeur par défaut.
+        ///       gardent leur valeur par défaut ;
+        ///  10 : étape 14 (« clavier-options ») — DispositionClavier et ZoneSaisie. Rien à
+        ///       corriger : absents d'un fichier plus ancien, ils gardent leur valeur par défaut.
         /// </summary>
-        public const int VersionActuelle = 9;
+        public const int VersionActuelle = 10;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -387,6 +389,23 @@ namespace GazeBar
         public bool ClavierEnHaut { get; set; }
 
         /// <summary>
+        /// La disposition du clavier au regard : le nom d'un fichier du dossier Claviers, sans
+        /// « .json » (par exemple « fr-azerty »). Choisie avec le bouton « Langue » de la barre
+        /// de menu du clavier (étape 14).
+        /// </summary>
+        [DataMember(Order = 116)]
+        public string DispositionClavier { get; set; }
+
+        /// <summary>
+        /// Vrai : une bande au-dessus des touches montre les derniers mots tapés (la « zone de
+        /// saisie », simple aperçu : le texte part toujours directement dans l'application).
+        /// Bouton « Zone de saisie » de la barre du clavier (étape 14). Pas dans l'onglet Clavier
+        /// des paramètres : il a déjà cinq lignes, le maximum qui tient sur la page.
+        /// </summary>
+        [DataMember(Order = 117)]
+        public bool ZoneSaisie { get; set; }
+
+        /// <summary>
         /// La disposition d'un groupe, lue dans les listes ci-dessus : un tableau avec une
         /// case par emplacement, null pour un emplacement vide. Pas enregistré tel quel.
         /// </summary>
@@ -558,6 +577,8 @@ namespace GazeBar
             HauteurClavier = 50;
             TailleClavier = 100;
             ClavierEnHaut = false;
+            DispositionClavier = GazeBar.DispositionClavier.NomParDefaut;
+            ZoneSaisie = false;
 
             IconesParDefaut();
         }
@@ -621,6 +642,15 @@ namespace GazeBar
             HauteurClavier = Borner(HauteurClavier, 25, 75);
             // Seulement 50, 75 ou 100 : une autre valeur va à la plus proche (60 → 50, 90 → 100).
             TailleClavier = Math.Round(Borner(TailleClavier, 50, 100) / 25) * 25;
+            // Un nom de fichier vide ou qui contient un chemin (« ..\ », « C:\ »…) redevient la
+            // disposition par défaut : on ne lit que des fichiers du dossier Claviers.
+            if (string.IsNullOrWhiteSpace(DispositionClavier) ||
+                DispositionClavier.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                DispositionClavier.Contains(".."))
+            {
+                DispositionClavier = GazeBar.DispositionClavier.NomParDefaut;
+            }
+            DispositionClavier = DispositionClavier.Trim();
 
             CorrigerIcones(GroupeIcones.Couronne);
             CorrigerIcones(GroupeIcones.Modificateurs);
@@ -713,6 +743,13 @@ namespace GazeBar
                 // Rien à corriger : TailleClavier et ClavierEnHaut, absents du fichier, ont
                 // gardé leur valeur par défaut (voir AvantLecture).
                 App.Log("Paramètres : mise à jour en version 9 (taille et position du clavier)");
+            }
+
+            if (VersionFichier < 10)
+            {
+                // Rien à corriger : DispositionClavier et ZoneSaisie, absents du fichier, ont
+                // gardé leur valeur par défaut (voir AvantLecture).
+                App.Log("Paramètres : mise à jour en version 10 (langue du clavier et zone de saisie)");
             }
             VersionFichier = VersionActuelle;
             return true;
