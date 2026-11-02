@@ -50,7 +50,10 @@ namespace GazeBar
         /// <summary>Le nom du dossier des dispositions, à côté de GazeBar.exe.</summary>
         public const string NomDossier = "Claviers";
 
-        /// <summary>La disposition utilisée tant qu'on ne peut pas en choisir une autre (étape 14).</summary>
+        /// <summary>
+        /// La disposition par défaut. Depuis l'étape 14, on en choisit une autre avec le bouton
+        /// « Langue » de la barre du clavier ([DispositionClavier] dans parametres.json).
+        /// </summary>
         public const string NomParDefaut = "fr-azerty";
 
         /// <summary>Le nom affiché, par exemple « Français AZERTY ».</summary>
@@ -144,6 +147,47 @@ namespace GazeBar
         }
 
         /// <summary>
+        /// Étape 14 (bouton « Langue ») : toutes les dispositions du dossier Claviers qui se
+        /// lisent correctement, triées par nom affiché. Une disposition illisible ou incorrecte
+        /// n'est pas proposée (la raison est écrite dans le journal par Charger).
+        /// Le nom du fichier (sans « .json ») est celui qu'on enregistre dans parametres.json.
+        /// </summary>
+        public static List<DispositionTrouvee> Lister()
+        {
+            List<DispositionTrouvee> resultat = new List<DispositionTrouvee>();
+            string dossier = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, NomDossier);
+            string[] fichiers;
+            try
+            {
+                fichiers = Directory.Exists(dossier) ? Directory.GetFiles(dossier, "*.json") : new string[0];
+            }
+            catch (Exception ex)
+            {
+                App.Log("Clavier : dossier des dispositions illisible : " + ex.Message);
+                return resultat;
+            }
+
+            foreach (string chemin in fichiers)
+            {
+                string nomFichier = Path.GetFileNameWithoutExtension(chemin);
+                string message;
+                DispositionClavier disposition = Charger(nomFichier, out message);
+                if (disposition != null)
+                {
+                    resultat.Add(new DispositionTrouvee
+                    {
+                        Fichier = nomFichier,
+                        // Sans nom dans le fichier : on affiche le nom du fichier.
+                        Nom = string.IsNullOrWhiteSpace(disposition.Nom) ? nomFichier : disposition.Nom,
+                        Langue = string.IsNullOrWhiteSpace(disposition.Langue) ? "?" : disposition.Langue.Trim()
+                    });
+                }
+            }
+            resultat.Sort((a, b) => string.Compare(a.Nom, b.Nom, StringComparison.CurrentCultureIgnoreCase));
+            return resultat;
+        }
+
+        /// <summary>
         /// Vérifie que la disposition est utilisable. Renvoie null si tout va bien, sinon une
         /// phrase qui explique le problème (pour le journal). Une touche hors de la grille est
         /// seulement signalée dans le journal et ignorée : le reste du clavier reste utilisable.
@@ -182,6 +226,19 @@ namespace GazeBar
             }
             return null;
         }
+    }
+
+    /// <summary>Une disposition trouvée dans le dossier Claviers (étape 14, liste « Langue »).</summary>
+    internal sealed class DispositionTrouvee
+    {
+        /// <summary>Le nom du fichier sans « .json » (« fr-azerty »).</summary>
+        public string Fichier { get; set; }
+
+        /// <summary>Le nom affiché (« Français AZERTY »).</summary>
+        public string Nom { get; set; }
+
+        /// <summary>La langue du dictionnaire (« fr »).</summary>
+        public string Langue { get; set; }
     }
 
     /// <summary>Une page du clavier : son nom et ses touches.</summary>

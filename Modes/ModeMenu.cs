@@ -48,10 +48,13 @@ namespace GazeBar
     /// l'utilisateur), de gauche à droite :
     ///   Haut / bas   met le clavier en haut de l'écran, ou le ramène en bas (retenu) ;
     ///   Taille       100 % → 75 % → 50 % → 100 %… (le bouton affiche la taille actuelle) ;
+    ///   Zone de saisie  interrupteur (bord vert) : la bande des derniers mots tapés (étape 14) ;
+    ///   Langue       ouvre la liste des dispositions du dossier Claviers (étape 14) ;
+    ///   Mes mots     ouvre la liste des mots ajoutés, pour en retirer (étape 14) ;
     ///   Pause        passe en mode pause (le clavier est caché, et revient à la reprise) ;
     ///   Fermer       ferme le clavier.
-    /// Haut / bas et Taille laissent le menu ouvert, comme « Suivi souris ». Les autres
-    /// boutons (langue, zone de saisie, mes mots) viendront à l'étape 14. Le clavier reste
+    /// Haut / bas, Taille et Zone de saisie laissent le menu ouvert, comme « Suivi souris ».
+    /// Langue et Mes mots ouvrent une liste en plein écran (ModeListeClavier). Le clavier reste
     /// affiché, et s'il est en bas il REMONTE au-dessus de la barre au lieu d'être recouvert
     /// (ClavierRegard.DefinirReserveBas) ; il redescend à la fermeture du menu.
     ///
@@ -72,6 +75,9 @@ namespace GazeBar
             FermerClavier,
             PositionClavier,
             TailleClavier,
+            ZoneSaisie,
+            Langue,
+            MesMots,
             Pause,
             Reprendre,
             SuiviSouris,
@@ -322,6 +328,21 @@ namespace GazeBar
                     Construire();
                     break;
 
+                case ActionMenu.ZoneSaisie:
+                    // Interrupteur, comme « Suivi souris » : le menu reste ouvert. La barre est
+                    // reconstruite (bord vert) ; le bouton attend que le regard le quitte.
+                    Gestionnaire.Clavier.BasculerZoneSaisie();
+                    Construire();
+                    break;
+
+                case ActionMenu.Langue:
+                    Gestionnaire.ChangerMode(new ModeListeClavier(ModeListeClavier.Sorte.Langue));
+                    break;
+
+                case ActionMenu.MesMots:
+                    Gestionnaire.ChangerMode(new ModeListeClavier(ModeListeClavier.Sorte.MesMots));
+                    break;
+
                 case ActionMenu.Pause:
                     Gestionnaire.ChangerMode(new ModePause());
                     break;
@@ -414,7 +435,8 @@ namespace GazeBar
             {
                 // Barre de menu du clavier (étape 12, voir le commentaire de la classe).
                 //   E70E / E70D = chevron vers le haut / vers le bas, E769 = pause,
-                //   E765 = clavier (avec une petite croix « × » en pastille pour « Fermer »).
+                //   E765 = clavier (avec une petite croix « × » en pastille pour « Fermer »),
+                //   E70F = crayon (zone de saisie), E774 = globe (langue), E82D = dictionnaire.
                 if (p.ClavierEnHaut)
                 {
                     Ajouter(boutons, actions, new BoutonRegard("\uE70D", null, "Clavier en bas de l'écran"), ActionMenu.PositionClavier);
@@ -426,6 +448,12 @@ namespace GazeBar
                 Ajouter(boutons, actions,
                         BoutonRegard.Texte(p.TailleClavier.ToString("F0") + " %", "Taille du clavier (100, 75, 50 %)"),
                         ActionMenu.TailleClavier);
+                // Étape 14 : zone de saisie (interrupteur), langue et mes mots.
+                BoutonRegard zone = new BoutonRegard("\uE70F", null, "Zone de saisie");
+                zone.DefinirAllume(p.ZoneSaisie);
+                Ajouter(boutons, actions, zone, ActionMenu.ZoneSaisie);
+                Ajouter(boutons, actions, new BoutonRegard("\uE774", null, "Langue du clavier"), ActionMenu.Langue);
+                Ajouter(boutons, actions, new BoutonRegard("\uE82D", null, "Mes mots"), ActionMenu.MesMots);
                 Ajouter(boutons, actions, new BoutonRegard("\uE769", null, "Pause"), ActionMenu.Pause);
                 Ajouter(boutons, actions, new BoutonRegard("\uE765", "\u00D7", "Fermer le clavier"), ActionMenu.FermerClavier);
             }
