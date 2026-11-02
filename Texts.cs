@@ -11,21 +11,21 @@ namespace GazeBar
     /// LOGIC: the texts shown to the user, in the chosen language (step "langues-socle").
     ///
     /// Every text of the interface lives in a language file of the Languages folder, next to
-    /// GazeBar.exe: Languages/fr.json, later Languages/en.json… A language file is a flat JSON
+    /// GazeBar.exe: Languages/en.json, Languages/fr.json… A language file is a flat JSON
     /// object, one entry per text:
     ///     {
-    ///       "language.name": "Français",
-    ///       "menu.settings": "Paramètres",
-    ///       "profiles.loaded": "Profil « {0} » chargé."
+    ///       "language.name": "English",
+    ///       "menu.settings": "Settings",
+    ///       "profiles.loaded": "Profile \"{0}\" loaded."
     ///     }
     /// "{0}", "{1}"… are replaced by values (string.Format), see Format.
     ///
     /// In the code, a text is read by its key: Texts.Get("menu.settings").
     /// If the key is missing from the chosen language, the text of the FALLBACK language
-    /// (French for now) is used; if it is missing there too, the key itself is shown, so a
+    /// (English, the reference language) is used; if it is missing there too, the key itself is shown, so a
     /// forgotten text is visible instead of crashing. Each missing key is logged once.
     ///
-    /// To add a language: copy fr.json to xx.json (xx = ISO 639-1 code), translate the values
+    /// To add a language: copy en.json to xx.json (xx = ISO 639-1 code), translate the values
     /// (never the keys), and put it in the Languages folder. It then appears in the "Langue"
     /// choice of the settings (Général tab).
     /// </summary>
@@ -34,10 +34,13 @@ namespace GazeBar
         /// <summary>Name of the language files folder, next to GazeBar.exe.</summary>
         public const string FolderName = "Languages";
 
-        /// <summary>The language used when a text is missing from the chosen one.</summary>
-        public const string FallbackLanguage = "fr";
+        /// <summary>
+        /// The reference language: used when a text is missing from the chosen one, and the
+        /// default language of a new installation (step langue-anglais).
+        /// </summary>
+        public const string FallbackLanguage = "en";
 
-        /// <summary>The key of a language file that holds the language's own name ("Français").</summary>
+        /// <summary>The key of a language file that holds the language's own name ("English").</summary>
         public const string NameKey = "language.name";
 
         private static Dictionary<string, string> _current = new Dictionary<string, string>();
@@ -143,7 +146,7 @@ namespace GazeBar
             return result;
         }
 
-        /// <summary>The display name of the current language ("Français").</summary>
+        /// <summary>The display name of the current language ("English").</summary>
         public static string LanguageName
         {
             get

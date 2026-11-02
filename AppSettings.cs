@@ -70,8 +70,9 @@ namespace GazeBar
         ///      its default value).
         /// Since the "code-anglais" step (2026-11-02), the file is settings.json with English
         /// keys: an old parametres.json is no longer read.
-        ///  12: step langues-socle — Language (interface language, "fr" by default). Nothing
-        ///      to fix: missing from an older file, it keeps its default value.
+        ///  12: step langues-socle — Language (interface language). Since step langue-anglais
+        ///      the default is "en" (new installations); an older file belongs to an existing
+        ///      French user, so it gets "fr".
         /// </summary>
         public const int CurrentVersion = 12;
 
@@ -796,8 +797,9 @@ namespace GazeBar
 
             if (FileVersion < 12)
             {
-                // Nothing to fix: Language, missing from the file, kept its default value
-                // (see BeforeReading).
+                // Language is missing from the file: it belongs to an existing French user, who
+                // keeps French (a new installation, with no file, starts in English).
+                Language = "fr";
                 App.Log("Settings: updated to version 12 (interface language)");
             }
             FileVersion = CurrentVersion;
