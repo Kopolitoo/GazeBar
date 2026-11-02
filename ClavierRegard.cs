@@ -1224,6 +1224,9 @@ namespace GazeBar
             // ── Le bouton Fermer : à droite, AU-DESSUS du clavier quand il est en bas, EN
             //    DESSOUS quand il est en haut (son libellé est alors sous le bouton). Il reste
             //    sur l'écran même si le clavier est très haut. (E711 = croix « annuler ».)
+            //    Demande de l'utilisateur du 02/11/2026 : il reste contre le BORD DROIT DE
+            //    L'ÉCRAN même quand le clavier est réduit (75 %, 50 %, clavier centré), et sa
+            //    taille ne dépend pas de celle du clavier : c'est toujours [TailleIcones].
             double taille = p.TailleIconesPx;
             double ecartFermer = Ecran.Px(EcartFermer4K);
             double yFermer = p.ClavierEnHaut
@@ -1233,7 +1236,7 @@ namespace GazeBar
             _fermer = new BoutonRegard("", null, "Fermer le clavier");
             _fermer.FacteurZone = FacteurZoneFermer;
             _fermer.Placer(_calque, surface,
-                           _droite - marge - taille / 2,
+                           largeur - marge - taille / 2,
                            yFermer,
                            taille, !p.ClavierEnHaut);
             _cibles.Add(_fermer);
