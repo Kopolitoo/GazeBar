@@ -176,7 +176,7 @@ namespace GazeBar
             Modifiers.ReleaseAll();
             _step = Step.Finished;
 
-            App.Log("Drag: dropped at (" + _ax.ToString("F0") + ", " + _ay.ToString("F0") + ")");
+            App.Log("Drag: dropped");
 
             // Movement mode deactivates the modifiers and ignores a new fixation around the
             // drop point until the gaze has left it.

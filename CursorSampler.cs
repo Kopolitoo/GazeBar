@@ -71,13 +71,6 @@ namespace GazeBar
         private double _windowStartMs;
         private CursorStats _stats;
 
-        /// <summary>
-        /// Raised on EVERY cursor position change.
-        /// WARNING: it is raised from the sampling thread, not from the interface thread.
-        /// A subscriber must therefore not touch screen elements (texts, buttons...)
-        /// directly.
-        /// </summary>
-        public event Action<CursorSample> PositionChanged;
 
         /// <summary>Current time of the sampler's clock, in milliseconds.</summary>
         public double NowMs
@@ -215,23 +208,6 @@ namespace GazeBar
                     _polls = 0;
                     _changes = 0;
                     _windowStartMs = now;
-                }
-            }
-
-            // Notify the subscribers OUTSIDE the lock, so as never to hold it too long.
-            if (changed)
-            {
-                Action<CursorSample> handler = PositionChanged;
-                if (handler != null)
-                {
-                    try
-                    {
-                        handler(sample);
-                    }
-                    catch (Exception ex)
-                    {
-                        App.Log("CursorSampler: error in a subscriber: " + ex);
-                    }
                 }
             }
         }

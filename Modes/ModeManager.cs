@@ -50,10 +50,9 @@ namespace GazeBar
         // Time (ms) when the gaze went down below the screen; -1 = it is not there.
         private double _belowStartMs = -1;
 
-        // For the log: where the gaze was at the previous tick (see NoteGazePosition).
+        // For the log: the gaze situation at the previous tick (see NoteGazePosition).
+        // Only the situation is logged, never the gaze coordinates.
         private string _gazeSituation = "";
-        private double _lastX;
-        private double _lastY;
 
         public ModeManager(GazeSource gaze, OverlayWindow layer)
         {
@@ -335,17 +334,10 @@ namespace GazeBar
                 situation = "on screen";
             }
 
-            if (state.Available)
-            {
-                _lastX = state.X;
-                _lastY = state.Y;
-            }
-
             if (situation != _gazeSituation)
             {
                 _gazeSituation = situation;
-                App.Log("Gaze: " + situation + " (last position X " + _lastX.ToString("F0") +
-                        ", Y " + _lastY.ToString("F0") + "; screen " + ScreenWidth + " × " + ScreenHeight + ")");
+                App.Log("Gaze: " + situation + " (screen " + ScreenWidth + " × " + ScreenHeight + ")");
             }
         }
 

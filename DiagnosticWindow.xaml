@@ -5,8 +5,8 @@
   substitute for the gaze? It shows:
     - the cursor position (valid on the WHOLE screen, even outside this window);
     - how many times per second it changes (the real rate);
-    - a thumbnail of the screen with a dot (the cursor) and its recent trail;
-    - a record button that writes a CSV file for analysis.
+    - a thumbnail of the screen with a dot (the cursor) and its recent trail.
+  Nothing is written to disk: the eyetracker licence forbids storing gaze data.
 
   The thumbnail is a Canvas: an area where elements are placed at exact coordinates.
   The elements drawn in it (dot, trail) are created in code (DiagnosticWindow.xaml.cs).
@@ -35,11 +35,7 @@
         </Border>
 
         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-            <Button x:Name="RecordButton" Content="" Click="OnRecordClick" />
             <Button x:Name="CloseButton" Content="" Click="OnCloseClick" />
         </StackPanel>
-
-        <TextBlock x:Name="RecordText" FontSize="20" Margin="0,6,0,0" TextWrapping="Wrap" MaxWidth="680"
-                   Text="" />
     </StackPanel>
 </Window>

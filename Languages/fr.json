@@ -212,9 +212,7 @@
   "eyetracker.dllNotFound": "DLL de l'eyetracker introuvables (Tobii.Interaction.Net.dll). Voir le README, section « Installation ».",
   "eyetracker.searchError": "Erreur en cherchant les DLL de l'eyetracker : {0}",
   "diagnostic.title": "GazeBar : diagnostic du curseur",
-  "diagnostic.record": "Enregistrer 20 s",
   "diagnostic.close": "Fermer",
-  "diagnostic.recordHelp": "Enregistrement : cliquez, puis parcourez tout l'écran du regard (coins, bords, centre), et terminez en fixant le centre quelques secondes.",
   "diagnostic.screen": "Écran : {0} x {1} pixels",
   "diagnostic.rate": "Changements de position : {0} par seconde   (lectures : {1} par seconde)",
   "diagnostic.gazeUnavailable": "Regard de l'eyetracker indisponible : {0}",
@@ -222,10 +220,5 @@
   "diagnostic.gaze": "Regard : X = {0}   Y = {1}   ({2} mesures/s)",
   "diagnostic.offScreen": "   HORS ÉCRAN",
   "diagnostic.noMovement": "Aucun mouvement détecté pour l'instant",
-  "diagnostic.lastChange": "Dernier changement il y a {0} ms",
-  "diagnostic.getReady": "Préparez-vous : début de l'enregistrement dans {0} s…",
-  "diagnostic.countdown": "Préparez-vous : début dans {0} s…",
-  "diagnostic.recording": "Enregistrement en cours, encore {0} s : parcourez tout l'écran du regard, puis fixez le centre.",
-  "diagnostic.saved": "Enregistré dans : {0}",
-  "diagnostic.saveFailed": "Échec de l'enregistrement : {0}"
+  "diagnostic.lastChange": "Dernier changement il y a {0} ms"
 }

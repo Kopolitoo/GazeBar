@@ -75,9 +75,10 @@ La barre ne prend jamais le focus, pour ne pas perturber la fenêtre où l'on ag
 
 1. Lancer GazeBar. La barre apparaît en haut de l'écran avec « Curseur : X … Y … | N changements/s ».
    Regardez différentes zones de l'écran : les valeurs doivent suivre le regard, y compris dans les coins.
-2. Bouton **Diagnostic** (onglet « Outils » des paramètres) → **Enregistrer 20 s** : parcourez les coins, les bords et le centre
-   du regard, puis fixez le centre 3 secondes. Le fichier CSV est écrit dans
-   `Documents\GazeBar\positions-….csv` : envoyez-le pour analyse.
+2. Bouton **Diagnostic** (onglet « Outils » des paramètres) : parcourez les coins, les bords et le centre
+   du regard ; la vignette montre le curseur et le regard en direct. GazeBar n'enregistre jamais les
+   données du regard sur le disque (la licence de l'eyetracker l'interdit) : ni fichier de positions,
+   ni coordonnées dans le journal.
 3. **Appui long** : cliquez le bouton (3 s de compte à rebours), regardez l'endroit voulu.
    Le bouton gauche est appuyé à la fin du compte à rebours, puis relâché 1,5 s plus tard.
 4. **Glisser (clic droit)** : par exemple dans l'Explorateur sur un fichier, le menu de

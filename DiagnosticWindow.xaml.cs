@@ -1,6 +1,4 @@
 using System;
-using System.Diagnostics;
-using System.Media;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -10,32 +8,17 @@ using System.Windows.Threading;
 namespace GazeBar
 {
     /// <summary>
-    /// INTERFACE: diagnostic window. Shows live what the cursor sampler "sees", and can
-    /// record a CSV file to analyze the signal quality.
+    /// INTERFACE: diagnostic window. Shows live what the cursor sampler "sees".
+    /// Nothing is written to disk: the eyetracker licence forbids storing gaze data.
     /// </summary>
     internal partial class DiagnosticWindow : Window
     {
-        /// <summary>Delay before recording starts, to give time to get ready.</summary>
-        private const double RecordCountdownSeconds = 3.0;
-
-        /// <summary>Recording duration.</summary>
-        private const double RecordSeconds = 20.0;
-
         /// <summary>Width of the screen thumbnail, in WPF units.</summary>
         private const double MapWidth = 680.0;
 
-        private enum RecordPhase
-        {
-            None,
-            Countdown,
-            Recording
-        }
-
         private readonly CursorSampler _sampler;
         private readonly GazeSource _gaze;
-        private readonly CursorRecorder _recorder = new CursorRecorder();
         private readonly DispatcherTimer _timer;
-        private readonly Stopwatch _recordClock = new Stopwatch();
 
         private readonly Polyline _trailLine;   // the trail of the latest positions
         private readonly Ellipse _dot;          // the dot = current cursor position
@@ -45,17 +28,13 @@ namespace GazeBar
         private readonly double _screenHeight;
         private readonly double _mapHeight;
 
-        private RecordPhase _recordPhase = RecordPhase.None;
-
         public DiagnosticWindow(CursorSampler sampler, GazeSource gaze)
         {
             InitializeComponent();
 
             // The fixed texts, in the current language (step langues-socle).
             Title = Texts.Get("diagnostic.title");
-            RecordButton.Content = Texts.Get("diagnostic.record");
             CloseButton.Content = Texts.Get("diagnostic.close");
-            RecordText.Text = Texts.Get("diagnostic.recordHelp");
 
             _sampler = sampler;
             _gaze = gaze;
@@ -107,10 +86,6 @@ namespace GazeBar
         private void OnWindowClosed(object sender, EventArgs e)
         {
             _timer.Stop();
-            if (_recordPhase == RecordPhase.Recording)
-            {
-                _recorder.Cancel(_sampler);
-            }
         }
 
         // ───────────────────────── Live display ─────────────────────────
@@ -119,7 +94,6 @@ namespace GazeBar
         {
             UpdateReadouts();
             UpdateMap();
-            UpdateRecording();
         }
 
         private void UpdateReadouts()
@@ -196,71 +170,6 @@ namespace GazeBar
                 _gazeDot.Fill = outside ? Brushes.Red : Brushes.LimeGreen;
                 Canvas.SetLeft(_gazeDot, mx - _gazeDot.Width / 2);
                 Canvas.SetTop(_gazeDot, my - _gazeDot.Height / 2);
-            }
-        }
-
-        // ───────────────────────── Recording ─────────────────────────
-
-        private void OnRecordClick(object sender, RoutedEventArgs e)
-        {
-            if (_recordPhase != RecordPhase.None)
-            {
-                return;
-            }
-
-            _recordPhase = RecordPhase.Countdown;
-            _recordClock.Restart();
-            RecordButton.IsEnabled = false;
-            RecordText.Text = Texts.Format("diagnostic.getReady", RecordCountdownSeconds.ToString("F0"));
-        }
-
-        /// <summary>Advances the recording (called 20 times per second).</summary>
-        private void UpdateRecording()
-        {
-            if (_recordPhase == RecordPhase.None)
-            {
-                return;
-            }
-
-            double elapsed = _recordClock.Elapsed.TotalSeconds;
-
-            if (_recordPhase == RecordPhase.Countdown)
-            {
-                if (elapsed < RecordCountdownSeconds)
-                {
-                    RecordText.Text = Texts.Format("diagnostic.countdown",
-                                                   Math.Ceiling(RecordCountdownSeconds - elapsed).ToString("F0"));
-                    return;
-                }
-
-                SystemSounds.Asterisk.Play();   // short sound: recording starts
-                _recorder.Start(_sampler);
-                _recordPhase = RecordPhase.Recording;
-                _recordClock.Restart();
-                return;
-            }
-
-            // Recording phase.
-            if (elapsed < RecordSeconds)
-            {
-                RecordText.Text = Texts.Format("diagnostic.recording",
-                                               Math.Ceiling(RecordSeconds - elapsed).ToString("F0"));
-                return;
-            }
-
-            _recordPhase = RecordPhase.None;
-            RecordButton.IsEnabled = true;
-            SystemSounds.Exclamation.Play();    // different sound: it is finished
-
-            try
-            {
-                string file = _recorder.StopAndSave(_sampler, _screenWidth, _screenHeight);
-                RecordText.Text = Texts.Format("diagnostic.saved", file);
-            }
-            catch (Exception ex)
-            {
-                App.Log("Recording failed: " + ex);
-                RecordText.Text = Texts.Format("diagnostic.saveFailed", ex.Message);
             }
         }
 

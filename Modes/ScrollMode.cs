@@ -206,8 +206,7 @@ namespace GazeBar
             BuildSurface();
             layer.ShowCircle(_px, _py, AppSettings.Current.CircleRadiusPx * DeadZoneFactor, true, Opacity);
 
-            App.Log("Scroll: start at (" + _px.ToString("F0") + ", " + _py.ToString("F0") +
-                    "), modifiers: " + Modifiers.Description());
+            App.Log("Scroll: start, modifiers: " + Modifiers.Description());
         }
 
         public override void Update(GazeState gaze)
