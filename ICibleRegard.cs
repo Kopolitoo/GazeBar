@@ -6,7 +6,7 @@ namespace GazeBar
     ///
     /// Jusqu'à l'étape 6, ViseurBoutons ne connaissait que les BoutonRegard (les carrés du
     /// choix d'action et du menu, dessinés sur le calque). Le mode paramètres a d'autres
-    /// cibles : les onglets, les boutons « − » et « + », « Non » et « Oui »… (CibleParametre).
+    /// cibles : les onglets, les boutons « − » et « + », les interrupteurs oui / non… (CibleParametre).
     /// Plutôt que d'écrire un deuxième viseur, on décrit ici ce qu'ils ont en commun :
     /// c'est une « interface ». Une classe qui « implémente » l'interface (écrit
     /// « class BoutonRegard : ICibleRegard ») promet de fournir ces trois éléments.

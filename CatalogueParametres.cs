@@ -11,10 +11,11 @@ namespace GazeBar
     ///
     /// Deux sortes de réglages :
     ///   - un NOMBRE (Lissage, DelaiFixation…) : boutons « − », valeur, « + » ;
-    ///   - un OUI / NON (ClicDirect, SuiviSouris…) : boutons « Non » et « Oui ».
+    ///   - un OUI / NON (ClicDirect, SuiviSouris…) : un INTERRUPTEUR arrondi, comme ceux de
+    ///     Bootstrap (02/11/2026, remplace les deux boutons « Non » et « Oui »).
     ///     Variante (étape 9) : un choix entre deux mots, par exemple « directe » ou
-    ///     « relative » pour SourisJeu. C'est le même affichage, avec d'autres mots sur les
-    ///     deux boutons (voir DeuxChoix).
+    ///     « relative » pour SourisJeu. Là, un interrupteur ne dirait pas ce que chaque côté
+    ///     veut dire : on garde les deux boutons, un par mot (voir DeuxChoix).
     ///
     /// Lire et Ecrire sont des « fonctions rangées dans une variable » (délégués). Par exemple
     ///     p => p.Lissage                 lit le lissage d'un objet Parametres p ;
@@ -56,6 +57,12 @@ namespace GazeBar
         /// <summary>Vrai pour un réglage oui / non (ou un choix entre deux mots).</summary>
         public bool OuiNon { get; private set; }
 
+        /// <summary>
+        /// Vrai pour un vrai oui / non (créé par OuiOuNon) : il s'affiche en interrupteur.
+        /// Faux pour un choix entre deux autres mots (DeuxChoix) : deux boutons.
+        /// </summary>
+        public bool Interrupteur { get; private set; }
+
         /// <summary>Le mot du bouton de gauche (valeur « faux ») : « Non » d'habitude.</summary>
         public string MotFaux { get; private set; }
 
@@ -90,7 +97,9 @@ namespace GazeBar
                                        Func<Parametres, bool> lire, Action<Parametres, bool> ecrire,
                                        Action<Parametres> apres = null)
         {
-            return DeuxChoix(nom, explication, "Non", "Oui", lire, ecrire, apres);
+            Reglage r = DeuxChoix(nom, explication, "Non", "Oui", lire, ecrire, apres);
+            r.Interrupteur = true;   // affiché en interrupteur (02/11/2026)
+            return r;
         }
 
         /// <summary>
