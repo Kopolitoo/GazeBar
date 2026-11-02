@@ -25,6 +25,12 @@ namespace GazeBar
     {
         private readonly DispatcherTimer _foreground;
 
+        /// <summary>
+        /// Opacity of the green flash of the options icon when its delay is over (see
+        /// ShowIcon): 0.6 = a light flash, the dark icon stays seen through it.
+        /// </summary>
+        private const double FlashMaxOpacity = 0.6;
+
         public OverlayWindow()
         {
             InitializeComponent();
@@ -313,7 +319,9 @@ namespace GazeBar
 
         /// <summary>
         /// Shows the options icon: a square of side [size] centred on (x, y), in screen
-        /// pixels. progress (0 to 1) fills the ring around it; at 0, no ring.
+        /// pixels. progress (0 to 1) lights up the icon with a light green flash; at 0, no
+        /// flash. A ring around the icon was used before; with a very short delay (0.1 s) it
+        /// had no time to be seen, the flash is easier to notice (user request of 2026-11-02).
         /// showLabel: shows the "Options" text below the icon.
         /// </summary>
         public void ShowIcon(double xPixels, double yPixels, double sizePixels,
@@ -332,13 +340,16 @@ namespace GazeBar
             OptionsIcon.BorderThickness = new Thickness(ScreenMetrics.Units(2));
             OptionsIcon.CornerRadius = new CornerRadius(ScreenMetrics.Units(12));
             OptionsIconSymbol.FontSize = side * 0.5;
-            OptionsIconRing.StrokeThickness = ScreenMetrics.Units(6);
             Canvas.SetLeft(OptionsIcon, center.X - side / 2);
             Canvas.SetTop(OptionsIcon, center.Y - side / 2);
             OptionsIcon.Visibility = Visibility.Visible;
 
-            // The ring surrounds the square: radius = half the square's diagonal.
-            DrawArc(OptionsIconRing, xPixels, yPixels, sizePixels / 2 * Math.Sqrt(2) + ScreenMetrics.Px(4), progress);
+            // The flash: its corners follow the inside of the icon's border; its opacity
+            // grows with the progress, up to FlashMaxOpacity (a light flash, the white symbol
+            // stays readable on it).
+            double inner = Math.Max(0, ScreenMetrics.Units(12) - ScreenMetrics.Units(2));
+            OptionsIconFlash.CornerRadius = new CornerRadius(inner);
+            OptionsIconFlash.Opacity = FlashMaxOpacity * Math.Max(0, Math.Min(1, progress));
 
             if (showLabel)
             {
@@ -363,7 +374,7 @@ namespace GazeBar
         public void HideIcon()
         {
             OptionsIcon.Visibility = Visibility.Collapsed;
-            OptionsIconRing.Visibility = Visibility.Collapsed;
+            OptionsIconFlash.Opacity = 0;
             OptionsLabel.Visibility = Visibility.Collapsed;
         }
 

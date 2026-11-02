@@ -156,7 +156,7 @@ To add a language: copy `en.json` to `xx.json` and translate the values (never t
   facing the centre of the screen, and the cursor goes to the fixed point. If `DirectClick` is on
   (off by default, set it to `true` in `settings.json`), looking inside the circle for
   `DirectClickDelay` makes a left click; looking at the icon for `OptionsIconDelay` (0.3 s,
-  shorter than the other buttons) opens the action choice (or first the magnifier if
+  shorter than the other buttons; the icon lights up with a light green flash) opens the action choice (or first the magnifier if
   `MagnifierBeforeAction` is `true` in `settings.json`); leaving the circle and the icon goes
   back to movement mode. After a click, a new fixation at the same place is not recognised until
   the gaze has left it (no bursts of clicks).
