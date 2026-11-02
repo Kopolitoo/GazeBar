@@ -68,9 +68,13 @@ namespace GazeBar
         ///       ClavierEnHaut. Rien à corriger : absents d'un fichier plus ancien, ils
         ///       gardent leur valeur par défaut ;
         ///  10 : étape 14 (« clavier-options ») — DispositionClavier et ZoneSaisie. Rien à
-        ///       corriger : absents d'un fichier plus ancien, ils gardent leur valeur par défaut.
+        ///       corriger : absents d'un fichier plus ancien, ils gardent leur valeur par défaut ;
+        ///  11 : VitesseMaxDefilement passe de 15 à 5 crans/s par défaut (demande de
+        ///       l'utilisateur du 02/11/2026, après le passage au défilement fin), et nouveau
+        ///       réglage DefilerFenetresInactives (oui par défaut ; absent d'un fichier plus
+        ///       ancien, il garde sa valeur par défaut).
         /// </summary>
-        public const int VersionActuelle = 10;
+        public const int VersionActuelle = 11;
 
         /// <summary>Numéro du format du fichier, pour pouvoir le faire évoluer un jour sans tout casser.</summary>
         [DataMember(Order = 0)]
@@ -252,11 +256,20 @@ namespace GazeBar
         /// <summary>
         /// Vitesse maximale du mode défilement, en crans de molette par seconde (étape 8).
         /// La vitesse vaut 0 au bord de la zone morte (la moitié de [RayonCercle]) et atteint
-        /// cette valeur trois [RayonCercle] plus loin ; au-delà, elle ne monte plus.
+        /// 5 par défaut depuis le 02/11/2026 (15 depuis le 28/10/2026, 10 au début).
         /// 15 par défaut depuis le 28/10/2026 (10 avant).
         /// </summary>
         [DataMember(Order = 71)]
         public double VitesseMaxDefilement { get; set; }
+
+        /// <summary>
+        /// Réglage de Windows « Faire défiler les fenêtres inactives lorsque je pointe dessus »
+        /// (02/11/2026). Oui par défaut : la molette va à la fenêtre sous le curseur, sans avoir
+        /// à cliquer dedans avant. Le fichier de réglages garde le choix ; c'est MoletteWindows
+        /// qui l'applique réellement à Windows (au démarrage et à chaque changement).
+        /// </summary>
+        [DataMember(Order = 72)]
+        public bool DefilerFenetresInactives { get; set; }
 
         // ───────────────────────── Jeu ─────────────────────────
 
@@ -561,7 +574,8 @@ namespace GazeBar
             DureePauseAndroid = 1.0;
             DureeGlisser = 0.5;
 
-            VitesseMaxDefilement = 15;
+            VitesseMaxDefilement = 5;
+            DefilerFenetresInactives = true;
 
             LissageJeu = 0.16;
             SensibiliteJeu = 1.0;
@@ -750,6 +764,18 @@ namespace GazeBar
                 // Rien à corriger : DispositionClavier et ZoneSaisie, absents du fichier, ont
                 // gardé leur valeur par défaut (voir AvantLecture).
                 App.Log("Paramètres : mise à jour en version 10 (langue du clavier et zone de saisie)");
+            }
+
+            if (VersionFichier < 11)
+            {
+                // Seul l'ancien défaut est remplacé : une valeur choisie par l'utilisateur reste.
+                // (Un fichier de version 4 ou moins vient de passer de 10 à 15 juste au-dessus :
+                // il arrive donc lui aussi à 5.)
+                if (Math.Abs(VitesseMaxDefilement - 15) < 0.001)
+                {
+                    VitesseMaxDefilement = 5;
+                }
+                App.Log("Paramètres : mise à jour en version 11 (VitesseMaxDefilement 15 → 5)");
             }
             VersionFichier = VersionActuelle;
             return true;

@@ -332,7 +332,11 @@ namespace GazeBar
             // EC8F = flèches haut et bas (« Défilement », étape 8)
             new Onglet("Défilement", "\uEC8F",
                 Reglage.Nombre("Vitesse maximale", "Atteinte trois rayons de cercle au-delà du bord", " crans/s", 1,
-                               p => p.VitesseMaxDefilement, (p, v) => p.VitesseMaxDefilement = v)),
+                               p => p.VitesseMaxDefilement, (p, v) => p.VitesseMaxDefilement = v),
+                // Réglage de Windows, appliqué par MoletteWindows (02/11/2026).
+                Reglage.OuiOuNon("Défiler les fenêtres inactives", "Réglage Windows : la molette va à la fenêtre sous le curseur",
+                                 p => p.DefilerFenetresInactives, (p, v) => p.DefilerFenetresInactives = v,
+                                 p => MoletteWindows.Appliquer(p.DefilerFenetresInactives))),
 
             // E7FC = manette (« Jeu », étape 9)
             new Onglet("Jeu", "\uE7FC",

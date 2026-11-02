@@ -174,11 +174,16 @@ mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tou
   fixé sur le curseur. Regard dans le cercle : rien ne défile (zone morte). Regard au-dessus, en
   dessous, à droite ou à gauche : la fenêtre sous le curseur défile dans ce sens (molette Windows,
   un seul sens à la fois), d'autant plus vite que le regard est loin du cercle, jusqu'à
-  `VitesseMaxDefilement` (10 crans/s) trois `RayonCercle` au-delà du bord. Un petit arc vert sur le
+  `VitesseMaxDefilement` (5 crans/s par défaut depuis le 02/11/2026) trois `RayonCercle` au-delà du bord. Un petit arc vert sur le
   cercle montre la direction. Rien ne défile avant un premier passage du regard dans le cercle,
   ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
   l'écran compte, pour agrandir la plage de vitesse) ou sur le bouton « retour » (bord droit, centré),
   qui ramène au mode mouvement. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
+  Depuis le 02/11/2026 : défilement fin (petites quantités de molette, jusqu'à une fois par
+  image, et vitesse lissée qui monte et descend en douceur) ; en entrant, GazeBar rend active la
+  fenêtre sous le curseur (sans cliquer), pour ne plus avoir à cliquer avant de défiler.
+  Onglet « Défilement » : option « Défiler les fenêtres inactives » (oui par défaut), qui
+  règle l'option Windows du même nom (`MoletteWindows`, appliquée au démarrage et à chaque changement).
 - `Modes/ModeConfigIcones` (étape 10) : onglet « Icônes » des paramètres, bouton « Configurer les
   icônes ». Même mise en page que le choix d'action (`DispositionChoixAction`, partagée par les
   deux modes), avec un cadre gris à la place de la photo. Les quatorze emplacements (huit de la
@@ -287,6 +292,9 @@ Test de l'étape 8 : on ouvre une longue page web, on fixe le texte, on ouvre le
 puis « Défilement » (à gauche, en haut). Le cercle blanc reste en place. On regarde dans le
 cercle : rien ne bouge. On regarde un peu sous le cercle : la page descend doucement ; plus bas :
 plus vite. Au-dessus : elle remonte. « Retour » au bord droit ramène au mode mouvement.
+Depuis le 02/11/2026 : à vitesse lente, la page doit glisser sans petits sauts, et démarrer
+ou s'arrêter en douceur ; sans avoir cliqué dans la page avant, elle doit défiler quand même
+(le journal note « fenêtre … rendue active » et l'état du réglage Windows de la molette).
 
 Test de l'étape 11 : écran en 1920 × 1080 à 100 %. Au premier lancement, le journal note
 « mise à jour en version 7 » et l'écran détecté ; le cercle, les icônes et la barre de menu ont

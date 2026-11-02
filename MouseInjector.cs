@@ -172,8 +172,8 @@ namespace GazeBar
         /// Un mouvement de molette (étape 8, mode défilement), à l'endroit où est le curseur.
         ///
         /// quantite : en « unités de molette » de Windows. Un cran d'une vraie molette vaut 120
-        /// (WHEEL_DELTA) ; on peut envoyer moins (30 = un quart de cran) pour un défilement plus
-        /// doux : la plupart des logiciels récents (navigateurs, Word, Explorateur) additionnent
+        /// (WHEEL_DELTA) ; on peut envoyer moins (le mode défilement envoie dès 8 unités, voir
+        /// ModeDefilement.PasMinimal) pour un défilement plus doux : la plupart des logiciels récents (navigateurs, Word, Explorateur) additionnent
         /// ces petites quantités.
         /// Sens, comme une vraie molette :
         ///   - verticale : positif = vers le haut, négatif = vers le bas ;
