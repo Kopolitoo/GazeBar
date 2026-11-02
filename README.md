@@ -119,12 +119,14 @@ au démarrage. « Démarrer avec Windows » ne change pas (réglage de l'ordinat
 l'interface, ni le dictionnaire personnel.
 
 **Langue de l'interface** (étape langues-socle, `Texts.cs`) : tous les textes affichés sont dans
-des fichiers de langue, dossier `Languages` copié à côté de GazeBar.exe (`Languages/fr.json` pour
-l'instant). Chaque texte a une clé (`"menu.settings": "Paramètres"`) ; `{0}`, `{1}` sont remplacés
-par des valeurs. Un texte absent de la langue choisie est pris en français, et la clé manquante est
-notée dans le journal. Le bouton « Langue » (onglet Général) passe à la langue suivante du dossier
+des fichiers de langue, dossier `Languages` copié à côté de GazeBar.exe (`Languages/en.json`,
+`Languages/fr.json`). Chaque texte a une clé (`"menu.settings": "Paramètres"`) ; `{0}`, `{1}`
+sont remplacés par des valeurs. L'anglais est la langue de référence (étape langue-anglais) : c'est
+la langue d'une nouvelle installation, et un texte absent de la langue choisie est pris en anglais
+(la clé manquante est notée dans le journal) ; un ancien fichier de réglages (avant la version 12)
+garde le français. Le bouton « Langue » (onglet Général) passe à la langue suivante du dossier
 et redessine la page tout de suite ; le choix est le réglage `Language` (`settings.json` version 12).
-Pour ajouter une langue : copier `fr.json` en `xx.json`, traduire les valeurs (jamais les clés).
+Pour ajouter une langue : copier `en.json` en `xx.json`, traduire les valeurs (jamais les clés).
 
 ## Architecture des modes
 
