@@ -27,8 +27,9 @@ that come from others, and what GazeBar uses without shipping it.
 
 ### Application icon: `Resources/GazeBar.ico`
 
-Made for GazeBar from an image supplied by the project owner; under the MIT licence like the
-rest of the project.
+Image first generated with ChatGPT (OpenAI), then edited by the project owner with Photocraft.
+OpenAI's terms of use give the rights on generated images to the person who made them; the icon
+is distributed under the MIT licence like the rest of the project.
 
 ## Used but not shipped
 
