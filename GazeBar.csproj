@@ -8,7 +8,7 @@
     This project is a WPF application on .NET Framework 4.8 (not .NET 10), because the
     Tobii.Interaction library, which provides the gaze, only exists for this framework, in 32 bits.
     It is a WPF application: a classic ("desktop") Windows program, which can therefore
-    simulate the mouse and keyboard, show transparent windows, etc. See README.md.
+    simulate the mouse and keyboard, show transparent windows, etc. See docs/architecture.md.
   -->
   <PropertyGroup>
     <!-- WinExe = program with windows (no black console behind it). -->

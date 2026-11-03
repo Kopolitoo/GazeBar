@@ -30,7 +30,7 @@ namespace GazeBar
     ///
     /// Where to look, in order:
     ///  1. the "Eyetracker" subfolder next to GazeBar.exe (if the user copied the DLLs there
-    ///     himself, see the README);
+    ///     himself, see docs/user-guide.md, "Eyetracker files");
     ///  2. the installation folders of the eyetracker vendor's software (Program Files);
     ///  3. the Visual Studio "NuGet cache" (%USERPROFILE%\.nuget\packages): this is where
     ///     Visual Studio stores the downloaded package, so it is always present on the
