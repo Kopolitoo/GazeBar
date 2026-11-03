@@ -122,8 +122,8 @@ dossier en grands boutons (le plus récent en premier, 12 par page) ; après « 
 actuels sont gardés dans « Sauvegarde automatique » (fichier `auto-backup.json`, remplacé à
 chaque chargement, pour revenir en arrière au regard), puis le profil est appliqué tout de suite et
 enregistré dans `settings.json`. Un profil d'une ancienne version est converti comme `settings.json`
-au démarrage. « Démarrer avec Windows » ne change pas (réglage de l'ordinateur), ni la langue de
-l'interface, ni le dictionnaire personnel.
+au démarrage. « Démarrer avec Windows » et « Journal détaillé » ne changent pas (réglages de
+l'ordinateur), ni la langue de l'interface, ni le dictionnaire personnel.
 
 **Langue de l'interface** (étape langues-socle, `Texts.cs`) : tous les textes affichés sont dans
 des fichiers de langue, dossier `Languages` copié à côté de GazeBar.exe (`Languages/en.json`,
@@ -428,7 +428,11 @@ crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet l
 - Une fenêtre lancée « en tant qu'administrateur » ignore les clics injectés et les touches du
   clavier au regard, sauf si GazeBar est lui aussi lancé en administrateur.
 - Le mode jeu (regard vers déplacement relatif de la souris) n'est pas encore étudié.
-- Journal : `%LOCALAPPDATA%\GazeBar\gazebar.log`.
+- Journal : `%LOCALAPPDATA%\GazeBar\gazebar.log`. Par défaut, il ne note que les événements
+  importants et les erreurs ; le réglage « Journal détaillé » (onglet « Général ») note aussi chaque
+  mode, action et touche, pour chercher un bug. À 5 Mo, le fichier devient `gazebar.old.log` et un
+  nouveau commence. L'échantillonneur du curseur (1000 lectures par seconde) ne tourne que pendant
+  que la fenêtre Diagnostic est ouverte.
 
 ## Licence
 

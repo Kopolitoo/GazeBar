@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Windows;
 
@@ -23,7 +24,6 @@ namespace GazeBar
     /// </summary>
     public partial class App : Application
     {
-        private CursorSampler _sampler;
         private GazeSource _gaze;
         private OverlayWindow _layer;
         private ModeManager _modes;
@@ -95,9 +95,6 @@ namespace GazeBar
             // settings file (see WheelScroller).
             WheelScroller.Apply(AppSettings.Current.ScrollInactiveWindows);
 
-            _sampler = new CursorSampler();
-            _sampler.Start();
-
             // The real gaze, provided by the eyetracker engine. If it is unavailable, the
             // program still starts (see GazeSource.ErrorMessage).
             // Since 2026-11-02, the eyetracker DLLs are no longer shipped with GazeBar: they are
@@ -148,7 +145,7 @@ namespace GazeBar
             {
                 if (_modes.Keyboard.IsOpen)
                 {
-                    App.Log("Escape key: closing the gaze keyboard");
+                    App.LogDetail("Escape key: closing the gaze keyboard");
                     _modes.Keyboard.Close();
                 }
                 return;
@@ -175,7 +172,7 @@ namespace GazeBar
                 list.Back();
                 return;
             }
-            App.Log("Escape key: back to movement mode");
+            App.LogDetail("Escape key: back to movement mode");
             MouseInjector.ReleaseAll();
             KeyboardInjector.ReleaseAll();
             _modes.ChangeMode(new MovementMode());
@@ -189,7 +186,7 @@ namespace GazeBar
         {
             if (_diagnostic == null)
             {
-                _diagnostic = new DiagnosticWindow(_sampler, _gaze);
+                _diagnostic = new DiagnosticWindow(_gaze);
                 _diagnostic.Closed += (sender, args) => { _diagnostic = null; };
             }
             _diagnostic.Show();
@@ -223,10 +220,6 @@ namespace GazeBar
                 _modes.Keyboard.Stop();
                 _modes.Stop();
             }
-            if (_sampler != null)
-            {
-                _sampler.Dispose();
-            }
             if (_gaze != null)
             {
                 _gaze.Dispose();
@@ -240,28 +233,84 @@ namespace GazeBar
             base.OnExit(e);
         }
 
+        /// <summary>Maximum size of gazebar.log (5 MB). Beyond it, the file becomes gazebar.old.log.</summary>
+        private const long MaxLogBytes = 5L * 1024 * 1024;
+
+        // Several threads may write to the log at the same time: the lock makes them wait
+        // for each other, so that two lines are never mixed up.
+        private static readonly object LogLock = new object();
+
+        // Current size of gazebar.log in bytes (-1 = not measured yet).
+        private static long _logBytes = -1;
+
         /// <summary>
-        /// Writes a message to the log, in two places:
+        /// Writes an IMPORTANT message to the log: start and stop, errors, settings read or
+        /// changed, eyetracker found or not... Always written.
+        /// For frequent events (each mode, each action, each key...), use LogDetail.
+        /// </summary>
+        internal static void Log(string message)
+        {
+            Write(message);
+        }
+
+        /// <summary>
+        /// Writes a DETAILED message to the log (frequent events, useful to track down a bug).
+        /// Only written when the "Detailed log" setting is on: otherwise the log stays short.
+        /// </summary>
+        internal static void LogDetail(string message)
+        {
+            AppSettings settings = AppSettings.Current;
+            if (settings != null && settings.DetailedLog)
+            {
+                Write(message);
+            }
+        }
+
+        /// <summary>
+        /// Writes one line, in two places:
         ///  1. the Visual Studio "Output" window (prefix [GazeBar]);
         ///  2. the gazebar.log file in %LOCALAPPDATA%\GazeBar
         ///     (useful when the program is started without the debugger).
+        /// When gazebar.log reaches 5 MB, it is renamed gazebar.old.log (replacing the previous
+        /// one) and a new gazebar.log starts: the log never fills the disk.
+        /// Reminder: no gaze coordinates and no typed text in the log (see CONTRIBUTING.md).
         /// </summary>
-        internal static void Log(string message)
+        private static void Write(string message)
         {
             string line = DateTime.Now.ToString("HH:mm:ss.fff") + "  " + message;
             Debug.WriteLine("[GazeBar] " + line);
 
-            try
+            lock (LogLock)
             {
-                string folder = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GazeBar");
-                Directory.CreateDirectory(folder);
-                File.AppendAllText(Path.Combine(folder, "gazebar.log"), line + Environment.NewLine);
-            }
-            catch
-            {
-                // The log must never crash the program itself:
-                // if writing fails, ignore it silently.
+                try
+                {
+                    string folder = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GazeBar");
+                    Directory.CreateDirectory(folder);
+                    string path = Path.Combine(folder, "gazebar.log");
+                    string text = line + Environment.NewLine;
+
+                    if (_logBytes < 0)
+                    {
+                        _logBytes = File.Exists(path) ? new FileInfo(path).Length : 0;
+                    }
+                    if (_logBytes > 0 && _logBytes + text.Length > MaxLogBytes)
+                    {
+                        string oldPath = Path.Combine(folder, "gazebar.old.log");
+                        File.Delete(oldPath);   // does nothing if the file does not exist
+                        File.Move(path, oldPath);
+                        _logBytes = 0;
+                    }
+
+                    File.AppendAllText(path, text);
+                    _logBytes += Encoding.UTF8.GetByteCount(text);
+                }
+                catch
+                {
+                    // The log must never crash the program itself:
+                    // if writing fails, ignore it silently (the size is measured again next time).
+                    _logBytes = -1;
+                }
             }
         }
     }

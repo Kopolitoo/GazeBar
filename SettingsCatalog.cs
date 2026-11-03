@@ -514,7 +514,10 @@ namespace GazeBar
             new SettingsTab(GeneralTabName, "",
                 Setting.YesOrNo("setting.startWithWindows",
                                  p => p.StartWithWindows, (p, v) => p.StartWithWindows = v,
-                                 p => WindowsStartup.Apply(p.StartWithWindows))),
+                                 p => WindowsStartup.Apply(p.StartWithWindows)),
+                // Step logging: short log (no) or detailed log (yes), see App.LogDetail.
+                Setting.YesOrNo("setting.detailedLog",
+                                 p => p.DetailedLog, (p, v) => p.DetailedLog = v)),
 
             // E77B = person ("Profiles", step 15): no setting, two big buttons "Save the current
             // settings" and "Load a profile" (see SettingsWindow.BuildProfilesTab).

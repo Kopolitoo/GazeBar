@@ -541,7 +541,7 @@ namespace GazeBar
             }
             _addedWords.Add(word);
             _addedKeys.Add(Key(word));
-            App.Log("Prediction: one word added to the personal dictionary (" + _addedWords.Count + " in total)");
+            App.LogDetail("Prediction: one word added to the personal dictionary (" + _addedWords.Count + " in total)");
             SavePersonal();
         }
 
@@ -578,7 +578,7 @@ namespace GazeBar
             {
                 followers.Remove(word);
             }
-            App.Log("Prediction: one word removed from the personal dictionary (" + _addedWords.Count + " left)");
+            App.LogDetail("Prediction: one word removed from the personal dictionary (" + _addedWords.Count + " left)");
             SavePersonal();
         }
 

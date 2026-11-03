@@ -123,8 +123,8 @@ shows the `.json` files of this folder as large buttons (the most recent first, 
 after "Yes", the current settings are kept in "Automatic backup" (file `auto-backup.json`,
 replaced at each load, to go back with the eyes), then the profile is applied at once and saved
 in `settings.json`. A profile from an older version is converted like `settings.json` at
-startup. "Start with Windows" does not change (a setting of the computer), nor does the
-interface language or the personal dictionary.
+startup. "Start with Windows" and "Detailed log" do not change (settings of the computer), nor
+does the interface language or the personal dictionary.
 
 **Interface language** (step langues-socle, `Texts.cs`): every displayed text is in language
 files, in the `Languages` folder copied next to GazeBar.exe (`Languages/en.json`,
@@ -419,7 +419,10 @@ Loading "Automatic backup" restores the changed radius.
   keyboard, unless GazeBar is also started as administrator.
 - The game mode with relative mouse movement (gaze to mouse speed) has not been studied yet.
 - The personal dictionary (added words, word pairs) is shared between languages.
-- Log: `%LOCALAPPDATA%\GazeBar\gazebar.log`.
+- Log: `%LOCALAPPDATA%\GazeBar\gazebar.log`. By default it only notes the important events and
+  the errors; the "Detailed log" setting ("General" tab) also notes every mode, action and key,
+  to track down a bug. At 5 MB the file becomes `gazebar.old.log` and a new one starts. The
+  cursor sampler (1000 reads per second) only runs while the Diagnostic window is open.
 
 ## Licence
 

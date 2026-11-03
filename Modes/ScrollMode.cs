@@ -206,7 +206,7 @@ namespace GazeBar
             BuildSurface();
             layer.ShowCircle(_px, _py, AppSettings.Current.CircleRadiusPx * DeadZoneFactor, true, Opacity);
 
-            App.Log("Scroll: start, modifiers: " + Modifiers.Description());
+            App.LogDetail("Scroll: start, modifiers: " + Modifiers.Description());
         }
 
         public override void Update(GazeState gaze)
@@ -224,7 +224,7 @@ namespace GazeBar
             int active = _aimer.Update(gaze, p.ActivationDelay, p.ShowLabels);
             if (active >= 0)
             {
-                App.Log("Scroll: end (back)");
+                App.LogDetail("Scroll: end (back)");
                 Manager.ChangeMode(new MovementMode());
                 return;
             }
@@ -361,7 +361,7 @@ namespace GazeBar
             try
             {
                 // Which window does the wheel go to? (Windows setting, see WheelScroller)
-                App.Log("Scroll: Windows setting \"scroll inactive windows\" = " + WheelScroller.Description());
+                App.LogDetail("Scroll: Windows setting \"scroll inactive windows\" = " + WheelScroller.Description());
 
                 NativeMethods.POINT point;
                 point.X = (int)Math.Round(_px);
@@ -370,7 +370,7 @@ namespace GazeBar
                 IntPtr window = underP == IntPtr.Zero ? IntPtr.Zero : NativeMethods.GetAncestor(underP, NativeMethods.GA_ROOT);
                 if (window == IntPtr.Zero)
                 {
-                    App.Log("Scroll: no window under the target point");
+                    App.LogDetail("Scroll: no window under the target point");
                     return;
                 }
 
@@ -400,7 +400,7 @@ namespace GazeBar
 
                 System.Text.StringBuilder title = new System.Text.StringBuilder(128);
                 NativeMethods.GetWindowText(window, title, title.Capacity);
-                App.Log("Scroll: window \"" + title + "\" activated: " + (succeeded ? "yes" : "no (refused by Windows)"));
+                App.LogDetail("Scroll: window \"" + title + "\" activated: " + (succeeded ? "yes" : "no (refused by Windows)"));
             }
             catch (Exception ex)
             {

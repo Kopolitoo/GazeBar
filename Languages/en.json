@@ -200,6 +200,8 @@
   "setting.keyboardSize.help": "Width and height together: 50, 75 or 100 %",
   "setting.startWithWindows.name": "Start with Windows",
   "setting.startWithWindows.help": "Launch GazeBar when the session opens",
+  "setting.detailedLog.name": "Detailed log",
+  "setting.detailedLog.help": "Write every action to the log (to track down a bug)",
   "unit.notchesPerSecond": " notches/s",
   "screen.description": "{0} × {1} px, scale {2} %, text {3} %",
   "profiles.backupName": "Automatic backup",

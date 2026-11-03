@@ -183,7 +183,7 @@ namespace GazeBar
         /// </summary>
         public void Back()
         {
-            App.Log(Name + ": back");
+            App.LogDetail(Name + ": back");
             if (_kind == ListKind.MyWords)
             {
                 Manager.ChangeMode(new SettingsMode(SettingsCatalog.GeneralTabIndex));
@@ -226,7 +226,7 @@ namespace GazeBar
         /// </summary>
         private void ChooseProfile(FoundProfile profile)
         {
-            App.Log("Profiles: profile chosen, confirmation requested");
+            App.LogDetail("Profiles: profile chosen, confirmation requested");
             Manager.ChangeMode(new SettingsMode(SettingsCatalog.ProfilesTabIndex, profile));
         }
 

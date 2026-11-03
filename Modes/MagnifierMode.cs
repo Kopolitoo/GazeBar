@@ -293,13 +293,13 @@ namespace GazeBar
             {
                 // Drag and drop: (x, y) is the drop point. The cursor stays on the start point;
                 // the execution will take it there, button pressed.
-                App.Log("Magnifier: drag end point refined");
+                App.LogDetail("Magnifier: drag end point refined");
                 Manager.ChangeMode(new DragExecutionMode(_drag, x, y));
                 return;
             }
 
             NativeMethods.SetCursorPos((int)Math.Round(x), (int)Math.Round(y));
-            App.Log("Magnifier: fixation on the photo, cursor placed");
+            App.LogDetail("Magnifier: fixation on the photo, cursor placed");
 
             Manager.ChangeMode(new ActionChoiceMode(x, y));
         }
@@ -310,7 +310,7 @@ namespace GazeBar
         /// </summary>
         private void Back()
         {
-            App.Log(_drag != null ? "Magnifier: drag and drop cancelled (back)" : "Magnifier: back");
+            App.LogDetail(_drag != null ? "Magnifier: drag and drop cancelled (back)" : "Magnifier: back");
             if (_drag != null)
             {
                 Manager.ChangeMode(new MovementMode());
@@ -339,7 +339,7 @@ namespace GazeBar
             if (Distance(_zoneX, _zoneY, _targetX, _targetY) <= p.CircleRadiusPx)
             {
                 _ignoredZone = false;
-                App.Log("Magnifier: gaze already on the target point, no need to move the gaze");
+                App.LogDetail("Magnifier: gaze already on the target point, no need to move the gaze");
             }
         }
 
@@ -461,8 +461,7 @@ namespace GazeBar
 
             layer.ShowChoiceScreen();
             _step = Step.Aim;
-            App.Log("Magnifier: photo of " + side + " × " + side + " px at (" + _ox + ", " + _oy +
-                    "), magnified ×" + _zoom.ToString("0.##"));
+            App.LogDetail("Magnifier: photo of " + side + " × " + side + " px, magnified ×" + _zoom.ToString("0.##"));
             return true;
         }
 
