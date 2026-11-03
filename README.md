@@ -10,7 +10,10 @@ right click, drag and drop, scroll, magnifier for small targets. It also has a g
 with word prediction, a game mode, settings changed with the eyes, and an English and French
 interface.
 
-It is developed by its own user, for daily use, and tested on a Tobii Dynavox PCEye 5.
+GazeBar is designed by and for a tetraplegic person with ALS (Charcot disease), who builds it
+with his voice and his eyes only, with the help of the AI assistant Claude. Since November
+2026 he uses GazeBar alone, every day, without TD Control: it is tested all the time, on a
+Tobii Dynavox PCEye 5. If you are in the same situation, we hope it can help you too.
 
 ## Status
 

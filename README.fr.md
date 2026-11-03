@@ -10,8 +10,11 @@ double clic, clic droit, glisser-déposer, défilement, loupe pour les petites c
 aussi un clavier au regard avec prédiction de mots, un mode jeu, des paramètres réglables au
 regard, et une interface en français et en anglais.
 
-Il est développé par son propre utilisateur, pour un usage quotidien, et testé sur un
-Tobii Dynavox PCEye 5.
+GazeBar est conçu par et pour une personne tétraplégique atteinte de SLA (maladie de Charcot),
+qui le développe uniquement avec la voix et les yeux, avec l'aide de l'assistant d'IA Claude.
+Depuis novembre 2026, il utilise GazeBar seul, tous les jours, sans TD Control : il est donc
+testé en permanence, sur un Tobii Dynavox PCEye 5. Si vous êtes dans la même situation, nous
+espérons qu'il pourra vous aider aussi.
 
 ## État du projet
 
