@@ -1,0 +1,61 @@
+# Automatic build (continuous integration, "CI").
+#
+# On every pull request and every push to main, GitHub starts a Windows machine,
+# compiles GazeBar and checks the data files. The result (green tick or red cross)
+# shows on the pull request. Nothing is published: it is only a check.
+#
+# The eyetracker DLLs are not needed: the Tobii.Interaction package is downloaded from
+# NuGet only to compile (see GazeBar.csproj), and nothing is run.
+
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Allows starting the build by hand from the "Actions" tab.
+  workflow_dispatch:
+
+# Read-only access to the repository: this workflow changes nothing.
+permissions:
+  contents: read
+
+# A new push on the same branch cancels the build still running for the old one.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Check the language and keyboard files
+        shell: pwsh
+        run: ./.github/scripts/check-data-files.ps1
+
+      - name: Compile GazeBar (Release, x86)
+        run: dotnet build GazeBar.csproj --configuration Release
+
+      - name: Check that no eyetracker DLL is in the output
+        shell: pwsh
+        run: |
+          $found = Get-ChildItem bin -Recurse -Filter 'Tobii*.dll'
+          if ($found) {
+            $found | ForEach-Object { Write-Host "::error::Eyetracker DLL in the output: $($_.FullName)" }
+            exit 1
+          }
+          Write-Host 'OK: no eyetracker DLL in the output.'
+
+      # The compiled program can be downloaded from the build page for 14 days
+      # (for testing a pull request without compiling it yourself).
+      - name: Keep the compiled program
+        uses: actions/upload-artifact@v4
+        with:
+          name: GazeBar-${{ github.sha }}
+          path: bin/Release/net48/
+          retention-days: 14
