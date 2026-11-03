@@ -70,7 +70,7 @@ namespace GazeBar
                     Alt = !Alt;
                     break;
             }
-            App.Log("Modifiers: " + Description());
+            App.LogDetail("Modifiers: " + Description());
             return IsActive(m);
         }
 
@@ -79,7 +79,7 @@ namespace GazeBar
         {
             if (AnyActive)
             {
-                App.Log("Modifiers: all off");
+                App.LogDetail("Modifiers: all off");
             }
             Ctrl = false;
             Shift = false;

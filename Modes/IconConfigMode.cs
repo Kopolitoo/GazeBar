@@ -108,7 +108,7 @@ namespace GazeBar
             int active = _aimer.Update(gaze, p.ActivationDelay, labels);
             if (active >= 0)
             {
-                App.Log("Icon configuration: " + _buttons[active].Label);
+                App.LogDetail("Icon configuration: " + _buttons[active].Label);
                 _actions[active]();
                 return;
             }
@@ -154,7 +154,7 @@ namespace GazeBar
             AppSettings p = AppSettings.Current;
             p.SetSlot(group, num, null);
             p.Save();
-            App.Log("Icon configuration: " + group + " " + num + " emptied");
+            App.LogDetail("Icon configuration: " + group + " " + num + " emptied");
             Build();
         }
 
@@ -173,7 +173,7 @@ namespace GazeBar
             AppSettings p = AppSettings.Current;
             p.SetSlot(_chosenGroup, _chosenSlot, action);
             p.Save();
-            App.Log("Icon configuration: " + action + " placed at " + _chosenGroup + " " + _chosenSlot);
+            App.LogDetail("Icon configuration: " + action + " placed at " + _chosenGroup + " " + _chosenSlot);
             _listOpen = false;
             Build();
         }

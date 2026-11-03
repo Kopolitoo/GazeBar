@@ -216,7 +216,7 @@ namespace GazeBar
             _previousPage = null;
             IsOpen = true;
             ForgetState();
-            App.Log("Keyboard: opened");
+            App.LogDetail("Keyboard: opened");
             return true;
         }
 
@@ -232,7 +232,7 @@ namespace GazeBar
             IsOpen = false;
             Hide();
             ForgetState();
-            App.Log("Keyboard: closed");
+            App.LogDetail("Keyboard: closed");
         }
 
         /// <summary>
@@ -383,7 +383,7 @@ namespace GazeBar
             AppSettings p = AppSettings.Current;
             p.KeyboardAtTop = !p.KeyboardAtTop;
             p.Save();
-            App.Log("Keyboard: " + (p.KeyboardAtTop ? "top" : "bottom") + " of the screen");
+            App.LogDetail("Keyboard: " + (p.KeyboardAtTop ? "top" : "bottom") + " of the screen");
             if (_visible)
             {
                 Build();
@@ -399,7 +399,7 @@ namespace GazeBar
             AppSettings p = AppSettings.Current;
             p.KeyboardSize = p.KeyboardSize > 75 ? 75 : p.KeyboardSize > 50 ? 50 : 100;
             p.Save();
-            App.Log("Keyboard: size " + p.KeyboardSize + " %");
+            App.LogDetail("Keyboard: size " + p.KeyboardSize + " %");
             if (_visible)
             {
                 Build();
@@ -416,7 +416,7 @@ namespace GazeBar
             AppSettings p = AppSettings.Current;
             p.InputBox = !p.InputBox;
             p.Save();
-            App.Log("Keyboard: input box " + (p.InputBox ? "shown" : "hidden"));
+            App.LogDetail("Keyboard: input box " + (p.InputBox ? "shown" : "hidden"));
             if (_visible)
             {
                 Build();
@@ -453,7 +453,7 @@ namespace GazeBar
             _page = layout.StartPage;
             _previousPage = null;
             ForgetState();
-            App.Log("Keyboard: layout chosen: " + name);
+            App.LogDetail("Keyboard: layout chosen: " + name);
             if (_visible)
             {
                 Build();

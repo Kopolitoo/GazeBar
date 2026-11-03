@@ -179,7 +179,7 @@ namespace GazeBar
             // BEFORE Enter: the magnifier takes its picture of the screen as soon as it enters, without the keyboard.
             Keyboard.OnModeChange(newVal);
 
-            App.Log("Mode: " + (old == null ? "(none)" : old.Name) + " → " + newVal.Name);
+            App.LogDetail("Mode: " + (old == null ? "(none)" : old.Name) + " → " + newVal.Name);
             // The new mode receives the current gaze position to initialize itself.
             newVal.Enter(ReadGaze());
 
@@ -337,7 +337,7 @@ namespace GazeBar
             if (situation != _gazeSituation)
             {
                 _gazeSituation = situation;
-                App.Log("Gaze: " + situation + " (screen " + ScreenWidth + " × " + ScreenHeight + ")");
+                App.LogDetail("Gaze: " + situation + " (screen " + ScreenWidth + " × " + ScreenHeight + ")");
             }
         }
 

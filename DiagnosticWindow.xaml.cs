@@ -10,6 +10,9 @@ namespace GazeBar
     /// <summary>
     /// INTERFACE: diagnostic window. Shows live what the cursor sampler "sees".
     /// Nothing is written to disk: the eyetracker licence forbids storing gaze data.
+    /// The window owns its cursor sampler: it starts when the window opens and stops when it
+    /// closes. Reading the cursor 1000 times per second costs processor time and battery, so
+    /// it only happens while someone looks at the measures.
     /// </summary>
     internal partial class DiagnosticWindow : Window
     {
@@ -28,7 +31,7 @@ namespace GazeBar
         private readonly double _screenHeight;
         private readonly double _mapHeight;
 
-        public DiagnosticWindow(CursorSampler sampler, GazeSource gaze)
+        public DiagnosticWindow(GazeSource gaze)
         {
             InitializeComponent();
 
@@ -36,7 +39,8 @@ namespace GazeBar
             Title = Texts.Get("diagnostic.title");
             CloseButton.Content = Texts.Get("diagnostic.close");
 
-            _sampler = sampler;
+            _sampler = new CursorSampler();
+            _sampler.Start();
             _gaze = gaze;
 
             // Screen size in pixels (same unit as the cursor position).
@@ -86,6 +90,8 @@ namespace GazeBar
         private void OnWindowClosed(object sender, EventArgs e)
         {
             _timer.Stop();
+            _sampler.Dispose();
+            App.LogDetail("Diagnostic: closed, cursor sampler stopped");
         }
 
         // ───────────────────────── Live display ─────────────────────────

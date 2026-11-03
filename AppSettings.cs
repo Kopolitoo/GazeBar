@@ -74,8 +74,10 @@ namespace GazeBar
         ///  12: step langues-socle — Language (interface language). Since step langue-anglais
         ///      the default is "en" (new installations); an older file belongs to an existing
         ///      French user, so it gets "fr".
+        ///  13: step logging — DetailedLog (no by default). Nothing to fix: missing from an
+        ///      older file, it keeps its default value.
         /// </summary>
-        public const int CurrentVersion = 12;
+        public const int CurrentVersion = 13;
 
         /// <summary>Format number of the file, so it can evolve one day without breaking everything.</summary>
         [DataMember(Order = 0)]
@@ -427,6 +429,17 @@ namespace GazeBar
         [DataMember(Order = 130)]
         public string Language { get; set; }
 
+        // ───────────────────────── Log (step logging) ─────────────────────────
+
+        /// <summary>
+        /// Detailed log: no by default. Off, gazebar.log only gets the important events and the
+        /// errors; on, it also gets every frequent event (modes, actions, keys...), useful to
+        /// track down a bug. See App.Log and App.LogDetail.
+        /// Like StartWithWindows, it belongs to the computer: loading a profile does not change it.
+        /// </summary>
+        [DataMember(Order = 131)]
+        public bool DetailedLog { get; set; }
+
         /// <summary>
         /// A group's layout, read from the lists above: an array with one cell per slot, null
         /// for an empty slot. Not saved as such.
@@ -593,6 +606,7 @@ namespace GazeBar
 
             MouseTracking = false;
             StartWithWindows = false;
+            DetailedLog = false;
 
             KeyDelay = 0.6;
             KeyRepeat = true;
@@ -805,6 +819,8 @@ namespace GazeBar
                 Language = "fr";
                 App.Log("Settings: updated to version 12 (interface language)");
             }
+
+            // Version 13 (DetailedLog): nothing to fix, the setting keeps its default value (no).
             FileVersion = CurrentVersion;
             return true;
         }

@@ -200,6 +200,8 @@
   "setting.keyboardSize.help": "Largeur et hauteur ensemble : 50, 75 ou 100 %",
   "setting.startWithWindows.name": "Démarrer avec Windows",
   "setting.startWithWindows.help": "Lancer GazeBar à l'ouverture de session",
+  "setting.detailedLog.name": "Journal détaillé",
+  "setting.detailedLog.help": "Noter chaque action dans le journal (pour chercher un bug)",
   "unit.notchesPerSecond": " crans/s",
   "screen.description": "{0} × {1} px, échelle {2} %, texte {3} %",
   "profiles.backupName": "Sauvegarde automatique",

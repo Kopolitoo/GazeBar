@@ -263,9 +263,10 @@ namespace GazeBar
                 return false;
             }
 
-            // 3. The computer setting does not change, nor the interface language (switching
-            //    language by loading a profile would be a surprise).
+            // 3. The computer settings (start with Windows, detailed log) do not change, nor the
+            //    interface language (switching language by loading a profile would be a surprise).
             newItems.StartWithWindows = currentValues.StartWithWindows;
+            newItems.DetailedLog = currentValues.DetailedLog;
             newItems.Language = currentValues.Language;
 
             // 4. Apply and save.

@@ -165,8 +165,7 @@ namespace GazeBar
             NativeMethods.SetCursorPos(dx, dy);
 
             MouseInjector.Press(_drag.Button);
-            App.Log("Drag: " + _drag.Name + ", button pressed at (" + dx + ", " + dy +
-                    "), modifiers: " + Modifiers.Description());
+            App.LogDetail("Drag: " + _drag.Name + ", button pressed, modifiers: " + Modifiers.Description());
         }
 
         /// <summary>5. DROP: button released, then modifiers, then back to movement mode.</summary>
@@ -176,7 +175,7 @@ namespace GazeBar
             Modifiers.ReleaseAll();
             _step = Step.Finished;
 
-            App.Log("Drag: dropped");
+            App.LogDetail("Drag: dropped");
 
             // Movement mode deactivates the modifiers and ignores a new fixation around the
             // drop point until the gaze has left it.

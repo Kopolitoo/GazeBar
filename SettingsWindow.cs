@@ -331,7 +331,7 @@ namespace GazeBar
             Setting setting = _editedSetting;
             _editedSetting = null;   // first, so that losing focus does not confirm the input
             RestoreDisplay(setting);
-            App.Log("Settings: input cancelled (" + setting.Key + ")");
+            App.LogDetail("Settings: input cancelled (" + setting.Key + ")");
             return true;
         }
 
@@ -845,7 +845,7 @@ namespace GazeBar
         private void SaveProfile()
         {
             ConfirmInput();
-            App.Log("Profiles: name page opened");
+            App.LogDetail("Profiles: name page opened");
             _naming = true;
             _nameText = SettingsProfiles.SuggestedName();
             _selectName = true;
@@ -983,7 +983,7 @@ namespace GazeBar
             }
             if (SettingsProfiles.Exists(name))
             {
-                App.Log("Profiles: name already used, asking before replacing");
+                App.LogDetail("Profiles: name already used, asking before replacing");
                 _nameToReplace = name;
                 Build();
                 return;
@@ -1021,7 +1021,7 @@ namespace GazeBar
         /// <summary>"Annuler": nothing is saved, back to the "Profils" tab.</summary>
         private void CancelNaming()
         {
-            App.Log("Profiles: save cancelled");
+            App.LogDetail("Profiles: save cancelled");
             EndNaming(null);
         }
 
@@ -1061,7 +1061,7 @@ namespace GazeBar
         /// <summary>"Non": back to the "Profils" tab, nothing changes.</summary>
         private void CancelProfile()
         {
-            App.Log("Profiles: load cancelled");
+            App.LogDetail("Profiles: load cancelled");
             _profileToConfirm = null;
             Build();
         }
@@ -1141,7 +1141,7 @@ namespace GazeBar
             List<int> tabs = SettingsCatalog.TabsOf(category);
             if (tabs.Count > 0)
             {
-                App.Log("Settings: category " + SettingsCatalog.Categories[category].Name);
+                App.LogDetail("Settings: category " + SettingsCatalog.Categories[category].Name);
                 ChooseTab(tabs[0]);
             }
         }
@@ -1188,7 +1188,7 @@ namespace GazeBar
             _confirmation = false;
             _profileToConfirm = null;
             _message = null;
-            App.Log("Settings: tab " + SettingsCatalog.Tabs[num].Name);
+            App.LogDetail("Settings: tab " + SettingsCatalog.Tabs[num].Name);
             Build();
         }
 
@@ -1327,7 +1327,7 @@ namespace GazeBar
             }
             else
             {
-                App.Log("Settings: unreadable input for " + setting.Key + ": \"" + text + "\"");
+                App.LogDetail("Settings: unreadable input for " + setting.Key);
             }
             RestoreDisplay(setting);
         }

@@ -105,7 +105,7 @@ namespace GazeBar
             _remainderY = 0;
             _lastMs = -1;
 
-            App.Log("Game mode: mouse " + AppSettings.Current.GameMouse +
+            App.LogDetail("Game mode: mouse " + AppSettings.Current.GameMouse +
                     (AppSettings.Current.RelativeMouse ? " (" + AppSettings.Current.GameRelative + ")" : ""));
         }
 

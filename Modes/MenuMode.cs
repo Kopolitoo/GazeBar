@@ -268,7 +268,7 @@ namespace GazeBar
         private void Activate(int num)
         {
             MenuAction action = _actions[num].Value;
-            App.Log("Menu: " + action);
+            App.LogDetail("Menu: " + action);
 
             switch (action)
             {

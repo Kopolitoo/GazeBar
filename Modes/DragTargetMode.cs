@@ -101,9 +101,8 @@ namespace GazeBar
             _smoothed.Place(gaze.XScreen, gaze.YScreen);
 
             BuildSurface();
-            App.Log("Drag: choosing the end point (" + _drag.Name + ", start at (" +
-                    _drag.StartX.ToString("F0") + ", " + _drag.StartY.ToString("F0") +
-                    "), modifiers: " + Modifiers.Description() + ")");
+            App.LogDetail("Drag: choosing the end point (" + _drag.Name +
+                    ", modifiers: " + Modifiers.Description() + ")");
         }
 
         public override void Update(GazeState gaze)
@@ -114,7 +113,7 @@ namespace GazeBar
             int active = _aimer.Update(gaze, p.ActivationDelay, p.ShowLabels);
             if (active >= 0)
             {
-                App.Log("Drag: cancelled (back)");
+                App.LogDetail("Drag: cancelled (back)");
                 Manager.ChangeMode(new MovementMode());
                 return;
             }
@@ -157,7 +156,7 @@ namespace GazeBar
 
             if (_fixation.Reached)
             {
-                App.Log("Drag: end point fixed, opening the magnifier");
+                App.LogDetail("Drag: end point fixed, opening the magnifier");
                 Manager.ChangeMode(new MagnifierMode(_fixation.X, _fixation.Y, _drag));
                 return;
             }

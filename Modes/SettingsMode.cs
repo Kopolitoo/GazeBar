@@ -264,7 +264,7 @@ namespace GazeBar
         /// <summary>"Configure icons" button: opens the icon configuration screen.</summary>
         private void OpenIconConfig()
         {
-            App.Log("Settings: icon configuration");
+            App.LogDetail("Settings: icon configuration");
             Manager.ChangeMode(new IconConfigMode());
         }
 
@@ -274,7 +274,7 @@ namespace GazeBar
         /// </summary>
         private void OpenMyWords()
         {
-            App.Log("Settings: my words");
+            App.LogDetail("Settings: my words");
             Manager.ChangeMode(new KeyboardListMode(KeyboardListMode.ListKind.MyWords));
         }
 
@@ -284,7 +284,7 @@ namespace GazeBar
         /// </summary>
         private void OpenProfileList()
         {
-            App.Log("Settings: profile list");
+            App.LogDetail("Settings: profile list");
             Manager.ChangeMode(new KeyboardListMode(KeyboardListMode.ListKind.Profiles));
         }
 
@@ -369,7 +369,7 @@ namespace GazeBar
             {
                 return;
             }
-            App.Log("Settings: calibration");
+            App.LogDetail("Settings: calibration");
             _window.Hide();
             IntPtr previousWindow = NativeMethods.GetForegroundWindow();
 
@@ -393,7 +393,7 @@ namespace GazeBar
         /// </summary>
         private void OpenDiagnostic()
         {
-            App.Log("Settings: diagnostic");
+            App.LogDetail("Settings: diagnostic");
             Manager.ChangeMode(new MovementMode());
             ((App)Application.Current).OpenDiagnostic();
         }
@@ -401,7 +401,7 @@ namespace GazeBar
         /// <summary>"Back" button: back to movement mode.</summary>
         private void Back()
         {
-            App.Log("Settings: back to movement mode");
+            App.LogDetail("Settings: back to movement mode");
             Manager.ChangeMode(new MovementMode());
         }
     }

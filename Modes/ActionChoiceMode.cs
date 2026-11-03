@@ -212,7 +212,7 @@ namespace GazeBar
         /// <summary>A button has just been activated.</summary>
         private void Activate(ChoiceAction action)
         {
-            App.Log("Action choice: " + action);
+            App.LogDetail("Action choice: " + action);
 
             if (action == ChoiceAction.Back)
             {
@@ -333,7 +333,7 @@ namespace GazeBar
             // ... and released just after. (Movement mode will then deactivate them.)
             Modifiers.ReleaseAll();
 
-            App.Log(_chosenAction + ", modifiers: " + modifiers);
+            App.LogDetail(_chosenAction + ", modifiers: " + modifiers);
 
             // Back to movement mode (user's choice). A new fixation at the same place is ignored
             // until the gaze has left it, as after a direct click.
@@ -466,7 +466,7 @@ namespace GazeBar
 
             layer.ShowChoiceScreen();
             _step = Step.Choice;
-            App.Log("Action choice: photo of " + side + " × " + side + " px at (" + ox + ", " + oy + ")");
+            App.LogDetail("Action choice: photo of " + side + " × " + side + " px");
             return true;
         }
 

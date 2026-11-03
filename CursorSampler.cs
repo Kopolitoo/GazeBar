@@ -42,6 +42,8 @@ namespace GazeBar
     /// How it works: a dedicated "thread" queries Windows about 500 to 1000 times per
     /// second. The user interface thread is not slowed down, and each position change is
     /// seen with its precise time.
+    /// It only runs while the Diagnostic window is open (step logging): that window creates it
+    /// and stops it.
     /// </summary>
     internal sealed class CursorSampler : IDisposable
     {

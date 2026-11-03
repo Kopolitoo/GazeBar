@@ -103,7 +103,7 @@ namespace GazeBar
             // The gaze is fixated: the cursor joins it now.
             PlaceCursor();
 
-            App.Log("Fixed gaze");
+            App.LogDetail("Fixed gaze");
         }
 
         public override void Update(GazeState gaze)
@@ -224,7 +224,7 @@ namespace GazeBar
             PlaceCursor();
             MouseInjector.Press(MouseSide.Left);
             MouseInjector.Release(MouseSide.Left);
-            App.Log("Direct click");
+            App.LogDetail("Direct click");
             ReturnToMovement(true);
         }
 
