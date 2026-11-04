@@ -54,7 +54,7 @@ l'explication de la classe.
 | `Platform` | appels à Windows : `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess` |
 | `Languages`, `Keyboards`, `Dictionaries` | fichiers de données copiés à côté de `GazeBar.exe` (textes, dispositions de clavier, dictionnaires de prédiction) |
 | `Resources` | l'icône du programme |
-| `Install` | scripts de l'installation complète (accès à l'interface) : `Install.cmd`, `install.ps1`, `Uninstall.cmd`, `uninstall.ps1`, `common.ps1` |
+| `Install` | l'installation complète (accès à l'interface) : installateur `GazeBar.iss` (Inno Setup) et `setup-certificate.ps1` ; scripts `Install.cmd`, `install.ps1`, `Uninstall.cmd`, `uninstall.ps1` ; `common.ps1` commun à tous |
 
 ## DLL de l'eyetracker
 
@@ -290,6 +290,14 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   l'ordinateur de l'utilisateur (sa clé privée supprimée aussitôt) et ajoutent un raccourci au menu
   Démarrer ; `make-full-install.ps1` (`.github/scripts`) réunit la version et les scripts pour
   l'artefact de la compilation automatique et la release.
+- Installateur (étape `installer`) : `Install/GazeBar.iss` fabrique `GazeBar-<version>-setup.exe`
+  avec [Inno Setup](https://jrsoftware.org/isinfo.php) 6, un outil de compilation seulement
+  (`make-setup.ps1` l'installe sur la machine de GitHub si besoin). L'installateur fait comme
+  `Install.cmd` (Program Files, menu Démarrer, signature par `setup-certificate.ps1` et les
+  fonctions de `common.ps1`) et ajoute GazeBar à « Paramètres > Applications » de Windows ; son
+  programme de désinstallation retire le certificat et l'entrée « Démarrer avec Windows ». Ses
+  textes sont dans le fichier `.iss` (français ou anglais, selon la langue de Windows), pas dans
+  `Languages/`, car GazeBar ne tourne pas à ce moment-là.
 
 ## Fichier des réglages
 

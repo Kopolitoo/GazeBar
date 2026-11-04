@@ -140,6 +140,23 @@ installation.
    `%APPDATA%\GazeBar`.
 6. The simple zip and Visual Studio still work as before, with "UI access: no" in the log.
 
+## Installer (Setup.exe)
+
+Use the `GazeBar-setup-…` zip of the automatic build (Actions page of the pull request,
+"Artifacts"). Keep another way to click (voice, mouse) during the installation.
+
+1. Unzip it and double-click `GazeBar-…-setup.exe`. Windows may say "unknown publisher" ("More
+   info", "Run anyway"), then asks "Yes" for administrator. The installer speaks the language of
+   Windows; click "Install", then "Finish" with "Launch GazeBar" ticked: GazeBar starts, the log
+   says "UI access: yes", and the circle stays above the Start menu.
+2. `C:\Program Files\GazeBar` exists, GazeBar is in the Start menu and in "Settings > Apps"
+   of Windows.
+3. Run the installer again (update): no question about closing GazeBar (it is closed), same
+   result, settings unchanged. Also works over a copy installed by `Install.cmd`.
+4. Uninstall it from "Settings > Apps": the folder, the shortcut and the certificate "GazeBar
+   local signature" (`certlm.msc`, "Trusted Root Certification Authorities") are gone; the
+   settings are still in `%APPDATA%\GazeBar`.
+
 ## Before publishing a version
 
 Download the zip of the draft release and unzip it in a new folder (not the Visual Studio

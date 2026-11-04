@@ -33,6 +33,14 @@ Images d'abord créées avec ChatGPT (OpenAI), puis retouchées par l'auteur du 
 Photocraft. Les conditions d'utilisation d'OpenAI donnent les droits sur les images créées à la
 personne qui les a demandées ; l'icône et le logo sont distribués sous licence MIT comme le reste du projet.
 
+### Inno Setup (installateur seulement)
+
+- L'installateur `GazeBar-x.y.z-setup.exe` et son programme de désinstallation sont fabriqués avec
+  [Inno Setup](https://jrsoftware.org/isinfo.php) 6, © Jordan Russell et Martijn Laan, et
+  contiennent son code.
+- Licence : [Inno Setup License](https://jrsoftware.org/files/is/license.txt) (gratuite, y compris
+  pour distribuer les installateurs qu'il fabrique).
+
 ## Utilisé mais pas livré
 
 ### Tobii.Interaction (bibliothèque de l'eyetracker)

@@ -26,8 +26,10 @@ foreach ($file in 'LICENSE.txt', 'THIRD-PARTY-NOTICES.md', 'THIRD-PARTY-NOTICES.
     Copy-Item (Join-Path $root $file) $program
 }
 
-# The installation scripts, next to the GazeBar folder.
-Copy-Item (Join-Path $root 'Install\*') $Destination
+# The installation scripts, next to the GazeBar folder (not the files of the Setup.exe installer).
+foreach ($file in 'Install.cmd', 'Uninstall.cmd', 'install.ps1', 'uninstall.ps1', 'common.ps1') {
+    Copy-Item (Join-Path $root "Install\$file") $Destination
+}
 
 # The program must ask for UI access, otherwise the installation would be useless.
 & (Join-Path $PSScriptRoot 'check-exe-manifest.ps1') (Join-Path $program 'GazeBar.exe') true
