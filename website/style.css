@@ -1,0 +1,373 @@
+/* GazeBar website: one shared style sheet for the French and English pages.
+   Large text, large buttons and strong contrast, because visitors may use
+   an eyetracker, a head mouse or a screen magnifier. */
+
+:root {
+  --text: #0d1b3e;
+  --text-soft: #3a4766;
+  --background: #ffffff;
+  --band: #f2f5fb;
+  --line: #d5dcea;
+  --blue: #1557d6;
+  --blue-dark: #0e3f9e;
+  --focus: #ff7a00;
+  --gradient: linear-gradient(90deg, #00b4ff, #3b5bff 30%, #c13cff 60%, #ff3d7f 80%, #ff8a00);
+  --radius: 18px;
+  --max: 1080px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 125%; /* 20 px for most browsers */
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--blue);
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--blue-dark);
+}
+
+:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Hidden until focused with the keyboard. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  padding: 0.6rem 1rem;
+  background: var(--text);
+  color: #fff;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  color: #fff;
+}
+
+/* ---------- Top bar ---------- */
+
+.top {
+  border-bottom: 1px solid var(--line);
+}
+
+.top::before {
+  content: "";
+  display: block;
+  height: 6px;
+  background: var(--gradient);
+}
+
+.top .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 84px;
+}
+
+.top-name {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.top-name img {
+  width: 52px;
+  height: 52px;
+}
+
+/* Big target for the language switch: easy to reach with the eyes. */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  min-width: 140px;
+  padding: 0.4rem 1.2rem;
+  border: 2px solid var(--blue);
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lang-switch:hover {
+  background: var(--blue);
+  color: #fff;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  padding: 2.5rem 0 3rem;
+  text-align: center;
+}
+
+.hero-logo {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto 1.5rem;
+}
+
+.hero h1 {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1.25;
+  margin: 0 auto 1rem;
+  max-width: 24em;
+}
+
+.hero .lead {
+  font-size: 1.15rem;
+  color: var(--text-soft);
+  max-width: 36em;
+  margin: 0 auto 2rem;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.2rem;
+}
+
+/* Buttons are at least 72 px tall, with space around them. */
+.button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  min-width: 260px;
+  padding: 0.7rem 2rem;
+  border-radius: var(--radius);
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-decoration: none;
+  line-height: 1.3;
+}
+
+.button small {
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.button-main {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(21, 87, 214, 0.3);
+}
+
+.button-main:hover {
+  background: var(--blue-dark);
+  color: #fff;
+}
+
+.button-second {
+  border: 2px solid var(--blue);
+  color: var(--blue);
+  background: #fff;
+}
+
+.button-second:hover {
+  background: var(--band);
+}
+
+/* ---------- Sections ---------- */
+
+section {
+  padding: 3rem 0;
+}
+
+section.band {
+  background: var(--band);
+}
+
+h2 {
+  font-size: 1.7rem;
+  line-height: 1.3;
+  margin: 0 0 1.5rem;
+}
+
+h2::after {
+  content: "";
+  display: block;
+  width: 90px;
+  height: 6px;
+  margin-top: 0.5rem;
+  border-radius: 3px;
+  background: var(--gradient);
+}
+
+h3 {
+  font-size: 1.2rem;
+  margin: 0 0 0.4rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+.text {
+  max-width: 40em;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.2rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.4rem;
+}
+
+.card p {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.card-icon {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 0.6rem;
+}
+
+/* The story is told as a quote, to show it is a person speaking. */
+.story {
+  border-left: 8px solid transparent;
+  border-image: var(--gradient) 1;
+  padding: 0.2rem 0 0.2rem 1.4rem;
+  max-width: 40em;
+}
+
+/* Screenshots: an empty frame waits until real pictures are added. */
+.shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.2rem;
+  margin: 0;
+}
+
+.shots figure {
+  margin: 0;
+}
+
+.shot-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  border: 3px dashed var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--text-soft);
+  text-align: center;
+  padding: 1rem;
+}
+
+.shots figcaption {
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+.steps {
+  max-width: 40em;
+  padding-left: 1.4rem;
+}
+
+.steps li {
+  margin-bottom: 0.8rem;
+  padding-left: 0.3rem;
+}
+
+.notice {
+  max-width: 40em;
+  background: #fff6e8;
+  border: 2px solid #f0b75e;
+  border-radius: var(--radius);
+  padding: 1.2rem 1.4rem;
+}
+
+.notice p:last-child {
+  margin: 0;
+}
+
+/* ---------- Footer ---------- */
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 2rem 0 3rem;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+footer p {
+  max-width: 48em;
+}
+
+@media (max-width: 600px) {
+  html {
+    font-size: 112.5%; /* 18 px on phones */
+  }
+
+  .top-name span {
+    display: none;
+  }
+
+  .button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  section {
+    padding: 2.2rem 0;
+  }
+}
