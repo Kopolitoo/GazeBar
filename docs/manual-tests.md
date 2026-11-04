@@ -120,3 +120,13 @@ profile, and the file appears in `Documents\GazeBar\Profiles`. Change the circle
 radius (Display). Profiles, "Load a profile": the list shows the profile; look at it: "Load the
 profile …?"; "No" changes nothing; "Yes" restores the old radius and creates "Automatic backup".
 Loading "Automatic backup" restores the changed radius.
+
+## 15. Mouse as gaze (developer mode)
+
+Start GazeBar with `--mouse` (Visual Studio profile "GazeBar (mouse as gaze)"). The log says
+"Gaze: mouse as gaze (developer mode)". The gaze circle follows the mouse; the cursor goes to
+it and does not fight the hand. Mouse still on an icon: fixed gaze then the action choice open
+as with the gaze. Move the mouse down past the bottom edge: the menu opens. Diagnostic window:
+about 30 measures per second. Settings, Tools, "Calibration": a message says the eyetracker is
+not connected. Started without `--mouse`: the eyetracker works as before.
+

@@ -44,8 +44,8 @@ l'explication de la classe.
 
 | Dossier | Contenu |
 |---|---|
-| (racine) | `App.xaml` (point d'entrée : lit les réglages, ouvre la surcouche et le gestionnaire de modes), `GazeBar.csproj`, `app.manifest` |
-| `Gaze` | lecture du regard et traitement : `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
+| (racine) | `App.xaml` (point d'entrée : lit les réglages, ouvre la surcouche et le gestionnaire de modes), `GazeBar.csproj`, `app.manifest`, `Properties/launchSettings.json` (profils de lancement de Visual Studio) |
+| `Gaze` | lecture du regard et traitement : `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `MouseGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
 | `Modes` | une classe par mode, et `ModeManager` |
 | `Actions` | ce que propose le choix d'action : `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
 | `Typing` | le clavier au regard et la prédiction de mots : `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
@@ -325,6 +325,25 @@ la langue d'une nouvelle installation, et un texte absent de la langue choisie e
 garde le français. Le bouton « Langue » (onglet Général) passe à la langue suivante du dossier
 et redessine la page tout de suite ; le choix est le réglage `Language` (`settings.json` version 12).
 Pour ajouter une langue : copier `en.json` en `xx.json`, traduire les valeurs (jamais les clés).
+
+## La souris comme regard (mode développeur)
+
+Lancé avec l'option `--mouse` (Visual Studio : profil de lancement « GazeBar (mouse as gaze) »
+dans `Properties/launchSettings.json`), GazeBar utilise `MouseGazeSource` au lieu de
+`EyetrackerGazeSource` : la souris physique joue le rôle du regard, pour tester sans eyetracker.
+
+- GazeBar déplace lui-même le curseur : la source ne lit donc pas la position du curseur. Elle
+  garde un point de « regard virtuel » déplacé par les mouvements bruts de la vraie souris
+  (Raw Input de Windows, messages `WM_INPUT` envoyés à une fenêtre invisible « message only »).
+  Les mouvements injectés par un programme (le `SendInput` de GazeBar) n'ont pas de périphérique
+  et sont ignorés.
+- Le point peut sortir de l'écran de 15 % de la hauteur de l'écran : descendre la souris sous le
+  bord du bas ouvre le menu, comme avec le regard.
+- Un minuteur envoie le point environ 30 fois par seconde même quand la souris ne bouge pas : une
+  souris immobile est une fixation. La perte du regard ne peut pas être simulée.
+- Le mouvement utilise les comptes bruts de la souris : la vitesse du pointeur de Windows ne
+  s'applique pas.
+- La calibration ne marche qu'avec l'eyetracker. Rien n'est enregistré, comme pour le vrai regard.
 
 ## Journal et diagnostic
 

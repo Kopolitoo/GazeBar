@@ -41,8 +41,8 @@ The three biggest classes are "partial" classes: one class written in several fi
 
 | Folder | Contents |
 |---|---|
-| (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `GazeBar.csproj`, `app.manifest` |
-| `Gaze` | reading the gaze and processing it: `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
+| (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `GazeBar.csproj`, `app.manifest`, `Properties/launchSettings.json` (Visual Studio launch profiles) |
+| `Gaze` | reading the gaze and processing it: `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `MouseGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
 | `Modes` | one class per mode, and `ModeManager` |
 | `Actions` | what the action choice offers: `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
 | `Typing` | the gaze keyboard and word prediction: `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
@@ -314,6 +314,23 @@ missing key is noted in the log); an older settings file (before version 12) kee
 at once; the choice is the `Language` setting (`settings.json` version 12). It also chooses the
 word prediction dictionary (see "English keyboard" below).
 To add a language: copy `en.json` to `xx.json` and translate the values (never the keys).
+
+## Mouse as gaze (developer mode)
+
+Started with the `--mouse` option (Visual Studio: launch profile "GazeBar (mouse as gaze)" in
+`Properties/launchSettings.json`), GazeBar uses `MouseGazeSource` instead of
+`EyetrackerGazeSource`: the physical mouse plays the gaze, to test without an eyetracker.
+
+- GazeBar moves the cursor itself, so the source does not read the cursor position: it keeps a
+  "virtual gaze" point moved by the raw movements of the real mouse (Windows Raw Input,
+  `WM_INPUT` messages sent to an invisible message-only window). Movements injected by a program
+  (GazeBar's own `SendInput`) have no device and are ignored.
+- The point can go outside the screen by 15 % of the screen height: moving the mouse down past
+  the bottom edge opens the menu, as with the gaze.
+- A timer sends the point about 30 times per second even when the mouse is still: a still mouse
+  is a fixation. Gaze loss cannot be simulated.
+- The movement uses the raw mouse counts: the Windows pointer speed does not apply.
+- Calibration only works with the eyetracker. Nothing is saved, as for the real gaze.
 
 ## Log and diagnostic
 

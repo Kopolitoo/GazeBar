@@ -129,3 +129,14 @@ message donne le nom du profil, et le fichier apparaît dans `Documents\GazeBar\
 change le rayon du cercle (Affichage). Profils, « Charger un profil » : la liste montre le profil ;
 on le regarde : « Charger le profil … ? » ; « Non » ne change rien ; « Oui » remet l'ancien rayon et
 crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet le rayon modifié.
+
+## 15. La souris comme regard (mode développeur)
+
+Lancer GazeBar avec `--mouse` (profil Visual Studio « GazeBar (mouse as gaze) »). Le journal
+indique « Gaze: mouse as gaze (developer mode) ». Le cercle du regard suit la souris ; le curseur
+le rejoint et ne se bat pas avec la main. Souris immobile sur une icône : le regard fixe puis le
+choix d'action s'ouvrent comme avec le regard. Descendre la souris sous le bord du bas : le menu
+s'ouvre. Fenêtre Diagnostic : environ 30 mesures par seconde. Paramètres, Outils,
+« Calibration » : un message dit que l'eyetracker n'est pas connecté. Lancé sans `--mouse` :
+l'eyetracker marche comme avant.
+

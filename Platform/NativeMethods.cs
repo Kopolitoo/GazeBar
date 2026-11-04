@@ -474,5 +474,39 @@ namespace GazeBar
         /// </summary>
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern IntPtr LoadLibrary(string dllPath);
+
+        // ───────────────────────── Raw mouse movements (mouse as gaze) ─────────────────────────
+
+        internal const int WM_INPUT = 0x00FF;
+        internal const uint RID_INPUT = 0x10000003;
+        internal const uint RIM_TYPEMOUSE = 0;
+        internal const uint RIDEV_INPUTSINK = 0x00000100;
+        internal const ushort MOUSE_MOVE_ABSOLUTE = 0x01;
+
+        /// <summary>
+        /// Which device to listen to (Windows RAWINPUTDEVICE structure). Usage page 1, usage 2 =
+        /// "a mouse". RIDEV_INPUTSINK: the messages arrive even when GazeBar is not the active
+        /// window.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct RAWINPUTDEVICE
+        {
+            public ushort UsagePage;
+            public ushort Usage;
+            public uint Flags;
+            public IntPtr TargetWindow;
+        }
+
+        /// <summary>Asks Windows to send the raw movements of a device (WM_INPUT messages) to a window.</summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool RegisterRawInputDevices(RAWINPUTDEVICE[] devices, uint count, uint size);
+
+        /// <summary>
+        /// Reads the content of a WM_INPUT message. With data = IntPtr.Zero, only gives the size
+        /// needed.
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern uint GetRawInputData(IntPtr rawInput, uint command, IntPtr data, ref uint size, uint headerSize);
     }
 }

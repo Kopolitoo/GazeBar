@@ -55,3 +55,9 @@ GazeBar is tested by its user on a Tobii PCEye 5. Please say clearly in your pul
 what was compiled and what was tested on real hardware, using the
 [manual tests](docs/manual-tests.md). Every pull request is compiled automatically on GitHub
 (see `.github/workflows/build.yml`).
+
+Without an eyetracker, start GazeBar with the `--mouse` option (in Visual Studio, choose the
+launch profile "GazeBar (mouse as gaze)"): the mouse then plays the gaze. Keep the mouse still
+to fixate, move it below the bottom of the screen to open the menu. This checks the modes and
+the screens, not the feel of a real gaze: say in the pull request if you only tested this way.
+See [architecture](docs/architecture.md#mouse-as-gaze-developer-mode).
