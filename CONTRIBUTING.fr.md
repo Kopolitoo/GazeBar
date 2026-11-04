@@ -19,6 +19,14 @@ Commencez par l'[architecture](docs/architecture.fr.md) pour vous repérer dans 
 - L'auteur du projet en discute en français ; les issues et les pull requests peuvent être
   écrites en anglais ou en français.
 
+## Issues et pull requests
+
+- Pour signaler un problème ou proposer une idée, ouvrez une issue : GitHub propose deux
+  formulaires, « Problème » et « Idée » (`.github/ISSUE_TEMPLATE/`).
+- Une nouvelle pull request commence par une petite liste à cocher
+  (`.github/pull_request_template.md`). Écrivez-y `Closes #12` pour fermer l'issue 12
+  automatiquement quand la pull request est fusionnée.
+
 ## Règles techniques
 
 - WPF sur .NET Framework 4.8, en x86 uniquement (les bibliothèques de l'eyetracker sont en
