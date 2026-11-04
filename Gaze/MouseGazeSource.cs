@@ -62,8 +62,8 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Installs the mouse hook, opens the invisible window, asks Windows for the raw mouse movements and starts the
-        /// timer. Must be called on the UI thread.
+        /// Installs the mouse hook, opens the invisible window, asks Windows for the raw mouse
+        /// movements and starts the timer. Must be called on the UI thread.
         /// </summary>
         public override void Start()
         {
