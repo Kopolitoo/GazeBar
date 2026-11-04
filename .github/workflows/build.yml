@@ -42,15 +42,18 @@ jobs:
         shell: pwsh
         run: ./.github/scripts/check-manifests.ps1
 
+      - name: Check the installation scripts
+        shell: powershell
+        run: ./.github/scripts/check-install-scripts.ps1
+
       # First the "full installation" build, with UI access (UiAccess=true, see
-      # GazeBar.csproj), only to check that it compiles and asks for UI access. It is not kept:
-      # unsigned, it would not start. Its own folders (bin/uiaccess, obj/uiaccess), apart from the normal build.
+      # GazeBar.csproj), in its own folders (bin/uiaccess, obj/uiaccess), apart from the normal build.
       - name: Compile the full installation build (UI access)
         run: dotnet build GazeBar.csproj --configuration Release -p:UiAccess=true -p:OutDir=${{ github.workspace }}/bin/uiaccess/ -p:IntermediateOutputPath=obj/uiaccess/
 
-      - name: Check that the full installation build asks for UI access
+      - name: Make the full installation folder
         shell: pwsh
-        run: ./.github/scripts/check-exe-manifest.ps1 bin/uiaccess/GazeBar.exe true
+        run: ./.github/scripts/make-full-install.ps1 bin/uiaccess bin/full-install
 
       - name: Compile GazeBar (Release, x86)
         run: dotnet build GazeBar.csproj --configuration Release
@@ -76,4 +79,13 @@ jobs:
         with:
           name: GazeBar-${{ github.sha }}
           path: bin/Release/net48/
+          retention-days: 14
+
+      # The full installation, to test it before a release: extract the downloaded zip, then
+      # double-click Install.cmd (see docs/user-guide.md, "Full installation").
+      - name: Keep the full installation
+        uses: actions/upload-artifact@v4
+        with:
+          name: GazeBar-full-install-${{ github.sha }}
+          path: bin/full-install/
           retention-days: 14

@@ -2,8 +2,9 @@
 #
 # Started by hand: "Actions" tab > "Release" > "Run workflow", type the version number
 # (for example 0.1.0). GitHub then compiles GazeBar on a Windows machine, checks that no
-# eyetracker DLL and no personal file is inside, makes GazeBar-0.1.0.zip and prepares a DRAFT
-# release with this zip. Nothing is public yet: open the "Releases" page, read the draft and
+# eyetracker DLL and no personal file is inside, makes GazeBar-0.1.0.zip (simple: unzip and
+# start) and GazeBar-0.1.0-full-install.zip (with UI access, installed by Install.cmd) and
+# prepares a DRAFT release with these two zips. Nothing is public yet: open the "Releases" page, read the draft and
 # click "Publish release". The tag v0.1.0 is created at that moment.
 # See CONTRIBUTING.md, "Publishing a version".
 
@@ -69,6 +70,11 @@ jobs:
       - name: Compile GazeBar (Release, x86)
         run: dotnet build GazeBar.csproj --configuration Release -p:Version=${{ env.VERSION }} -p:IncludeSourceRevisionInInformationalVersion=false
 
+      # The "full installation" build, with UI access (see Platform/UiAccess.cs), in its own
+      # folders. It ships in a second zip with the installation scripts (Install folder).
+      - name: Compile the full installation build (UI access)
+        run: dotnet build GazeBar.csproj --configuration Release -p:UiAccess=true -p:OutDir=${{ github.workspace }}/bin/uiaccess/ -p:IntermediateOutputPath=obj/uiaccess/ -p:Version=${{ env.VERSION }} -p:IncludeSourceRevisionInInformationalVersion=false
+
       - name: Make the folder to ship
         shell: pwsh
         run: |
@@ -79,6 +85,10 @@ jobs:
           Copy-Item bin/Release/net48/* $folder -Recurse -Exclude '*.pdb'
           # The licences and the short presentation.
           Copy-Item LICENSE.txt, THIRD-PARTY-NOTICES.md, THIRD-PARTY-NOTICES.fr.md, README.md, README.fr.md $folder
+
+      - name: Make the full installation folder
+        shell: pwsh
+        run: ./.github/scripts/make-full-install.ps1 bin/uiaccess "release/GazeBar-$env:VERSION-full-install"
 
       # Same rules as the repository: the eyetracker DLLs belong to Tobii AB, and personal
       # files (personal dictionary, settings, profiles, log, gaze positions) never ship.
@@ -96,14 +106,16 @@ jobs:
 
       - name: Make the zip
         shell: pwsh
-        run: Compress-Archive -Path "release/GazeBar-$env:VERSION" -DestinationPath "release/GazeBar-$env:VERSION.zip"
+        run: |
+          Compress-Archive -Path "release/GazeBar-$env:VERSION" -DestinationPath "release/GazeBar-$env:VERSION.zip"
+          Compress-Archive -Path "release/GazeBar-$env:VERSION-full-install" -DestinationPath "release/GazeBar-$env:VERSION-full-install.zip"
 
       # The draft lists the pull requests merged since the previous version (--generate-notes).
       # The tag v<version> is created on this commit when the draft is published.
       - name: Prepare the draft release
         shell: pwsh
         run: |
-          gh release create "v$env:VERSION" "release/GazeBar-$env:VERSION.zip" `
+          gh release create "v$env:VERSION" "release/GazeBar-$env:VERSION.zip" "release/GazeBar-$env:VERSION-full-install.zip" `
             --draft `
             --target "${{ github.sha }}" `
             --title "GazeBar $env:VERSION" `

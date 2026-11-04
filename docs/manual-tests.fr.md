@@ -130,6 +130,25 @@ change le rayon du cercle (Affichage). Profils, « Charger un profil » : la lis
 on le regarde : « Charger le profil … ? » ; « Non » ne change rien ; « Oui » remet l'ancien rayon et
 crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet le rayon modifié.
 
+## Installation complète (accès à l'interface)
+
+Prendre le zip `GazeBar-full-install-…` de la compilation automatique (page Actions de la pull
+request, « Artifacts ») ou d'un brouillon de release. Garder un autre moyen de cliquer (voix,
+souris) pendant l'installation.
+
+1. Le décompresser, double-cliquer sur `Install.cmd`, répondre « Oui » : la fenêtre bleue finit
+   par « GazeBar est installé », puis GazeBar démarre. `C:\Program Files\GazeBar` existe,
+   GazeBar est dans le menu Démarrer, et le journal dit « UI access: yes ».
+2. Ouvrir le menu Démarrer de Windows : le cercle du regard reste visible au-dessus, et un regard
+   fixe puis un clic gauche ouvre un élément du menu.
+3. Lancer le Bloc-notes en administrateur (clic droit, « Exécuter en tant qu'administrateur ») :
+   un clic au regard y met le curseur de texte, et le clavier du regard y écrit.
+4. Relancer `Install.cmd` (mise à jour) : même résultat, réglages inchangés.
+5. Lancer `Uninstall.cmd` : le dossier, le raccourci et le certificat « GazeBar local signature »
+   (`certlm.msc`, « Autorités de certification racines de confiance ») ont disparu ; les réglages
+   sont toujours dans `%APPDATA%\GazeBar`.
+6. Le zip simple et Visual Studio marchent comme avant, avec « UI access: no » dans le journal.
+
 ## Avant de publier une version
 
 Télécharger le zip du brouillon de release et le décompresser dans un nouveau dossier (pas le
@@ -137,4 +156,5 @@ dossier de Visual Studio). Il contient `GazeBar.exe`, les dossiers `Languages`, 
 `Dictionaries`, les licences, et aucun `Tobii.*.dll`. Lancer `GazeBar.exe` (Windows peut demander
 « Exécuter quand même ») : le regard fonctionne, le clavier du regard propose des mots, et les
 premières lignes de `%LOCALAPPDATA%\GazeBar\gazebar.log` disent « GazeBar 0.1.0 starting » (le
-numéro de la version).
+numéro de la version). Le brouillon contient aussi `GazeBar-0.1.0-full-install.zip` : faire avec
+lui le test « Installation complète » ci-dessus.

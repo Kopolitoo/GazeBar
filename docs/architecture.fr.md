@@ -54,6 +54,7 @@ l'explication de la classe.
 | `Platform` | appels à Windows : `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess` |
 | `Languages`, `Keyboards`, `Dictionaries` | fichiers de données copiés à côté de `GazeBar.exe` (textes, dispositions de clavier, dictionnaires de prédiction) |
 | `Resources` | l'icône du programme |
+| `Install` | scripts de l'installation complète (accès à l'interface) : `Install.cmd`, `install.ps1`, `Uninstall.cmd`, `uninstall.ps1`, `common.ps1` |
 
 ## DLL de l'eyetracker
 
@@ -284,7 +285,11 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   lance un tel programme que s'il est signé par un certificat approuvé et installé dans
   `C:\Program Files` : Visual Studio et le .zip simple gardent donc `app.manifest`. La
   compilation automatique vérifie que les deux manifestes ne diffèrent que par `uiAccess`.
-  `UiAccess.IsActive()` écrit « UI access: yes » ou « no » dans le journal au démarrage.
+  `UiAccess.IsActive()` écrit « UI access: yes » ou « no » dans le journal au démarrage. Les scripts du dossier `Install`
+  copient cette version dans `C:\Program Files\GazeBar`, la signent avec un certificat créé sur
+  l'ordinateur de l'utilisateur (sa clé privée supprimée aussitôt) et ajoutent un raccourci au menu
+  Démarrer ; `make-full-install.ps1` (`.github/scripts`) réunit la version et les scripts pour
+  l'artefact de la compilation automatique et la release.
 
 ## Fichier des réglages
 
