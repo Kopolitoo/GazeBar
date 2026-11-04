@@ -6,7 +6,8 @@
 [CONTRIBUTING.md](../CONTRIBUTING.md).*
 
 The "step N" and step names below refer to the roadmap of the specification (the order in
-which features were added). They help to find the matching pull request in the history.
+which features were added). They help to find the matching pull request in the history. The
+code comments do not use them: they describe the code as it is now.
 
 ## How it works
 

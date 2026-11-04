@@ -11,13 +11,13 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// MODEL: simulates pressing and releasing the mouse buttons, and (since step 6) moving
+    /// MODEL: simulates pressing and releasing the mouse buttons, and moving
     /// the cursor during a drag and drop.
     ///
     /// Clicks happen where the cursor already is (the modes place it beforehand with
     /// SetCursorPos).
     ///
-    /// For drag and drop (step 6), the cursor is moved by MoveTo, which goes through
+    /// For drag and drop, the cursor is moved by MoveTo, which goes through
     /// SendInput like a real mouse: applications then receive the same "the mouse moves"
     /// messages as with a physical mouse, which is needed for Explorer or Paint to
     /// recognize a drag.
@@ -117,7 +117,7 @@ namespace GazeBar
 
         /// <summary>
         /// Moves the cursor to the point (x, y), in screen pixels, as a real mouse would
-        /// (step 6, drag and drop).
+        /// (drag and drop).
         ///
         /// With MOUSEEVENTF_ABSOLUTE, Windows does not expect pixels but a position between 0
         /// and 65535 on each axis (0 = left or top edge, 65535 = right or bottom edge of the
@@ -127,7 +127,7 @@ namespace GazeBar
         /// </summary>
         public static void MoveTo(double x, double y)
         {
-            // Size measured by ScreenMetrics (the real resolution, even after a change, step 11).
+            // Size measured by ScreenMetrics (the real resolution, even after a change).
             double width = ScreenMetrics.WidthPixels;
             double height = ScreenMetrics.HeightPixels;
             if (width < 2 || height < 2)
@@ -145,7 +145,7 @@ namespace GazeBar
 
         /// <summary>
         /// Moves the cursor by (dx, dy) pixels from its current position, like a real mouse
-        /// being pushed (step 9, "relative" game mode).
+        /// being pushed ("relative" game mode).
         ///
         /// Without MOUSEEVENTF_ABSOLUTE, dx and dy are an OFFSET and not a position. This is
         /// what games read as "raw input". For other software, Windows may apply mouse
@@ -168,7 +168,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// A wheel movement (step 8, scroll mode), where the cursor is.
+        /// A wheel movement (scroll mode), where the cursor is.
         ///
         /// amount: in Windows "wheel units". One notch of a real wheel is 120 (WHEEL_DELTA);
         /// less can be sent (scroll mode sends from 8 units, see ScrollMode.MinStep) for a

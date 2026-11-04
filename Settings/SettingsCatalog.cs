@@ -5,15 +5,15 @@ using System.Globalization;
 namespace GazeBar
 {
     /// <summary>
-    /// A setting as it is SHOWN in settings mode (step 7): its displayed name, an explanation
+    /// A setting as it is SHOWN in settings mode: its displayed name, an explanation
     /// sentence, its unit, the step of the "−" and "+" buttons, and the way to read and write
     /// it in AppSettings.
     ///
     /// Two kinds of settings:
     ///   - a NUMBER (Smoothing, FixationDelay...): "−" button, value, "+" button;
     ///   - a YES / NO (DirectClick, MouseTracking...): a rounded SWITCH, like Bootstrap's
-    ///     (2026-11-02, replaces the two "No" and "Yes" buttons).
-    ///     Variant (step 9): a choice between two words, for example "direct" or "relative"
+    ///     (replaces the two "No" and "Yes" buttons).
+    ///     Variant: a choice between two words, for example "direct" or "relative"
     ///     for GameMouse. There, a switch would not say what each side means: the two
     ///     buttons are kept, one per word (see TwoChoices).
     ///
@@ -29,8 +29,8 @@ namespace GazeBar
     internal sealed class Setting
     {
         /// <summary>
-        /// Numbers are shown with a POINT (0.16), as in settings.json (user request of
-        /// 2026-10-26). CultureInfo.InvariantCulture is the "neutral" .NET formatting, which
+        /// Numbers are shown with a POINT (0.16), as in settings.json.
+        /// CultureInfo.InvariantCulture is the "neutral" .NET formatting, which
         /// uses the point.
         /// </summary>
         private static readonly CultureInfo Format = CultureInfo.InvariantCulture;
@@ -127,12 +127,12 @@ namespace GazeBar
                                        Action<AppSettings> after = null)
         {
             Setting r = TwoChoices(key, "common.no", "common.yes", read, write, after);
-            r.Switch = true;   // shown as a switch (2026-11-02)
+            r.Switch = true;   // shown as a switch
             return r;
         }
 
         /// <summary>
-        /// Creates a choice between two words (step 9). The setting is stored like a yes / no:
+        /// Creates a choice between two words. The setting is stored like a yes / no:
         /// "false" = wrongKey (left button), "true" = rightKey (right button). The words are
         /// keys of the language files.
         /// Example: TwoChoices("setting.relativeMouse", "setting.relativeMouse.left",
@@ -264,9 +264,9 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// A CATEGORY of the left column of the settings (user request of 2026-11-02: "fewer
+    /// A CATEGORY of the left column of the settings (user request: "fewer
     /// buttons on the left"). A category groups a few tabs; only the open category shows its
-    /// tabs, below it and indented ("collapsible categories", user's choice of 2026-11-02).
+    /// tabs, below it and indented ("collapsible categories", user's choice).
     /// </summary>
     internal sealed class SettingsCategory
     {
@@ -294,38 +294,34 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// THE LIST OF TABS AND SETTINGS of settings mode (step 7).
+    /// THE LIST OF TABS AND SETTINGS of settings mode.
     ///
-    /// Since 2026-11-02, the display order on the left is the one of the CATEGORIES (see
+    /// The display order on the left is the one of the CATEGORIES (see
     /// "Categories" below): the "Tabs" list is only used to find a tab by its index. The first
     /// tab of the list ("Regard") is the one that opens by default.
     ///
-    /// Step 11: the sizes (anti-jitter, fixation radius, max speed, circle radius, icon size)
+    /// The sizes (anti-jitter, fixation radius, max speed, circle radius, icon size)
     /// are in % OF THE SCREEN HEIGHT (see ScreenMetrics.cs), and the "Display" tab gets
     /// "Interface size".
     ///
-    /// Grouping validated by the user on 2026-10-26 (six tabs; "Scroll" added in step 8,
-    /// "Game" in step 9).
+    /// Grouping validated by the user.
     ///
     /// To add a setting later: add it to AppSettings.cs (with its default value and its limits
     /// in Fix), then here, in the wanted tab (five at most per tab, so that nothing scrolls).
-    /// The "Scroll" tab was added in step 8, the "Game" tab in step 9, the "Icons" tab in
-    /// step 10, the "Keyboard" tab in step 12.
-    ///
     /// The "Icons" tab is special: it has no "− / +" setting, but a big button that opens the
     /// icon configuration screen of the action choice (IconConfigMode). Its "Default" button
     /// restores the original icon layout.
     ///
     /// The "Tools" tab (last) has no setting either: two big buttons, "Calibration" and
-    /// "Diagnostic", which used to be in the menu bar. It has no "Default" button (there is
+    /// "Diagnostic". It has no "Default" button (there is
     /// nothing to restore).
     ///
-    /// The "Profiles" tab (step 15, before "Tools") has no setting nor "Default": two big
+    /// The "Profiles" tab (before "Tools") has no setting nor "Default": two big
     /// buttons to save the current settings and load a profile.
     /// </summary>
     internal static class SettingsCatalog
     {
-        /// <summary>The name of the "Icons" tab (step 10), recognized by SettingsWindow.</summary>
+        /// <summary>The name of the "Icons" tab, recognized by SettingsWindow.</summary>
         public const string IconsTabName = "tab.icons";
 
         /// <summary>The index of the "Icons" tab in the list (to come back to it after the configuration).</summary>
@@ -336,7 +332,7 @@ namespace GazeBar
 
         /// <summary>
         /// The name of the "General" tab, recognized by SettingsWindow (which adds the "My
-        /// words" button to it, step 14, user request of 2026-11-02).
+        /// words" button to it).
         /// </summary>
         public const string GeneralTabName = "tab.general";
 
@@ -347,13 +343,13 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The name of the "Tools" tab (calibration and diagnostic, moved from the menu bar on
-        /// 2026-10-29), recognized by SettingsWindow.
+        /// The name of the "Tools" tab (calibration and diagnostic), recognized by
+        /// SettingsWindow.
         /// </summary>
         public const string ToolsTabName = "tab.tools";
 
         /// <summary>
-        /// The name of the "Profiles" tab (step 15), recognized by SettingsWindow, which puts two
+        /// The name of the "Profiles" tab, recognized by SettingsWindow, which puts two
         /// big buttons there: "Save the current settings" and "Load a profile".
         /// </summary>
         public const string ProfilesTabName = "tab.profiles";
@@ -365,7 +361,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// THE CATEGORIES of the left column (2026-11-02), in display order, with the names of
+        /// THE CATEGORIES of the left column, in display order, with the names of
         /// their tabs. Each tab of "Tabs" must be in exactly one category (otherwise it could no
         /// longer be reached with the gaze).
         /// Symbols: E890 = open eye ("view"), E7C9 = touching hand ("actions"),
@@ -470,16 +466,16 @@ namespace GazeBar
                 Setting.Number("setting.dragDuration", " s", 0.05,
                                p => p.DragDuration, (p, v) => p.DragDuration = v)),
 
-            // EC8F = up and down arrows ("Scroll", step 8)
+            // EC8F = up and down arrows ("Scroll")
             new SettingsTab("tab.scroll", "\uEC8F",
                 Setting.Number("setting.maxScrollSpeed", "unit.notchesPerSecond", 1,
                                p => p.MaxScrollSpeed, (p, v) => p.MaxScrollSpeed = v),
-                // Windows setting, applied by WheelScroller (2026-11-02).
+                // Windows setting, applied by WheelScroller.
                 Setting.YesOrNo("setting.scrollInactiveWindows",
                                  p => p.ScrollInactiveWindows, (p, v) => p.ScrollInactiveWindows = v,
                                  p => WheelScroller.Apply(p.ScrollInactiveWindows))),
 
-            // E7FC = gamepad ("Game", step 9)
+            // E7FC = gamepad ("Game")
             new SettingsTab("tab.game", "\uE7FC",
                 Setting.TwoChoices("setting.relativeMouse",
                                   "setting.relativeMouse.left", "setting.relativeMouse.right",
@@ -492,11 +488,11 @@ namespace GazeBar
                 Setting.Number("setting.gameSensitivity", " ×", 0.1,
                                p => p.GameSensitivity, (p, v) => p.GameSensitivity = v)),
 
-            // E71D = grid of squares ("Icons", step 10): no setting, a "Configure icons" button
+            // E71D = grid of squares ("Icons"): no setting, a "Configure icons" button
             // (see SettingsWindow.BuildIconsTab).
             new SettingsTab(IconsTabName, "\uE71D"),
 
-            // E765 = keyboard ("Keyboard", step 12)
+            // E765 = keyboard ("Keyboard")
             new SettingsTab("tab.keyboard", "\uE765",
                 Setting.Number("setting.keyDelay", " s", 0.1,
                                p => p.KeyDelay, (p, v) => p.KeyDelay = v),
@@ -515,15 +511,15 @@ namespace GazeBar
                 Setting.YesOrNo("setting.startWithWindows",
                                  p => p.StartWithWindows, (p, v) => p.StartWithWindows = v,
                                  p => WindowsStartup.Apply(p.StartWithWindows)),
-                // Step logging: short log (no) or detailed log (yes), see App.LogDetail.
+                // Short log (no) or detailed log (yes), see App.LogDetail.
                 Setting.YesOrNo("setting.detailedLog",
                                  p => p.DetailedLog, (p, v) => p.DetailedLog = v)),
 
-            // E77B = person ("Profiles", step 15): no setting, two big buttons "Save the current
+            // E77B = person ("Profiles"): no setting, two big buttons "Save the current
             // settings" and "Load a profile" (see SettingsWindow.BuildProfilesTab).
             new SettingsTab(ProfilesTabName, "\uE77B"),
 
-            // E90F = wrench ("Tools", 2026-10-29): no setting, two big buttons "Calibration" and
+            // E90F = wrench ("Tools"): no setting, two big buttons "Calibration" and
             // "Diagnostic" (see SettingsWindow.BuildToolsTab).
             new SettingsTab(ToolsTabName, "\uE90F")
         };

@@ -3,7 +3,7 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// FIXED GAZE MODE (step 2 of the specification).
+    /// FIXED GAZE MODE.
     ///
     /// We get here from movement mode, when the gaze has fixated on a point P.
     ///  - The circle freezes around P, with a white border. It starts from where the circle of
@@ -11,7 +11,7 @@ namespace GazeBar
     ///  - An options icon is stuck to the circle, on the side facing the center of the screen
     ///    (cursor top left → icon bottom right, etc.; in the center: bottom right).
     ///  - Cursor: it is placed on P as soon as this mode starts. This is the only time it joins
-    ///    the gaze when [MouseTracking] is off (user's choice of 2026-10-22; the specification
+    ///    the gaze when [MouseTracking] is off (user's choice; the specification
     ///    planned to place it when the icon is activated).
     ///
     /// Then, depending on where one looks:
@@ -19,15 +19,15 @@ namespace GazeBar
     ///    [DirectClickDelay]; when full, a left click is made on P, then back to movement
     ///    mode. Looking at the icon resets this delay;
     ///  - on the icon: it lights up with a light green flash during [OptionsIconDelay]
-    ///    (shorter than [ActivationDelay]; no ring, user request of 2026-11-02); at the end,
-    ///    the icon activates and opens action choice mode
-    ///    (step 3), or first magnifier mode (step 5) if [MagnifierBeforeAction] is on;
+    ///    (shorter than [ActivationDelay]; no ring); at the end,
+    ///    the icon activates and opens action choice mode, or first magnifier mode if
+    ///    [MagnifierBeforeAction] is on;
     ///  - outside the circle and the icon: circle and icon disappear, back to movement mode.
     ///
     /// A single isolated measure in another zone is ignored (same tolerance as for the
     /// fixation): two measures in a row are needed to change zone.
     ///
-    /// Gaze right next to the screen (GazeState.NearScreen, 2026-11-02): it is brought back
+    /// Gaze right next to the screen (GazeState.NearScreen): it is brought back
     /// to the nearest edge instead of leaving this mode. Further off screen: back to movement
     /// mode, as before.
     /// </summary>
@@ -45,8 +45,7 @@ namespace GazeBar
         private const int MeasuresToChange = 2;
 
         /// <summary>
-        /// Activation zone of the options icon, relative to the drawn icon: 50 % larger (user
-        /// requests of 2026-10-28, 1.2, then 2026-11-02, 1.5).
+        /// Activation zone of the options icon, relative to the drawn icon: 50 % larger.
         /// The drawing itself does not change. The zone overlaps the circle a bit more, on the
         /// icon's side: there, the icon wins (see ZoneOf).
         /// </summary>
@@ -113,7 +112,7 @@ namespace GazeBar
 
             // Gaze clearly off screen: we have necessarily left the circle and the icon. Right
             // next to the screen (GazeState.NearScreen), we stay: in a corner, a few
-            // overflowing measures must not cancel everything (2026-11-02).
+            // overflowing measures must not cancel everything.
             if (gaze.Available && !gaze.NearScreen)
             {
                 ReturnToMovement(false);
@@ -229,11 +228,11 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Activation of the options icon: we switch to action choice mode (step 3), which
+        /// Activation of the options icon: we switch to action choice mode, which
         /// takes a picture of the zone around P and offers the actions.
-        /// If the [MagnifierBeforeAction] option is on, we first go through magnifier mode
-        /// (step 5), which refines the position then opens the action choice itself.
-        /// This option is set in the "Magnifier, drag" tab of settings mode (step 7).
+        /// If the [MagnifierBeforeAction] option is on, we first go through magnifier mode, which
+        /// refines the position then opens the action choice itself.
+        /// This option is set in the "Magnifier, drag" tab of settings mode.
         /// </summary>
         private void ActivateIcon()
         {

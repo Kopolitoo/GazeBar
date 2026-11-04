@@ -36,7 +36,7 @@ namespace GazeBar
 
         /// <summary>
         /// The reference language: used when a text is missing from the chosen one, and the
-        /// default language of a new installation (step langue-anglais).
+        /// default language of a new installation.
         /// </summary>
         public const string FallbackLanguage = "en";
 

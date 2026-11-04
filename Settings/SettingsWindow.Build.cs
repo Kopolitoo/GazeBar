@@ -39,14 +39,14 @@ namespace GazeBar
             TextBlock title = Text(Texts.Format("settings.title", tab.Label), 30, Soft, false);
             Place(title, LeftContent, 26);
 
-            // ── The left column: the "collapsible" CATEGORIES (2026-11-02, user's choice).
+            // ── The left column: the "collapsible" CATEGORIES.
             //    All four categories are visible; only the one holding the open tab shows its
             //    tabs, right below it and indented.
             //    At most 4 + 3 = 7 buttons (instead of 11 before), hence taller buttons.
             BuildLeftColumn();
 
             // ── The content: the settings, or the "Défaut" confirmation, or the profile
-            //    load confirmation (step 15).
+            //    load confirmation.
             if (_naming)
             {
                 BuildNamingPage();
@@ -259,11 +259,11 @@ namespace GazeBar
             _frames[setting] = frame;
         }
 
-        /// <summary>Name of the "Affichage" tab, below which the detected screen is recalled (step 11).</summary>
+        /// <summary>Name of the "Affichage" tab, below which the detected screen is recalled.</summary>
         private const string DisplayTabName = "tab.display";
 
         /// <summary>
-        /// "Affichage" tab (step 11): the screen detected by GazeBar (Windows resolution,
+        /// "Affichage" tab: the screen detected by GazeBar (Windows resolution,
         /// scaling and text size), to check that the change was seen.
         /// </summary>
         private void BuildScreenInfo(double top)
@@ -293,7 +293,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "Général" tab (step 14, user request of 2026-11-02): a big "Mes mots" button, below
+        /// "Général" tab: a big "Mes mots" button, below
         /// the settings file reminder. It opens the list of words added to the keyboard's
         /// personal dictionary (KeyboardListMode), to remove some. The Clavier tab had no room
         /// left (five settings). E82D = dictionary.
@@ -302,7 +302,7 @@ namespace GazeBar
         {
             AddTarget(LeftContent, 640, 570, 180, BigButton("\uE82D", Texts.Get("settings.myWords")),
                          () => Notify(MyWordsRequested), false, false);
-            // Step langues-socle: the interface language, next to "Mes mots". E774 = globe.
+            // The interface language, next to "Mes mots". E774 = globe.
             AddTarget(LeftContent + 630, 640, 570, 180, BigButton("\uE774", Texts.LanguageName),
                          NextLanguage, false, false);
             // Below the buttons: the message of the language button if there is one, otherwise
@@ -316,7 +316,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "Icônes" tab (step 10): an explanation, then a big button that opens the action
+        /// "Icônes" tab: an explanation, then a big button that opens the action
         /// choice icon configuration screen. E71D = grid of squares.
         /// </summary>
         private void BuildIconsTab()
@@ -348,7 +348,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "Outils" tab (2026-10-29): two big buttons one above the other, with a wide gap
+        /// "Outils" tab: two big buttons one above the other, with a wide gap
         /// between them so that aiming at one does not activate the other.
         ///   E890 = eye (Calibration), E9D9 = diagnostic (curve).
         /// Below the buttons: the possible message (calibration impossible…).

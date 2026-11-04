@@ -1,7 +1,7 @@
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: the description of a drag and drop being prepared (step 6).
+    /// MODEL: the description of a drag and drop being prepared.
     ///
     /// A drag and drop goes through three modes (see the specification):
     ///   1. DragTargetMode     the circle follows the gaze until a fixation on the drop
@@ -15,7 +15,7 @@ namespace GazeBar
     ///   left drag and drop     : left button, no pause;
     ///   right drag and drop    : right button, no pause;
     ///   android drag and drop  : left button, with a pause of [AndroidPauseDuration] between
-    ///                            the press and the move (replaces the old long press).
+    ///                            the press and the move.
     /// </summary>
     internal sealed class DragGesture
     {

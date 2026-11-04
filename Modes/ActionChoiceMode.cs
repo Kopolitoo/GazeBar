@@ -9,7 +9,7 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// ACTION CHOICE MODE (step 3 of the specification).
+    /// ACTION CHOICE MODE.
     ///
     /// We get here from fixed gaze mode, by looking at the options icon. The cursor is already
     /// on the fixated point P (placed when entering fixed gaze).
@@ -25,7 +25,7 @@ namespace GazeBar
     ///     ×2 (400 × 400 px) and a cross in place of the cursor. Around it: the crown of eight
     ///     action slots. On the left: the three modifier slots. On the right: the "back" icon.
     ///     A slot without an action is still drawn, grayed, to show that an action can be put
-    ///     there (user request of 2026-10-22). On top of everything, a small circle (half of
+    ///     there. On top of everything, a small circle (half of
     ///     [CircleRadius]) shows where the gaze is.
     ///     Looking at an icon for [ActivationDelay] activates it (its ring fills up).
     ///
@@ -35,11 +35,11 @@ namespace GazeBar
     ///
     /// The "back" icon returns to movement mode without doing anything.
     ///
-    /// The "Magnifier" action (step 5, crown slot 4) opens magnifier mode on the same point P,
+    /// The "Magnifier" action (crown slot 4) opens magnifier mode on the same point P,
     /// to refine the cursor position. The magnifier then comes back here, on the refined point
     /// (or on P if "back" is chosen there).
     ///
-    /// Step 6:
+    /// Drag and drop and modifiers:
     ///   - the three "drag and drop" actions (left, right, android) open the choice of the drop
     ///     point (DragTargetMode), with P as the start point;
     ///   - the three slots on the left are the Ctrl, Shift and Alt modifiers. A gaze activates
@@ -47,18 +47,18 @@ namespace GazeBar
     ///     The active keys are pressed just before the action and released just after (see
     ///     Modifiers.cs).
     ///
-    /// Special actions (user request of 2026-10-28): Copy, Cut, Paste, three buttons stuck to
+    /// Special actions: Copy, Cut, Paste, three buttons stuck to
     /// the top of the screen, outside the crown, as the modifiers are on the left edge (see
     /// ActionChoiceLayout). They send Ctrl + C, Ctrl + X and Ctrl + V to the active window;
     /// "Paste" first makes a left click on P, to put the insertion point where one was looking.
     ///
-    /// Step 12: the "Keyboard" action (of the crown, to place oneself in the icon configuration
-    /// screen, request of 2026-11-01) opens the gaze keyboard, or closes it if it is already
+    /// The "Keyboard" action (of the crown, to place oneself in the icon configuration
+    /// screen) opens the gaze keyboard, or closes it if it is already
     /// open.
     ///
-    /// Step 8: the "Scroll" action (slot 0 since 2026-10-28) opens scroll mode, centered on P.
+    /// The "Scroll" action (slot 0) opens scroll mode, centered on P.
     ///
-    /// Step 10: the icon layout (crown, modifiers, utility buttons) is no longer written here;
+    /// The icon layout (crown, modifiers, utility buttons) is not written here;
     /// it is read from the settings (AppSettings.Layout) and set in the icon configuration
     /// screen (IconConfigMode), opened from the "Icons" tab of settings mode. A slot can be
     /// empty: it is drawn grayed and does not activate. The layout itself is computed by
@@ -82,7 +82,7 @@ namespace GazeBar
 
         /// <summary>
         /// Activation zone of ALL the buttons of this mode (crown, modifiers, back), relative to
-        /// the drawn square: 30 % larger (user request of 2026-10-28). With 120 px buttons 60 px
+        /// the drawn square: 30 % larger. With 120 px buttons 60 px
         /// apart (ActionChoiceLayout.Space), each zone overflows by 18 px on each side: 24 px
         /// remain between two neighbouring zones.
         /// </summary>
@@ -228,7 +228,7 @@ namespace GazeBar
                 // The button is blocked until the gaze has left it: otherwise, by keeping looking
                 // at it, it would be turned on and off endlessly.
                 bool active = Modifiers.Toggle(ActionCatalog.ToModifier(action));
-                // The same modifier can be placed on several slots (step 10): all its icons
+                // The same modifier can be placed on several slots: all its icons
                 // light up or go off together.
                 for (int i = 0; i < _actions.Count; i++)
                 {
@@ -262,7 +262,7 @@ namespace GazeBar
 
             if (action == ChoiceAction.Keyboard)
             {
-                // The gaze keyboard (step 12, user request of 2026-11-01): closed, it opens;
+                // The gaze keyboard: closed, it opens;
                 // already open (hidden during this choice), it closes. It appears when back in
                 // movement mode (GazeKeyboard.OnModeChange).
                 // Layout file missing or incorrect: nothing opens, the error is written to the
@@ -335,7 +335,7 @@ namespace GazeBar
 
             App.LogDetail(_chosenAction + ", modifiers: " + modifiers);
 
-            // Back to movement mode (user's choice). A new fixation at the same place is ignored
+            // Back to movement mode. A new fixation at the same place is ignored
             // until the gaze has left it, as after a direct click.
             Manager.ChangeMode(new MovementMode(_px, _py));
         }
@@ -415,7 +415,7 @@ namespace GazeBar
             // A thin gray frame around the photo.
             Rectangle frame = new Rectangle();
             frame.Stroke = Brushes.Gray;
-            // Thickness in units of the reference screen, converted (step 11, see ScreenMetrics.cs).
+            // Thickness in units of the reference screen, converted (see ScreenMetrics.cs).
             double stroke = ScreenMetrics.Units(2);
             frame.StrokeThickness = stroke;
             frame.Width = image.Width + 2 * stroke;
@@ -530,7 +530,7 @@ namespace GazeBar
         {
             Point center = layer.ToWpf(x, y);
             // Half length: 20 px of the 4K screen; thicknesses: units of the reference screen
-            // (step 11, see ScreenMetrics.cs).
+            // (see ScreenMetrics.cs).
             double half = layer.LengthToWpf(ScreenMetrics.Px(20));
             double thick = ScreenMetrics.Units(5);
             double end = ScreenMetrics.Units(2);

@@ -5,10 +5,10 @@ using System.Text;
 namespace GazeBar
 {
     /// <summary>
-    /// CALIBRATION MODE (step 4 of the specification).
+    /// CALIBRATION MODE.
     ///
-    /// We get here from the "Tools" tab of the settings (before 2026-10-29: from the menu
-    /// bar), once the eyetracker calibration tool has been started (see Calibration.cs).
+    /// We get here from the "Tools" tab of the settings, once the eyetracker calibration tool has
+    /// been started (see Calibration.cs).
     /// During calibration, GazeBar must do nothing: the overlay is empty, nothing follows
     /// the gaze (otherwise the circle would get in the way and a fixation on a calibration
     /// point could trigger an action).
@@ -56,7 +56,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The screen changed (step 11): this mode carries on, because the eyetracker
+        /// The screen changed: this mode carries on, because the eyetracker
         /// calibration must not be interrupted.
         /// </summary>
         public override bool AdaptToScreen()

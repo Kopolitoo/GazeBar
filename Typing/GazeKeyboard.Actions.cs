@@ -56,7 +56,7 @@ namespace GazeBar
 
             if (d.Prediction.HasValue)
             {
-                // Step 13: a suggestion box. No repetition: by keeping looking at it, the word
+                // A suggestion box. No repetition: by keeping looking at it, the word
                 // would not be written twice (the box is empty right after anyway, the current
                 // word starting from scratch).
                 ChooseSuggestion(d.Prediction.Value);
@@ -351,7 +351,7 @@ namespace GazeBar
                 }
                 else
                 {
-                    // The current word is finished (step 13): if it is known, the prediction
+                    // The current word is finished: if it is known, the prediction
                     // remembers it was used once more, and that it followed the previous word
                     // (learning). With an apostrophe, the elided form counts: "l'", "qu'".
                     if (_currentWord.Length > 0)
@@ -391,14 +391,14 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Step 13: the user looked at suggestion box number "num" (1, 2 or 3).
+        /// The user looked at suggestion box number "num" (1, 2 or 3).
         ///  - "+ myword" box: the typed word is added to the personal dictionary, then a space
         ///    is written (the word is already written in full);
         ///  - otherwise: the suggested word replaces the typed letters, followed by a space. To
         ///    be fast and flicker-free, only the differing end is deleted: "bon" → "bonjour"
         ///    only writes "jour"; "ete" → "été" deletes "te" and writes "té".
         ///    After an elided word (m' t' n' s' c' l' qu' d' j'…), no space: the next word
-        ///    sticks to it (user request of 2026-11-02).
+        ///    sticks to it.
         /// </summary>
         private void ChooseSuggestion(int num)
         {

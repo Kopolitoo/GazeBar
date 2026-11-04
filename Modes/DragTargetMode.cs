@@ -8,7 +8,7 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// DRAG AND DROP MODE, part 1: choosing the drop point (step 6).
+    /// DRAG AND DROP MODE, part 1: choosing the drop point.
     ///
     /// We get here from the action choice, with one of the three "drag and drop" actions of
     /// the crown. The start point is the aimed point of the action choice (the cross).
@@ -19,7 +19,7 @@ namespace GazeBar
     ///     the mouse;
     ///   - a small white dot marks the start point;
     ///   - a "back" button, on the right edge of the screen and vertically centered (user's
-    ///     choice of 2026-10-25), cancels the drag and drop without pressing anything and
+    ///     choice), cancels the drag and drop without pressing anything and
     ///     returns to movement mode.
     ///
     /// When the gaze fixates (same detection as in movement mode, [FixationDelay]), we move
@@ -32,12 +32,12 @@ namespace GazeBar
     ///    only recognized once the gaze has left that place (radius [CircleRadius]);
     ///  - a fixation on the "back" button does not count as a drop point.
     ///
-    /// The menu does not open during this mode (choice of 2026-10-25): the way out is the
+    /// The menu does not open during this mode: the way out is the
     /// "back" button (or the caregiver's Escape key).
     /// </summary>
     internal sealed class DragTargetMode : Mode
     {
-        /// <summary>Radius of the dot marking the start, in 4K screen pixels (converted with ScreenMetrics.Px, step 11).</summary>
+        /// <summary>Radius of the dot marking the start, in 4K screen pixels (converted with ScreenMetrics.Px).</summary>
         private const double StartDotRadius = 6;
 
         private readonly DragGesture _drag;

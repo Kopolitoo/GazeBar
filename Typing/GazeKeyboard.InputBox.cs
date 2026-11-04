@@ -13,7 +13,7 @@ namespace GazeBar
     /// </summary>
     internal sealed partial class GazeKeyboard
     {
-        // ───────────────────────── Input box (step 14) ─────────────────────────
+        // ───────────────────────── Input box ─────────────────────────
 
         /// <summary>
         /// Updates the input box preview as the application did: "deleted" Backspaces, then

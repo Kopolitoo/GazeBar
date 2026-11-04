@@ -16,7 +16,7 @@ namespace GazeBar
     internal sealed partial class SettingsWindow : Window
     {
         /// <summary>
-        /// "Profils" tab (step 15): an explanation with the profiles folder, then two big
+        /// "Profils" tab: an explanation with the profiles folder, then two big
         /// buttons one above the other (same height as those of "Outils", but wider for the
         /// long text, with the same wide gap). E74E = floppy disk (Enregistrer), E8E5 = open
         /// folder (Charger). Below the buttons: the message ("Réglages enregistrés dans…").
@@ -49,7 +49,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The question "Charger le profil … ?" (step 15), like the "Défaut" confirmation:
+        /// The question "Charger le profil … ?", like the "Défaut" confirmation:
         /// "Oui" and "Non" in the middle of the page. For the automatic backup, the question
         /// rather says the previous settings come back.
         /// </summary>

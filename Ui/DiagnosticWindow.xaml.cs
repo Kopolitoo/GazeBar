@@ -35,7 +35,7 @@ namespace GazeBar
         {
             InitializeComponent();
 
-            // The fixed texts, in the current language (step langues-socle).
+            // The fixed texts, in the current language.
             Title = Texts.Get("diagnostic.title");
             CloseButton.Content = Texts.Get("diagnostic.close");
 

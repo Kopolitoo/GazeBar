@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: makes the cursor reappear if Windows hid it (fix of 2026-10-29).
+    /// MODEL: makes the cursor reappear if Windows hid it.
     ///
     /// The observed problem: when GazeBar is started alone at Windows startup, the cursor
     /// stays invisible; it only appears after a drag and drop.
@@ -19,7 +19,7 @@ namespace GazeBar
     /// (GetCursorInfo). If it is "suppressed", we simulate a tiny mouse nudge through
     /// SendInput (1 pixel right then 1 pixel left), then put the cursor back exactly in place
     /// with SetCursorPos. The cursor reappears without moving.
-    /// A single check, at startup (the user's choice after testing, 2026-10-29).
+    /// A single check, at startup (the user's choice after testing).
     /// </summary>
     internal static class CursorWaker
     {

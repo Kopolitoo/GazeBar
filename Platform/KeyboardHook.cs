@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: watches the Escape key, in all programs (step 4).
+    /// MODEL: watches the Escape key, in all programs.
     ///
     /// The specification asks for "always a way out": a keyboard key (Escape) returns to
-    /// movement mode, for the caregiver. It is all the more useful since the old toolbar
-    /// (which could be clicked with the mouse) was removed.
+    /// movement mode, for the caregiver. It is all the more useful since GazeBar has
+    /// no toolbar that could be clicked with the mouse.
     ///
     /// How: we install a "low-level keyboard hook" (WH_KEYBOARD_LL). Windows then calls our
     /// OnKey function on every key press, wherever the focus is.
@@ -76,7 +76,7 @@ namespace GazeBar
                 if (message == NativeMethods.WM_KEYDOWN || message == NativeMethods.WM_SYSKEYDOWN)
                 {
                     int key = Marshal.ReadInt32(lParam);
-                    // Step 12: the Escape key of the gaze keyboard is SIMULATED by GazeBar.
+                    // The Escape key of the gaze keyboard is SIMULATED by GazeBar.
                     // It must reach the application, but must neither return to movement mode
                     // nor close the keyboard: we only react to a real keyboard (the caregiver's).
                     int flagsValue = Marshal.ReadInt32(lParam, NativeMethods.HookFlagsOffset);

@@ -9,10 +9,9 @@ using System.Windows.Media;
 namespace GazeBar
 {
     /// <summary>
-    /// LOGIC: the gaze keyboard (step 12, "clavier-base").
+    /// LOGIC: the gaze keyboard ("clavier-base").
     ///
-    /// It is not a mode: the keyboard stays shown WHILE GazeBar works normally above it
-    /// (user's choice of 2026-10-31):
+    /// It is not a mode: the keyboard stays shown WHILE GazeBar works normally above it:
     ///   - gaze OUTSIDE the keyboard: movement mode applies (fixed gaze, action choice,
     ///     magnifier…);
     ///   - gaze ON the keyboard: the mouse cursor does not move, the gaze circle is hidden,
@@ -26,7 +25,7 @@ namespace GazeBar
     ///
     /// It is drawn on the overlay (KeyboardSurface), at the bottom of the screen, full
     /// width, above everything and WITHOUT reserving room: other windows keep their size.
-    /// Since 2026-11-01 (user remarks), the keyboard menu bar also offers: moving it to the
+    /// The keyboard menu bar also offers: moving it to the
     /// top of the screen (position remembered, [KeyboardAtTop]), and shrinking it to 75 % or
     /// 50 % ([KeyboardSize], centred). When this bar is open, the keyboard moves up above it
     /// (SetBottomReserve). The overlay never takes focus: the application being typed in
@@ -35,20 +34,19 @@ namespace GazeBar
     /// A "Fermer le clavier" button sits above the keyboard, on the right (below when the
     /// keyboard is at the top). It can also be closed with the Escape key of a real keyboard
     /// (for the caregiver), or with the "Clavier" button of the classic bar if it is hidden
-    /// by game mode. (The Close button of the keyboard bar was removed in step 14: it was
-    /// redundant.)
+    /// by game mode.
     ///
     /// Keys come from a layout file (KeyboardLayout, read again at each opening). Typed
     /// text is NEVER written to the log (privacy): only openings, closings and errors are.
     ///
-    /// Step 13 ("clavier-prediction"): the 3 top boxes suggest the most likely words
+    /// The 3 top boxes suggest the most likely words
     /// starting with the current word (WordPredictor); looking at one writes the whole word
     /// followed by a space. An unknown word (2 letters or more) shows in the 1st box with a
     /// "+": looking at it adds it to the personal dictionary.
     /// Right after a space, the boxes suggest the words that already followed the previous
-    /// word ("next word", learnt as sentences are written, request of 2026-11-02).
+    /// word ("next word", learnt as sentences are written).
     ///
-    /// Step 14 ("clavier-options"): the layout is the one chosen with the "Langue" button
+    /// The layout is the one chosen with the "Langue" button
     /// ([KeyboardLayout], see ChangeLayout), and an optional INPUT BOX ([InputBox]) shows the
     /// last typed words in a band above the keys. It is a plain preview: text always goes
     /// straight to the application. The keyboard cannot read the application's text: the
@@ -60,14 +58,14 @@ namespace GazeBar
         // Distances in pixels of the 4K screen, converted for the current screen (ScreenMetrics.Px).
         private const double Margin4K = 16;          // between the keyboard edge and the keys
         private const double KeyGap4K = 12;   // gap between two keys
-        // Between the Close button and the keyboard: 24 px at first, 60 px since 2026-11-01
-        // (user request: button too close to the keys).
+        // Between the Close button and the keyboard (60 px: closer, the button is too near the
+        // keys).
         private const double CloseGap4K = 60;
 
         /// <summary>Activation zone of the Close button: 20 % larger than its drawing.</summary>
         private const double CloseZoneFactor = 1.2;
 
-        /// <summary>Height of the input box (step 14), relative to a row of keys.</summary>
+        /// <summary>Height of the input box, relative to a row of keys.</summary>
         private const double InputBoxRatio = 0.7;
 
         /// <summary>Number of characters kept for the input box preview (only the end is shown).</summary>
@@ -94,7 +92,7 @@ namespace GazeBar
         // True when the keyboard is really drawn on screen.
         private bool _visible;
 
-        // Profile name (2026-11-02): true while the keyboard is shown in the settings to type
+        // Profile name: true while the keyboard is shown in the settings to type
         // a profile name (ShowForInput); _openedForInput: it was closed before and opened only
         // for that, so it closes again afterwards (EndInput).
         private bool _shownForInput;
@@ -119,10 +117,10 @@ namespace GazeBar
         private bool _win;
 
         // The "current word": letters typed since the last space or sign (see Follow). Used
-        // by "Effacer le mot" and by prediction (step 13).
+        // by "Effacer le mot" and by prediction.
         private readonly StringBuilder _currentWord = new StringBuilder();
 
-        // Step 13: prediction, and what the suggestion boxes show (computed by RefreshState
+        // Prediction, and what the suggestion boxes show (computed by RefreshState
         // after each key). _unknownWord: true when the 1st box shows "+ myword" (unknown word
         // to add).
         private readonly WordPredictor _predictor;
@@ -130,14 +128,14 @@ namespace GazeBar
         private bool _unknownWord;
 
         // The word written just before the current word (stored dictionary form), for
-        // next-word prediction (2026-11-02); null at the start, after punctuation, or when the
+        // next-word prediction; null at the start, after punctuation, or when the
         // text cursor may have moved (the previous word is then no longer certain).
         private string _previousWord;
 
         // The last two typed characters, for automatic capitalisation after ".".
         private string _end = "";
 
-        // Step 14: the input box. _preview: what the keyboard typed since the text cursor
+        // The input box. _preview: what the keyboard typed since the text cursor
         // last stayed put (kept in memory only, never in the log); _previewText: its shown
         // text (null when the box is not shown); _previewWidthWpf: the width available for
         // this text, in WPF units.
@@ -149,12 +147,11 @@ namespace GazeBar
         {
             _layer = layer;
             // "1": a single gaze sample is enough to light a key (2 for GazeBar's other
-            // buttons). Hover thus reacts one sample earlier (about 30 ms); user request of
-            // 2026-11-02.
+            // buttons). Hover thus reacts one sample earlier (about 30 ms).
             _aimer = new ButtonAimer(_targets, 1);
 
-            // The dictionary is the one of the INTERFACE language (Language setting, user
-            // request of 2026-11-02): the keyboard layout does not change it. It is read as
+            // The dictionary is the one of the INTERFACE language (Language setting):
+            // the keyboard layout does not change it. It is read as
             // soon as GazeBar starts, in the background (specification): it is ready when the
             // keyboard opens. When the interface language changes ("Langue" button of the
             // settings), the dictionary of the new language is loaded.
@@ -190,7 +187,7 @@ namespace GazeBar
         /// </summary>
         public bool Open(out string message)
         {
-            // Step 14: the layout chosen with the "Langue" button. If its file disappeared or
+            // The layout chosen with the "Langue" button. If its file disappeared or
             // contains an error, the default layout (en-qwerty) is tried rather than not
             // opening the keyboard at all; the saved choice does not change.
             string name = AppSettings.Current.KeyboardLayout;
@@ -274,7 +271,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Profile name (request of 2026-11-02): shows the keyboard in the settings, so that
+        /// Profile name: shows the keyboard in the settings, so that
         /// the user can type the name of the profile to save. The keys go, as always, to the
         /// active window: here the settings window, whose text box has the focus.
         /// If the keyboard was closed, it is opened for this input only (EndInput closes it
@@ -340,7 +337,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>The screen changed (step 11): the keyboard is redrawn at the new sizes.</summary>
+        /// <summary>The screen changed: the keyboard is redrawn at the new sizes.</summary>
         public void AdaptToScreen()
         {
             if (_visible)
@@ -352,7 +349,7 @@ namespace GazeBar
         /// <summary>
         /// The keyboard menu bar opens (pixels = its height, from the bottom of the screen)
         /// or closes (0). If the keyboard is at the bottom, it moves up above the bar instead
-        /// of being covered (user request of 2026-11-01). At the top, nothing changes.
+        /// of being covered. At the top, nothing changes.
         /// </summary>
         public void SetBottomReserve(double pixels)
         {
@@ -364,7 +361,7 @@ namespace GazeBar
             _bottomReserve = pixels;
             if (_visible && !AppSettings.Current.KeyboardAtTop)
             {
-                // Redrawn at its new place, then slid from the old one (2026-11-02).
+                // Redrawn at its new place, then slid from the old one.
                 double oldTop = _top;
                 Build();
                 if (_visible)
@@ -407,7 +404,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "Zone de saisie" button of the keyboard bar (step 14): shows or hides the band of
+        /// "Zone de saisie" button of the keyboard bar: shows or hides the band of
         /// the last typed words. Saved. The keyboard is redrawn (it grows or shrinks by the
         /// band's height).
         /// </summary>
@@ -424,7 +421,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The word prediction, for the "Mes mots" list (step 14, see KeyboardListMode).
+        /// The word prediction, for the "Mes mots" list (see KeyboardListMode).
         /// </summary>
         public WordPredictor Predictor
         {
@@ -432,7 +429,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "Langue" button (step 14): switches to another layout of the Keyboards folder
+        /// "Langue" button: switches to another layout of the Keyboards folder
         /// (file name without ".json"). It is read at once; if missing or invalid, nothing
         /// changes and "message" explains why. Otherwise the choice is saved and the keyboard
         /// restarts from the new layout's start page. The dictionary does not change: it
@@ -462,7 +459,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Step 15: a settings profile has just been loaded (called by SettingsMode).
+        /// A settings profile has just been loaded (called by SettingsMode).
         /// Size, position and input box are read again at each drawing: nothing to do for
         /// them. But the layout may have changed: if
         /// the keyboard is open, it is reopened, which reads the layout saved in the
@@ -601,7 +598,7 @@ namespace GazeBar
                 case "down": code = 0x28; extent = true; return true;
                 case "insert": code = 0x2D; extent = true; return true;
                 case "delete": code = 0x2E; extent = true; return true;
-                // The Windows key alone (2026-11-02): opens or closes the Start menu.
+                // The Windows key alone: opens or closes the Start menu.
                 // It is an "extended" key for Windows.
                 case "windows": code = NativeMethods.VK_LWIN; extent = true; return true;
             }

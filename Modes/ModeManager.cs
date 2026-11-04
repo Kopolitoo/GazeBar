@@ -15,10 +15,10 @@ namespace GazeBar
     /// second), it reads the gaze, prepares a GazeState and gives it to the current mode (the
     /// mode's Update method).
     ///
-    /// Why "on each frame"? Before, a timer (DispatcherTimer) ran every 16 ms. But this timer
+    /// Why "on each frame"? Rather than a timer (DispatcherTimer) every 16 ms: such a timer
     /// is not precise on Windows (it often fires after 15 or 31 ms), and it is not synchronized
-    /// with the screen: some frames showed two circle moves, others none. Result: a movement
-    /// that "catches". WPF's CompositionTarget.Rendering event is called just before WPF draws
+    /// with the screen: some frames would show two circle moves, others none, and the movement
+    /// would "catch". WPF's CompositionTarget.Rendering event is called just before WPF draws
     /// each frame: the circle moves exactly once per frame, regularly.
     ///
     /// The modes find everything they need there: the gaze (Gaze), the full-screen overlay
@@ -27,9 +27,9 @@ namespace GazeBar
     /// The first mode is usually movement mode; it hands over to fixed gaze mode when a point
     /// is fixated, and fixed gaze mode hands it back.
     ///
-    /// Step 4: it also opens the menu: when the gaze stays down, below the screen, for
-    /// [MenuDelay], we switch to menu mode. Since step 6, only movement, pause and game
-    /// (step 9) modes allow it (Mode.MenuAllowed property).
+    /// It also opens the menu: when the gaze stays down, below the screen, for
+    /// [MenuDelay], we switch to menu mode. Only movement, pause and game
+    /// modes allow it (Mode.MenuAllowed property).
     /// </summary>
     internal sealed class ModeManager
     {
@@ -60,12 +60,12 @@ namespace GazeBar
             Layer = layer;
             Keyboard = new GazeKeyboard(layer);
 
-            // Step 11: the screen may change while GazeBar runs.
+            // The screen may change while GazeBar runs.
             ScreenMetrics.Change += OnScreenChanged;
         }
 
         /// <summary>
-        /// The Windows resolution, scaling or text size changed (step 11). The current mode
+        /// The Windows resolution, scaling or text size changed. The current mode
         /// adapts if it can (Mode.AdaptToScreen); otherwise we return to movement mode, as with
         /// the Escape key: mouse buttons and Ctrl, Shift, Alt keys released for safety (a drag
         /// and drop is interrupted).
@@ -76,7 +76,7 @@ namespace GazeBar
             {
                 return;
             }
-            // The gaze keyboard (step 12) redraws itself at the new sizes.
+            // The gaze keyboard redraws itself at the new sizes.
             Keyboard.AdaptToScreen();
             if (CurrentMode.AdaptToScreen())
             {
@@ -96,7 +96,7 @@ namespace GazeBar
         public OverlayWindow Layer { get; private set; }
 
         /// <summary>
-        /// The gaze keyboard (step 12). It is not a mode: it stays shown during movement and
+        /// The gaze keyboard. It is not a mode: it stays shown during movement and
         /// fixed gaze modes (see GazeKeyboard).
         /// </summary>
         public GazeKeyboard Keyboard { get; private set; }
@@ -111,8 +111,8 @@ namespace GazeBar
         public event Action<Mode> ModeChanged;
 
         /// <summary>
-        /// Width of the primary screen, in real pixels, measured by ScreenMetrics (step 11:
-        /// GetSystemMetrics did not see a resolution change made while GazeBar runs, see
+        /// Width of the primary screen, in real pixels, measured by ScreenMetrics
+        /// (GetSystemMetrics does not see a resolution change made while GazeBar runs, see
         /// NativeMethods.PrimaryScreenSize).
         /// </summary>
         public double ScreenWidth
@@ -175,7 +175,7 @@ namespace GazeBar
             CurrentMode = newVal;
             newVal.Attach(this);
 
-            // The gaze keyboard is shown or hidden according to the new mode (step 12).
+            // The gaze keyboard is shown or hidden according to the new mode.
             // BEFORE Enter: the magnifier takes its picture of the screen as soon as it enters, without the keyboard.
             Keyboard.OnModeChange(newVal);
 
@@ -226,7 +226,7 @@ namespace GazeBar
                 return;
             }
 
-            // No tick INSIDE another tick (bug of 2026-11-02). Some operations done during a
+            // No tick INSIDE another tick. Some operations done during a
             // tick, like opening the settings window (Show, Activate), let WPF process other
             // messages meanwhile: the next frame could then arrive, and update the new mode
             // before the end of its Enter (SettingsMode: aimer still empty →
@@ -299,8 +299,8 @@ namespace GazeBar
                 CurrentMode.MenuAllowed)
             {
                 _belowStartMs = -1;
-                // Step 12: keyboard shown (so movement mode) → the keyboard's menu bar, not the
-                // classic bar (user's choice of 2026-10-31).
+                // Keyboard shown (so movement mode) → the keyboard's menu bar, not the
+                // classic bar.
                 bool keyboardMenu = Keyboard.IsOpen && CurrentMode is MovementMode;
                 ChangeMode(new MenuMode(keyboardMenu));
                 return true;

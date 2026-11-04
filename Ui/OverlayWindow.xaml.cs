@@ -39,7 +39,7 @@ namespace GazeBar
             // other software…). Among them, the last one shown or activated wins. To keep the
             // overlay ABOVE EVERYTHING, it is put back at the top of the stack twice a second.
             //
-            // Known limit (2026-10-29): the Windows Start menu, search and notification
+            // Known limit: the Windows Start menu, search and notification
             // centre live in a "band" reserved for the system, higher than every "always on
             // top" window. The overlay therefore goes below them despite this timer. Only a
             // program declared "uiAccess" (manifest), digitally signed and installed in
@@ -49,7 +49,7 @@ namespace GazeBar
             _foreground.Tick += (sender, e) => BringToFront();
             _foreground.Start();
 
-            // Step 11: screen watch (resolution, scaling, text size). Windows notifies the
+            // Screen watch (resolution, scaling, text size). Windows notifies the
             // overlay with messages (see Hook), but it is also checked every two seconds: it
             // is not yet known whether Windows really sends a message when the text size
             // changes (to check in testing).
@@ -84,7 +84,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The "hook" for Windows messages sent to the overlay (step 11). Only two messages,
+        /// The "hook" for Windows messages sent to the overlay. Only two messages,
         /// sent to every window, are kept:
         ///   WM_DISPLAYCHANGE: the screen resolution changed;
         ///   WM_SETTINGCHANGE: a Windows setting changed (maybe the text size).
@@ -144,7 +144,7 @@ namespace GazeBar
                 | NativeMethods.WS_EX_NOACTIVATE
                 | NativeMethods.WS_EX_TOOLWINDOW);
 
-            // Step 11: listen to Windows messages (see Hook).
+            // Listen to Windows messages (see Hook).
             HwndSource source = HwndSource.FromHwnd(handle);
             if (source != null)
             {
@@ -157,7 +157,7 @@ namespace GazeBar
         /// <summary>
         /// Called by WPF if the Windows scaling changes while GazeBar runs (for example from
         /// 100 % to 125 % in the display settings). The size is recomputed at once, then a
-        /// second time half a second later (step 11): the resolution often changes at the
+        /// second time half a second later: the resolution often changes at the
         /// same time.
         /// </summary>
         protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
@@ -174,9 +174,9 @@ namespace GazeBar
         /// "DPI aware" in app.manifest). TransformFromDevice is the "real pixels → WPF units"
         /// conversion provided by WPF for this window.
         ///
-        /// Step 11: the measure is also given to ScreenMetrics, which notifies the rest of
+        /// The measure is also given to ScreenMetrics, which notifies the rest of
         /// the program if the resolution, scaling or text size changed. The window size is
-        /// only rewritten (and logged) if it changed, because this method is now called
+        /// only rewritten (and logged) if it changed, because this method is called
         /// every two seconds.
         /// </summary>
         private void CoverScreen()
@@ -252,7 +252,7 @@ namespace GazeBar
 
         /// <summary>
         /// Same as above, with reduced opacity: damping = 1 → usual opacity, 0.5 → twice as
-        /// transparent (scroll mode, request of 2026-10-28).
+        /// transparent (scroll mode).
         /// </summary>
         public void ShowCircle(double xPixels, double yPixels, double radiusPixels, bool fixedValue,
                                    double damping)
@@ -262,7 +262,7 @@ namespace GazeBar
             CircleShown = true;
 
             Circle.Stroke = fixedValue ? FixedBrush : MovementBrush;
-            // Thicknesses in reference-screen units, converted (step 11, see ScreenMetrics.cs).
+            // Thicknesses in reference-screen units, converted (see ScreenMetrics.cs).
             Circle.StrokeThickness = ScreenMetrics.Units(fixedValue ? 1.5 : 1);
             Circle.Opacity = (fixedValue ? 0.6 : 0.3) * damping;
             CircleBackground.StrokeThickness = ScreenMetrics.Units(fixedValue ? 2.5 : 2);
@@ -321,7 +321,7 @@ namespace GazeBar
         /// Shows the options icon: a square of side [size] centred on (x, y), in screen
         /// pixels. progress (0 to 1) lights up the icon with a light green flash; at 0, no
         /// flash. A ring around the icon was used before; with a very short delay (0.1 s) it
-        /// had no time to be seen, the flash is easier to notice (user request of 2026-11-02).
+        /// had no time to be seen, the flash is easier to notice.
         /// showLabel: shows the "Options" text below the icon.
         /// </summary>
         public void ShowIcon(double xPixels, double yPixels, double sizePixels,
@@ -353,7 +353,7 @@ namespace GazeBar
 
             if (showLabel)
             {
-                // The label follows the Windows text size (step 11, see ScreenMetrics.Font) and
+                // The label follows the Windows text size (see ScreenMetrics.Font) and
                 // the interface language.
                 OptionsLabelText.Text = Texts.Get("overlay.options");
                 OptionsLabelText.FontSize = ScreenMetrics.Font(20);
@@ -390,7 +390,7 @@ namespace GazeBar
             HideKeyboardSurface();
         }
 
-        // ───────────────────────── Action choice black screen (step 3) ─────────────────────────
+        // ───────────────────────── Action choice black screen ─────────────────────────
 
         /// <summary>
         /// True when the overlay is really shown on screen. Before that, no coordinate
@@ -425,7 +425,7 @@ namespace GazeBar
             ChoiceScreen.Visibility = Visibility.Collapsed;
         }
 
-        // ───────────────────────── Menu bar (step 4) ─────────────────────────
+        // ───────────────────────── Menu bar ─────────────────────────
 
         /// <summary>
         /// Clears the menu bar surface and gives it the overlay's size.
@@ -451,7 +451,7 @@ namespace GazeBar
 
         /// <summary>
         /// Shows the menu bar.
-        /// animate = true: small appear animation (user request of 2026-10-28): the bar
+        /// animate = true: small appear animation: the bar
         /// rises [MenuAppearRise] units to its place, going from transparent to opaque, in
         /// [MenuAppearDurationMs] ms. It slows down at the end ("EaseOut"), which looks more
         /// natural than a constant speed.
@@ -505,7 +505,7 @@ namespace GazeBar
 
         /// <summary>
         /// Hides the menu bar (its content is kept until the next PrepareMenuBar).
-        /// animate = true: small closing animation (user request of 2026-10-28), the reverse
+        /// animate = true: small closing animation, the reverse
         /// of appearing: the bar goes down [MenuAppearRise] units while becoming transparent,
         /// in [MenuCloseDurationMs] ms, speeding up ("EaseIn").
         /// Buttons already ignore the gaze: only the drawing fades.
@@ -578,7 +578,7 @@ namespace GazeBar
             MenuBar.Opacity = 1;
         }
 
-        // ───────────────────────── Drag-and-drop surface (step 6) ─────────────────────────
+        // ───────────────────────── Drag-and-drop surface ─────────────────────────
 
         /// <summary>
         /// Clears the drag-and-drop surface and gives it the overlay's size.
@@ -604,7 +604,7 @@ namespace GazeBar
             DragSurface.Visibility = Visibility.Collapsed;
         }
 
-        // ───────────────────────── Gaze keyboard surface (step 12) ─────────────────────────
+        // ───────────────────────── Gaze keyboard surface ─────────────────────────
 
         /// <summary>
         /// Clears the keyboard surface and gives it the overlay's size.
@@ -625,7 +625,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Slides the keyboard to its new place (user request of 2026-11-02): it has just been
+        /// Slides the keyboard to its new place: it has just been
         /// redrawn at its final place, it is first shifted by "fromPixels" (screen pixels,
         /// positive = lower), then this shift goes back to zero. Moving up: at the menu bar's
         /// appear speed, slowing down at the end. Moving down: at its closing speed, speeding

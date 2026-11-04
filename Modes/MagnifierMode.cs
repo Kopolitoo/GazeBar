@@ -9,7 +9,7 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// MAGNIFIER MODE (step 5 of the specification): refining the cursor position.
+    /// MAGNIFIER MODE: refining the cursor position.
     ///
     /// Why? The gaze is often wrong by about thirty pixels. That is too much to aim at a small
     /// checkbox. In the magnifier, the zone around the aimed point is enlarged [MagnifierZoom]
@@ -19,8 +19,8 @@ namespace GazeBar
     /// We get here in three ways:
     ///  - from action choice mode, with the "Magnifier" action of the crown (slot 4 by default);
     ///  - from fixed gaze mode, directly, if the [MagnifierBeforeAction] option is on
-    ///    ("Magnifier, drag" tab of settings mode, step 7);
-    ///  - during a drag and drop (step 6), to refine the drop point (part 2, see
+    ///    ("Magnifier, drag" tab of settings mode);
+    ///  - during a drag and drop, to refine the drop point (part 2, see
     ///    DragGesture.cs). The fixation then starts the execution of the drag
     ///    (DragExecutionMode) instead of the action choice, and the "back" icon, placed on the
     ///    right edge of the screen, cancels the drag and drop (back to movement mode).
@@ -48,7 +48,7 @@ namespace GazeBar
     ///  - when the magnifier opens, the gaze is still on the icon just activated, which may be
     ///    above the photo. So a fixation is only recognized once the gaze has left that place
     ///    (same principle as the "ignored zone" of movement mode after a click);
-    ///    EXCEPTION (user request of 2026-10-28): if, on opening, the gaze is already on the
+    ///    EXCEPTION: if, on opening, the gaze is already on the
     ///    place of the photo where P appears (the center of the screen, except near an edge),
     ///    there is no ignored zone. This is the case when the options icon of fixed gaze was
     ///    near the center of the screen: one is already looking at the right place, it would
@@ -73,7 +73,7 @@ namespace GazeBar
 
         /// <summary>
         /// Diameter of the small circle following the gaze, in 4K screen pixels (specification:
-        /// 50 px), converted with ScreenMetrics.Px (step 11).
+        /// 50 px), converted with ScreenMetrics.Px.
         /// </summary>
         private const double GazeCircleDiameter = 50;
 
@@ -121,8 +121,7 @@ namespace GazeBar
         private double _targetY;
 
         /// <summary>
-        /// Activation zone of the "back" button, relative to the drawn button: 30 % larger (user
-        /// request of 2026-10-28).
+        /// Activation zone of the "back" button, relative to the drawn button: 30 % larger.
         /// </summary>
         private const double BackZoneFactor = 1.3;
 
@@ -146,7 +145,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Opens the magnifier around the drop point (x, y) of a drag and drop (step 6).
+        /// Opens the magnifier around the drop point (x, y) of a drag and drop.
         /// The fixation starts the execution of the drag; the "back" icon cancels it.
         /// </summary>
         public MagnifierMode(double x, double y, DragGesture drag)
@@ -373,7 +372,7 @@ namespace GazeBar
 
             // ── The photographed zone: the square enclosing the circle, centered on P.
             //    The enlarged photo must fit on the screen (with a margin of 40 px of the 4K
-            //    screen, converted with ScreenMetrics.Px, step 11): on a small screen, or with
+            //    screen, converted with ScreenMetrics.Px): on a small screen, or with
             //    a large zoom, a smaller square is therefore photographed.
             //    Example: 1080 px high screen, zoom 4 → at most (1080 − 40) ÷ 4 = 260 px.
             int side = (int)Math.Round(2 * p.CircleRadiusPx);
@@ -423,7 +422,7 @@ namespace GazeBar
             // A thin gray frame around the photo.
             Rectangle frame = new Rectangle();
             frame.Stroke = Brushes.Gray;
-            // Thickness in units of the reference screen, converted (step 11, see ScreenMetrics.cs).
+            // Thickness in units of the reference screen, converted (see ScreenMetrics.cs).
             double stroke = ScreenMetrics.Units(2);
             frame.StrokeThickness = stroke;
             frame.Width = image.Width + 2 * stroke;
@@ -435,7 +434,7 @@ namespace GazeBar
             // ── The "back" icon, on the right,
             //    at the same height as in the action choice (middle of the screen).
             //    During a drag and drop, it is stuck to the right edge of the screen, at the same
-            //    place as while choosing the drop point (user's choice of 2026-10-25).
+            //    place as while choosing the drop point.
             //    Symbol E72B = "back" arrow of the Windows font.
             double xBack = width - size;
             string backLabel = _drag != null ? Texts.Get("drag.cancel") : Texts.Get("common.back");

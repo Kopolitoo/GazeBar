@@ -7,52 +7,52 @@ using System.Windows.Media;
 namespace GazeBar
 {
     /// <summary>
-    /// MENU MODE (step 4 of the specification).
+    /// MENU MODE.
     ///
     /// Entry: looking down, below the screen, for [MenuDelay]. The ModeManager watches for
-    /// this, only from movement, pause and game modes: see Mode.MenuAllowed (step 6).
+    /// this, only from movement, pause and game modes: see Mode.MenuAllowed.
     ///
     /// Display: a bar centered at the bottom of the screen, with buttons activated by the gaze
     /// (GazeButton): one looks at a button for [ActivationDelay], its ring fills up, then it
     /// activates. From left to right:
-    ///   Settings       opens settings mode (step 7);
-    ///   Game           switches to game mode (step 9). Coming from game mode, this button
+    ///   Settings       opens settings mode;
+    ///   Game           switches to game mode. Coming from game mode, this button
     ///                  becomes "Quit game" and returns to movement mode;
-    ///   Keyboard       opens GazeBar's gaze keyboard (step 12, see GazeKeyboard), then closes
+    ///   Keyboard       opens GazeBar's gaze keyboard (see GazeKeyboard), then closes
     ///                  the menu. If it is already open (hidden by game mode), closes it;
     ///   Pause          switches to pause mode;
     ///   Mouse tracking switch: green border when the option is on. The menu stays open; the
     ///                  gaze must leave the button before it can be used again;
     ///   Quit           asks for confirmation ("Yes, quit" / "No"), then closes GazeBar.
     ///
-    /// Calibration and Diagnostic are no longer in the bar (user request of 2026-10-29): they
+    /// Calibration and Diagnostic are not in the bar: they
     /// are in the "Tools" tab of the settings (see SettingsWindow).
     ///
     /// From game mode, the "Quit game" button has a green border, like a lit switch: it shows
-    /// that game mode is active (user request of 2026-10-28).
+    /// that game mode is active.
     ///
-    /// From PAUSE mode (user request of 2026-10-28): the bar first shows ONLY the "Resume"
+    /// From PAUSE mode: the bar first shows ONLY the "Resume"
     /// button (play). This way, during the pause, a downward gaze cannot trigger anything else.
     /// When activated, it ends the pause and returns directly to movement mode. For the other
     /// buttons, one then opens the menu again.
     ///
-    /// The gaze circle keeps its normal size ([CircleRadius], as in movement mode: user request
-    /// of 2026-10-28; before, it was halved). It is hidden while the gaze is in the bar zone.
+    /// The gaze circle keeps its normal size ([CircleRadius], as in movement mode).
+    /// It is hidden while the gaze is in the bar zone.
     ///
-    /// KEYBOARD MENU BAR (step 12, user's choice of 2026-10-31): when the gaze keyboard is
+    /// KEYBOARD MENU BAR: when the gaze keyboard is
     /// shown, looking below the screen does NOT open the classic bar, but the keyboard's one
-    /// (KeyboardMenu = true). Since 2026-11-01 (user remarks), from left to right:
+    /// (KeyboardMenu = true). From left to right:
     ///   Up / down     puts the keyboard at the top of the screen, or brings it back down
     ///                 (remembered);
     ///   Size          100 % → 75 % → 50 % → 100 %... (the button shows the current size);
-    ///   Input box     switch (green border): the band of the last typed words (step 14);
-    ///   Language      opens the list of the layouts of the Keyboards folder (step 14);
+    ///   Input box     switch (green border): the band of the last typed words;
+    ///   Language      opens the list of the layouts of the Keyboards folder;
     ///   Pause         switches to pause mode (the keyboard is hidden, and comes back on resume).
     /// No "Close" button: it duplicated the one placed above the keyboard (removed at the
-    /// user's request of 2026-11-02).
+    /// user's).
     /// Up / down, Size and Input box leave the menu open, like "Mouse tracking".
     /// Language opens a full-screen list (KeyboardListMode). "My words" is in the General tab
-    /// of the settings (user request of 2026-11-02). The keyboard stays shown, and if it is at
+    /// of the settings. The keyboard stays shown, and if it is at
     /// the bottom it MOVES UP above the bar instead of being covered
     /// (GazeKeyboard.SetBottomReserve); it moves back down when the menu closes.
     ///
@@ -84,7 +84,7 @@ namespace GazeBar
         /// <summary>
         /// Space between two buttons, and between the buttons and the edge of the bar, in pixels.
         /// Large enough so that the progress ring of a button does not touch its neighbour.
-        /// Step 11: these three distances are pixels of the 4K screen, converted for the current
+        /// These three distances are pixels of the 4K screen, converted for the current
         /// screen (ScreenMetrics.Px, or ScreenMetrics.GazePx for the gaze margin).
         /// </summary>
         private const double Gap4K = 60;
@@ -142,7 +142,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// keyboardMenu = true: the menu bar of the gaze keyboard (step 12) instead of the
+        /// keyboardMenu = true: the menu bar of the gaze keyboard instead of the
         /// classic bar.
         /// </summary>
         public MenuMode(bool keyboardMenu)
@@ -223,9 +223,9 @@ namespace GazeBar
             }
 
             // 3. The gaze circle. It follows the position brought back into the screen: gaze
-            //    off screen → it slides along the edge (user request of 2026-10-29).
+            //    off screen → it slides along the edge.
             //    It is hidden when the gaze is in the bar zone (with its margin), or down below
-            //    the screen: it would hinder reading the buttons (request of 2026-10-28).
+            //    the screen: it would hinder reading the buttons.
             //    Its position keeps being tracked: it reappears without a jump when leaving the
             //    zone. Gaze lost: it stays where it is.
             if (gaze.Available)
@@ -236,7 +236,7 @@ namespace GazeBar
                     _circlePlaced = true;
                 }
                 _smoothed.Follow(gaze.XScreen, gaze.YScreen, gaze.NowMs);
-                // Keyboard bar (step 12): the circle is also hidden above the keyboard.
+                // Keyboard bar: the circle is also hidden above the keyboard.
                 if (InBar(gaze) || (KeyboardMenu && Manager.Keyboard.Contains(_smoothed.X, _smoothed.Y)))
                 {
                     Manager.Layer.HideCircle();
@@ -285,7 +285,7 @@ namespace GazeBar
                     break;
 
                 case MenuAction.Keyboard:
-                    // The gaze keyboard (step 12). Already open (hidden during the game): the
+                    // The gaze keyboard. Already open (hidden during the game): the
                     // button closes it. Otherwise, it opens and appears when back in movement
                     // mode. Layout file missing or incorrect: message.
                     if (Manager.Keyboard.IsOpen)
@@ -335,7 +335,7 @@ namespace GazeBar
 
                 case MenuAction.Resume:
                     // End of the pause: straight back to movement mode, without showing the
-                    // other buttons (user's choice of 2026-10-28).
+                    // other buttons.
                     Manager.ChangeMode(new MovementMode());
                     break;
 
@@ -419,7 +419,7 @@ namespace GazeBar
             }
             else if (KeyboardMenu && !_confirmation)
             {
-                // Keyboard menu bar (step 12, see the class comment).
+                // Keyboard menu bar (see the class comment).
                 //   E70E / E70D = chevron up / down, E769 = pause,
                 //   E70F = pencil (input box), E774 = globe (language).
                 if (p.KeyboardAtTop)
@@ -433,7 +433,7 @@ namespace GazeBar
                 Add(buttons, actions,
                         GazeButton.Text(p.KeyboardSize.ToString("F0") + " %", Texts.Get("menu.keyboardSize")),
                         MenuAction.KeyboardSize);
-                // Step 14: input box (switch) and language ("My words" is in the settings).
+                // Input box (switch) and language ("My words" is in the settings).
                 GazeButton zone = new GazeButton("\uE70F", null, Texts.Get("menu.inputBox"));
                 zone.SetLit(p.InputBox);
                 Add(buttons, actions, zone, MenuAction.InputBox);
@@ -477,8 +477,7 @@ namespace GazeBar
             // ── Button size: [IconSize], reduced if the bar does not fit in the screen
             //    width.
             int n = buttons.Count;
-            // The menu buttons are twice as big as the other icons
-            // (user request of 2026-10-22).
+            // The menu buttons are twice as big as the other icons.
             double size = 2 * p.IconSizePx;
             double maxSize = (width - ScreenMetrics.Px(20) - (n + 1) * Gap) / n;
             size = Math.Max(ScreenMetrics.Px(20), Math.Min(size, maxSize));
@@ -519,7 +518,7 @@ namespace GazeBar
                 TextBlock text = new TextBlock();
                 text.Text = _message;
                 text.Foreground = Brushes.White;
-                // The message follows the Windows text size (step 11).
+                // The message follows the Windows text size.
                 text.FontSize = ScreenMetrics.Font(28);
                 Border frame = new Border();
                 frame.Background = new SolidColorBrush(Color.FromArgb(0xE0, 0x20, 0x21, 0x24));
@@ -534,7 +533,7 @@ namespace GazeBar
                 surface.Children.Add(frame);
 
                 // The message is part of the bar for closing. Its measured height is in WPF
-                // units: it is converted to screen pixels (step 11; it was a fixed estimate of
+                // units: it is converted to screen pixels (it was a fixed estimate of
                 // 80 px before).
                 double messageHeight = frame.DesiredSize.Height / layer.LengthToWpf(1);
                 zoneTop = top - ScreenMetrics.Px(20) - messageHeight;
@@ -547,7 +546,7 @@ namespace GazeBar
             _topZone = zoneTop - zoneMargin;
 
             // Keyboard bar: the keyboard (if at the bottom) moves up above the bar and its
-            // optional message, with a small gap (request of 2026-11-01).
+            // optional message, with a small gap.
             if (KeyboardMenu)
             {
                 Manager.Keyboard.SetBottomReserve(height - zoneTop + ScreenMetrics.Px(20));

@@ -6,7 +6,7 @@ using System.Windows.Media.Imaging;
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: takes a picture of a rectangle of the screen (step 3, action choice mode).
+    /// MODEL: takes a picture of a rectangle of the screen (action choice mode).
     ///
     /// We go through GDI, the drawing library built into Windows (see NativeMethods),
     /// then convert the resulting image into a WPF image (BitmapSource) to display it.

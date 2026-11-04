@@ -9,6 +9,8 @@ Commencez par l'[architecture](docs/architecture.fr.md) pour vous repérer dans 
 
 - **Le code, les noms et les commentaires sont écrits en anglais** : classes, méthodes, champs,
   fichiers, dossiers, messages du journal et commentaires du code.
+- **Les commentaires décrivent le code tel qu'il est**, au présent. Pas de « step 12: », pas de
+  dates, pas de « avant, … » : l'historique est dans Git et dans les pull requests.
 - Les textes montrés à l'utilisateur ne sont PAS écrits dans le code : ils sont dans les fichiers
   de langue du dossier `Languages` (`Languages/en.json`, `Languages/fr.json`…) et sont lus avec
   `Texts.Get("clé")` ou `Texts.Format("clé", valeurs)` (voir `Texts.cs`). Les messages du journal

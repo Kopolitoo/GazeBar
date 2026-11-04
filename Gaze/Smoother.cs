@@ -5,9 +5,9 @@ namespace GazeBar
     /// <summary>
     /// GAZE SMOOTHING, shared by every mode that makes a circle follow the gaze.
     ///
-    /// ─── Why the movement used to "stutter" ───
+    /// ─── Why a single-stage smoothing "stutters" ───
     ///
-    /// Before, each mode did on each tick: position += (gaze − position) × [Smoothing].
+    /// The simplest smoothing does on each tick: position += (gaze − position) × [Smoothing].
     /// This is a "single-stage" smoothing. It has two flaws:
     ///
     ///  1. The PCEye 5 only sends about 30 measures per second, while the screen redraws 60
@@ -23,9 +23,9 @@ namespace GazeBar
     ///
     ///  1. TWO STAGES in a row ("double smoothing"): the first stage follows the gaze, the
     ///     second follows the first. The second stage receives an already rounded curve: the
-    ///     circle's speed no longer jerks, it varies smoothly. The gaze jitter is also better
-    ///     filtered. Each stage is twice as fast as the old single smoothing: the average lag
-    ///     behind the gaze stays the same as before, for the same [Smoothing] setting.
+    ///     circle's speed does not jerk, it varies smoothly. The gaze jitter is also better
+    ///     filtered. Each stage is twice as fast as a single smoothing: the average lag
+    ///     behind the gaze stays the same, for the same [Smoothing] setting.
     ///
     ///  2. The smoothing depends on the REAL elapsed time, not on the number of ticks: a late
     ///     tick moves the circle a bit more, an early tick a bit less. The movement is regular.
@@ -70,7 +70,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Smoother that reads its smoothing elsewhere (step 9: game mode uses [GameSmoothing]).
+        /// Smoother that reads its smoothing elsewhere (game mode uses [GameSmoothing]).
         /// readSmoothing is a function, called on each tick: a change of the setting applies
         /// immediately.
         /// </summary>

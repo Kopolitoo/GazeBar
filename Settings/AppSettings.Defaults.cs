@@ -23,7 +23,7 @@ namespace GazeBar
 
         /// <summary>
         /// Resets every setting to its initial value (those of the specification).
-        /// The "Défaut" button of each settings mode tab (step 7) only resets the settings of
+        /// The "Défaut" button of each settings mode tab only resets the settings of
         /// its tab: it reads these values from a new object (new AppSettings()).
         /// </summary>
         public void DefaultValues()
@@ -31,7 +31,7 @@ namespace GazeBar
             FileVersion = CurrentVersion;
 
             Smoothing = 0.16;
-            // Sizes in % of the screen height (step 11): the old values in pixels of the 4K
+            // Sizes in % of the screen height: the old values in pixels of the 4K
             // screen (8, 30, 900, 190, 120) divided by 21.6, rounded.
             CursorDeadZone = 0.4;
             MaxMeasureAge = 300;
@@ -104,7 +104,7 @@ namespace GazeBar
         public void Fix()
         {
             Smoothing = Clamp(Smoothing, 0.01, 1);
-            // Size limits in % of the screen height (step 11).
+            // Size limits in % of the screen height.
             CursorDeadZone = Clamp(CursorDeadZone, 0, 5);
             MaxMeasureAge = Clamp(MaxMeasureAge, 50, 5000);
 

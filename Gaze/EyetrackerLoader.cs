@@ -8,14 +8,14 @@ namespace GazeBar
 {
     /// <summary>
     /// MODEL: finds and loads the eyetracker DLLs at startup, WITHOUT shipping them with
-    /// GazeBar (2026-11-02).
+    /// GazeBar.
     ///
     /// The eyetracker is read with the Tobii.Interaction library (Tobii Core SDK): the file
     /// and folder names below are therefore Tobii's, they cannot change.
     ///
     /// Why? The eyetracker DLLs are proprietary code: we do not want to distribute them with
     /// GazeBar. So the Tobii.Interaction NuGet package is only used to COMPILE (see
-    /// GazeBar.csproj: its DLLs are no longer copied next to GazeBar.exe). At startup, this
+    /// GazeBar.csproj: its DLLs are not copied next to GazeBar.exe). At startup, this
     /// file goes and gets them where they already are on the PC.
     ///
     /// There are three DLLs:

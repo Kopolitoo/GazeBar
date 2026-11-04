@@ -27,11 +27,11 @@ namespace GazeBar
         /// <summary>
         /// True if looking down below the screen can open the menu during this mode.
         ///
-        /// Since step 6 (user's choice of 2026-10-25), the menu ONLY opens from movement,
+        /// The menu ONLY opens from movement,
         /// pause and game modes. The other modes have their own way out: a "back" button in
         /// the magnifier, the action choice and the drag and drop.
         /// The default answer is therefore "no"; only MovementMode, PauseMode and GameMode
-        /// (step 9) replace it with "yes" (with override).
+        /// replace it with "yes" (with override).
         /// </summary>
         public virtual bool MenuAllowed
         {
@@ -61,7 +61,7 @@ namespace GazeBar
 
         /// <summary>
         /// Called when the Windows resolution, scaling or text size changed during this mode
-        /// (step 11, see ScreenMetrics.cs).
+        /// (see ScreenMetrics.cs).
         /// Returns true if the mode adapted itself (for example movement mode, which redraws
         /// everything on each tick with the new sizes). Returns false (default) if the mode
         /// cannot carry on: its buttons and its photo were placed for the old screen. The

@@ -3,7 +3,7 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// GAME MODE (step 9 of the roadmap, section "10. Game mode" of the specification).
+    /// GAME MODE (section "10. Game mode" of the specification).
     ///
     /// Entry: "Game" button of the menu. Exit: looking down, below the screen, for
     /// [MenuDelay] opens the menu (MenuAllowed = yes), where the button becomes "Quit game".
@@ -15,7 +15,7 @@ namespace GazeBar
     /// Two variants, chosen by the [GameMouse] setting:
     ///
     ///   "direct" (default, for Mindball Play): the cursor moves EXACTLY as in movement mode
-    ///   with mouse tracking, but without a circle (user request of 2026-10-28: with
+    ///   with mouse tracking, but without a circle (user request: with
     ///   [GameSmoothing] = 0.7 then 0.3, the cursor stuttered too much). So: the same double
     ///   smoothing as movement mode, but with its own [GameSmoothing] setting (0.16 by
     ///   default, like [Smoothing]: the user wants two separate settings), and the
@@ -43,7 +43,7 @@ namespace GazeBar
     {
         /// <summary>
         /// Gamepad mode: maximum cursor speed, in 4K screen pixels per second (converted with
-        /// ScreenMetrics.GazePx, step 11), reached when the gaze is at the screen edge (before
+        /// ScreenMetrics.GazePx), reached when the gaze is at the screen edge (before
         /// multiplying by [GameSensitivity]).
         /// Starting value, to adjust after testing.
         /// </summary>
@@ -76,14 +76,14 @@ namespace GazeBar
             get { return "Game (" + AppSettings.Current.GameMouse + ")"; }
         }
 
-        /// <summary>The menu opens from the game: it is the gaze way out (choice of 2026-10-25).</summary>
+        /// <summary>The menu opens from the game: it is the gaze way out.</summary>
         public override bool MenuAllowed
         {
             get { return true; }
         }
 
         /// <summary>
-        /// The screen changed (step 11): this mode carries on, because a game must not be
+        /// The screen changed: this mode carries on, because a game must not be
         /// interrupted, and the cursor position is recomputed on each tick.
         /// </summary>
         public override bool AdaptToScreen()
@@ -239,7 +239,7 @@ namespace GazeBar
 
             // From 0 (edge of the neutral zone) to 1 (screen edge), without going above 1.
             double force = Math.Min(1.0, (distance - neutralZone) / (maxDistance - neutralZone));
-            // MaxGamepadSpeed is in 4K screen pixels per second: converted (step 11).
+            // MaxGamepadSpeed is in 4K screen pixels per second: converted.
             double speed = force * ScreenMetrics.GazePx(MaxGamepadSpeed) * AppSettings.Current.GameSensitivity;
 
             // Same direction as the gap (gap / distance = direction of length 1).

@@ -3,7 +3,7 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// MOVEMENT MODE (default mode, step 2 of the specification).
+    /// MOVEMENT MODE (default mode).
     ///
     /// A [CircleRadius] circle follows the gaze on the overlay, smoothed ([Smoothing], see
     /// Smoother.cs). The mouse cursor does not move, unless [MouseTracking] is on: it then
@@ -21,12 +21,12 @@ namespace GazeBar
     /// the right edge. The fixation, however, is forgotten as soon as the gaze moves away
     /// from the screen; but a gaze JUST next to the screen (narrow band, see
     /// GazeState.NearScreen) still counts, brought back to the edge: otherwise, in the
-    /// corners, the measures overflowing a little prevented fixed gaze (2026-11-02).
+    /// corners, the measures overflowing a little prevented fixed gaze.
     /// Gaze lost (no measure): the circle and the cursor stay where they are.
     ///
-    /// It is one of the only modes from which the menu can open (with pause, step 6).
+    /// It is one of the only modes from which the menu can open (with pause).
     ///
-    /// Step 12, gaze keyboard (see GazeKeyboard): when it is shown and the gaze is ON it, this
+    /// Gaze keyboard (see GazeKeyboard): when it is shown and the gaze is ON it, this
     /// mode hands over to it: the cursor does not move, the circle is hidden, no fixation
     /// starts, and the keys react. The circle keeps following the gaze secretly: it reappears
     /// without a jump when leaving the keyboard.
@@ -80,7 +80,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The screen changed (step 11): this mode carries on, because it redraws the circle on
+        /// The screen changed: this mode carries on, because it redraws the circle on
         /// each tick, with the sizes of the new screen.
         /// </summary>
         public override bool AdaptToScreen()
@@ -123,7 +123,7 @@ namespace GazeBar
         {
             AppSettings p = AppSettings.Current;
 
-            // Is the gaze on the gaze keyboard (step 12)? Real gaze, on the screen.
+            // Is the gaze on the gaze keyboard? Real gaze, on the screen.
             GazeKeyboard keyboard = Manager.Keyboard;
             bool onKeyboard = gaze.OnScreen && keyboard.Contains(gaze.X, gaze.Y);
 
@@ -158,7 +158,7 @@ namespace GazeBar
             // 4. The fixation. In the ignored zone, it is not allowed to progress.
             //    A gaze clearly off screen resets it; right next to the screen, it is brought
             //    back to the edge (see FixationDetector.Add).
-            //    No progress ring here (user's choice): the ring is reserved for buttons
+            //    No progress ring here: the ring is reserved for buttons
             //    (options icon, action choice, menu bar).
             _fixation.Add(gaze);
             if (_ignoredZone || onKeyboard)
@@ -167,7 +167,7 @@ namespace GazeBar
                 _fixation.Reset();
             }
 
-            // 4b. The gaze keyboard (step 12): key hovered, activated... If it is not shown,
+            // 4b. The gaze keyboard: key hovered, activated... If it is not shown,
             //     it does nothing.
             keyboard.Update(gaze);
 
@@ -178,7 +178,7 @@ namespace GazeBar
             }
 
             // 5. Drawing the circle (as soon as there is a position).
-            //    It is hidden above the keyboard (step 12), including when the gaze is below
+            //    It is hidden above the keyboard, including when the gaze is below
             //    the screen: the circle, clamped to the bottom edge, would then be on the keyboard.
             if (_placed)
             {
@@ -213,8 +213,8 @@ namespace GazeBar
         ///  - as soon as the circle moves further away, the cursor gets "on the way" and
         ///    follows the circle on EVERY tick, continuously, until it has caught up (less than
         ///    one pixel).
-        /// Before, the cursor stayed still then jumped deadZone pixels at once, again and
-        /// again: it moved in small leaps, which gave a jerky movement.
+        /// (A cursor that stays still then jumps deadZone pixels at once, again and again,
+        /// moves in small leaps: the movement is jerky.)
         /// The real cursor position is read: if it was moved by the mouse in the meantime,
         /// this is taken into account.
         /// </summary>

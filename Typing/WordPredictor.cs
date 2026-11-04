@@ -12,7 +12,7 @@ using System.Xml;
 namespace GazeBar
 {
     /// <summary>
-    /// LOGIC: word prediction for the gaze keyboard (step 13, "clavier-prediction").
+    /// LOGIC: word prediction for the gaze keyboard ("clavier-prediction").
     ///
     /// It answers one question: "the user typed these letters, which are the 3 most likely
     /// words that start this way?" (method Suggest).
@@ -31,11 +31,11 @@ namespace GazeBar
     ///      settings.json. It is NEVER in the public repository: it holds the words added by
     ///      the user and how many times each word was used (the "learning").
     ///
-    /// Ranking of a word (specification, validated on 2026-11-01):
+    /// Ranking of a word (specification):
     ///     score = frequency in Lexique + [UsageBonus] × number of uses
     /// Usual words therefore rise quickly. An added word (not in Lexique) starts at 0.
     ///
-    /// NEXT WORD (user request of 2026-11-02): the prediction also remembers PAIRS of words
+    /// NEXT WORD: the prediction also remembers PAIRS of words
     /// written one after the other ("je" → "suis", "l'" → "homme"), in the personal
     /// dictionary. Right after a space, the 3 boxes show the words that most often followed
     /// the previous word; while typing, these words gain [FollowBonus] per occurrence.
@@ -172,7 +172,7 @@ namespace GazeBar
             {
                 return;
             }
-            // Language change (step 14, "Langue" button): the old language's dictionary is
+            // Language change ("Langue" button): the old language's dictionary is
             // forgotten at once. Otherwise, if the new language's file were missing, French
             // words would still be suggested.
             bool changement = _requestedLanguage != null;
@@ -288,8 +288,8 @@ namespace GazeBar
         /// <summary>
         /// The (at most) 3 most likely words starting with "typed" (ignoring accents and
         /// case), from most to least likely.
-        /// Only words at least as long as what was typed are suggested ("ete" suggests "été",
-        /// rule validated on 2026-11-02). If what was typed is itself a known word, it goes in
+        /// Only words at least as long as what was typed are suggested ("ete" suggests
+        /// "été"). If what was typed is itself a known word, it goes in
         /// the 1st box (so looking at it writes the space after it). Words are returned as
         /// stored: the keyboard adds the capital letter if needed.
         ///
@@ -367,7 +367,7 @@ namespace GazeBar
 
             unknownWord = !known && prefix.Length >= 2;
 
-            // User request of 2026-11-02: if what was typed is already a known word, it comes
+            // User request: if what was typed is already a known word, it comes
             // FIRST. Looking at it simply writes the space after it (faster than looking for
             // the Space key). The other boxes keep the best ones.
             string exactMatch = KnownShape(typed);
@@ -394,7 +394,7 @@ namespace GazeBar
         private void Remember(string word, double frequency, string typed, Dictionary<string, int> followers,
                              List<string> best, List<double> scores)
         {
-            // Rule validated by the user on 2026-11-02: a word AT LEAST AS LONG as what was
+            // Rule validated by the user: a word AT LEAST AS LONG as what was
             // typed ("été" for "ete"). The fully typed word is skipped here: Suggest puts it
             // back in the 1st box itself.
             if (word.Length < typed.Length || string.Equals(word, typed, StringComparison.OrdinalIgnoreCase))
@@ -546,7 +546,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Step 14 ("Mes mots" button): a copy of the list of words added with the "+" box,
+        /// A copy of the list of words added with the "+" box,
         /// in alphabetical order (ignoring accents and case).
         /// </summary>
         public List<string> AddedWords()
@@ -558,7 +558,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Step 14 ("Mes mots" button): removes a word added by mistake. Its usage count and
+        /// Removes a word added by mistake. Its usage count and
         /// the pairs it appears in (next word) are forgotten too, so it is never suggested
         /// again. The file is saved right away. Lexique words are untouched. The word is not
         /// written to the log (privacy).
@@ -718,7 +718,7 @@ namespace GazeBar
         {
             _toSave = false;
             PersonalFile file = new PersonalFile();
-            // Version 2 (2026-11-02): word pairs added (Followers). A version 1 file is read
+            // Version 2: word pairs added (Followers). A version 1 file is read
             // as is: it simply has no pairs.
             file.FileVersion = 2;
             file.Words = new List<PersonalWord>();

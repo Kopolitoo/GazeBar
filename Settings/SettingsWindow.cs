@@ -11,27 +11,27 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// INTERFACE: the settings mode window (step 7), full screen, black background.
+    /// INTERFACE: the settings mode window, full screen, black background.
     ///
-    /// Layout validated by the user on 2026-10-26:
-    ///   - tabs on the left (SettingsCatalog), grouped in collapsible categories since
-    ///     2026-11-02; one tab shown at a time, five settings at most, nothing scrolls;
+    /// Layout validated by the user:
+    ///   - tabs on the left (SettingsCatalog), grouped in collapsible categories;
+    ///     one tab shown at a time, five settings at most, nothing scrolls;
     ///   - each setting: its name, an explanation sentence, then "−", the value, "+" (or a
     ///     switch for a yes / no, see below); the default value is recalled below the value;
     ///   - on the right: "Défaut" at the top (restores the shown tab's values, after
     ///     confirmation) and "Retour" in the middle of the edge (back to movement mode).
     ///
-    /// Step 10: an "Icônes" tab, with a single big "Configurer les icônes" button that asks
+    /// An "Icônes" tab, with a single big "Configurer les icônes" button that asks
     /// the mode to open the configuration screen (IconConfigMode).
     ///
-    /// 2026-10-29: an "Outils" tab, with two big buttons "Calibration" and "Diagnostic"
-    /// (they used to be in the menu bar). As for "Configurer les icônes", the window only
+    /// An "Outils" tab, with two big buttons "Calibration" and "Diagnostic".
+    /// As for "Configurer les icônes", the window only
     /// NOTIFIES the mode (CalibrationRequested and DiagnosticRequested events): SettingsMode
     /// starts the tool and changes mode.
     ///
-    /// Step 15: a "Profils" tab (Système category), with two big buttons:
-    ///   - "Enregistrer les réglages actuels": opens the NAME page (request of
-    ///     2026-11-02): a text box, filled with the dated name, where the user types the
+    /// A "Profils" tab (Système category), with two big buttons:
+    ///   - "Enregistrer les réglages actuels": opens the NAME page: a text box, filled with the
+    ///     dated name, where the user types the
     ///     profile name with the gaze keyboard (the mode shows it: NamingStarted /
     ///     NamingEnded), then "Enregistrer" or "Annuler". The page sits in the part of the
     ///     screen the keyboard leaves free (SetKeyboardZone). If the name already exists, a
@@ -65,7 +65,7 @@ namespace GazeBar
         private const double TabGap = 20;         // gap between two tabs
         private const double TopTabs = 60;         // top of the first tab
         private const double BottomTabs = 1040;        // the last tab stops before this line
-        private const double TabIndent = 40;       // indent of tabs below their category (2026-11-02)
+        private const double TabIndent = 40;       // indent of tabs below their category
         private const double LeftContent = 460;
         private const double TopRow = 92;
         private const double StepRow = 184;           // from one setting row to the next
@@ -76,8 +76,8 @@ namespace GazeBar
         private const double ValueWidth = 290;
         private const double ChoiceWidth = 260;       // the two buttons of a choice between two words
 
-        // ── The switch of a yes / no setting (2026-11-02, Bootstrap "switch" style).
-        //    The gaze TARGET stays large (the whole room of the former "Non" and "Oui"
+        // ── The switch of a yes / no setting (Bootstrap "switch" style).
+        //    The gaze TARGET stays large (the room of two "Non" and "Oui"
         //    buttons: 2 × 260 + 18 = 538 × 120); the drawn switch sits inside it.
         private const double SwitchWidth = 150;   // the track (the "pill")
         private const double SwitchHeight = 76;
@@ -113,11 +113,11 @@ namespace GazeBar
         // "Profils" ("Profil chargé…"), or null. Cleared when the tab changes.
         private string _message;
 
-        // Step 15: the profile chosen in the list, awaiting confirmation ("Charger le
+        // The profile chosen in the list, awaiting confirmation ("Charger le
         // profil … ? Oui / Non"), or null.
         private FoundProfile _profileToConfirm;
 
-        // Profile name page (2026-11-02): open or not, its text box, the typed text (kept
+        // Profile name page: open or not, its text box, the typed text (kept
         // when the page is rebuilt), "select all" at the first showing (the first letter typed
         // replaces the suggested name), the name waiting for "replace it?" (or null), and the
         // sentence under the box (error, or null for the help).
@@ -143,7 +143,7 @@ namespace GazeBar
         /// <summary>
         /// Creates the window, opened on tab number "tab" (0 = the first). When coming back
         /// from the icon configuration screen, it opens on the "Icônes" tab.
-        /// Step 15: when coming back from the profile list, "profileToConfirm" is the chosen
+        /// When coming back from the profile list, "profileToConfirm" is the chosen
         /// profile; the page then shows the question "Charger le profil … ?".
         /// </summary>
         public SettingsWindow(int tab = 0, FoundProfile profileToConfirm = null)
@@ -190,25 +190,25 @@ namespace GazeBar
         /// <summary>Request to go back to movement mode ("Retour" button, or closing by Windows).</summary>
         public event Action BackRequested;
 
-        /// <summary>"Configurer les icônes" button of the "Icônes" tab (step 10).</summary>
+        /// <summary>"Configurer les icônes" button of the "Icônes" tab.</summary>
         public event Action IconConfigRequested;
 
-        /// <summary>"Calibration" button of the "Outils" tab (2026-10-29).</summary>
+        /// <summary>"Calibration" button of the "Outils" tab.</summary>
         public event Action CalibrationRequested;
 
-        /// <summary>"Diagnostic" button of the "Outils" tab (2026-10-29).</summary>
+        /// <summary>"Diagnostic" button of the "Outils" tab.</summary>
         public event Action DiagnosticRequested;
 
-        /// <summary>"Mes mots" button of the "Général" tab (step 14).</summary>
+        /// <summary>"Mes mots" button of the "Général" tab.</summary>
         public event Action MyWordsRequested;
 
-        /// <summary>"Charger un profil" button of the "Profils" tab (step 15).</summary>
+        /// <summary>"Charger un profil" button of the "Profils" tab.</summary>
         public event Action ProfileListRequested;
 
-        /// <summary>"Oui" to the question "Charger le profil … ?" (step 15): the profile to load.</summary>
+        /// <summary>"Oui" to the question "Charger le profil … ?": the profile to load.</summary>
         public event Action<FoundProfile> ProfileLoadRequested;
 
-        /// <summary>The profile name page opens: the mode shows the gaze keyboard (2026-11-02).</summary>
+        /// <summary>The profile name page opens: the mode shows the gaze keyboard.</summary>
         public event Action NamingStarted;
 
         /// <summary>The profile name page closes: the mode hides the gaze keyboard.</summary>
@@ -357,7 +357,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The screen changed while the window is open (step 11, called by the mode): it
+        /// The screen changed while the window is open (called by the mode): it
         /// takes the screen size again, and the page is rebuilt (an input in progress is
         /// confirmed).
         /// </summary>

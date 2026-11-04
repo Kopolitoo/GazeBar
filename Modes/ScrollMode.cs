@@ -9,41 +9,41 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// SCROLL MODE (step 8 of the specification, user's description of 2026-10-26).
+    /// SCROLL MODE (specification, user's description).
     ///
-    /// We get here from the action choice, with the "Scroll" action of the crown (slot 0 since
-    /// 2026-10-28). The cursor is on the aimed point P; it no longer moves.
+    /// We get here from the action choice, with the "Scroll" action of the crown (slot 0).
+    /// The cursor is on the aimed point P; it does not move.
     ///
     /// Display, on top of the real screen:
     ///   - the dead zone circle, FIXED on P (the cursor). Its radius is half of [CircleRadius]
     ///     (see DeadZoneFactor);
     ///   - a small colored arc, laid on the circle, on the side where the gaze is: it shows the
-    ///     scroll direction. Since 2026-10-28 (user request), it is shown ALL THE TIME, even
+    ///     scroll direction. It is shown ALL THE TIME, even
     ///     when the gaze is in the dead zone (nothing scrolls then): it always shows where
     ///     GazeBar sees the gaze. Gaze lost or on the back button: it stays at its last place;
-    ///   - circle and arc are more transparent than in the other modes (request of
-    ///     2026-10-28), to see better what scrolls underneath;
+    ///   - circle and arc are more transparent than in the other modes,
+    ///     to see better what scrolls underneath;
     ///   - a "back" button on the right edge of the screen, vertically centered: it returns to
     ///     movement mode.
     ///
     /// Scrolling:
-    ///   - DEAD ZONE = THE DRAWN CIRCLE, of radius [CircleRadius] × [DeadZoneFactor] (half,
-    ///     user request of 2026-10-28): gaze inside → nothing scrolls;
+    ///   - DEAD ZONE = THE DRAWN CIRCLE, of radius [CircleRadius] × [DeadZoneFactor] (half):
+    ///     gaze inside → nothing scrolls;
     ///   - DIRECTION: gaze above the circle → up, below → down, on the right → right, on the
     ///     left → left. Only one direction at a time: the one with the largest gap from the
     ///     center (no diagonal);
     ///   - SPEED: 0 at the edge of the dead zone, then it increases with the distance, up to
     ///     [MaxScrollSpeed] notches per second at [MaxSpeedRadii] × [CircleRadius] beyond the
-    ///     edge (three radii, user request of 2026-10-26). This speed-up distance is always
+    ///     edge (three radii). This speed-up distance is always
     ///     counted in WHOLE radii of [CircleRadius]: shrinking the dead zone only brought the
     ///     start of scrolling closer, without making the speed-up more abrupt.
     ///     Further away, it no longer increases;
     ///   - Windows "wheel events" are sent: the window under the cursor scrolls (Windows setting
     ///     "Scroll inactive windows when I hover over them", on by default).
     ///
-    /// FINE SCROLLING (user request of 2026-11-02: "scrolling is very jerky"):
-    ///   - before, the wheel went in quarter notches (30 units): at low speed, 3 or 4 small jumps
-    ///     per second. Now it goes in very small amounts, up to once per frame (about 60 times
+    /// FINE SCROLLING (user request: "scrolling is very jerky"):
+    ///   - quarter notches (30 units) would make 3 or 4 small jumps per second at low speed.
+    ///     So the wheel goes in very small amounts, up to once per frame (about 60 times
     ///     per second), as soon as there are [MinStep] units. Recent software (browsers, Word,
     ///     Explorer) adds up these small amounts and scrolls almost continuously. Very old
     ///     software, which waits for a whole notch (120), stays notch by notch: nothing can be
@@ -69,7 +69,7 @@ namespace GazeBar
     ///     (otherwise, while going to look at the button, it would scroll to the right).
     ///
     /// Gaze slightly off screen: it still counts, up to [OffScreenMargin4K] pixels beyond the
-    /// edges (user request of 2026-10-26). This enlarges the area where the speed is set:
+    /// edges. This enlarges the area where the speed is set:
     /// upwards and downwards, the screen alone is too short to reach the maximum speed. The
     /// PCEye 5 measures the gaze off screen, but less precisely; beyond the margin, the
     /// measure is considered unusable.
@@ -78,7 +78,7 @@ namespace GazeBar
     /// movement, then released: Ctrl + wheel zooms in most software, Shift + wheel often
     /// scrolls sideways.
     ///
-    /// The menu does not open during this mode (choice of 2026-10-25): the way out is the
+    /// The menu does not open during this mode: the way out is the
     /// "back" button (or the caregiver's Escape key).
     /// </summary>
     internal sealed class ScrollMode : Mode
@@ -86,8 +86,8 @@ namespace GazeBar
         /// <summary>
         /// Smallest wheel send, in Windows units (120 = one whole notch): 8 units = 1/15 of a
         /// notch. As soon as the reserve reaches this amount, EVERYTHING it contains is sent (in
-        /// whole units), on every frame if needed. Before 2026-11-02, quarter notches (30) were
-        /// sent, which made visible jumps at low speed.
+        /// whole units), on every frame if needed. (Quarter notches, 30, make visible jumps at
+        /// low speed.)
         /// If a program scrolls much too fast (some old programs count each send as a whole
         /// notch), go back to 120 here.
         /// </summary>
@@ -111,27 +111,27 @@ namespace GazeBar
 
         /// <summary>
         /// Distance, counted in circle radii from the edge, where the speed reaches
-        /// [MaxScrollSpeed]. First 1, tripled at the user's request (2026-10-26) for a more
+        /// [MaxScrollSpeed]. First 1, tripled at the user's request for a more
         /// gradual speed-up.
         /// </summary>
         private const double MaxSpeedRadii = 3;
 
         /// <summary>
         /// How far, in 4K screen pixels beyond the screen edges, the gaze still counts for
-        /// scrolling. Further away, nothing scrolls. Step 11: converted for the current screen
+        /// scrolling. Further away, nothing scrolls. Converted for the current screen
         /// with ScreenMetrics.GazePx (200 px in 4K → 100 px in 1920 × 1080).
         /// </summary>
         private const double OffScreenMargin4K = 200;
 
         /// <summary>
-        /// Radius of the dead zone (and of the drawn circle), relative to [CircleRadius]: half
-        /// (user request of 2026-10-28). Only changes this mode.
+        /// Radius of the dead zone (and of the drawn circle), relative to [CircleRadius]: half.
+        /// Only changes this mode.
         /// </summary>
         private const double DeadZoneFactor = 0.5;
 
         /// <summary>
         /// Opacity of the circle and the arc, relative to their usual opacity: 0.5 = twice as
-        /// transparent (request of 2026-10-28: "increase the transparency").
+        /// transparent (request: "increase the transparency").
         /// </summary>
         private const double Opacity = 0.5;
 

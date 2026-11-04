@@ -7,7 +7,8 @@ pour contribuer : [CONTRIBUTING.fr.md](../CONTRIBUTING.fr.md).*
 
 Les « étape N » et noms d'étapes ci-dessous renvoient à la feuille de route du cahier des
 charges (l'ordre dans lequel les fonctions ont été ajoutées). Ils aident à retrouver la pull
-request correspondante dans l'historique.
+request correspondante dans l'historique. Les commentaires du code ne les utilisent pas : ils
+décrivent le code tel qu'il est.
 
 ## Fonctionnement
 

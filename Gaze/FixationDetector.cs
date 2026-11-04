@@ -30,8 +30,8 @@ namespace GazeBar
     ///
     /// Time is measured in real milliseconds (FixationDelay), not in number of ticks.
     ///
-    /// Screen edges and corners (2026-11-02): a measure just outside the screen (see
-    /// GazeState.NearScreen) no longer interrupts the fixation; it is brought back to the edge.
+    /// Screen edges and corners: a measure just outside the screen (see
+    /// GazeState.NearScreen) does not interrupt the fixation; it is brought back to the edge.
     /// </summary>
     internal sealed class FixationDetector
     {

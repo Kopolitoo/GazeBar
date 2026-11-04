@@ -3,12 +3,12 @@ using System.Collections.Generic;
 namespace GazeBar
 {
     /// <summary>
-    /// LOGIC: decides which button (GazeButton) is looked at, and when it activates (step 4).
-    /// Since step 7, it aims at any target implementing IGazeTarget (also the targets of
+    /// LOGIC: decides which button (GazeButton) is looked at, and when it activates.
+    /// It aims at any target implementing IGazeTarget (also the targets of
     /// settings mode).
     ///
-    /// This work was done directly in ActionChoiceMode in step 3. The menu bar needs it too:
-    /// so it was moved into this small class, shared by both modes.
+    /// The action choice, the menu bar and the other screens all need it: so it is this
+    /// small class, shared by the modes.
     ///
     /// The rules:
     ///  - on each NEW gaze measure, we look for the button underneath;
@@ -30,12 +30,12 @@ namespace GazeBar
     {
         /// <summary>
         /// Number of measures in a row needed on a new button to aim at it: 2 by default;
-        /// 1 for the gaze keyboard (faster hover, 2026-11-02).
+        /// 1 for the gaze keyboard (faster hover).
         /// </summary>
         private readonly int _measuresToChange;
 
         // The list of buttons, shared with the mode (which may fill it afterwards).
-        // IReadOnlyList<IGazeTarget> (step 7): a list that can be read but not modified, of any
+        // IReadOnlyList<IGazeTarget>: a list that can be read but not modified, of any
         // targets (GazeButton, SettingTarget...). Thanks to a C# rule called "covariance", a
         // List<GazeButton> can be given as is.
         private readonly IReadOnlyList<IGazeTarget> _buttons;

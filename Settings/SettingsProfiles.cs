@@ -29,7 +29,7 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// SETTINGS PROFILES (step 15 of the specification, "profils-parametres").
+    /// SETTINGS PROFILES (specification, "profils-parametres").
     ///
     /// A PROFILE is simply a copy of the settings.json file, stored in the folder
     ///     Documents\GazeBar\Profiles
@@ -37,10 +37,10 @@ namespace GazeBar
     /// This way several sets of settings can be kept ("Evening", "Tired"...) and switched
     /// with the gaze, from the "Profiles" tab of the settings.
     ///
-    /// What this class does (design validated by the user on 2026-11-02):
+    /// What this class does (design validated by the user):
     ///   - List: the .json files of the folder, the most recent first;
     ///   - Save: writes the current settings under the name typed with the gaze keyboard
-    ///     (request of 2026-11-02; the dated name SuggestedName is offered by default);
+    ///     (request; the dated name SuggestedName is offered by default);
     ///   - Load: reads a profile (a file from an older version is converted, like
     ///     settings.json at startup), first keeps the current settings in the "automatic
     ///     backup" profile (replaced on each load: this way one can go back with the gaze),
@@ -111,7 +111,7 @@ namespace GazeBar
         /// <summary>
         /// The name suggested when saving: the date and time, for example
         /// "Réglages 2026-11-02 16h45" (in the interface language). The user can keep it or
-        /// type another one (request of 2026-11-02).
+        /// type another one.
         /// </summary>
         public static string SuggestedName()
         {

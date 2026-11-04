@@ -32,7 +32,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Step 15 (profiles): replaces all current settings at once with "newItems" (a
+        /// Replaces all current settings at once with "newItems" (a
         /// profile just read). Nothing in the program keeps a copy of the old object: each
         /// mode reads AppSettings.Current again at every tick, so everything follows at once.
         /// Saves nothing: the caller must do it.
@@ -49,7 +49,7 @@ namespace GazeBar
         /// Reads a settings file, updates a file of an older version (Refresh) then brings
         /// the values back within their limits (Fix).
         ///
-        /// Used at startup (settings.json) and in step 15 to load a profile.
+        /// Used at startup (settings.json) and to load a profile.
         /// "updated" tells whether the file came from an older version.
         /// If the file is missing or unreadable, an exception is THROWN: the caller decides
         /// what to do (start from default values, show a message…).
@@ -67,7 +67,7 @@ namespace GazeBar
                 // A file holding only "null": treated as unreadable.
                 throw new InvalidDataException("the file contains no settings");
             }
-            // Updating an old file comes BEFORE Fix (step 11): the old sizes in pixels (190…)
+            // Updating an old file comes BEFORE Fix: the old sizes in pixels (190…)
             // would exceed the new limits in % (23 at most) and would be damaged before being
             // converted.
             updated = result.Refresh();
@@ -135,7 +135,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Saves the settings to the file "path" (step 15: also used to write a profile in
+        /// Saves the settings to the file "path" (also used to write a profile in
         /// Documents\GazeBar\Profiles). The folder is created if it does not exist.
         /// Returns false if writing failed (disk full, protected folder…).
         /// </summary>

@@ -7,8 +7,8 @@ using System.Reflection;
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: starts the calibration tool of the eyetracker engine (step 4, "Calibration"
-    /// button of the "Tools" settings tab; before 2026-10-29, of the menu bar).
+    /// MODEL: starts the calibration tool of the eyetracker engine ("Calibration"
+    /// button of the "Tools" settings tab).
     ///
     /// The problem: the Tobii.Interaction 0.7.3 package has almost no documentation, and
     /// this code could not be compiled or tried on the PCEye 5. According to known examples,
