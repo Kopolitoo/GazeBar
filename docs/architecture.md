@@ -1,5 +1,7 @@
 # GazeBar architecture
 
+*Version française : [architecture.fr.md](architecture.fr.md).*
+
 *For developers. Users: see the [user guide](user-guide.md). Rules for contributors:
 [CONTRIBUTING.md](../CONTRIBUTING.md).*
 

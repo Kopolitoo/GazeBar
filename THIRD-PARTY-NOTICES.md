@@ -1,5 +1,7 @@
 # Third-party notices
 
+*Version française : [THIRD-PARTY-NOTICES.fr.md](THIRD-PARTY-NOTICES.fr.md).*
+
 GazeBar itself is under the MIT licence ([LICENSE.txt](LICENSE.txt)). This file lists the parts
 that come from others, and what GazeBar uses without shipping it.
 

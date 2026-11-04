@@ -1,5 +1,7 @@
 # Contributing to GazeBar
 
+*Version française : [CONTRIBUTING.fr.md](CONTRIBUTING.fr.md).*
+
 Thank you for your interest in GazeBar, a Windows tool that controls the mouse with eye gaze.
 Start with the [architecture](docs/architecture.md) to find your way in the code.
 
@@ -28,14 +30,15 @@ Start with the [architecture](docs/architecture.md) to find your way in the code
 
 ## Documentation
 
-- `README.md` (English) and `README.fr.md` (French) stay short: what GazeBar is, how to install
-  it, links. Keep both in step.
-- Details go in `docs/`: `user-guide.md` and `user-guide.fr.md` (for users, keep both in step),
-  `architecture.md` (for developers, English only), `manual-tests.md` and `manual-tests.fr.md`.
+- Every explanatory file exists in English (`name.md`) and in French (`name.fr.md`), with a
+  link at the top to the other version. Keep both in step.
+- `README.md` stays short: what GazeBar is, how to install it, links.
+- Details go in `docs/`: `user-guide.md` (for users), `architecture.md` (for developers),
+  `manual-tests.md`. `docs/GUIDE-GIT.md` is in French only.
 - A pull request that changes what the user sees updates the user guide; one that adds a class
   or a setting updates the architecture; a new feature adds its manual test.
 - A new file taken from someone else (word list, image, code) is listed in
-  `THIRD-PARTY-NOTICES.md` with its licence.
+  `THIRD-PARTY-NOTICES.md` (and `THIRD-PARTY-NOTICES.fr.md`) with its licence.
 
 ## Testing
 

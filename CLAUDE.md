@@ -11,6 +11,7 @@
   compiled or not tested, and never promise untested behaviour.
 - The personal dictionary stays out of the public repository. Typed text is never logged. Gaze data is never saved
   (no positions file, no gaze coordinates in the log): eyetracker licence.
-- Docs: short README.md + README.fr.md; details in docs/ (user guide fr + en, architecture in
-  English, manual tests fr + en). Update them with the code (see CONTRIBUTING.md, Documentation).
+- Docs: every explanatory file in English (name.md) and French (name.fr.md), each linking to the
+  other: README, CONTRIBUTING, THIRD-PARTY-NOTICES, docs/user-guide, docs/architecture,
+  docs/manual-tests. Update both with the code (see CONTRIBUTING.md, Documentation).
 - See CONTRIBUTING.md for the general rules.
