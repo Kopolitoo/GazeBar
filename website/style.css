@@ -124,12 +124,20 @@ a:hover {
   align-items: center;
   justify-content: center;
   min-height: 60px;
-  min-width: 140px;
+  gap: 0.6rem;
+  min-width: 160px;
   padding: 0.4rem 1.2rem;
   border: 2px solid var(--blue);
   border-radius: 999px;
   font-weight: 600;
   text-decoration: none;
+}
+
+.lang-switch img {
+  height: 18px;
+  width: auto;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
 .lang-switch:hover {

@@ -12,5 +12,8 @@ Le petit site qui présente GazeBar aux visiteurs non techniciens, à l'adresse
 - `images/` : logo et icône (copies de `docs/images` et de l'icône de l'application, réduites).
 - `favicon.ico` : copie de `Resources/GazeBar.ico`.
 
-Pour voir une modification, ouvrir `index.html` dans un navigateur. L'envoi des fichiers sur
-l'hébergement est une étape suivante.
+Pour voir une modification, ouvrir `index.html` dans un navigateur.
+
+Mise en ligne : l'hébergement OVH est relié à ce dépôt (branche `main`). Quand une pull request
+est fusionnée, un webhook GitHub prévient OVH, qui recopie le dépôt. Le fichier `.htaccess` à la
+racine du dépôt fait que le site ne montre que le dossier `website/`.

@@ -12,5 +12,8 @@ The small website that presents GazeBar to non-technical visitors, at
 - `images/`: logo and icon (copies of `docs/images` and the application icon, resized).
 - `favicon.ico`: copy of `Resources/GazeBar.ico`.
 
-To see a change, open `index.html` in a web browser. Sending the files to the hosting is a
-later step.
+To see a change, open `index.html` in a web browser.
+
+Going online: the OVH hosting is linked to this repository (branch `main`). When a pull request
+is merged, a GitHub webhook tells OVH, which copies the repository again. The `.htaccess` file
+at the root of the repository makes the site show only the `website/` folder.
