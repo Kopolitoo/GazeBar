@@ -162,7 +162,8 @@ namespace GazeBar
             if (sentCount != array.Length)
             {
                 // Known case: a window started as administrator refuses the keys simulated by
-                // a normal program ("ui-access" step of the roadmap).
+                // a normal program. The "full installation" has UI access and is not refused
+                // (see UiAccess.cs).
                 App.Log("SendInput (" + what + ") : " + sentCount + " inputs out of " + array.Length +
                         " accepted (Windows error " + Marshal.GetLastWin32Error() + ")");
             }

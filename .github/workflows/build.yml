@@ -38,8 +38,26 @@ jobs:
         shell: pwsh
         run: ./.github/scripts/check-data-files.ps1
 
+      - name: Check the two manifests (normal and with UI access)
+        shell: pwsh
+        run: ./.github/scripts/check-manifests.ps1
+
+      # First the "full installation" build, with UI access (UiAccess=true, see
+      # GazeBar.csproj), only to check that it compiles and asks for UI access. It is not kept:
+      # unsigned, it would not start. Its own folders (bin/uiaccess, obj/uiaccess), apart from the normal build.
+      - name: Compile the full installation build (UI access)
+        run: dotnet build GazeBar.csproj --configuration Release -p:UiAccess=true -p:OutDir=${{ github.workspace }}/bin/uiaccess/ -p:IntermediateOutputPath=obj/uiaccess/
+
+      - name: Check that the full installation build asks for UI access
+        shell: pwsh
+        run: ./.github/scripts/check-exe-manifest.ps1 bin/uiaccess/GazeBar.exe true
+
       - name: Compile GazeBar (Release, x86)
         run: dotnet build GazeBar.csproj --configuration Release
+
+      - name: Check that the normal build does not ask for UI access
+        shell: pwsh
+        run: ./.github/scripts/check-exe-manifest.ps1 bin/Release/net48/GazeBar.exe false
 
       - name: Check that no eyetracker DLL is in the output
         shell: pwsh

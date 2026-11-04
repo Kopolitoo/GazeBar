@@ -65,6 +65,9 @@ namespace GazeBar
 
             Log("GazeBar " + Version + " starting");
 
+            // "UI access" (see Platform/UiAccess.cs): only the "full installation" has it.
+            Log("UI access: " + (UiAccess.IsActive() ? "yes" : "no"));
+
             // Safety nets: whatever the error, release the mouse buttons and the Ctrl, Shift,
             // Alt keys (a button or key left pressed would disturb the whole computer),
             // and write the error to the log.

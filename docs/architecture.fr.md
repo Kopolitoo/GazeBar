@@ -44,14 +44,14 @@ l'explication de la classe.
 
 | Dossier | Contenu |
 |---|---|
-| (racine) | `App.xaml` (point d'entrée : lit les réglages, ouvre la surcouche et le gestionnaire de modes), `GazeBar.csproj`, `app.manifest` |
+| (racine) | `App.xaml` (point d'entrée : lit les réglages, ouvre la surcouche et le gestionnaire de modes), `GazeBar.csproj`, `app.manifest`, `app.uiaccess.manifest` |
 | `Gaze` | lecture du regard et traitement : `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
 | `Modes` | une classe par mode, et `ModeManager` |
 | `Actions` | ce que propose le choix d'action : `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
 | `Typing` | le clavier au regard et la prédiction de mots : `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
 | `Settings` | le fichier des réglages, les profils et la fenêtre des paramètres : `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow`, `SettingTarget` |
 | `Ui` | fenêtres et boutons au regard : `OverlayWindow`, `DiagnosticWindow`, `CursorSampler`, `GazeButton`, `ButtonAimer`, `IGazeTarget`, `Texts` |
-| `Platform` | appels à Windows : `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup` |
+| `Platform` | appels à Windows : `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess` |
 | `Languages`, `Keyboards`, `Dictionaries` | fichiers de données copiés à côté de `GazeBar.exe` (textes, dispositions de clavier, dictionnaires de prédiction) |
 | `Resources` | l'icône du programme |
 
@@ -277,6 +277,14 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
 - Le calque se remet au-dessus de toutes les fenêtres deux fois par seconde.
 - `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
+- `app.uiaccess.manifest` (étape `ui-access`) : le même manifeste avec `uiAccess="true"`, utilisé
+  seulement par la version « installation complète » (`dotnet build -p:UiAccess=true`).
+  L'« accès à l'interface » (UI access) met le cercle du regard au-dessus du menu Démarrer et
+  permet aux clics et aux touches d'atteindre les fenêtres lancées en administrateur. Windows ne
+  lance un tel programme que s'il est signé par un certificat approuvé et installé dans
+  `C:\Program Files` : Visual Studio et le .zip simple gardent donc `app.manifest`. La
+  compilation automatique vérifie que les deux manifestes ne diffèrent que par `uiAccess`.
+  `UiAccess.IsActive()` écrit « UI access: yes » ou « no » dans le journal au démarrage.
 
 ## Fichier des réglages
 
