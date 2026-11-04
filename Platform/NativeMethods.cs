@@ -474,5 +474,58 @@ namespace GazeBar
         /// </summary>
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern IntPtr LoadLibrary(string dllPath);
+
+        // ───────────────────────── Raw mouse movements (mouse as gaze) ─────────────────────────
+
+        internal const int WM_INPUT = 0x00FF;
+        internal const uint RID_INPUT = 0x10000003;
+        internal const uint RIM_TYPEMOUSE = 0;
+        internal const uint RIDEV_INPUTSINK = 0x00000100;
+        internal const ushort MOUSE_MOVE_ABSOLUTE = 0x01;
+
+        /// <summary>
+        /// Which device to listen to (Windows RAWINPUTDEVICE structure). Usage page 1, usage 2 =
+        /// "a mouse". RIDEV_INPUTSINK: the messages arrive even when GazeBar is not the active
+        /// window.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct RAWINPUTDEVICE
+        {
+            public ushort UsagePage;
+            public ushort Usage;
+            public uint Flags;
+            public IntPtr TargetWindow;
+        }
+
+        /// <summary>Asks Windows to send the raw movements of a device (WM_INPUT messages) to a window.</summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool RegisterRawInputDevices(RAWINPUTDEVICE[] devices, uint count, uint size);
+
+        /// <summary>
+        /// Reads the content of a WM_INPUT message. With data = IntPtr.Zero, only gives the size
+        /// needed.
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern uint GetRawInputData(IntPtr rawInput, uint command, IntPtr data, ref uint size, uint headerSize);
+
+        // ───────────────────────── Mouse hook (mouse as gaze) ─────────────────────────
+
+        /// <summary>The function called by Windows for every mouse event (signature imposed by Windows).</summary>
+        internal delegate IntPtr LowLevelMouseProc(int code, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern IntPtr SetWindowsHookEx(int hookId, LowLevelMouseProc callback, IntPtr module, uint threadId);
+
+        internal const int WH_MOUSE_LL = 14;        // "low-level" mouse hook, for the whole system
+        internal const int WM_MOUSEMOVE = 0x0200;   // the mouse moves
+
+        /// <summary>
+        /// In the structure received by the mouse hook (MSLLHOOKSTRUCT): the new position X, Y
+        /// first, then "mouseData", then the "flags" field (12 bytes after the start). This
+        /// flag says the movement was SIMULATED by a program (SendInput).
+        /// </summary>
+        internal const int MouseHookFlagsOffset = 12;
+        internal const int LLMHF_INJECTED = 0x01;
     }
 }

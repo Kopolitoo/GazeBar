@@ -42,6 +42,22 @@ namespace GazeBar
         // True for a second GazeBar, which closes without doing anything (see OnStartup / OnExit).
         private bool _extraInstance;
 
+        /// <summary>Command-line option of the developer mode: the mouse plays the gaze.</summary>
+        private const string MouseOption = "--mouse";
+
+        /// <summary>True if the command line contains the option (upper or lower case).</summary>
+        private static bool HasOption(string[] args, string option)
+        {
+            foreach (string arg in args)
+            {
+                if (string.Equals(arg, option, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Called by WPF when the program starts.
         /// </summary>
@@ -95,12 +111,21 @@ namespace GazeBar
             // settings file (see WheelScroller).
             WheelScroller.Apply(AppSettings.Current.ScrollInactiveWindows);
 
-            // The real gaze, provided by the eyetracker engine. If it is unavailable, the
-            // program still starts (see IGazeSource.ErrorMessage).
+            // The gaze source. Normally the real gaze, provided by the eyetracker engine. If it
+            // is unavailable, the program still starts (see IGazeSource.ErrorMessage).
             // The eyetracker DLLs are not shipped with GazeBar: they are
             // first searched for on the PC (see EyetrackerLoader.cs), before any use of the gaze.
-            EyetrackerLoader.Install();
-            _gaze = new EyetrackerGazeSource();
+            // Developer mode: with the "--mouse" option, the physical mouse plays the gaze
+            // (see MouseGazeSource), to test GazeBar without an eyetracker.
+            if (HasOption(e.Args, MouseOption))
+            {
+                _gaze = new MouseGazeSource();
+            }
+            else
+            {
+                EyetrackerLoader.Install();
+                _gaze = new EyetrackerGazeSource();
+            }
             _gaze.Start();
 
             // The program only stops on request ("Quit GazeBar" button of the menu): closing

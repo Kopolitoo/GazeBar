@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "GazeBar": {
+      "commandName": "Project"
+    },
+    "GazeBar (mouse as gaze)": {
+      "commandName": "Project",
+      "commandLineArgs": "--mouse"
+    }
+  }
+}
