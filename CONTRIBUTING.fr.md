@@ -65,8 +65,8 @@ GazeBar l'écrit dans son journal au démarrage.
 1. Sur GitHub, onglet « Actions », « Release » à gauche, « Run workflow » : garder la branche
    `main`, taper le numéro (par exemple `0.1.0`), cliquer sur « Run workflow ».
 2. GitHub compile GazeBar, vérifie qu'aucune DLL de l'eyetracker ni aucun fichier personnel
-   n'est dedans, fabrique `GazeBar-0.1.0.zip` (simple) et `GazeBar-0.1.0-full-install.zip` (avec
-   accès à l'interface et les scripts `Install`) et prépare un **brouillon** de release
+   n'est dedans, fabrique `GazeBar-0.1.0.zip` (simple) et l'installateur `GazeBar-0.1.0-setup.exe`
+   (installation complète, avec accès à l'interface, fait avec Inno Setup) et prépare un **brouillon** de release
    (`.github/workflows/release.yml`).
 3. Page « Releases » (colonne de droite de la page d'accueil du dépôt) : ouvrir le brouillon,
    relire la liste des changements, puis « Publish release ». Le tag `v0.1.0` est posé sur ce

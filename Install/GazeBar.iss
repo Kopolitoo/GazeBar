@@ -32,8 +32,8 @@ AppPublisherURL=https://gazebar.kopol.xyz
 AppSupportURL=https://github.com/Kopolitoo/GazeBar/issues
 VersionInfoVersion={#AppVersion}
 ; Administrator: Program Files is a protected folder, and Windows gives UI access only to a
-; program installed there. 64-bit Windows: "C:\Program Files", the folder of Install.cmd, so
-; that the installer updates a copy installed by Install.cmd.
+; program installed there. 64-bit Windows: "C:\Program Files", the folder of the old Install.cmd
+; script, so that the installer also updates a copy installed by it.
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
 DefaultDirName={autopf}\GazeBar
@@ -72,10 +72,11 @@ fr.UnknownReason=inconnue (code de sortie %1)
 Type: filesandordirs; Name: "{app}\Languages"
 Type: filesandordirs; Name: "{app}\Keyboards"
 Type: filesandordirs; Name: "{app}\Dictionaries"
+; Left by older versions of this installer (its content is now in setup-certificate.ps1).
+Type: files; Name: "{app}\Setup\common.ps1"
 
 [Files]
-; The certificate scripts first: they must be there when the signature step runs.
-Source: "common.ps1"; DestDir: "{app}\Setup"; Flags: ignoreversion
+; The certificate script first: it must be there when the signature step runs.
 Source: "setup-certificate.ps1"; DestDir: "{app}\Setup"; Flags: ignoreversion
 ; The program and its data files. Never the debug files, the eyetracker DLLs (they belong to
 ; Tobii AB) or a local "Eyetracker" folder.
@@ -87,7 +88,7 @@ Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.fr.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-; For all the users of the computer (same shortcut as Install.cmd).
+; For all the users of the computer (same shortcut as the old Install.cmd script).
 Name: "{autoprograms}\GazeBar"; Filename: "{app}\GazeBar.exe"; WorkingDir: "{app}"
 
 [Run]
@@ -97,7 +98,7 @@ Name: "{autoprograms}\GazeBar"; Filename: "{app}\GazeBar.exe"; WorkingDir: "{app
 Filename: "{app}\GazeBar.exe"; Description: "{cm:LaunchProgram,GazeBar}"; Flags: nowait postinstall runasoriginaluser shellexec skipifsilent
 
 [UninstallDelete]
-; Everything left in the folder, as Uninstall.cmd did (for example an "Eyetracker" folder of DLLs
+; Everything left in the folder (for example an "Eyetracker" folder of DLLs
 ; copied by the user). The folder is always Program Files\GazeBar (no folder page).
 Type: filesandordirs; Name: "{app}"
 

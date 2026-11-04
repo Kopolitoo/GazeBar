@@ -121,41 +121,28 @@ radius (Display). Profiles, "Load a profile": the list shows the profile; look a
 profile …?"; "No" changes nothing; "Yes" restores the old radius and creates "Automatic backup".
 Loading "Automatic backup" restores the changed radius.
 
-## Full installation (UI access)
-
-Use the `GazeBar-full-install-…` zip of the automatic build (Actions page of the pull request,
-"Artifacts") or of a draft release. Keep another way to click (voice, mouse) during the
-installation.
-
-1. Unzip it, double-click `Install.cmd`, answer "Yes": the blue window ends with "GazeBar is
-   installed", then GazeBar starts. `C:\Program Files\GazeBar` exists, GazeBar is in the Start
-   menu, and the log says "UI access: yes".
-2. Open the Windows Start menu: the gaze circle stays visible above it, and a fixed gaze then a
-   left click opens an item of the menu.
-3. Start Notepad as administrator (right click, "Run as administrator"): a click by gaze puts
-   the text cursor in it, and the gaze keyboard types in it.
-4. Run `Install.cmd` a second time (update): same result, settings unchanged.
-5. Run `Uninstall.cmd`: the folder, the shortcut and the certificate "GazeBar local signature"
-   (`certlm.msc`, "Trusted Root Certification Authorities") are gone; the settings are still in
-   `%APPDATA%\GazeBar`.
-6. The simple zip and Visual Studio still work as before, with "UI access: no" in the log.
-
-## Installer (Setup.exe)
+## Full installation (Setup.exe, UI access)
 
 Use the `GazeBar-setup-…` zip of the automatic build (Actions page of the pull request,
-"Artifacts"). Keep another way to click (voice, mouse) during the installation.
+"Artifacts") or the `GazeBar-x.y.z-setup.exe` of a draft release. Keep another way to click
+(voice, mouse) during the installation.
 
-1. Unzip it and double-click `GazeBar-…-setup.exe`. Windows may say "unknown publisher" ("More
-   info", "Run anyway"), then asks "Yes" for administrator. The installer speaks the language of
-   Windows; click "Install", then "Finish" with "Launch GazeBar" ticked: GazeBar starts, the log
-   says "UI access: yes", and the circle stays above the Start menu.
+1. Double-click `GazeBar-…-setup.exe`. Windows may say "unknown publisher" ("More info", "Run
+   anyway"), then asks "Yes" for administrator. The installer speaks the language of Windows;
+   click "Install", then "Finish" with "Launch GazeBar" ticked: GazeBar starts and the log says
+   "UI access: yes".
 2. `C:\Program Files\GazeBar` exists, GazeBar is in the Start menu and in "Settings > Apps"
    of Windows.
-3. Run the installer again (update): no question about closing GazeBar (it is closed), same
-   result, settings unchanged. Also works over a copy installed by `Install.cmd`.
-4. Uninstall it from "Settings > Apps": the folder, the shortcut and the certificate "GazeBar
+3. Open the Windows Start menu: the gaze circle stays visible above it, and a fixed gaze then a
+   left click opens an item of the menu.
+4. Start Notepad as administrator (right click, "Run as administrator"): a click by gaze puts
+   the text cursor in it, and the gaze keyboard types in it.
+5. Run the installer again (update): no question about closing GazeBar (it is closed), same
+   result, settings unchanged.
+6. Uninstall it from "Settings > Apps": the folder, the shortcut and the certificate "GazeBar
    local signature" (`certlm.msc`, "Trusted Root Certification Authorities") are gone; the
    settings are still in `%APPDATA%\GazeBar`.
+7. The simple zip and Visual Studio still work as before, with "UI access: no" in the log.
 
 ## Before publishing a version
 
@@ -164,5 +151,4 @@ folder). It contains `GazeBar.exe`, the `Languages`, `Keyboards` and `Dictionari
 licences, and no `Tobii.*.dll`. Start `GazeBar.exe` (Windows may ask "Run anyway"): the gaze
 works, the gaze keyboard suggests words, and the first lines of
 `%LOCALAPPDATA%\GazeBar\gazebar.log` say "GazeBar 0.1.0 starting" (the number of the version).
-The draft also has `GazeBar-0.1.0-full-install.zip`: run the "Full installation" test above
-with it.
+The draft also has `GazeBar-0.1.0-setup.exe`: run the "Full installation" test above with it.

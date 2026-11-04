@@ -3,8 +3,8 @@
 # Started by hand: "Actions" tab > "Release" > "Run workflow", type the version number
 # (for example 0.1.0). GitHub then compiles GazeBar on a Windows machine, checks that no
 # eyetracker DLL and no personal file is inside, makes GazeBar-0.1.0.zip (simple: unzip and
-# start) and GazeBar-0.1.0-full-install.zip (with UI access, installed by Install.cmd) and
-# prepares a DRAFT release with these two zips. Nothing is public yet: open the "Releases" page, read the draft and
+# start) and the installer GazeBar-0.1.0-setup.exe (full installation, with UI access) and
+# prepares a DRAFT release with these two files. Nothing is public yet: open the "Releases" page, read the draft and
 # click "Publish release". The tag v0.1.0 is created at that moment.
 # See CONTRIBUTING.md, "Publishing a version".
 
@@ -71,7 +71,7 @@ jobs:
         run: dotnet build GazeBar.csproj --configuration Release -p:Version=${{ env.VERSION }} -p:IncludeSourceRevisionInInformationalVersion=false
 
       # The "full installation" build, with UI access (see Platform/UiAccess.cs), in its own
-      # folders. It ships in a second zip with the installation scripts (Install folder).
+      # folders. It ships in the installer (Setup.exe).
       - name: Compile the full installation build (UI access)
         run: dotnet build GazeBar.csproj --configuration Release -p:UiAccess=true -p:OutDir=${{ github.workspace }}/bin/uiaccess/ -p:IntermediateOutputPath=obj/uiaccess/ -p:Version=${{ env.VERSION }} -p:IncludeSourceRevisionInInformationalVersion=false
 
@@ -86,9 +86,11 @@ jobs:
           # The licences and the short presentation.
           Copy-Item LICENSE.txt, THIRD-PARTY-NOTICES.md, THIRD-PARTY-NOTICES.fr.md, README.md, README.fr.md $folder
 
-      - name: Make the full installation folder
+      # The installer is made from bin/uiaccess, checked by the step below (the installer
+      # script also leaves out the eyetracker DLLs and the debug files).
+      - name: Make the installer (Setup.exe)
         shell: pwsh
-        run: ./.github/scripts/make-full-install.ps1 bin/uiaccess "release/GazeBar-$env:VERSION-full-install"
+        run: ./.github/scripts/make-setup.ps1 bin/uiaccess $env:VERSION release
 
       # Same rules as the repository: the eyetracker DLLs belong to Tobii AB, and personal
       # files (personal dictionary, settings, profiles, log, gaze positions) never ship.
@@ -96,8 +98,8 @@ jobs:
         shell: pwsh
         run: |
           $forbidden = 'Tobii*.dll', 'personal-dictionary*', 'settings.json', '*.log', 'positions-*', '*.perso.*'
-          $found = Get-ChildItem release -Recurse -Include $forbidden
-          $found += Get-ChildItem release -Recurse -Directory | Where-Object { $_.Name -in 'Eyetracker', 'Profiles' }
+          $found = @(Get-ChildItem release, bin/uiaccess -Recurse -Include $forbidden)
+          $found += Get-ChildItem release, bin/uiaccess -Recurse -Directory | Where-Object { $_.Name -in 'Eyetracker', 'Profiles' }
           if ($found) {
             $found | ForEach-Object { Write-Host "::error::Must not be shipped: $($_.FullName)" }
             exit 1
@@ -108,14 +110,13 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive -Path "release/GazeBar-$env:VERSION" -DestinationPath "release/GazeBar-$env:VERSION.zip"
-          Compress-Archive -Path "release/GazeBar-$env:VERSION-full-install" -DestinationPath "release/GazeBar-$env:VERSION-full-install.zip"
 
       # The draft lists the pull requests merged since the previous version (--generate-notes).
       # The tag v<version> is created on this commit when the draft is published.
       - name: Prepare the draft release
         shell: pwsh
         run: |
-          gh release create "v$env:VERSION" "release/GazeBar-$env:VERSION.zip" "release/GazeBar-$env:VERSION-full-install.zip" `
+          gh release create "v$env:VERSION" "release/GazeBar-$env:VERSION.zip" "release/GazeBar-$env:VERSION-setup.exe" `
             --draft `
             --target "${{ github.sha }}" `
             --title "GazeBar $env:VERSION" `

@@ -48,8 +48,8 @@ lancement, synthèse vocale.
    [Fichiers de l'eyetracker](docs/user-guide.fr.md#fichiers-de-leyetracker).
 
 Pour l'**installation complète** (cercle au-dessus du menu Démarrer, clics dans les fenêtres
-administrateur), télécharger plutôt `GazeBar-x.y.z-full-install.zip` et double-cliquer sur
-`Install.cmd` : voir [Installation complète](docs/user-guide.fr.md#installation-complète-accès-à-linterface).
+administrateur), télécharger plutôt l'installateur `GazeBar-x.y.z-setup.exe` et double-cliquer
+dessus : voir [Installation complète](docs/user-guide.fr.md#installation-complète-accès-à-linterface).
 
 Pour le compiler soi-même à la place : cloner ce dépôt, ouvrir `GazeBar.slnx` dans Visual
 Studio, appuyer sur F5.

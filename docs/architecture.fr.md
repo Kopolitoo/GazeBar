@@ -54,7 +54,7 @@ l'explication de la classe.
 | `Platform` | appels à Windows : `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess` |
 | `Languages`, `Keyboards`, `Dictionaries` | fichiers de données copiés à côté de `GazeBar.exe` (textes, dispositions de clavier, dictionnaires de prédiction) |
 | `Resources` | l'icône du programme |
-| `Install` | l'installation complète (accès à l'interface) : installateur `GazeBar.iss` (Inno Setup) et `setup-certificate.ps1` ; scripts `Install.cmd`, `install.ps1`, `Uninstall.cmd`, `uninstall.ps1` ; `common.ps1` commun à tous |
+| `Install` | l'installateur de l'installation complète (accès à l'interface) : `GazeBar.iss` (Inno Setup) et `setup-certificate.ps1` |
 
 ## DLL de l'eyetracker
 
@@ -285,19 +285,18 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   lance un tel programme que s'il est signé par un certificat approuvé et installé dans
   `C:\Program Files` : Visual Studio et le .zip simple gardent donc `app.manifest`. La
   compilation automatique vérifie que les deux manifestes ne diffèrent que par `uiAccess`.
-  `UiAccess.IsActive()` écrit « UI access: yes » ou « no » dans le journal au démarrage. Les scripts du dossier `Install`
-  copient cette version dans `C:\Program Files\GazeBar`, la signent avec un certificat créé sur
-  l'ordinateur de l'utilisateur (sa clé privée supprimée aussitôt) et ajoutent un raccourci au menu
-  Démarrer ; `make-full-install.ps1` (`.github/scripts`) réunit la version et les scripts pour
-  l'artefact de la compilation automatique et la release.
-- Installateur (étape `installer`) : `Install/GazeBar.iss` fabrique `GazeBar-<version>-setup.exe`
+  `UiAccess.IsActive()` écrit « UI access: yes » ou « no » dans le journal au démarrage. L'installateur (étape
+  `installer`) livre cette version : `Install/GazeBar.iss` fabrique `GazeBar-<version>-setup.exe`
   avec [Inno Setup](https://jrsoftware.org/isinfo.php) 6, un outil de compilation seulement
-  (`make-setup.ps1` l'installe sur la machine de GitHub si besoin). L'installateur fait comme
-  `Install.cmd` (Program Files, menu Démarrer, signature par `setup-certificate.ps1` et les
-  fonctions de `common.ps1`) et ajoute GazeBar à « Paramètres > Applications » de Windows ; son
-  programme de désinstallation retire le certificat et l'entrée « Démarrer avec Windows ». Ses
-  textes sont dans le fichier `.iss` (français ou anglais, selon la langue de Windows), pas dans
-  `Languages/`, car GazeBar ne tourne pas à ce moment-là.
+  (`make-setup.ps1` dans `.github/scripts` l'installe sur la machine de GitHub si besoin).
+  L'installateur copie la version dans `C:\Program Files\GazeBar`, lance `setup-certificate.ps1`,
+  qui la signe avec un certificat créé sur l'ordinateur de l'utilisateur (sa clé privée supprimée
+  aussitôt), et ajoute un raccourci au menu Démarrer et une entrée dans « Paramètres >
+  Applications » de Windows. Son programme de désinstallation retire le certificat et l'entrée
+  « Démarrer avec Windows ». Il lance GazeBar par ShellExecute (option `shellexec`) :
+  CreateProcess refuse un programme avec accès à l'interface (erreur 740). Ses textes sont dans le
+  fichier `.iss` (français ou anglais, selon la langue de Windows), pas dans `Languages/`, car
+  GazeBar ne tourne pas à ce moment-là.
 
 ## Fichier des réglages
 
