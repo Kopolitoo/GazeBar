@@ -2,8 +2,8 @@
 #
 #   pwsh .github/scripts/check-exe-manifest.ps1 <path of GazeBar.exe> <true|false>
 #
-# The manifest is stored as plain text inside the .exe: it is enough to look for
-# uiAccess="true" or uiAccess="false" in the bytes of the file.
+# The manifest is stored as plain text inside the .exe, comments included: the script reads
+# the uiAccess value of the requestedExecutionLevel tag (not the one quoted in a comment).
 # Used by the automatic build (.github/workflows/build.yml).
 
 param(
@@ -13,11 +13,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $text = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($ExePath))
-$wanted = "uiAccess=""$Expected"""
-$other = if ($Expected -eq 'true') { 'uiAccess="false"' } else { 'uiAccess="true"' }
+$found = [regex]::Matches($text, '<requestedExecutionLevel[^>]*uiAccess="(true|false)"')
 
-if (-not $text.Contains($wanted) -or $text.Contains($other)) {
-    Write-Host "::error::$ExePath should contain $wanted in its manifest, and not $other."
+if ($found.Count -ne 1 -or $found[0].Groups[1].Value -ne $Expected) {
+    $values = ($found | ForEach-Object { $_.Groups[1].Value }) -join ', '
+    Write-Host "::error::$ExePath should ask for uiAccess=""$Expected"" in its manifest (found: $values)."
     exit 1
 }
-Write-Host "OK: $ExePath asks for $wanted."
+Write-Host "OK: $ExePath asks for uiAccess=""$Expected""."
