@@ -31,6 +31,11 @@ which features were added). They help to find the matching pull request in the h
 The source code is grouped by topic. Every class stays in the `GazeBar` namespace, whatever its
 folder. The project file finds the `.cs` and `.xaml` files of every folder by itself.
 
+The three biggest classes are "partial" classes: one class written in several files, named
+`Class.Part.cs`. `AppSettings` (`.Icons`, `.Defaults`, `.File`), `SettingsWindow` (`.Build`,
+`.Profiles`, `.Actions`) and `GazeKeyboard` (`.Actions`, `.InputBox`, `.Drawing`). The main file
+(`AppSettings.cs`…) holds the fields and the explanation of the class.
+
 | Folder | Contents |
 |---|---|
 | (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `GazeBar.csproj`, `app.manifest` |
@@ -38,7 +43,7 @@ folder. The project file finds the `.cs` and `.xaml` files of every folder by it
 | `Modes` | one class per mode, and `ModeManager` |
 | `Actions` | what the action choice offers: `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
 | `Typing` | the gaze keyboard and word prediction: `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
-| `Settings` | the settings file, profiles and settings window: `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow` |
+| `Settings` | the settings file, profiles and settings window: `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow`, `SettingTarget` |
 | `Ui` | windows and gaze buttons: `OverlayWindow`, `DiagnosticWindow`, `CursorSampler`, `GazeButton`, `ButtonAimer`, `IGazeTarget`, `Texts` |
 | `Platform` | calls to Windows: `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup` |
 | `Languages`, `Keyboards`, `Dictionaries` | data files copied next to `GazeBar.exe` (texts, keyboard layouts, prediction dictionaries) |
