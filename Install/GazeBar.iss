@@ -92,7 +92,9 @@ Name: "{autoprograms}\GazeBar"; Filename: "{app}\GazeBar.exe"; WorkingDir: "{app
 
 [Run]
 ; Last page: "Launch GazeBar" (ticked). GazeBar starts as the normal user, not as administrator.
-Filename: "{app}\GazeBar.exe"; Description: "{cm:LaunchProgram,GazeBar}"; Flags: nowait postinstall runasoriginaluser skipifsilent
+; "shellexec": started like a double-click (ShellExecute). A program with UI access cannot be
+; started by CreateProcess: Windows answers "error 740, the operation requires elevation".
+Filename: "{app}\GazeBar.exe"; Description: "{cm:LaunchProgram,GazeBar}"; Flags: nowait postinstall runasoriginaluser shellexec skipifsilent
 
 [UninstallDelete]
 ; Everything left in the folder, as Uninstall.cmd did (for example an "Eyetracker" folder of DLLs
