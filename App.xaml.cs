@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -62,7 +63,7 @@ namespace GazeBar
                 return;
             }
 
-            Log("GazeBar starting");
+            Log("GazeBar " + Version + " starting");
 
             // Safety nets: whatever the error, release the mouse buttons and the Ctrl, Shift,
             // Alt keys (a button or key left pressed would disturb the whole computer),
@@ -242,6 +243,21 @@ namespace GazeBar
 
         // Current size of gazebar.log in bytes (-1 = not measured yet).
         private static long _logBytes = -1;
+
+        /// <summary>
+        /// The GazeBar version, for example "0.1.0". It comes from the &lt;Version&gt; of
+        /// GazeBar.csproj; the release workflow replaces it with the version being published.
+        /// The build may add "+" and the commit identifier after it.
+        /// </summary>
+        internal static string Version
+        {
+            get
+            {
+                var attribute = typeof(App).Assembly
+                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+                return attribute != null ? attribute.InformationalVersion : "?";
+            }
+        }
 
         /// <summary>
         /// Writes an IMPORTANT message to the log: start and stop, errors, settings read or

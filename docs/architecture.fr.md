@@ -342,3 +342,9 @@ Pour ajouter une langue : copier `en.json` en `xx.json`, traduire les valeurs (j
 envoi sur `main`. `.github/scripts/check-data-files.ps1` vérifie que les fichiers JSON des
 claviers et des langues sont valides, et que chaque langue a les mêmes clés et les mêmes `{n}`
 que `en.json`.
+
+`.github/workflows/release.yml`, lancé à la main, compile une version avec le numéro tapé
+(`-p:Version=…`, qui remplace `<Version>` de `GazeBar.csproj`), vérifie qu'aucune DLL de
+l'eyetracker ni aucun fichier personnel n'est dans le dossier à livrer, le zippe avec les
+licences et prépare un brouillon de release GitHub. `App.Version` relit ce numéro (version
+informative de l'assembly) pour le journal.

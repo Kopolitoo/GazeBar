@@ -27,6 +27,12 @@
     <!-- Enables WPF. -->
     <UseWPF>true</UseWPF>
 
+    <!-- The version number (MAJOR.MINOR.PATCH): PATCH grows for a fix, MINOR for a new
+         feature, MAJOR for a big change (1.0.0 = first stable version).
+         The release workflow (.github/workflows/release.yml) replaces it with the number typed
+         when a version is published. It is written to the log at startup. -->
+    <Version>0.1.0</Version>
+
     <RootNamespace>GazeBar</RootNamespace>
     <AssemblyName>GazeBar</AssemblyName>
 
