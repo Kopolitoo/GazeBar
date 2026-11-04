@@ -59,6 +59,12 @@ namespace GazeBar
         /// </summary>
         public bool NearScreen;
 
+        /// <summary>True if the position is outside the primary screen.</summary>
+        public static bool IsOffScreen(double x, double y, double screenWidth, double screenHeight)
+        {
+            return x < 0 || y < 0 || x >= screenWidth || y >= screenHeight;
+        }
+
         /// <summary>True if the gaze is available and on the screen: the "normal" case.</summary>
         public bool OnScreen
         {

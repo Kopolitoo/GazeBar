@@ -54,7 +54,7 @@ namespace GazeBar
         // Only the situation is logged, never the gaze coordinates.
         private string _gazeSituation = "";
 
-        public ModeManager(GazeSource gaze, OverlayWindow layer)
+        public ModeManager(IGazeSource gaze, OverlayWindow layer)
         {
             Gaze = gaze;
             Layer = layer;
@@ -90,7 +90,7 @@ namespace GazeBar
         }
 
         /// <summary>The gaze source (eyetracker).</summary>
-        public GazeSource Gaze { get; private set; }
+        public IGazeSource Gaze { get; private set; }
 
         /// <summary>The transparent full-screen window where the modes draw.</summary>
         public OverlayWindow Layer { get; private set; }
@@ -377,7 +377,7 @@ namespace GazeBar
             state.Y = y;
             state.Number = num;
             state.MeasureTimeMs = instantMs;
-            state.OffScreen = GazeSource.IsOffScreen(x, y, width, height);
+            state.OffScreen = GazeState.IsOffScreen(x, y, width, height);
             state.BelowScreen = y >= height;
 
             // The same position, but brought back into the screen (from 0 to width − 1, from 0

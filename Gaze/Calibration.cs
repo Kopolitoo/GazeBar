@@ -33,9 +33,11 @@ namespace GazeBar
         /// Tries to start calibration. Returns true if a call was made without error.
         /// message: what happened, in plain words (shown in the menu bar on failure).
         /// </summary>
-        public static bool Launch(GazeSource gaze, out string message)
+        public static bool Launch(IGazeSource gaze, out string message)
         {
-            object host = gaze == null ? null : gaze.Host;
+            // Only the eyetracker can be calibrated: with another source, there is no Host.
+            EyetrackerGazeSource eyetracker = gaze as EyetrackerGazeSource;
+            object host = eyetracker == null ? null : eyetracker.Host;
             if (host == null)
             {
                 message = Texts.Get("calibration.notConnected");

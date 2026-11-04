@@ -20,7 +20,7 @@ namespace GazeBar
         private const double MapWidth = 680.0;
 
         private readonly CursorSampler _sampler;
-        private readonly GazeSource _gaze;
+        private readonly IGazeSource _gaze;
         private readonly DispatcherTimer _timer;
 
         private readonly Polyline _trailLine;   // the trail of the latest positions
@@ -31,7 +31,7 @@ namespace GazeBar
         private readonly double _screenHeight;
         private readonly double _mapHeight;
 
-        public DiagnosticWindow(GazeSource gaze)
+        public DiagnosticWindow(IGazeSource gaze)
         {
             InitializeComponent();
 
@@ -131,7 +131,7 @@ namespace GazeBar
                 double gx;
                 double gy;
                 _gaze.GetLatest(out gx, out gy);
-                bool outside = GazeSource.IsOffScreen(gx, gy, _screenWidth, _screenHeight);
+                bool outside = GazeState.IsOffScreen(gx, gy, _screenWidth, _screenHeight);
                 GazeReadText.Text = Texts.Format("diagnostic.gaze", gx.ToString("F0"), gy.ToString("F0"),
                                                  _gaze.SamplesPerSecond.ToString("F0")) +
                                     (outside ? Texts.Get("diagnostic.offScreen") : "");
@@ -170,7 +170,7 @@ namespace GazeBar
                 double gx;
                 double gy;
                 _gaze.GetLatest(out gx, out gy);
-                bool outside = GazeSource.IsOffScreen(gx, gy, _screenWidth, _screenHeight);
+                bool outside = GazeState.IsOffScreen(gx, gy, _screenWidth, _screenHeight);
                 double mx = Math.Max(0, Math.Min(MapWidth, gx * scaleX));
                 double my = Math.Max(0, Math.Min(_mapHeight, gy * scaleY));
                 _gazeDot.Fill = outside ? Brushes.Red : Brushes.LimeGreen;
