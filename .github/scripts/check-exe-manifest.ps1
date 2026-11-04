@@ -21,3 +21,4 @@ if ($found.Count -ne 1 -or $found[0].Groups[1].Value -ne $Expected) {
     exit 1
 }
 Write-Host "OK: $ExePath asks for uiAccess=""$Expected""."
+exit 0
