@@ -26,6 +26,24 @@ which features were added). They help to find the matching pull request in the h
 - **Privacy**: gaze data is never saved (eyetracker licence) and typed text is never written to
   the log.
 
+## Folders
+
+The source code is grouped by topic. Every class stays in the `GazeBar` namespace, whatever its
+folder. The project file finds the `.cs` and `.xaml` files of every folder by itself.
+
+| Folder | Contents |
+|---|---|
+| (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `GazeBar.csproj`, `app.manifest` |
+| `Gaze` | reading the gaze and processing it: `GazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
+| `Modes` | one class per mode, and `ModeManager` |
+| `Actions` | what the action choice offers: `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
+| `Typing` | the gaze keyboard and word prediction: `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
+| `Settings` | the settings file, profiles and settings window: `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow` |
+| `Ui` | windows and gaze buttons: `OverlayWindow`, `DiagnosticWindow`, `CursorSampler`, `GazeButton`, `ButtonAimer`, `IGazeTarget`, `Texts` |
+| `Platform` | calls to Windows: `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup` |
+| `Languages`, `Keyboards`, `Dictionaries` | data files copied next to `GazeBar.exe` (texts, keyboard layouts, prediction dictionaries) |
+| `Resources` | the program icon |
+
 ## Eyetracker DLLs
 
 The three Tobii DLLs (`Tobii.Interaction.Net.dll`, `Tobii.Interaction.Model.dll`,
@@ -59,7 +77,7 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   switches to fixed gaze (without a progress ring: the ring is kept for buttons).
 - Each mode receives the gaze position in `Enter(gaze)` to start, and takes the circle where it
   is drawn: no jump from one mode to the next, no default place.
-- `Modes/FixationDetector`: recognises a fixation. A sample is still if its speed stays under
+- `Gaze/FixationDetector`: recognises a fixation. A sample is still if its speed stays under
   `MaxFixationSpeed` AND it stays within `FixationRadius` of the anchor point (the mean of the
   fixation's samples). It takes `FixationDelay` seconds of stillness, measured in real time. A
   single outlier sample is ignored.
@@ -102,7 +120,7 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
      `AndroidPauseDuration` (1 s) separates the press from the movement (it replaces the long
      press).
   During stages 1 and 2, a "back" button on the right edge of the screen (vertically centred)
-  cancels without pressing anything. `Modes/DragGesture` describes the current drag (start,
+  cancels without pressing anything. `Actions/DragGesture` describes the current drag (start,
   button, pause).
 - `GazeButton`: a button activated by gaze (symbol of the Windows font, badge, ring, label on
   hover), drawn on the overlay. It can be empty (greyed "+"), unavailable (its symbol, greyed) or

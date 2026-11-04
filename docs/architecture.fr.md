@@ -27,6 +27,25 @@ request correspondante dans l'historique.
 - **Vie privée** : les données du regard ne sont jamais enregistrées (licence de l'eyetracker) et
   le texte tapé n'est jamais écrit dans le journal.
 
+## Dossiers
+
+Le code source est rangé par thème. Toutes les classes restent dans l'espace de noms `GazeBar`,
+quel que soit leur dossier. Le fichier de projet trouve tout seul les fichiers `.cs` et `.xaml` de
+chaque dossier.
+
+| Dossier | Contenu |
+|---|---|
+| (racine) | `App.xaml` (point d'entrée : lit les réglages, ouvre la surcouche et le gestionnaire de modes), `GazeBar.csproj`, `app.manifest` |
+| `Gaze` | lecture du regard et traitement : `GazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
+| `Modes` | une classe par mode, et `ModeManager` |
+| `Actions` | ce que propose le choix d'action : `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
+| `Typing` | le clavier au regard et la prédiction de mots : `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
+| `Settings` | le fichier des réglages, les profils et la fenêtre des paramètres : `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow` |
+| `Ui` | fenêtres et boutons au regard : `OverlayWindow`, `DiagnosticWindow`, `CursorSampler`, `GazeButton`, `ButtonAimer`, `IGazeTarget`, `Texts` |
+| `Platform` | appels à Windows : `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup` |
+| `Languages`, `Keyboards`, `Dictionaries` | fichiers de données copiés à côté de `GazeBar.exe` (textes, dispositions de clavier, dictionnaires de prédiction) |
+| `Resources` | l'icône du programme |
+
 ## DLL de l'eyetracker
 
 Les trois DLL de Tobii (`Tobii.Interaction.Net.dll`, `Tobii.Interaction.Model.dll`,
@@ -63,7 +82,7 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   aux boutons).
 - Chaque mode reçoit la position du regard dans `Enter(gaze)` pour s'initialiser, et reprend
   le cercle là où il est dessiné : pas de saut d'un mode à l'autre, pas de place par défaut.
-- `Modes/FixationDetector` : reconnaît une fixation. Une mesure est immobile si sa vitesse reste
+- `Gaze/FixationDetector` : reconnaît une fixation. Une mesure est immobile si sa vitesse reste
   sous `MaxFixationSpeed` (pixels par seconde) ET si elle reste à moins de `FixationRadius` du
   point d'ancrage (la moyenne des mesures de la fixation). Il faut `FixationDelay` secondes
   d'immobilité, mesurées en vrai temps. Une mesure aberrante isolée est ignorée.
@@ -106,7 +125,7 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
      en `DragDuration` (0,5 s), bouton relâché. Pour le glisser-déposer **android**, une pause
      de `AndroidPauseDuration` (1 s) sépare l'appui du déplacement (il remplace l'appui long).
   Pendant les temps 1 et 2, un bouton « retour » au bord droit de l'écran (centré verticalement)
-  annule sans rien enfoncer. `Modes/DragGesture` décrit le glisser en cours (départ, bouton, pause).
+  annule sans rien enfoncer. `Actions/DragGesture` décrit le glisser en cours (départ, bouton, pause).
 - `GazeButton` : un bouton activable au regard (symbole de la police Windows, pastille,
   anneau, libellé au survol), dessiné sur le calque. Il peut être vide (« + » grisé),
   indisponible (son symbole, grisé) ou allumé (bord vert, pour un interrupteur).
