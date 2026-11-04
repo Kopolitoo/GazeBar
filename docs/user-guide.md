@@ -151,27 +151,29 @@ The simple zip runs from any folder, but Windows keeps two things out of its rea
 menu, search and notifications are drawn above the gaze circle, and windows started "as
 administrator" ignore its clicks and keys. The **full installation** removes both limits. Windows
 allows this "UI access" only to a program that is signed and installed in `C:\Program Files`, so
-it has its own zip and an installation script.
+it comes with its own installer.
 
 To install or update:
 
 1. On the [Releases](https://github.com/Kopolitoo/GazeBar/releases) page, download
-   `GazeBar-x.y.z-full-install.zip` and unzip it (anywhere, for example in `Downloads`).
-2. In the unzipped folder, double-click `Install.cmd`. Windows asks "Do you want to allow this
-   app to make changes to your device?": answer "Yes". GazeBar closes during the installation,
-   so keep another way to click (voice, mouse, TD Control) for this step.
-3. A blue window shows the steps, then GazeBar starts again from `C:\Program Files\GazeBar`.
-   The window closes by itself after 10 seconds.
+   `GazeBar-x.y.z-setup.exe` (under "Assets") and double-click it. Keep another way to click
+   (voice, mouse, TD Control) for this step: GazeBar closes during the installation.
+2. The installer is not signed by a known publisher, so Windows may show "Windows protected
+   your PC": click "More info", then "Run anyway". Windows then asks "Do you want to allow this
+   app to make changes to your device?": answer "Yes".
+3. The installer speaks the language of Windows. Click "Install", then "Finish" with "Launch
+   GazeBar" ticked: GazeBar starts from `C:\Program Files\GazeBar`.
 
-What the script does: it copies GazeBar to `C:\Program Files\GazeBar`, creates a certificate on
-this computer, makes the computer trust it, signs `GazeBar.exe` with it, then deletes the
+What the installer does: it copies GazeBar to `C:\Program Files\GazeBar`, creates a certificate
+on this computer, makes the computer trust it, signs `GazeBar.exe` with it, then deletes the
 certificate's private key (nothing else can ever be signed with it). A new certificate is made at
-each update. It also adds GazeBar to the Start menu. Your settings are kept. If "Start with
-Windows" is on, GazeBar updates the startup entry itself.
+each update. It also adds GazeBar to the Start menu and to "Settings > Apps" of Windows. Your
+settings are kept. If "Start with Windows" is on, GazeBar updates the startup entry itself. It
+also updates a copy installed by the old `Install.cmd` script.
 
 To check: the log (`%LOCALAPPDATA%\GazeBar\gazebar.log`) says "UI access: yes" at startup.
 
-To remove it: double-click `Uninstall.cmd` (same folder) and answer "Yes". It deletes the
+To remove it: Windows "Settings > Apps > Installed apps", GazeBar, "Uninstall". It deletes the
 program folder, the shortcut and the certificate. Your settings are kept.
 
 If the eyetracker files had to be copied by hand (see [Eyetracker files](#eyetracker-files)),

@@ -42,7 +42,7 @@ jobs:
         shell: pwsh
         run: ./.github/scripts/check-manifests.ps1
 
-      - name: Check the installation scripts
+      - name: Check the installer script (setup-certificate.ps1)
         shell: powershell
         run: ./.github/scripts/check-install-scripts.ps1
 
@@ -50,10 +50,6 @@ jobs:
       # GazeBar.csproj), in its own folders (bin/uiaccess, obj/uiaccess), apart from the normal build.
       - name: Compile the full installation build (UI access)
         run: dotnet build GazeBar.csproj --configuration Release -p:UiAccess=true -p:OutDir=${{ github.workspace }}/bin/uiaccess/ -p:IntermediateOutputPath=obj/uiaccess/
-
-      - name: Make the full installation folder
-        shell: pwsh
-        run: ./.github/scripts/make-full-install.ps1 bin/uiaccess bin/full-install
 
       # The installer (Setup.exe, made with Inno Setup) of this same build. Its version number
       # is the <Version> of GazeBar.csproj.
@@ -87,15 +83,6 @@ jobs:
         with:
           name: GazeBar-${{ github.sha }}
           path: bin/Release/net48/
-          retention-days: 14
-
-      # The full installation, to test it before a release: extract the downloaded zip, then
-      # double-click Install.cmd (see docs/user-guide.md, "Full installation").
-      - name: Keep the full installation
-        uses: actions/upload-artifact@v4
-        with:
-          name: GazeBar-full-install-${{ github.sha }}
-          path: bin/full-install/
           retention-days: 14
 
       # The installer, to test it before a release: double-click GazeBar-<version>-setup.exe

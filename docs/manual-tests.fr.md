@@ -130,43 +130,29 @@ change le rayon du cercle (Affichage). Profils, « Charger un profil » : la lis
 on le regarde : « Charger le profil … ? » ; « Non » ne change rien ; « Oui » remet l'ancien rayon et
 crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet le rayon modifié.
 
-## Installation complète (accès à l'interface)
-
-Prendre le zip `GazeBar-full-install-…` de la compilation automatique (page Actions de la pull
-request, « Artifacts ») ou d'un brouillon de release. Garder un autre moyen de cliquer (voix,
-souris) pendant l'installation.
-
-1. Le décompresser, double-cliquer sur `Install.cmd`, répondre « Oui » : la fenêtre bleue finit
-   par « GazeBar est installé », puis GazeBar démarre. `C:\Program Files\GazeBar` existe,
-   GazeBar est dans le menu Démarrer, et le journal dit « UI access: yes ».
-2. Ouvrir le menu Démarrer de Windows : le cercle du regard reste visible au-dessus, et un regard
-   fixe puis un clic gauche ouvre un élément du menu.
-3. Lancer le Bloc-notes en administrateur (clic droit, « Exécuter en tant qu'administrateur ») :
-   un clic au regard y met le curseur de texte, et le clavier du regard y écrit.
-4. Relancer `Install.cmd` (mise à jour) : même résultat, réglages inchangés.
-5. Lancer `Uninstall.cmd` : le dossier, le raccourci et le certificat « GazeBar local signature »
-   (`certlm.msc`, « Autorités de certification racines de confiance ») ont disparu ; les réglages
-   sont toujours dans `%APPDATA%\GazeBar`.
-6. Le zip simple et Visual Studio marchent comme avant, avec « UI access: no » dans le journal.
-
-## Installateur (Setup.exe)
+## Installation complète (Setup.exe, accès à l'interface)
 
 Prendre le zip `GazeBar-setup-…` de la compilation automatique (page Actions de la pull request,
-« Artifacts »). Garder un autre moyen de cliquer (voix, souris) pendant l'installation.
+« Artifacts ») ou le `GazeBar-x.y.z-setup.exe` d'un brouillon de release. Garder un autre moyen
+de cliquer (voix, souris) pendant l'installation.
 
-1. Le décompresser et double-cliquer sur `GazeBar-…-setup.exe`. Windows peut dire « éditeur
-   inconnu » (« Informations complémentaires », « Exécuter quand même »), puis demande « Oui »
-   pour l'administrateur. L'installateur parle la langue de Windows ; cliquer sur « Installer »,
-   puis « Terminer » avec « Exécuter GazeBar » coché : GazeBar démarre, le journal dit « UI access:
-   yes », et le cercle reste au-dessus du menu Démarrer.
+1. Double-cliquer sur `GazeBar-…-setup.exe`. Windows peut dire « éditeur inconnu »
+   (« Informations complémentaires », « Exécuter quand même »), puis demande « Oui » pour
+   l'administrateur. L'installateur parle la langue de Windows ; cliquer sur « Installer », puis
+   « Terminer » avec « Exécuter GazeBar » coché : GazeBar démarre et le journal dit « UI access:
+   yes ».
 2. `C:\Program Files\GazeBar` existe, GazeBar est dans le menu Démarrer et dans « Paramètres >
    Applications » de Windows.
-3. Relancer l'installateur (mise à jour) : pas de question pour fermer GazeBar (il est fermé),
-   même résultat, réglages inchangés. Marche aussi par-dessus une copie installée par
-   `Install.cmd`.
-4. Le désinstaller depuis « Paramètres > Applications » : le dossier, le raccourci et le
+3. Ouvrir le menu Démarrer de Windows : le cercle du regard reste visible au-dessus, et un regard
+   fixe puis un clic gauche ouvre un élément du menu.
+4. Lancer le Bloc-notes en administrateur (clic droit, « Exécuter en tant qu'administrateur ») :
+   un clic au regard y met le curseur de texte, et le clavier du regard y écrit.
+5. Relancer l'installateur (mise à jour) : pas de question pour fermer GazeBar (il est fermé),
+   même résultat, réglages inchangés.
+6. Le désinstaller depuis « Paramètres > Applications » : le dossier, le raccourci et le
    certificat « GazeBar local signature » (`certlm.msc`, « Autorités de certification racines de
    confiance ») ont disparu ; les réglages sont toujours dans `%APPDATA%\GazeBar`.
+7. Le zip simple et Visual Studio marchent comme avant, avec « UI access: no » dans le journal.
 
 ## Avant de publier une version
 
@@ -175,5 +161,5 @@ dossier de Visual Studio). Il contient `GazeBar.exe`, les dossiers `Languages`, 
 `Dictionaries`, les licences, et aucun `Tobii.*.dll`. Lancer `GazeBar.exe` (Windows peut demander
 « Exécuter quand même ») : le regard fonctionne, le clavier du regard propose des mots, et les
 premières lignes de `%LOCALAPPDATA%\GazeBar\gazebar.log` disent « GazeBar 0.1.0 starting » (le
-numéro de la version). Le brouillon contient aussi `GazeBar-0.1.0-full-install.zip` : faire avec
-lui le test « Installation complète » ci-dessus.
+numéro de la version). Le brouillon contient aussi `GazeBar-0.1.0-setup.exe` : faire avec lui le
+test « Installation complète » ci-dessus.

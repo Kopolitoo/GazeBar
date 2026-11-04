@@ -5,7 +5,7 @@
 #
 # Inno Setup is installed on the GitHub machine if it is not there yet (with Chocolatey, a fixed
 # version). It is only needed to MAKE the installer: nothing to install on the user's computer.
-# Used by the automatic build (build.yml).
+# Used by the automatic build (build.yml) and by the release (release.yml).
 
 param(
     [Parameter(Mandatory = $true)][string]$ProgramFolder,

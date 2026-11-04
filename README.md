@@ -44,7 +44,7 @@ text-to-speech.
    [Eyetracker files](docs/user-guide.md#eyetracker-files).
 
 For the **full installation** (circle above the Start menu, clicks in administrator windows),
-download `GazeBar-x.y.z-full-install.zip` instead and double-click `Install.cmd`: see
+download the installer `GazeBar-x.y.z-setup.exe` instead and double-click it: see
 [Full installation](docs/user-guide.md#full-installation-ui-access).
 
 To compile it yourself instead: clone this repository, open `GazeBar.slnx` in Visual Studio,
