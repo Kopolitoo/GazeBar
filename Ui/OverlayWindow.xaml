@@ -23,32 +23,32 @@
   visible on a light background as well as a dark one. In fixed gaze mode, the top line
   becomes white and opaque: one sees at once that the circle is frozen.
 
-  Elements added in step 2 (movement mode):
+  Movement mode:
     Ring              the progress ring: a thick arc filling up on the edge of the circle,
                       clockwise, starting from the top;
     OptionsIcon       the options icon of fixed gaze mode: a dark square with rounded corners
                       containing a symbol of the Windows font ("...", code E712);
     OptionsIconFlash  the light flash of the icon when it is looked at: a green layer on the
                       icon whose opacity follows the progress (replaces the ring that was
-                      drawn around the icon, user request of 2026-11-02);
+                      drawn around the icon);
     OptionsLabel      the "Options" text shown under the icon when it is looked at (if
                       ShowLabels is on).
-  Element added in step 3 (action choice):
+  Action choice:
     ChoiceScreen      the black screen of action choice mode. It covers the whole overlay, on
                       top of the rest. Its content (enlarged capture, cross, action icons and
                       their rings) is created in code (ActionChoiceMode and GazeButton). Since
                       the overlay stays transparent to clicks, this black screen never catches
                       the mouse.
-  Element added in step 4 (menu mode):
+  Menu mode:
     MenuBar           the menu bar surface, at the bottom of the screen. It covers the whole
                       overlay but stays transparent: only the bar and its buttons, created in
                       code (MenuMode and GazeButton), are visible. It is placed BEFORE the
                       black screen, so drawn underneath it.
-  Element added in step 6 (drag and drop):
+  Drag and drop:
     DragSurface       the surface for choosing the drop point of a drag and drop: the dotted
                       line of the path and the "back" button on the right edge. Transparent,
                       like the menu bar: the real screen is seen underneath.
-  Element added in step 12 (gaze keyboard):
+  Gaze keyboard:
     KeyboardSurface   the keyboard, at the bottom of the screen (see GazeKeyboard). It is
                       opaque but, like the whole overlay, lets the clicks of a real mouse
                       through and never takes the focus: the application being typed into
@@ -74,7 +74,7 @@
 
     <!-- Canvas: a surface where elements are placed by coordinates (Canvas.Left / Canvas.Top). -->
     <Canvas x:Name="Surface">
-        <!-- Gaze keyboard surface (step 12). Placed FIRST: it is drawn underneath everything
+        <!-- Gaze keyboard surface. Placed FIRST: it is drawn underneath everything
              else (circle, options icon, menu bar...). Its size and content are set in code
              (GazeKeyboard). -->
         <Canvas x:Name="KeyboardSurface" Visibility="Collapsed" />
@@ -103,13 +103,13 @@
             <TextBlock x:Name="OptionsLabelText" Text="Options" Foreground="White" FontSize="20" />
         </Border>
 
-        <!-- Drag and drop surface (step 6). Its size and content are set in code. -->
+        <!-- Drag and drop surface. Its size and content are set in code. -->
         <Canvas x:Name="DragSurface" Visibility="Collapsed" />
 
-        <!-- Menu bar surface (step 4). Its size and content are set in code. -->
+        <!-- Menu bar surface. Its size and content are set in code. -->
         <Canvas x:Name="MenuBar" Visibility="Collapsed" />
 
-        <!-- Black screen of action choice mode (step 3). Its size is set in code. -->
+        <!-- Black screen of action choice mode. Its size is set in code. -->
         <Canvas x:Name="ChoiceScreen" Background="Black" Visibility="Collapsed" />
     </Canvas>
 </Window>

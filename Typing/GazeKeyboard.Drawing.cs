@@ -35,7 +35,7 @@ namespace GazeBar
             double width = ScreenMetrics.WidthPixels;
             double height = ScreenMetrics.HeightPixels;
 
-            // Size (2026-11-01): at 75 % or 50 %, width AND height shrink together, so keys
+            // Size: at 75 % or 50 %, width AND height shrink together, so keys
             // keep their shape; the keyboard is centred horizontally.
             double sizePercent = p.KeyboardSize / 100.0;
             double keyboardWidth = width * sizePercent;
@@ -47,7 +47,7 @@ namespace GazeBar
             double cellHeight = (keysHeight - 2 * margin) / _layout.Rows;
             double gap = Math.Min(ScreenMetrics.Px(KeyGap4K), Math.Min(cellWidth, cellHeight) * 0.15);
 
-            // Step 14: the input box adds a band above the keys. The keyboard grows by its
+            // The input box adds a band above the keys. The keyboard grows by its
             // height: keys keep their size.
             double zoneHeight = p.InputBox ? Math.Round(cellHeight * InputBoxRatio) : 0;
             double keyboardHeight = keysHeight + zoneHeight;
@@ -80,7 +80,7 @@ namespace GazeBar
             Canvas.SetTop(background, corner.Y);
             surface.Children.Add(background);
 
-            // ── The input box (step 14): a dark band, the full width of the keys, with the
+            // ── The input box: a dark band, the full width of the keys, with the
             //    text aligned left. It is not a gaze target: gaze on it does nothing (the
             //    mouse cursor stays still).
             _previewText = null;
@@ -128,7 +128,7 @@ namespace GazeBar
             // ── The Close button: on the right, ABOVE the keyboard when it is at the bottom,
             //    BELOW when it is at the top (its label is then below the button). It stays
             //    on screen even if the keyboard is very tall. (E711 = "cancel" cross.)
-            //    User request of 2026-11-02: it stays against the RIGHT EDGE OF THE SCREEN
+            //    User request: it stays against the RIGHT EDGE OF THE SCREEN
             //    even when the keyboard is shrunk (75 %, 50 %, centred keyboard), and its size
             //    does not depend on the keyboard's: it is always [IconSize].
             double size = p.IconSizePx;

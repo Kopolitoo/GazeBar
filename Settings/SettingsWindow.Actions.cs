@@ -37,7 +37,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "Langue" button of the Général tab (step langues-socle): switches to the next
+        /// "Langue" button of the Général tab: switches to the next
         /// language of the Languages folder (in code order, back to the first after the last).
         /// The choice is saved and the page is redrawn at once in the new language. With a
         /// single language file, a message says so.

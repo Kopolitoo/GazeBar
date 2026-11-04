@@ -7,7 +7,7 @@ using System.Windows.Media;
 namespace GazeBar
 {
     /// <summary>
-    /// INTERFACE: a key of the gaze keyboard, drawn on the overlay (step 12).
+    /// INTERFACE: a key of the gaze keyboard, drawn on the overlay.
     ///
     /// It is a rectangle with slightly rounded corners, with its label in the center. As on
     /// the user's screenshots:
@@ -15,9 +15,9 @@ namespace GazeBar
     ///   - the others have a dark background ("function" style);
     ///   - the digits, F1 to F12 and the arrows have a lighter background ("light" style).
     ///
-    /// What one sees when looking at it (user's choice of 2026-10-31):
-    ///   - on hover, it gets slightly lighter: NO progress ring. Since 2026-11-02 (user
-    ///     request), the hover background is a bit less light, and a thin light-blue outline
+    /// What one sees when looking at it:
+    ///   - on hover, it gets slightly lighter: NO progress ring. The hover background is
+    ///     only a little lighter, and a thin light-blue outline
     ///     fades in ([OutlineDurationMs]);
     ///   - when it activates, it "flashes" green for a short moment (Flash).
     /// An active modifier (Shift, Caps Lock, Ctrl, Alt, Win) has a green border, like the lit
@@ -42,13 +42,13 @@ namespace GazeBar
         private static readonly Brush LetterBackground = Freeze(Color.FromArgb(0x00, 0x00, 0x00, 0x00));
         private static readonly Brush FunctionBackground = Freeze(Color.FromArgb(0xFF, 0x26, 0x27, 0x2A));
         private static readonly Brush LightBackground = Freeze(Color.FromArgb(0xFF, 0x3A, 0x3B, 0x3E));
-        // Hover background: #505358 at first, a bit less light since 2026-11-02.
+        // Hover background: only a little lighter than the key.
         private static readonly Brush HoverBackground = Freeze(Color.FromArgb(0xFF, 0x46, 0x48, 0x4D));
         private static readonly Brush FlashBackground = Freeze(Color.FromArgb(0xFF, 0x00, 0xC8, 0x53));
         private static readonly Brush White = Freeze(Colors.White);
         private static readonly Brush Gray = Freeze(Color.FromArgb(0xFF, 0x90, 0x90, 0x90));
         private static readonly Brush Green = Freeze(Color.FromArgb(0xFF, 0x00, 0xC8, 0x53));
-        // Step 13: text color of the "+ myword" cell (unknown word to add), to tell it apart
+        // Text color of the "+ myword" cell (unknown word to add), to tell it apart
         // from an ordinary suggestion (amber).
         private static readonly Brush Amber = Freeze(Color.FromArgb(0xFF, 0xFF, 0xC8, 0x57));
 
@@ -77,7 +77,7 @@ namespace GazeBar
         private double _bottom;
 
         // Size of the key drawing, in WPF units (remembered by Place): used to choose the text
-        // size of a suggestion, which changes with each typed letter (step 13).
+        // size of a suggestion, which changes with each typed letter.
         private double _widthWpf;
         private double _cellHeightWpf;
 
@@ -86,7 +86,7 @@ namespace GazeBar
         {
             Description = description;
 
-            // A suggestion cell (step 13) is empty, so inactive, as long as it shows no word
+            // A suggestion cell is empty, so inactive, as long as it shows no word
             // (see ShowSuggestion).
             Active = !description.Prediction.HasValue;
 
@@ -185,7 +185,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Step 13: the word shown in a suggestion cell. null = empty cell (it does not
+        /// The word shown in a suggestion cell. null = empty cell (it does not
         /// activate). newVal = true for the "+ myword" cell (unknown word to add to the personal
         /// dictionary), written in amber.
         /// </summary>

@@ -9,6 +9,8 @@ Start with the [architecture](docs/architecture.md) to find your way in the code
 
 - **Code, names and comments are written in English**: classes, methods, fields, files,
   folders, log messages and code comments.
+- **Comments describe the code as it is now**, in the present tense. No "step 12:", no dates,
+  no "used to": the history is in Git and in the pull requests.
 - Texts shown to the user are NOT written in the code: they live in the language files of the
   `Languages` folder (`Languages/en.json`, `Languages/fr.json`…) and are read with `Texts.Get("key")` or
   `Texts.Format("key", values)` (see `Texts.cs`). Log messages stay in the code, in English.

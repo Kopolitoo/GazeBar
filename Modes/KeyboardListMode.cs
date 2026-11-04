@@ -8,30 +8,31 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// KEYBOARD LIST MODE (step 14, "clavier-options").
+    /// KEYBOARD LIST MODE ("clavier-options").
     ///
     /// Two lists: "Language" opens from the menu bar of the gaze keyboard, "My words" from
-    /// the General tab of the settings (user request of 2026-11-02):
+    /// the General tab of the settings:
     ///   - LANGUAGE: the layouts found in the Keyboards folder (one per JSON file). The one in
     ///     use has a green border. Looking at another one chooses it (saved in settings.json),
     ///     then we go back to the keyboard;
     ///   - MY WORDS: the words added to the personal dictionary with the "+" cell, in
     ///     alphabetical order. Each word has a red "−" badge: looking at it REMOVES it at once
-    ///     (as for removing an icon in step 10), and we stay in the list to be able to remove
+    ///     (as for removing an icon in the icon configuration), and we stay in the list to be able
+    ///     to remove
     ///     others. Lexique words are never affected.
     ///
-    /// Step 15 ("profils-parametres"): a third list, which has nothing to do with the
+    /// A third list, which has nothing to do with the
     /// keyboard but reuses the same layout:
     ///   - PROFILES: the settings profiles of the Documents\GazeBar\Profiles folder, the most
     ///     recent first (see SettingsProfiles). Looking at one returns to the settings,
     ///     Profiles tab, with the question "Load profile ...?": nothing changes without this
     ///     "Yes". "Back to settings" returns to the same tab without changing anything.
     ///
-    /// Layout: the same as the list of the icon configuration (step 10): black screen,
+    /// Layout: the same as the list of the icon configuration: black screen,
     /// rounded rectangle over three quarters of the screen, title at the top, grid of at most
     /// 4 columns × 3 rows (12 per page). "Back" (to the keyboard for Language, to the settings
-    /// for My words) is on the right of the screen, vertically centered, outside the rectangle
-    /// (2026-11-02). At the bottom of the rectangle: "Previous page" and "Next page" when the
+    /// for My words) is on the right of the screen, vertically centered, outside the rectangle. At
+    /// the bottom of the rectangle: "Previous page" and "Next page" when the
     /// list does not fit on one page.
     ///
     /// The keyboard is hidden during this mode (it is neither movement mode nor fixed gaze)
@@ -50,7 +51,7 @@ namespace GazeBar
             Profiles
         }
 
-        /// <summary>Proportion of the screen taken by the list (as in step 10).</summary>
+        /// <summary>Proportion of the screen taken by the list (as in the icon configuration).</summary>
         private const double ListRatio = 0.75;
 
         /// <summary>Grid of a page: 4 columns × 3 rows.</summary>
@@ -146,7 +147,7 @@ namespace GazeBar
 
             AppSettings p = AppSettings.Current;
             // Each item already has its name written underneath: no hover label, it would
-            // overlap this name (as in the list of step 10).
+            // overlap this name (as in the icon configuration).
             int active = _aimer.Update(gaze, p.ActivationDelay, false);
             if (active >= 0)
             {
@@ -157,7 +158,7 @@ namespace GazeBar
             MoveGazeCircle(gaze, p);
         }
 
-        /// <summary>The screen changed (step 11): we stay here, everything is redrawn on the next tick.</summary>
+        /// <summary>The screen changed: we stay here, everything is redrawn on the next tick.</summary>
         public override bool AdaptToScreen()
         {
             _toBuild = true;
@@ -305,7 +306,7 @@ namespace GazeBar
             _page = Math.Max(0, Math.Min(_page, pages - 1));
 
             // ── The title, and under it an explanation (or the error message).
-            //    The texts follow the Windows text size (step 11).
+            //    The texts follow the Windows text size.
             double titleFont = size * 0.3 * ScreenMetrics.WindowsText;
             double nameFont = size * 0.2 * ScreenMetrics.WindowsText;
             string title = _kind == ListKind.Profiles ? Texts.Get("settings.profiles.load") : Name;
@@ -326,7 +327,7 @@ namespace GazeBar
 
             // ── "Back" (cross E711): on the right of the screen, vertically centered, OUTSIDE
             //    the list rectangle (in the middle of the right margin), so as not to aim at it
-            //    while looking at a word (user request of 2026-11-02).
+            //    while looking at a word.
             string backName = _kind == ListKind.Language ? Texts.Get("list.backToKeyboard") : Texts.Get("list.backToSettings");
             double rightMargin = width - (left + l);
             double xBack = left + l + rightMargin / 2;
@@ -374,7 +375,8 @@ namespace GazeBar
             {
                 int columns = Math.Min(inPage, Columns);
                 int rows = (inPage + columns - 1) / columns;
-                // As in step 10: each item gets a cell, and the icon with its name underneath
+                // As in the icon configuration: each item gets a cell, and the icon with its name
+                // underneath
                 // are centered in the cell.
                 double stepX = l / columns;
                 double stepY = Math.Max((gridBottom - gridTop) / rows, size + nameFont * 2 + space * 0.5);
@@ -412,7 +414,7 @@ namespace GazeBar
                     else
                     {
                         string word = _words[isFirst + i];   // copy for the function below
-                        // E74D = trash can, with the red "−" badge of step 10.
+                        // E74D = trash can, with the red "−" badge of the icon configuration.
                         button = new GazeButton("", null, Texts.Get("list.removeWord"));
                         button.SetConfigBadge(false);
                         action = () => RemoveWord(word);

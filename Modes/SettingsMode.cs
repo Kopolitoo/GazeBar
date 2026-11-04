@@ -4,7 +4,7 @@ using System.Windows;
 namespace GazeBar
 {
     /// <summary>
-    /// SETTINGS MODE (step 7 of the specification).
+    /// SETTINGS MODE.
     ///
     /// Entry: "Settings" button of the menu bar.
     ///
@@ -16,35 +16,35 @@ namespace GazeBar
     ///     1920 × 1080 page of the window, then given to a ButtonAimer, the same as for the
     ///     menu and the action choice;
     ///   - a target looked at for [ActivationDelay] activates;
-    ///   - REPEAT (user's choice of 2026-10-26): if the gaze stays on "−" or "+", the value
+    ///   - REPEAT: if the gaze stays on "−" or "+", the value
     ///     keeps changing, by one step every [RepeatDelay] seconds. The other targets (tabs,
     ///     No / Yes...) only activate once: the gaze must leave the target to activate it again;
     ///   - a small gray circle (50 px) shows where the gaze is.
     ///
-    /// Step 10: the "Configure icons" button of the "Icons" tab opens the icon configuration
+    /// The "Configure icons" button of the "Icons" tab opens the icon configuration
     /// screen (IconConfigMode), which comes back here, on this tab.
     ///
-    /// Step 14: the "My words" button of the "General" tab opens the list of the words added
+    /// The "My words" button of the "General" tab opens the list of the words added
     /// to the keyboard (KeyboardListMode), which comes back here, on this tab.
     ///
-    /// "Tools" tab (2026-10-29, buttons moved from the menu bar):
+    /// "Tools" tab (buttons moved from the menu bar):
     ///   - "Calibration" starts the eyetracker tool then switches to calibration mode (which
     ///     returns to movement mode when the tool closes). If starting fails, we stay here and
     ///     the message is shown in the tab;
     ///   - "Diagnostic" returns to movement mode and opens the Diagnostic window.
     ///
-    /// Step 15 (profiles): "Profiles" tab. "Load a profile" opens the list of profiles
+    /// Profiles: "Profiles" tab. "Load a profile" opens the list of profiles
     /// (KeyboardListMode, kind Profiles), which comes back here with the chosen profile: the
     /// window then asks for confirmation. "Yes": LoadProfile (below) applies the profile, then
     /// the keyboard reloads its layout (the language may have changed).
-    /// "Save the current settings" opens the profile NAME page (request of 2026-11-02): this
+    /// "Save the current settings" opens the profile NAME page: this
     /// mode then shows the gaze keyboard (GazeKeyboard.ShowForInput) and gives it the gaze when
     /// the gaze is on it; elsewhere, the window's targets react as usual. The keys go to the
     /// window's text box, which has the keyboard focus.
     ///
     /// Exit: "Back" button (in the middle of the right edge) or the caregiver's Escape key,
-    /// to movement mode. The bottom menu does not open here (Mode.MenuAllowed stays "no",
-    /// rule of 2026-10-25).
+    /// to movement mode. The bottom menu does not open here (Mode.MenuAllowed stays
+    /// "no").
     ///
     /// Each change is applied at once (AppSettings.Current) and saved in settings.json.
     /// </summary>
@@ -56,7 +56,7 @@ namespace GazeBar
         // The tab shown when opening (0 = the first).
         private readonly int _startTab;
 
-        // Step 15: the profile chosen in the list, to confirm when opening (or null).
+        // The profile chosen in the list, to confirm when opening (or null).
         private readonly FoundProfile _profileToConfirm;
 
         private SettingsWindow _window;
@@ -73,7 +73,7 @@ namespace GazeBar
         private bool _circlePlaced;
 
         /// <summary>
-        /// Opens the settings on tab number "tab" (the first one if not given). Step 15:
+        /// Opens the settings on tab number "tab" (the first one if not given).
         /// "profileToConfirm" = profile chosen in the list of profiles; the page then opens on
         /// the question "Load profile ...?".
         /// </summary>
@@ -94,8 +94,8 @@ namespace GazeBar
             Manager.Layer.HideAll();
 
             // The window is stored in _window ONLY when everything is ready (aimer included):
-            // Update does nothing as long as _window is empty (bug of 2026-11-02: a tick
-            // arriving during Show found an empty aimer).
+            // Update does nothing as long as _window is empty (otherwise a tick
+            // arriving during Show finds an empty aimer).
             SettingsWindow window = new SettingsWindow(_startTab, _profileToConfirm);
             window.BackRequested += Back;
             window.IconConfigRequested += OpenIconConfig;
@@ -233,7 +233,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The screen changed (step 11): we stay in the settings. The window takes the screen
+        /// The screen changed: we stay in the settings. The window takes the screen
         /// size again and the page is redrawn (the "Display" tab shows the detected screen).
         /// The 1920 × 1080 unit page adapts by itself (Viewbox).
         /// </summary>
@@ -269,7 +269,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "My words" button of the "General" tab (step 14): the list of the words added to the
+        /// "My words" button of the "General" tab: the list of the words added to the
         /// keyboard, which comes back here, on this tab.
         /// </summary>
         private void OpenMyWords()
@@ -279,7 +279,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "Load a profile" button of the "Profiles" tab (step 15): the full-screen list of
+        /// "Load a profile" button of the "Profiles" tab: the full-screen list of
         /// profiles, which comes back here (Profiles tab) with or without a choice.
         /// </summary>
         private void OpenProfileList()
@@ -289,7 +289,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// "Yes" to "Load profile ...?" (step 15): the profile becomes the current settings
+        /// "Yes" to "Load profile ...?": the profile becomes the current settings
         /// (SettingsProfiles.Load). The keyboard, if open, reloads its layout, because the
         /// profile may have another language. We stay in the settings: the page is rebuilt
         /// with the new values and the message.
@@ -308,7 +308,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The profile name page opens (2026-11-02): the gaze keyboard is shown at its usual
+        /// The profile name page opens: the gaze keyboard is shown at its usual
         /// place (bottom or top, usual size), and the window places the page in the free part.
         /// If it cannot be shown, the page uses the whole height (real keyboard only).
         /// </summary>

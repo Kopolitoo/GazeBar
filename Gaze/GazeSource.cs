@@ -7,7 +7,7 @@ namespace GazeBar
 {
     /// <summary>
     /// MODEL: the real gaze position, provided by the eyetracker through the Tobii.Interaction
-    /// library (the same as Mill Mouse). It no longer depends on the cursor driven by the
+    /// library (the same as Mill Mouse). It does not depend on the cursor driven by the
     /// vendor's software.
     ///
     /// Coordinates are in screen pixels. They can be NEGATIVE or beyond the screen size when
@@ -16,7 +16,7 @@ namespace GazeBar
     /// If the eyetracker engine is not available, the program keeps working: IsRunning stays
     /// false and ErrorMessage explains why.
     ///
-    /// Since 2026-11-02, the eyetracker DLLs are no longer shipped with GazeBar: they are
+    /// The eyetracker DLLs are not shipped with GazeBar: they are
     /// searched for on the PC at startup (see EyetrackerLoader.cs). So that GazeBar starts
     /// even when they cannot be found, the Tobii.Interaction types (Host, GazePointDataStream)
     /// only appear in the ConnectEyetracker method: .NET only looks for a DLL when it prepares
@@ -53,7 +53,7 @@ namespace GazeBar
 
         /// <summary>
         /// The Host object (Tobii.Interaction) (null if the connection failed). Only used to start
-        /// the calibration tool (see Calibration.cs, step 4). Its type is "object" so that the
+        /// the calibration tool (see Calibration.cs). Its type is "object" so that the
         /// rest of the program does not need to know Tobii.Interaction.
         /// </summary>
         public object Host
@@ -165,7 +165,7 @@ namespace GazeBar
                 x = _x;
                 y = _y;
             }
-            // Scale correction (step 11, see ScreenMetrics.GazeFactor): usually 1.
+            // Scale correction (see ScreenMetrics.GazeFactor): usually 1.
             double factor = ScreenMetrics.GazeFactor;
             x *= factor;
             y *= factor;
@@ -190,7 +190,7 @@ namespace GazeBar
                 num = _measureNumber;
                 instantMs = _lastSampleMs;
             }
-            // Scale correction (step 11, see ScreenMetrics.GazeFactor): usually 1.
+            // Scale correction (see ScreenMetrics.GazeFactor): usually 1.
             double factor = ScreenMetrics.GazeFactor;
             x *= factor;
             y *= factor;

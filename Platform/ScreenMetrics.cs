@@ -5,13 +5,13 @@ namespace GazeBar
 {
     /// <summary>
     /// MODEL: the screen measurements, and the conversion of GazeBar's sizes to pixels
-    /// (step 11, "mesures-ecran").
+    /// ("mesures-ecran").
     ///
-    /// THE PROBLEM: up to step 10, sizes were written in pixels (190 px circle, 120 px
+    /// THE PROBLEM: sizes written in pixels (190 px circle, 120 px
     /// icons...), tuned on the user's 4K screen (3840 × 2160). On a 1920 × 1080 screen, the
     /// same 190 px circle looks twice as big.
     ///
-    /// THE SOLUTION (specification, step 11): sizes are expressed as a PERCENTAGE OF THE
+    /// THE SOLUTION (specification): sizes are expressed as a PERCENTAGE OF THE
     /// SCREEN HEIGHT. An 8.8 % circle is 190 px on a 2160 px high screen, and 95 px on a
     /// 1080 px screen: on the same physical screen, it keeps the same real size. This is what
     /// matters for the gaze, whose precision does not depend on the resolution chosen in
@@ -72,7 +72,7 @@ namespace GazeBar
         public static double StartupScale { get; } = ReadStartupScale();
 
         /// <summary>
-        /// Correction of the eyetracker gaze (step 11, fix of 2026-10-29).
+        /// Correction of the eyetracker gaze.
         ///
         /// The user's test: GazeBar started in 1920 × 1080 at 100 %, then the screen switched
         /// to 3840 × 2160 at 150 %. The log shows that the gaze received from the eyetracker no

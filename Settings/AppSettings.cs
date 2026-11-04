@@ -10,8 +10,7 @@ namespace GazeBar
     /// <summary>
     /// MODEL: all of GazeBar's settings, in one place.
     ///
-    /// They replace the constants that were written at the top of the first files
-    /// (GazeMouse.cs and HoldSession.cs, removed in step 6). They are read at startup and
+    /// They are read at startup and
     /// saved in the file:
     ///     %APPDATA%\GazeBar\settings.json
     /// (for example C:\Users\Name\AppData\Roaming\GazeBar\settings.json).
@@ -47,9 +46,9 @@ namespace GazeBar
         ///      former long-press duration, drop delay, minimum drag distance and maximum
         ///      press duration, removed (user rule: a setting no longer used is removed);
         ///   4: step 9 — GameSmoothing goes from 0.7 to 0.16 by default (user test of
-        ///      2026-10-28: at 0.7, the cursor jerked in direct mouse);
+        ///      At 0.7, the cursor jerked in direct mouse);
         ///   5: MaxScrollSpeed goes from 10 to 15 notches/s by default (maximum scroll speed
-        ///      raised by half, user request of 2026-10-28);
+        ///      raised by half);
         ///   6: step 10 — action choice icon layout (CrownIcons, ModifierIcons, UtilityIcons).
         ///      Nothing to fix: an older file lacks these lists, so they keep the default
         ///      layout;
@@ -60,7 +59,7 @@ namespace GazeBar
         ///   8: step 12 — gaze keyboard: KeyDelay, KeyRepeat, AutoCapitalize and
         ///      KeyboardHeight. Nothing to fix: missing from an older file, they keep their
         ///      default value;
-        ///   9: step 12 (user remarks of 2026-11-01) — KeyboardSize and KeyboardAtTop. Nothing
+        ///   9: step 12 (user remarks) — KeyboardSize and KeyboardAtTop. Nothing
         ///      to fix: missing from an older file, they keep their default value;
         ///  10: step 14 ("clavier-options") — KeyboardLayout and InputBox. Missing from an
         ///      older file: InputBox keeps its default value; KeyboardLayout gets "fr-azerty"
@@ -69,7 +68,7 @@ namespace GazeBar
         ///      2026-11-02, after the switch to fine scrolling), and new setting
         ///      ScrollInactiveWindows (yes by default; missing from an older file, it keeps
         ///      its default value).
-        /// Since the "code-anglais" step (2026-11-02), the file is settings.json with English
+        /// Since the "code-anglais" step, the file is settings.json with English
         /// keys: an old parametres.json is no longer read.
         ///  12: step langues-socle — Language (interface language). Since step langue-anglais
         ///      the default is "en" (new installations); an older file belongs to an existing
@@ -90,7 +89,7 @@ namespace GazeBar
         public double Smoothing { get; set; }
 
         /// <summary>
-        /// Cursor anti-jitter, in % OF THE SCREEN HEIGHT (step 11; in pixels before): below
+        /// Cursor anti-jitter, in % OF THE SCREEN HEIGHT (in pixels before): below
         /// it, the cursor does not move. 0.4 % = 4 px on a 1080 px screen.
         /// In code, use CursorDeadZonePx (the value in pixels of the current screen).
         /// </summary>
@@ -104,8 +103,8 @@ namespace GazeBar
         // ───────────────────────── Fixation ─────────────────────────
 
         /// <summary>
-        /// The gaze is "still" while it stays within this radius, in % of the screen height
-        /// (step 11). 1.4 % = 15 px on a 1080 px screen. In code: FixationRadiusPx.
+        /// The gaze is "still" while it stays within this radius, in % of the screen height. 1.4 %
+        /// = 15 px on a 1080 px screen. In code: FixationRadiusPx.
         /// </summary>
         [DataMember(Order = 20)]
         public double FixationRadius { get; set; }
@@ -115,13 +114,13 @@ namespace GazeBar
         public double FixationDelay { get; set; }
 
         /// <summary>
-        /// Maximum gaze speed during a fixation, in % OF THE SCREEN HEIGHT PER SECOND (step 11;
-        /// in pixels per second before). In code: MaxFixationSpeedPx.
+        /// Maximum gaze speed during a fixation, in % OF THE SCREEN HEIGHT PER SECOND.
+        /// In code: MaxFixationSpeedPx.
         /// Between two samples, the gaze speed is computed (distance ÷ elapsed time): above
         /// this value, the eye is jumping to another point (a "saccade"), it is not a
         /// fixation.
-        /// Setting added in step 2 (it is not in the first version of the specification).
-        /// 42 %/s = 907 px/s on the 4K screen (the old value, 900 px/s), i.e. 30 pixels
+        /// (This setting is not in the first version of the specification.)
+        /// 42 %/s = 907 px/s on the 4K screen, i.e. 30 pixels
         /// between two PCEye samples (≈ 30 per second).
         /// </summary>
         [DataMember(Order = 24)]
@@ -139,21 +138,21 @@ namespace GazeBar
 
         /// <summary>
         /// Radius of the movement mode circle (and fixed gaze exit zone), in % of the screen
-        /// height (step 11). 8.8 % = 190 px in 4K, 95 px in 1080p.
+        /// height. 8.8 % = 190 px in 4K, 95 px in 1080p.
         /// In code: CircleRadiusPx (which also takes [InterfaceSize] into account).
         /// </summary>
         [DataMember(Order = 30)]
         public double CircleRadius { get; set; }
 
         /// <summary>
-        /// Side of the gaze-activated icons, in % of the screen height (step 11).
+        /// Side of the gaze-activated icons, in % of the screen height.
         /// 5.6 % = 121 px in 4K, 60 px in 1080p. In code: IconSizePx.
         /// </summary>
         [DataMember(Order = 31)]
         public double IconSize { get; set; }
 
         /// <summary>
-        /// Interface size, in % (step 11): 75 (small), 100 (normal, default), 125 (large) or
+        /// Interface size, in %: 75 (small), 100 (normal, default), 125 (large) or
         /// 150 (very large). Scales everything drawn on the overlay (circle, icons, menu bar,
         /// texts…), but not the gaze settings (fixation radius, maximum speed, anti-jitter).
         /// See ScreenMetrics.cs.
@@ -161,7 +160,7 @@ namespace GazeBar
         [DataMember(Order = 33)]
         public double InterfaceSize { get; set; }
 
-        // ── The same settings in PIXELS of the current screen (step 11). Computed on every
+        // ── The same settings in PIXELS of the current screen. Computed on every
         //    read (the screen may change while GazeBar runs) and not saved in the file (no
         //    [DataMember]). These are what the modes use.
 
@@ -207,7 +206,7 @@ namespace GazeBar
 
         /// <summary>
         /// Gaze duration on the fixed gaze mode options icon before it activates, in seconds.
-        /// Much shorter than [ActivationDelay] (user request of 2026-10-22): it is the icon
+        /// Much shorter than [ActivationDelay]: it is the icon
         /// looked at most often, and looking at it by mistake has no consequence (the action
         /// choice always offers "retour").
         /// </summary>
@@ -237,7 +236,6 @@ namespace GazeBar
         /// <summary>
         /// "Android" drag and drop: pause between the button press and the start of the move,
         /// in seconds (as when moving an icon on a phone).
-        /// Replaces the former long-press duration (step 6).
         /// </summary>
         [DataMember(Order = 60)]
         public double AndroidPauseDuration { get; set; }
@@ -245,27 +243,27 @@ namespace GazeBar
         /// <summary>
         /// Duration of the cursor move during a drag and drop, in seconds: the cursor goes
         /// from the start point to the end point in that time, button held down.
-        /// Replaces the former drop delay (step 6): the end point is now fixed with [FixationDelay].
+        /// The end point is fixed with [FixationDelay].
         /// </summary>
         [DataMember(Order = 61)]
         public double DragDuration { get; set; }
 
         // ───────────────────────── Scrolling ─────────────────────────
 
-        // (Step 8: the former neutral scroll zone setting is removed, the zone where nothing
-        //  scrolls is now the circle itself, of radius [CircleRadius]. If still in the file,
-        //  it is simply ignored when reading.)
+        // (The zone where nothing scrolls is the circle itself, of radius [CircleRadius]: it
+        //  has no setting of its own. An old "neutral zone" setting still in the file is
+        //  simply ignored when reading.)
 
         /// <summary>
-        /// Maximum speed of scroll mode, in wheel notches per second (step 8).
+        /// Maximum speed of scroll mode, in wheel notches per second.
         /// The speed is 0 at the edge of the dead zone (half of [CircleRadius]) and reaches
-        /// 5 by default since 2026-11-02 (15 since 2026-10-28, 10 at first).
+        /// 5 by default.
         /// </summary>
         [DataMember(Order = 71)]
         public double MaxScrollSpeed { get; set; }
 
         /// <summary>
-        /// Windows setting "Scroll inactive windows when I hover over them" (2026-11-02). Yes
+        /// Windows setting "Scroll inactive windows when I hover over them". Yes
         /// by default: the wheel goes to the window under the cursor, without having to click
         /// in it first. The settings file keeps the choice; WheelScroller really applies it
         /// to Windows (at startup and on each change).
@@ -277,8 +275,8 @@ namespace GazeBar
 
         /// <summary>
         /// Game mode smoothing, same meaning and same computation as [Smoothing] (see
-        /// Modes/Smoother.cs), but set separately (user request of 2026-10-28). 0.16 by
-        /// default, like movement mode (0.7 at first: the cursor jerked far too much).
+        /// Modes/Smoother.cs), but set separately. 0.16 by
+        /// default, like movement mode (at 0.7, the cursor jerks far too much).
         /// </summary>
         [DataMember(Order = 80)]
         public double GameSmoothing { get; set; }
@@ -288,7 +286,7 @@ namespace GazeBar
         public double GameSensitivity { get; set; }
 
         /// <summary>
-        /// Game mode variant (step 9, user's choice of 2026-10-27):
+        /// Game mode variant:
         ///   "direct":   the cursor follows the gaze (default, for Mindball Play);
         ///   "relative": moves are sent to the game (for other games).
         /// Written in full in settings.json, so it is easy to read.
@@ -297,10 +295,10 @@ namespace GazeBar
         public string GameMouse { get; set; }
 
         /// <summary>
-        /// Game mode relative mouse: how the gaze is turned into movement (step 9).
+        /// Game mode relative mouse: how the gaze is turned into movement.
         ///   "tracking": the movement follows the gaze's (default);
         ///   "gamepad":  the gap between the gaze and the screen centre gives the speed.
-        /// Setting added in step 9: the specification proposes both ways "to test".
+        /// The specification proposes both ways "to test".
         /// </summary>
         [DataMember(Order = 83)]
         public string GameRelative { get; set; }
@@ -335,14 +333,14 @@ namespace GazeBar
         public bool MouseTracking { get; set; }
 
         /// <summary>
-        /// Start GazeBar when the Windows session opens (step 7). No by default.
+        /// Start GazeBar when the Windows session opens. No by default.
         /// The settings file keeps the choice; WindowsStartup really applies it, in the
         /// Windows registry.
         /// </summary>
         [DataMember(Order = 91)]
         public bool StartWithWindows { get; set; }
 
-        // ───────────────────────── Action choice icons (step 10) ─────────────────────────
+        // ───────────────────────── Action choice icons ─────────────────────────
 
         /// <summary>
         /// The actions placed on the eight slots of the action choice crown, starting top
@@ -361,7 +359,7 @@ namespace GazeBar
         [DataMember(Order = 102)]
         public string[] UtilityIcons { get; set; }
 
-        // ───────────────────────── Gaze keyboard (step 12) ─────────────────────────
+        // ───────────────────────── Gaze keyboard ─────────────────────────
 
         /// <summary>
         /// Gaze duration on a keyboard key before it activates, in seconds.
@@ -386,7 +384,7 @@ namespace GazeBar
         public double KeyboardHeight { get; set; }
 
         /// <summary>
-        /// Size of the gaze keyboard, in %: 100, 75 or 50 (user request of 2026-11-01). Width
+        /// Size of the gaze keyboard, in %: 100, 75 or 50. Width
         /// AND height shrink together: at 50 %, the keyboard is half the screen width and half
         /// of [KeyboardHeight], centred.
         /// Also set with the "Taille" button of the keyboard menu bar.
@@ -397,7 +395,7 @@ namespace GazeBar
         /// <summary>
         /// True: the keyboard is at the top of the screen; false: at the bottom. Changed by
         /// the "Haut / bas" button of the keyboard menu bar, and remembered for the next
-        /// opening (user request of 2026-11-01).
+        /// opening.
         /// </summary>
         [DataMember(Order = 115)]
         public bool KeyboardAtTop { get; set; }
@@ -405,7 +403,7 @@ namespace GazeBar
         /// <summary>
         /// The gaze keyboard layout: the name of a file of the Keyboards folder, without
         /// ".json" (for example "en-qwerty", "fr-azerty"). Chosen with the "Langue" button of the keyboard
-        /// menu bar (step 14).
+        /// menu bar.
         /// </summary>
         [DataMember(Order = 116)]
         public string KeyboardLayout { get; set; }
@@ -413,13 +411,13 @@ namespace GazeBar
         /// <summary>
         /// True: a band above the keys shows the last typed words (the "input box", a plain
         /// preview: text always goes straight to the application).
-        /// "Zone de saisie" button of the keyboard bar (step 14). Not in the Clavier settings
+        /// "Zone de saisie" button of the keyboard bar. Not in the Clavier settings
         /// tab: it already has five rows, the maximum that fits on the page.
         /// </summary>
         [DataMember(Order = 117)]
         public bool InputBox { get; set; }
 
-        // ───────────────────────── Language (step langues-socle) ─────────────────────────
+        // ───────────────────────── Language ─────────────────────────
 
         /// <summary>
         /// The interface language: the code of a file of the Languages folder, without
@@ -429,7 +427,7 @@ namespace GazeBar
         [DataMember(Order = 130)]
         public string Language { get; set; }
 
-        // ───────────────────────── Log (step logging) ─────────────────────────
+        // ───────────────────────── Log ─────────────────────────
 
         /// <summary>
         /// Detailed log: no by default. Off, gazebar.log only gets the important events and the

@@ -5,7 +5,7 @@ using Microsoft.Win32;
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: the [StartWithWindows] option (step 7).
+    /// MODEL: the [StartWithWindows] option.
     ///
     /// How does Windows start a program when the session opens? It reads the list stored
     /// in the registry (the Windows settings database), at this location:

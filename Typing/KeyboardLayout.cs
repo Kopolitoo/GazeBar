@@ -7,11 +7,11 @@ using System.Runtime.Serialization.Json;
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: a gaze keyboard layout (step 12, "clavier-base"), read from a JSON file of the
+    /// MODEL: a gaze keyboard layout ("clavier-base"), read from a JSON file of the
     /// Keyboards folder (for example Keyboards/en-qwerty.json, Keyboards/fr-azerty.json).
     ///
     /// Why a file and not code? To be able to add a language or change a key later WITHOUT
-    /// recompiling: it is enough to edit or add a file (user request of 2026-10-31). The file
+    /// recompiling: it is enough to edit or add a file. The file
     /// is read again each time the keyboard opens: a change shows at the next opening.
     ///
     /// The keyboard is a GRID: [Columns] columns by [Rows] rows (12 × 4 for French). Row 0 is
@@ -27,7 +27,7 @@ namespace GazeBar
     ///   "shortcut": "Ctrl+F"   a shortcut (Ctrl, Alt, Shift or Win + a key);
     ///   "page": "accents"      shows another page ("back" = the previous page);
     ///   "modifier": "Shift"    Shift, CapsLock, Ctrl, Alt or Win;
-    ///   "prediction": 1        word suggestion cell no. 1, 2 or 3 (filled by the prediction, step 13);
+    ///   "prediction": 1        word suggestion cell no. 1, 2 or 3 (filled by the prediction);
     ///   "command": "DeleteWord"  DeleteWord or DeleteLetter.
     /// And for the look:
     ///   "label"      the text shown on the key;
@@ -48,8 +48,8 @@ namespace GazeBar
         public const string FolderName = "Keyboards";
 
         /// <summary>
-        /// The default layout (English since step clavier-anglais; fr-azerty before). Since
-        /// step 14, another one is chosen with the "Language" button of the keyboard bar
+        /// The default layout (English). Another one is chosen with the "Language" button of the
+        /// keyboard bar
         /// ([KeyboardLayout] in settings.json).
         /// </summary>
         public const string DefaultName = "en-qwerty";
@@ -59,8 +59,8 @@ namespace GazeBar
         public string Name { get; set; }
 
         /// <summary>
-        /// The language of the layout ("fr"), for information only: since step clavier-anglais
-        /// the prediction dictionary follows the interface language, not the layout.
+        /// The language of the layout ("fr"), for information only: the prediction dictionary
+        /// follows the interface language, not the layout.
         /// </summary>
         [DataMember(Name = "language", Order = 1)]
         public string Language { get; set; }
@@ -148,7 +148,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Step 14 ("Language" button): all the layouts of the Keyboards folder that read
+        /// All the layouts of the Keyboards folder that read
         /// correctly, sorted by displayed name. An unreadable or incorrect layout is not offered
         /// (the reason is written to the log by Load).
         /// The file name (without ".json") is the one saved in settings.json.
@@ -229,7 +229,7 @@ namespace GazeBar
         }
     }
 
-    /// <summary>A layout found in the Keyboards folder (step 14, "Language" list).</summary>
+    /// <summary>A layout found in the Keyboards folder ("Language" list).</summary>
     internal sealed class FoundLayout
     {
         /// <summary>The file name without ".json" ("fr-azerty").</summary>

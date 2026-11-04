@@ -10,11 +10,11 @@ namespace GazeBar
     /// <summary>
     /// The application class: entry point of the program.
     ///
-    /// Step 7: only one instance of GazeBar at a time, and the [StartWithWindows] option.
+    /// Only one instance of GazeBar at a time, and the [StartWithWindows] option.
     ///
     /// It reads the settings, creates the shared "model" objects (cursor, gaze), opens the
     /// full-screen overlay and the mode manager, and watches the Escape key.
-    /// Since step 4, there is no toolbar any more: everything goes through the gaze, and the
+    /// There is no toolbar: everything goes through the gaze, and the
     /// menu bar opens by looking down, below the screen.
     /// It also makes sure, in all circumstances, that the mouse buttons are released when
     /// closing.
@@ -31,7 +31,7 @@ namespace GazeBar
         private DiagnosticWindow _diagnostic;
 
         /// <summary>
-        /// The single-instance "lock" (step 7). A Mutex is a named Windows object; only one
+        /// The single-instance "lock". A Mutex is a named Windows object; only one
         /// program at a time can own it. The first GazeBar takes it; a second GazeBar sees it
         /// is already taken, and closes at once.
         /// "Local\": the name applies to the user's Windows session.
@@ -84,20 +84,20 @@ namespace GazeBar
             // The settings first: everything else uses them.
             AppSettings.Initialize();
 
-            // The interface texts, in the chosen language (step langues-socle).
+            // The interface texts, in the chosen language.
             Texts.Load(AppSettings.Current.Language);
 
             // Start with Windows: the registry is made to match the settings file
             // (and the program path is updated if it was moved).
             WindowsStartup.Apply(AppSettings.Current.StartWithWindows);
 
-            // Scrolling inactive windows (2026-11-02): the Windows setting is made to match the
+            // Scrolling inactive windows: the Windows setting is made to match the
             // settings file (see WheelScroller).
             WheelScroller.Apply(AppSettings.Current.ScrollInactiveWindows);
 
             // The real gaze, provided by the eyetracker engine. If it is unavailable, the
             // program still starts (see GazeSource.ErrorMessage).
-            // Since 2026-11-02, the eyetracker DLLs are no longer shipped with GazeBar: they are
+            // The eyetracker DLLs are not shipped with GazeBar: they are
             // first searched for on the PC (see EyetrackerLoader.cs), before any use of the gaze.
             EyetrackerLoader.Install();
             _gaze = new GazeSource();
@@ -115,7 +115,7 @@ namespace GazeBar
             _layer.BringToFront();
             _modes.Start(new MovementMode());
 
-            // Fix of 2026-10-29: if Windows hid the cursor (GazeBar started alone at startup,
+            // If Windows hid the cursor (GazeBar started alone at startup,
             // without a physical mouse), make it reappear (see CursorWaker).
             CursorWaker.Check();
 
@@ -128,7 +128,7 @@ namespace GazeBar
         /// <summary>
         /// Escape key (for the caregiver): the mouse buttons and modifier keys are released for
         /// safety (a drag and drop in progress is interrupted) and we return to movement mode,
-        /// unless we are already there. In movement mode, it closes the gaze keyboard (step 12).
+        /// unless we are already there. In movement mode, it closes the gaze keyboard.
         /// The key also reaches the active program normally (it is not "eaten" by GazeBar).
         /// </summary>
         private void OnEscape()
@@ -138,7 +138,7 @@ namespace GazeBar
                 return;
             }
 
-            // Step 12: in movement mode, Escape closes the gaze keyboard if it is open.
+            // In movement mode, Escape closes the gaze keyboard if it is open.
             // (The Escape key of the gaze keyboard is simulated: it does not arrive here, see
             // KeyboardHook.)
             if (_modes.CurrentMode is MovementMode)
@@ -158,14 +158,14 @@ namespace GazeBar
                 return;
             }
 
-            // Icon configuration screen (step 10): Escape returns to the settings.
+            // Icon configuration screen: Escape returns to the settings.
             IconConfigMode configuration = _modes.CurrentMode as IconConfigMode;
             if (configuration != null)
             {
                 configuration.BackToSettings();
                 return;
             }
-            // Keyboard lists (step 14): Escape acts like "Back" (My words → settings).
+            // Keyboard lists: Escape acts like "Back" (My words → settings).
             KeyboardListMode list = _modes.CurrentMode as KeyboardListMode;
             if (list != null)
             {
@@ -215,7 +215,7 @@ namespace GazeBar
             }
             if (_modes != null)
             {
-                // Step 13: the pending word usage counts of the keyboard are saved in the
+                // The pending word usage counts of the keyboard are saved in the
                 // personal dictionary.
                 _modes.Keyboard.Stop();
                 _modes.Stop();

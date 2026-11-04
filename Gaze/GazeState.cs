@@ -19,7 +19,7 @@ namespace GazeBar
         /// Gaze position BROUGHT BACK INTO THE SCREEN (each axis clamped separately at the edges).
         /// Example: gaze above the screen → YScreen = 0, but XScreen still follows the gaze from
         /// left to right. Used to slide the gaze circles along the edges when looking off
-        /// screen (user request of 2026-10-29).
+        /// screen.
         /// Also used by fixation and fixed gaze mode, but only when the gaze is very close
         /// to the screen (see NearScreen); never by the buttons.
         /// Only valid if Available is true.
@@ -46,13 +46,13 @@ namespace GazeBar
         /// <summary>True if the gaze is available but outside the screen.</summary>
         public bool OffScreen;
 
-        /// <summary>True if the gaze is available and BELOW the bottom of the screen (used to open the menu, step 4).</summary>
+        /// <summary>True if the gaze is available and BELOW the bottom of the screen (used to open the menu).</summary>
         public bool BelowScreen;
 
         /// <summary>
         /// True if the gaze is available and on the screen, OR right next to it: less than
-        /// [EdgesMargin4K] pixels (measured on the 4K screen) from its edges (user request of
-        /// 2026-11-02). In the corners, the PCEye is less precise: when looking at a corner,
+        /// [EdgesMargin4K] pixels (measured on the 4K screen) from its edges.
+        /// In the corners, the PCEye is less precise: when looking at a corner,
         /// some measures fall slightly off screen, which kept resetting the fixation. In this
         /// band, fixation and fixed gaze mode use the position brought back into the screen
         /// (XScreen, YScreen) instead of forgetting everything.

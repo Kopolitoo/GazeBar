@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace GazeBar
 {
     /// <summary>
-    /// The actions that can be placed on the icons of the action choice (step 10).
+    /// The actions that can be placed on the icons of the action choice.
     ///
-    /// Up to step 9, this list was hidden inside ActionChoiceMode. The icon configuration
-    /// screen (IconConfigMode) and the settings (settings.json) need it too: so it was moved
+    /// The action choice (ActionChoiceMode), the icon configuration
+    /// screen (IconConfigMode) and the settings (settings.json) all need this list: so it is
     /// here, with everything that describes an action (its group, its button, its name).
     ///
     /// Note: the NAMES of this list are written as is in settings.json (for example
@@ -33,7 +33,7 @@ namespace GazeBar
         Back,
 
         /// <summary>
-        /// Opens (or closes) the gaze keyboard (step 12, user request of 2026-11-01). Added at
+        /// Opens (or closes) the gaze keyboard. Added at
         /// the end: the names already written in settings.json do not change.
         /// </summary>
         Keyboard
@@ -92,7 +92,7 @@ namespace GazeBar
                         ChoiceAction.DragRight,
                         ChoiceAction.DragAndroid,
                         ChoiceAction.Scroll,
-                        // Step 12 (2026-11-01): offered in the list of the configuration
+                        // Offered in the list of the configuration
                         // screen, but not placed by default (the eight slots are taken).
                         ChoiceAction.Keyboard
                     };
@@ -104,7 +104,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The default layout of each group (order chosen by the user on 2026-10-28 for the
+        /// The default layout of each group (order chosen by the user for the
         /// crown). Crown, starting from the top right, clockwise (see ActionChoiceLayout):
         ///   0: top, right      → scroll
         ///   1: right, top      → right click
@@ -116,7 +116,7 @@ namespace GazeBar
         ///   7: top, left       → left click
         /// Modifiers, from top to bottom: Ctrl, Shift, Alt.
         /// Utilities, from left to right: Copy, Cut, Paste.
-        /// The Keyboard action (step 12) is not placed by default: one adds it oneself instead
+        /// The Keyboard action is not placed by default: one adds it oneself instead
         /// of another one, in the icon configuration screen.
         /// </summary>
         public static ChoiceAction[] DefaultLayout(IconGroup group)
@@ -224,11 +224,10 @@ namespace GazeBar
         ///   E962 = mouse, E71E = magnifier, E7C2 = move (four arrows), E72B = "back" arrow,
         ///   EC8F = scroll (up and down arrows; symbol to check on screen),
         ///   E8C8 = copy, E8C6 = scissors (cut), E77F = clipboard (paste),
-        ///   E765 = keyboard (step 12).
+        ///   E765 = keyboard.
         /// The three clicks share the mouse symbol, the three drag and drops the four arrows;
         /// the badge tells them apart (G = left, D = right, A = android).
         /// The modifiers simply show their name ("Ctrl", "Maj", "Alt").
-        /// (Moved from ActionChoiceMode in step 10, unchanged.)
         /// </summary>
         public static GazeButton CreateButton(ChoiceAction action)
         {

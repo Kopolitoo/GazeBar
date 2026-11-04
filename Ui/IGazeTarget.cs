@@ -2,10 +2,10 @@ namespace GazeBar
 {
     /// <summary>
     /// What a "target" that can be activated with the gaze must provide, so that ButtonAimer
-    /// can decide whether it is being looked at and when it activates (step 7).
+    /// can decide whether it is being looked at and when it activates.
     ///
-    /// Up to step 6, ButtonAimer only knew GazeButton objects (the squares of the action
-    /// choice and of the menu, drawn on the overlay). Settings mode has other targets: the
+    /// ButtonAimer aims at GazeButton objects (the squares of the action choice and of the
+    /// menu, drawn on the overlay), but settings mode has other targets: the
     /// tabs, the "−" and "+" buttons, the yes / no switches... (SettingTarget).
     /// Rather than writing a second aimer, we describe here what they have in common:
     /// this is an "interface". A class that "implements" the interface (written

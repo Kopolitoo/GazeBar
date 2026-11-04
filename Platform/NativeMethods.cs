@@ -37,7 +37,7 @@ namespace GazeBar
         internal static extern bool SetCursorPos(int x, int y);
 
         /// <summary>
-        /// Cursor state (Windows CURSORINFO structure). Fix of 2026-10-29: mostly "flags" is
+        /// Cursor state (Windows CURSORINFO structure). : mostly "flags" is
         /// read, to know whether Windows hid the cursor.
         /// cbSize must contain the size of the structure before the call (Windows checks it).
         /// </summary>
@@ -73,7 +73,7 @@ namespace GazeBar
         internal const int SM_CYSCREEN = 1;
 
         /// <summary>
-        /// REAL size of the primary screen, in pixels (step 11, fix of 2026-10-29).
+        /// REAL size of the primary screen, in pixels.
         ///
         /// Why not GetSystemMetrics? The user's test: GazeBar started in 1920 × 1080 at 100 %,
         /// then the screen switched to 3840 × 2160 at 200 %: GetSystemMetrics kept answering
@@ -106,7 +106,7 @@ namespace GazeBar
 
         /// <summary>
         /// The program's "system" scaling, in dots per inch (96 = 100 %, 144 = 150 %). It is set
-        /// when the program starts and no longer changes afterwards (step 11, see
+        /// when the program starts and no longer changes afterwards (see
         /// ScreenMetrics.StartupScale). Windows 10 version 1607 and later.
         /// </summary>
         [DllImport("user32.dll")]
@@ -167,7 +167,7 @@ namespace GazeBar
         {
             public int dx;             // position or movement in X (see MOUSEEVENTF_ABSOLUTE)
             public int dy;             // position or movement in Y
-            public uint mouseData;     // extra data: the wheel amount (step 8), otherwise 0
+            public uint mouseData;     // extra data: the wheel amount, otherwise 0
             public uint dwFlags;       // WHICH action: button pressed, released, movement...
             public uint time;          // 0 = let Windows set the time
             public UIntPtr dwExtraInfo;
@@ -175,7 +175,7 @@ namespace GazeBar
 
         /// <summary>
         /// Description of a keyboard key to simulate (Windows KEYBDINPUT structure).
-        /// Added in step 6 for the Ctrl, Shift and Alt modifiers.
+        /// Used for the Ctrl, Shift and Alt modifiers and the gaze keyboard.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct KEYBDINPUT
@@ -218,8 +218,8 @@ namespace GazeBar
         internal const uint MOUSEEVENTF_LEFTUP = 0x0004;
         internal const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
         internal const uint MOUSEEVENTF_RIGHTUP = 0x0010;
-        internal const uint MOUSEEVENTF_WHEEL = 0x0800;    // vertical wheel (step 8): amount in mouseData
-        internal const uint MOUSEEVENTF_HWHEEL = 0x1000;   // horizontal wheel (step 8)
+        internal const uint MOUSEEVENTF_WHEEL = 0x0800;    // vertical wheel: amount in mouseData
+        internal const uint MOUSEEVENTF_HWHEEL = 0x1000;   // horizontal wheel
         internal const uint MOUSEEVENTF_ABSOLUTE = 0x8000; // dx, dy = position on the screen (0 to 65535), not an offset
         internal const uint KEYEVENTF_KEYUP = 0x0002;
 
@@ -231,7 +231,7 @@ namespace GazeBar
         internal const ushort VK_V = 0x56;        // V key (paste, with Ctrl)
         internal const ushort VK_X = 0x58;        // X key (cut, with Ctrl)
 
-        // Step 12 (gaze keyboard).
+        // Gaze keyboard.
         //  KEYEVENTF_EXTENDEDKEY: "extended" key (arrows, Home, End, Delete, Page...,
         //                         Windows key): without this flag, some applications confuse
         //                         them with the numeric keypad keys;
@@ -267,7 +267,7 @@ namespace GazeBar
         internal const int WM_MOUSEACTIVATE = 0x0021;     // message: "a click is going to activate the window"
         internal const int MA_NOACTIVATE = 3;             // answer: "no, do not activate it"
 
-        // Messages sent by Windows to all windows (step 11, see OverlayWindow.Hook):
+        // Messages sent by Windows to all windows (see OverlayWindow.Hook):
         internal const int WM_SETTINGCHANGE = 0x001A;     // a Windows setting changed
         internal const int WM_DISPLAYCHANGE = 0x007E;     // the screen resolution changed
 
@@ -294,7 +294,7 @@ namespace GazeBar
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int SetWindowLong(IntPtr window, int index, int newValue);
 
-        // ───────────────────────── Screen capture (step 3) ─────────────────────────
+        // ───────────────────────── Screen capture ─────────────────────────
         //
         // To take a picture of part of the screen, we use GDI, the old Windows drawing library
         // (always present). The principle, in 5 steps (see ScreenCapture.cs):
@@ -334,7 +334,7 @@ namespace GazeBar
 
         internal const uint SRCCOPY = 0x00CC0020;   // BitBlt: plain pixel copy
 
-        // ───────────────────────── Windows of other programs (step 4) ─────────────────────────
+        // ───────────────────────── Windows of other programs ─────────────────────────
         //
         // During calibration, GazeBar watches the window of the eyetracker tool to know when it
         // closes (see CalibrationMode).
@@ -361,7 +361,7 @@ namespace GazeBar
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern int GetWindowText(IntPtr window, System.Text.StringBuilder text, int maxCount);
 
-        // ───────────────────────── Window under the cursor (scrolling, 2026-11-02) ─────────────────────────
+        // ───────────────────────── Window under the cursor (scrolling) ─────────────────────────
         //
         // When entering scroll mode, GazeBar makes the window under the aimed point active:
         // some software ignores the wheel as long as its window is not active (the user had to
@@ -420,7 +420,7 @@ namespace GazeBar
         internal const uint SPIF_UPDATEINIFILE = 0x01;   // Windows saves the change
         internal const uint SPIF_SENDCHANGE = 0x02;      // and notifies the open programs
 
-        // ───────────────────────── Caregiver's Escape key (step 4) ─────────────────────────
+        // ───────────────────────── Caregiver's Escape key ─────────────────────────
         //
         // A "keyboard hook" lets us be notified of every key pressed, in any program. GazeBar
         // only OBSERVES: the key goes on its way normally to the active program (see
@@ -450,7 +450,7 @@ namespace GazeBar
         /// <summary>
         /// In the structure received by the keyboard hook, the "flags" field (3rd number, so 8
         /// bytes after the start): this flag says the key was SIMULATED by a program
-        /// (SendInput), and not typed on a real keyboard (step 12).
+        /// (SendInput), and not typed on a real keyboard.
         /// </summary>
         internal const int HookFlagsOffset = 8;
         internal const int LLKHF_INJECTED = 0x10;

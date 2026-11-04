@@ -4,16 +4,16 @@ using System.Windows;
 namespace GazeBar
 {
     /// <summary>
-    /// THE LAYOUT of the action choice screen (step 10): where the photo, the eight crown
+    /// THE LAYOUT of the action choice screen: where the photo, the eight crown
     /// slots, the three modifiers, the three utility buttons and the "back" icon are.
     ///
-    /// These computations used to be done in ActionChoiceMode. The icon configuration screen
-    /// (IconConfigMode) must show EXACTLY the same layout (user request of 2026-10-28): so
-    /// they live here, and both modes use them.
+    /// The action choice (ActionChoiceMode) and the icon configuration screen
+    /// (IconConfigMode) must show EXACTLY the same layout: so these computations
+    /// live here, and both modes use them.
     ///
     /// All positions are CENTERS, in screen pixels (like the gaze).
     ///
-    /// Step 11: [Space] and [EdgeMargin] are pixels of the user's 4K screen, converted for
+    /// [Space] and [EdgeMargin] are pixels of the user's 4K screen, converted for
     /// the current screen with ScreenMetrics.Px (60 px in 4K → 30 px in 1920 × 1080).
     /// </summary>
     internal sealed class ActionChoiceLayout
@@ -23,8 +23,8 @@ namespace GazeBar
 
         /// <summary>
         /// Space, in 4K screen pixels, between two neighbouring buttons, between the buttons and
-        /// the photo, and between the modifiers and the left edge of the screen (user request of
-        /// 2026-10-26: "about 60 pixels").
+        /// the photo, and between the modifiers and the left edge of the screen (user request:
+        /// "about 60 pixels").
         /// </summary>
         public const double Space4K = 60;
 
@@ -60,8 +60,8 @@ namespace GazeBar
             // ── The enlarged photo, in the center of the screen.
             EnlargedPhotoSide = photoSide * Zoom;
 
-            // ── The crown: eight slots, TWO PER SIDE of the photo (user request of
-            //    2026-10-26). On each side, the two buttons are [Space] pixels apart and centered
+            // ── The crown: eight slots, TWO PER SIDE of the photo.
+            //    On each side, the two buttons are [Space] pixels apart and centered
             //    on the middle of the side. They are [Space] pixels from the photo, unless the
             //    screen is too small (top and bottom on a 1080p screen): they then move closer
             //    to the photo to stay fully on the screen.
@@ -78,8 +78,8 @@ namespace GazeBar
             }
 
             // ── The utility buttons (Copy, Cut, Paste): a row stuck to the top edge of the
-            //    screen, centered, spread over the width like the modifiers over the height
-            //    (request of 2026-10-28). On a 1920 × 1080 screen: x = 440, 960 and 1480.
+            //    screen, centered, spread over the width like the modifiers over the height. On a
+            //    1920 × 1080 screen: x = 440, 960 and 1480.
             int utilityCount = ActionCatalog.SlotCount(IconGroup.Utilities);
             double utilitiesGap = (width - size * utilityCount) / utilityCount;
             double yUtilities = size / 2 + EdgeMargin;
@@ -90,8 +90,8 @@ namespace GazeBar
                 Utilities[i] = new Point(x, yUtilities);
             }
 
-            // ── The modifiers: a column of three, stuck to the left edge of the screen
-            //    (request of 2026-10-26), [Space] pixels from the edge.
+            // ── The modifiers: a column of three, stuck to the left edge of the screen, [Space]
+            // pixels from the edge.
             int modifierCount = ActionCatalog.SlotCount(IconGroup.Modifiers);
             double xModifiers = Space + size / 2;
             double modifiersGap = (height - size * modifierCount) / modifierCount;

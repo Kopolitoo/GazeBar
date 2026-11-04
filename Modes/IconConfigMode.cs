@@ -8,13 +8,13 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// ICON CONFIGURATION MODE (step 10 of the specification).
+    /// ICON CONFIGURATION MODE.
     ///
     /// Entry: "Configure icons" button of the "Icons" tab of settings mode.
     /// Exit: "back" icon (in the middle of the right edge) or the caregiver's Escape key: back
     /// to settings mode, on the "Icons" tab. The bottom menu does not open here.
     ///
-    /// Layout (user request of 2026-10-28): THE SAME as the action choice
+    /// Layout: THE SAME as the action choice
     /// (ActionChoiceLayout), on the same black screen of the overlay. Instead of the photo, a
     /// gray frame that explains the screen. The fourteen slots are drawn: the eight of the
     /// crown, the three modifiers (left edge) and the three utility buttons (top edge). Each
@@ -25,7 +25,7 @@ namespace GazeBar
     ///
     /// The list: a rounded rectangle taking three quarters of the screen, with ALL the actions
     /// of the same group, each with its name underneath, and a "Cancel" button. An action can
-    /// be placed several times in its group (user request of 2026-10-28), for example two left
+    /// be placed several times in its group, for example two left
     /// clicks in the crown. Once the action is chosen, it is placed and the list closes.
     ///
     /// Each change is applied at once (AppSettings.Current) and saved in settings.json: the
@@ -117,7 +117,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// The screen changed (step 11): we stay here, and the whole screen is redrawn on the
+        /// The screen changed: we stay here, and the whole screen is redrawn on the
         /// next tick with the new sizes (the list stays open if it was).
         /// </summary>
         public override bool AdaptToScreen()
@@ -345,7 +345,7 @@ namespace GazeBar
             screen.Children.Add(frame);
 
             // ── The title, at the top of the rectangle.
-            // The texts of the list also follow the Windows text size (step 11).
+            // The texts of the list also follow the Windows text size.
             double titleFont = size * 0.3 * ScreenMetrics.WindowsText;
             AddCenteredText(layer, screen, Texts.Get("iconConfig.chooseAction"), placed.CenterX, top + size * 0.35,
                                l, titleFont, Brushes.White, true);
@@ -360,7 +360,7 @@ namespace GazeBar
                                size * 3, nameFont, Soft, false);
 
             // ── All the actions of the group, even those already placed elsewhere: an action
-            //    may appear several times (user request of 2026-10-28).
+            //    may appear several times.
             List<ChoiceAction> free = new List<ChoiceAction>(ActionCatalog.Actions(_chosenGroup));
 
             // The grid zone: between the title and "Cancel".
@@ -377,7 +377,7 @@ namespace GazeBar
 
             int columns = Math.Min(free.Count, ListColumns);
             int rows = (free.Count + columns - 1) / columns;
-            // The grid takes the whole room of the rectangle (user request of 2026-10-28: the
+            // The grid takes the whole room of the rectangle (user request: the
             // icons looked small in the middle of a lot of space).
             // Each action gets a "cell": the width of the rectangle shared between the columns,
             // and the height between the title and "Cancel" shared between the rows.

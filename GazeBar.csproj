@@ -48,26 +48,26 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Step 12: the gaze keyboard layouts (JSON files of the Keyboards folder) are copied
+    <!-- The gaze keyboard layouts (JSON files of the Keyboards folder) are copied
          next to GazeBar.exe on each build, if they changed.
          GazeBar reads them there (see KeyboardLayout.cs). -->
     <None Update="Keyboards\*.json" CopyToOutputDirectory="PreserveNewest" />
-    <!-- Step 13: the word prediction dictionary (Dictionaries/fr.txt, taken from
+    <!-- The word prediction dictionary (Dictionaries/fr.txt, taken from
          Lexique 3.83) and its license are copied next to GazeBar.exe in the same way
          (see WordPredictor.cs). -->
     <None Update="Dictionaries\*.txt" CopyToOutputDirectory="PreserveNewest" />
-    <!-- Step langues-socle: the interface language files (Languages/fr.json…), read by
+    <!-- The interface language files (Languages/fr.json…), read by
          Texts.cs, are copied the same way. -->
     <None Update="Languages\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- The gaze, through the eyetracker engine (same source as Mill Mouse).
-         2026-11-02: the eyetracker (Tobii) DLLs are proprietary code, we do NOT ship them with
+         The eyetracker (Tobii) DLLs are proprietary code, we do NOT ship them with
          GazeBar. The package is only used to COMPILE:
-         - ExcludeAssets="runtime": the eyetracker .NET DLLs are no longer copied next to GazeBar.exe;
+         - ExcludeAssets="runtime": the eyetracker .NET DLLs are not copied next to GazeBar.exe;
          - ExcludeAssets="build": the package's small script, which copied the native DLL
-           Tobii.EyeX.Client.dll, no longer runs.
+           Tobii.EyeX.Client.dll, does not run.
          At startup, GazeBar looks for these DLLs on the PC (see EyetrackerLoader.cs). -->
     <PackageReference Include="Tobii.Interaction" Version="0.7.3" ExcludeAssets="runtime;build" />
   </ItemGroup>

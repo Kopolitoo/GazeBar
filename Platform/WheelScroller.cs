@@ -3,7 +3,7 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: the [ScrollInactiveWindows] option (user request of 2026-11-02, "Scroll" tab
+    /// MODEL: the [ScrollInactiveWindows] option (user request, "Scroll" tab
     /// of the settings).
     ///
     /// It is the Windows 10/11 setting "Scroll inactive windows when I hover over them"

@@ -30,7 +30,7 @@ namespace GazeBar
 
         /// <summary>
         /// Places an action on a slot (null = empty it). The same action may be placed on
-        /// several slots of the group (user request of 2026-10-28). Does not save the file
+        /// several slots of the group. Does not save the file
         /// (see Save).
         /// </summary>
         public void SetSlot(IconGroup group, int num, ChoiceAction? action)

@@ -3,7 +3,7 @@ using System;
 namespace GazeBar
 {
     /// <summary>
-    /// DRAG AND DROP MODE, part 3: the execution (step 6).
+    /// DRAG AND DROP MODE, part 3: the execution.
     ///
     /// We get here from the magnifier, once the drop point has been refined. Everything
     /// happens on its own, in a few tenths of a second, without looking anywhere:

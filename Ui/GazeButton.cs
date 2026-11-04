@@ -7,7 +7,7 @@ using System.Windows.Shapes;
 namespace GazeBar
 {
     /// <summary>
-    /// INTERFACE: a button activated with the gaze, drawn on the overlay (step 3).
+    /// INTERFACE: a button activated with the gaze, drawn on the overlay.
     ///
     /// It is a dark square with rounded corners, with:
     ///   - a symbol of the Windows font (Segoe Fluent Icons or Segoe MDL2 Assets);
@@ -18,20 +18,20 @@ namespace GazeBar
     ///
     /// A button can be "empty" (Empty method): a slot with no action assigned yet. It is drawn
     /// grayed, with a pale "+", to show the user that an action can be put there (icon
-    /// configuration screen, step 10). It never activates; only its label appears on hover.
+    /// configuration screen). It never activates; only its label appears on hover.
     ///
-    /// A button can also be "unavailable" (Unavailable method, step 4): its function exists in
+    /// A button can also be "unavailable" (Unavailable method): its function exists in
     /// the specification but is not programmed yet (for example "Settings" in the menu bar).
     /// It keeps its real symbol, but grayed, and never activates either.
     ///
-    /// A button can be "lit" (SetLit method, step 4): a switch in the "yes" position, like
+    /// A button can be "lit" (SetLit method): a switch in the "yes" position, like
     /// "Mouse tracking" in the menu bar. Its border becomes green.
     ///
-    /// A button can show a word instead of a symbol (Text method, step 6): this is the case of
+    /// A button can show a word instead of a symbol (Text method): this is the case of
     /// the "Ctrl", "Maj" and "Alt" modifiers, which have no meaningful symbol in the Windows
     /// icon font.
     ///
-    /// Step 10, for the icon configuration screen:
+    /// For the icon configuration screen:
     ///   - an empty slot can be "configurable" (ConfigurableEmpty method): grayed like an empty
     ///     slot, but it activates (to place an action there);
     ///   - a round badge at the top right (SetConfigBadge method): green "+" on an empty slot,
@@ -44,11 +44,11 @@ namespace GazeBar
     /// Positions are given in SCREEN PIXELS, like the gaze; the conversion to WPF units is
     /// done here, with the help of the overlay.
     ///
-    /// Step 11: thicknesses, rounded corners, margins and the label font are constants in
+    /// Thicknesses, rounded corners, margins and the label font are constants in
     /// units of the reference screen, converted with ScreenMetrics.Units and
     /// ScreenMetrics.Font at Place time (see ScreenMetrics.cs).
     ///
-    /// Since step 7, it "implements" IGazeTarget: this way ButtonAimer can aim at a GazeButton
+    /// It "implements" IGazeTarget: this way ButtonAimer can aim at a GazeButton
     /// as well as at a target of settings mode (SettingTarget).
     /// </summary>
     internal sealed class GazeButton : IGazeTarget
@@ -104,7 +104,7 @@ namespace GazeBar
 
         /// <summary>
         /// Creates a grayed button that never activates, with its real symbol: for a function
-        /// planned but not programmed yet (step 4: "Settings", "Game").
+        /// planned but not programmed yet.
         /// </summary>
         public static GazeButton Unavailable(string symbol, string label)
         {
@@ -119,7 +119,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Creates an empty slot of the configuration screen (step 10): grayed, without a
+        /// Creates an empty slot of the configuration screen: grayed, without a
         /// symbol (the "+" badge is enough), but it activates, to place an action there.
         /// </summary>
         public static GazeButton ConfigurableEmpty(string label)
@@ -130,7 +130,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Adds the round badge of the configuration screen (step 10), at the top right:
+        /// Adds the round badge of the configuration screen, at the top right:
         /// plus = true → "+" on a green background (empty slot, an action can be placed);
         /// plus = false → "−" on a red background (assigned action, it can be removed).
         /// To call BEFORE Place. ("−" is the real minus sign, U+2212.)
@@ -203,7 +203,7 @@ namespace GazeBar
             TextBlock text = new TextBlock();
             text.Text = label;
             text.Foreground = White;
-            // The label font also follows the Windows text size (step 11).
+            // The label font also follows the Windows text size.
             text.FontSize = ScreenMetrics.Font(20);
             _label = new Border();
             _label.Background = NormalBackground;
@@ -289,7 +289,7 @@ namespace GazeBar
 
             surface.Children.Add(_background);
 
-            // The "+" / "−" badge (step 10): a circle of about a third of the side, whose center
+            // The "+" / "−" badge: a circle of about a third of the side, whose center
             // is a bit inside the top-right corner (it overflows the square).
             if (_configBadge != null)
             {
@@ -316,7 +316,7 @@ namespace GazeBar
         /// Size of the ACTIVATION ZONE (the zone where the gaze "touches" the button), relative
         /// to the drawn square. 1 = exactly the square (default value); 1.3 = a square 30 %
         /// larger, centered on the button. The drawing does not change: only the sensitive zone
-        /// grows (user request of 2026-10-28 for the action choice, the magnifier...), which
+        /// grows (user request for the action choice, the magnifier...), which
         /// forgives small gaze errors better.
         /// Note: the zone must not overlap a neighbouring button.
         /// </summary>

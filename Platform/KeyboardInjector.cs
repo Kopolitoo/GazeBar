@@ -4,10 +4,10 @@ using System.Runtime.InteropServices;
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: simulates pressing and releasing keyboard keys (step 6).
+    /// MODEL: simulates pressing and releasing keyboard keys.
     ///
     /// It is used by the Ctrl, Shift and Alt modifier keys of the action choice (see
-    /// Modifiers.cs) and, since step 12, by the gaze keyboard (TypeText, TypeKey).
+    /// Modifiers.cs) and by the gaze keyboard (TypeText, TypeKey).
     /// It works like MouseInjector, with SendInput.
     ///
     /// Safety: as for the mouse, the class remembers the keys it pressed, so it can release
@@ -65,7 +65,7 @@ namespace GazeBar
             }
         }
 
-        // ───────────────────────── Gaze keyboard (step 12) ─────────────────────────
+        // ───────────────────────── Gaze keyboard ─────────────────────────
         //
         // These methods send a complete key (press AND release) in a single SendInput call:
         // Windows handles them as one block, a real key cannot slip in between, and nothing

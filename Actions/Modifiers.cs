@@ -9,7 +9,7 @@ namespace GazeBar
     }
 
     /// <summary>
-    /// MODEL: the state of the Ctrl, Shift and Alt modifiers of the action choice (step 6).
+    /// MODEL: the state of the Ctrl, Shift and Alt modifiers of the action choice.
     ///
     /// How it works (specification, "Actions and modifiers"):
     ///  - a gaze on a modifier's icon activates it (green border), a second one deactivates it;
