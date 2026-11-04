@@ -322,14 +322,16 @@ Started with the `--mouse` option (Visual Studio: launch profile "GazeBar (mouse
 `EyetrackerGazeSource`: the physical mouse plays the gaze, to test without an eyetracker.
 
 - GazeBar moves the cursor itself, so the source does not read the cursor position: it keeps a
-  "virtual gaze" point moved by the raw movements of the real mouse (Windows Raw Input,
-  `WM_INPUT` messages sent to an invisible message-only window). Movements injected by a program
-  (GazeBar's own `SendInput`) have no device and are ignored.
+  "virtual gaze" point moved only by the movements of the real mouse. On the screen, a low-level
+  mouse hook (`WH_MOUSE_LL`) gives each movement with the Windows pointer speed and acceleration,
+  so the point moves exactly like the cursor would. Movements injected by a program (GazeBar's
+  own `SendInput`) are flagged by Windows and ignored.
 - The point can go outside the screen by 15 % of the screen height: moving the mouse down past
-  the bottom edge opens the menu, as with the gaze.
+  the bottom edge opens the menu, as with the gaze. There the cursor is stuck at the edge, so the
+  movement comes from Windows Raw Input (`WM_INPUT` messages sent to an invisible message-only
+  window), in mouse counts.
 - A timer sends the point about 30 times per second even when the mouse is still: a still mouse
   is a fixation. Gaze loss cannot be simulated.
-- The movement uses the raw mouse counts: the Windows pointer speed does not apply.
 - Calibration only works with the eyetracker. Nothing is saved, as for the real gaze.
 
 ## Log and diagnostic

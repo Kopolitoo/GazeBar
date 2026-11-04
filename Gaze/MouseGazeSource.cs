@@ -13,12 +13,16 @@ namespace GazeBar
     /// (movement mode, magnifier...): it would read back its own moves, and the cursor would
     /// fight the hand. So this source keeps its own "virtual gaze" point, moved only by the
     /// movements of the real mouse:
-    ///  - Windows sends them as "raw input" (WM_INPUT messages) to a small invisible window;
-    ///  - the movements GazeBar injects itself (SendInput) come with no device: they are
-    ///    ignored. SetCursorPos produces no raw input at all.
-    ///
-    /// The virtual point can go a little outside the screen ([OffScreenMarginRatio]), like a
-    /// real gaze: this is how the menu is opened, by "looking" below the screen.
+    ///  - on the screen, by a low-level mouse hook (WH_MOUSE_LL). For each real movement,
+    ///    Windows gives the new cursor position before applying it: new position − current
+    ///    position = the movement of the hand, with the Windows pointer speed and acceleration.
+    ///    So the virtual point moves exactly like the cursor would.
+    ///  - outside the screen, the cursor is stuck at the edge: there, the movement comes from
+    ///    "raw input" (WM_INPUT messages sent to a small invisible window), in mouse counts.
+    ///    The virtual point can go a little outside the screen ([OffScreenMarginRatio]), like
+    ///    a real gaze: this is how the menu is opened, by "looking" below the screen.
+    /// The movements GazeBar injects itself (SendInput) are flagged by Windows and ignored;
+    /// SetCursorPos produces no mouse event at all.
     ///
     /// A timer sends the point about 30 times per second, like the PCEye 5, even when the
     /// mouse does not move: a still mouse is a fixation.
@@ -36,6 +40,11 @@ namespace GazeBar
         /// <summary>Message-only window (no display): HWND_MESSAGE.</summary>
         private static readonly IntPtr MessageOnlyParent = new IntPtr(-3);
 
+        // Keep a reference to the hook function: otherwise the .NET "garbage collector" could
+        // destroy it while Windows still calls it (crash).
+        private readonly NativeMethods.LowLevelMouseProc _hookFunction;
+        private IntPtr _hook = IntPtr.Zero;
+
         private HwndSource _window;
         private DispatcherTimer _timer;
         private IntPtr _buffer = IntPtr.Zero;
@@ -47,8 +56,13 @@ namespace GazeBar
         private double _screenWidth;
         private double _screenHeight;
 
+        public MouseGazeSource()
+        {
+            _hookFunction = OnMouseHook;
+        }
+
         /// <summary>
-        /// Opens the invisible window, asks Windows for the raw mouse movements and starts the
+        /// Installs the mouse hook, opens the invisible window, asks Windows for the raw mouse movements and starts the
         /// timer. Must be called on the UI thread.
         /// </summary>
         public override void Start()
@@ -68,6 +82,16 @@ namespace GazeBar
                 {
                     _x = _screenWidth / 2;
                     _y = _screenHeight / 2;
+                }
+
+                // For a low-level hook, Windows asks for the program's "module";
+                // GetModuleHandle(null) gives the one of GazeBar.exe.
+                _hook = NativeMethods.SetWindowsHookEx(
+                    NativeMethods.WH_MOUSE_LL, _hookFunction, NativeMethods.GetModuleHandle(null), 0);
+                if (_hook == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException(
+                        "Mouse hook refused (Windows error " + Marshal.GetLastWin32Error() + ")");
                 }
 
                 HwndSourceParameters parameters = new HwndSourceParameters("GazeBar mouse gaze");
@@ -155,25 +179,71 @@ namespace GazeBar
             }
 
             ushort flags = (ushort)Marshal.ReadInt16(_buffer, headerSize);
+            if ((flags & NativeMethods.MOUSE_MOVE_ABSOLUTE) != 0)
+            {
+                // Tablets and remote desktop: an absolute position, followed by the hook only.
+                return;
+            }
             int moveX = Marshal.ReadInt32(_buffer, headerSize + 12);
             int moveY = Marshal.ReadInt32(_buffer, headerSize + 16);
 
-            if ((flags & NativeMethods.MOUSE_MOVE_ABSOLUTE) != 0)
+            double margin = _screenHeight * OffScreenMarginRatio;
+            _x = MoveOutside(_x, moveX, _screenWidth - 1, margin);
+            _y = MoveOutside(_y, moveY, _screenHeight - 1, margin);
+        }
+
+        /// <summary>
+        /// One axis of a raw movement: only used when the virtual point is outside the screen,
+        /// or on its edge and pushed outward (the cursor cannot follow there). The point stays
+        /// on its side: when it comes back, it stops on the edge and the hook takes over.
+        /// last: the last pixel of the screen on this axis.
+        /// </summary>
+        private static double MoveOutside(double position, int move, double last, double margin)
+        {
+            if (position < 0 || (position <= 0 && move < 0))
             {
-                // Tablets and remote desktop: a position from 0 to 65535 across the screen.
-                _x = moveX / 65535.0 * _screenWidth;
-                _y = moveY / 65535.0 * _screenHeight;
+                return Math.Max(-margin, Math.Min(0, position + move));
             }
-            else
+            if (position > last || (position >= last && move > 0))
             {
-                // A normal mouse: a movement in "counts" (Windows pointer speed not applied).
-                _x += moveX;
-                _y += moveY;
+                return Math.Min(last + margin, Math.Max(last, position + move));
+            }
+            return position;
+        }
+
+        /// <summary>
+        /// Called by Windows for every mouse event, on the UI thread. Must answer very quickly.
+        /// For a real movement, moves the virtual point by the movement of the cursor, on each
+        /// axis where the point is on the screen.
+        /// </summary>
+        private IntPtr OnMouseHook(int code, IntPtr wParam, IntPtr lParam)
+        {
+            if (code >= 0 && wParam.ToInt32() == NativeMethods.WM_MOUSEMOVE)
+            {
+                int flags = Marshal.ReadInt32(lParam, NativeMethods.MouseHookFlagsOffset);
+                NativeMethods.POINT cursor;
+                if ((flags & NativeMethods.LLMHF_INJECTED) == 0 && NativeMethods.GetCursorPos(out cursor))
+                {
+                    // The new position (start of the structure) minus the current one.
+                    int moveX = Marshal.ReadInt32(lParam, 0) - cursor.X;
+                    int moveY = Marshal.ReadInt32(lParam, 4) - cursor.Y;
+                    _x = MoveInside(_x, moveX, _screenWidth - 1);
+                    _y = MoveInside(_y, moveY, _screenHeight - 1);
+                }
             }
 
-            double margin = _screenHeight * OffScreenMarginRatio;
-            _x = Math.Max(-margin, Math.Min(_screenWidth + margin, _x));
-            _y = Math.Max(-margin, Math.Min(_screenHeight + margin, _y));
+            // Always pass the event on: the mouse keeps working normally.
+            return NativeMethods.CallNextHookEx(_hook, code, wParam, lParam);
+        }
+
+        /// <summary>One axis of a hook movement: only when the point is on the screen, and it stays on it.</summary>
+        private static double MoveInside(double position, int move, double last)
+        {
+            if (position < 0 || position > last)
+            {
+                return position;
+            }
+            return Math.Max(0, Math.Min(last, position + move));
         }
 
         public override void Dispose()
@@ -182,6 +252,11 @@ namespace GazeBar
             {
                 _timer.Stop();
                 _timer = null;
+            }
+            if (_hook != IntPtr.Zero)
+            {
+                NativeMethods.UnhookWindowsHookEx(_hook);
+                _hook = IntPtr.Zero;
             }
             if (_window != null)
             {

@@ -333,16 +333,17 @@ dans `Properties/launchSettings.json`), GazeBar utilise `MouseGazeSource` au lie
 `EyetrackerGazeSource` : la souris physique joue le rôle du regard, pour tester sans eyetracker.
 
 - GazeBar déplace lui-même le curseur : la source ne lit donc pas la position du curseur. Elle
-  garde un point de « regard virtuel » déplacé par les mouvements bruts de la vraie souris
-  (Raw Input de Windows, messages `WM_INPUT` envoyés à une fenêtre invisible « message only »).
-  Les mouvements injectés par un programme (le `SendInput` de GazeBar) n'ont pas de périphérique
-  et sont ignorés.
+  garde un point de « regard virtuel » déplacé seulement par les mouvements de la vraie souris.
+  Sur l'écran, un crochet souris de bas niveau (`WH_MOUSE_LL`) donne chaque mouvement avec la
+  vitesse et l'accélération du pointeur de Windows : le point bouge exactement comme le curseur.
+  Les mouvements injectés par un programme (le `SendInput` de GazeBar) sont marqués par Windows et
+  ignorés.
 - Le point peut sortir de l'écran de 15 % de la hauteur de l'écran : descendre la souris sous le
-  bord du bas ouvre le menu, comme avec le regard.
+  bord du bas ouvre le menu, comme avec le regard. Là, le curseur est bloqué au bord : le
+  mouvement vient alors du Raw Input de Windows (messages `WM_INPUT` envoyés à une fenêtre
+  invisible « message only »), en comptes de la souris.
 - Un minuteur envoie le point environ 30 fois par seconde même quand la souris ne bouge pas : une
   souris immobile est une fixation. La perte du regard ne peut pas être simulée.
-- Le mouvement utilise les comptes bruts de la souris : la vitesse du pointeur de Windows ne
-  s'applique pas.
 - La calibration ne marche qu'avec l'eyetracker. Rien n'est enregistré, comme pour le vrai regard.
 
 ## Journal et diagnostic

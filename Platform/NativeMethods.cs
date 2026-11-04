@@ -508,5 +508,24 @@ namespace GazeBar
         /// </summary>
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern uint GetRawInputData(IntPtr rawInput, uint command, IntPtr data, ref uint size, uint headerSize);
+
+        // ───────────────────────── Mouse hook (mouse as gaze) ─────────────────────────
+
+        /// <summary>The function called by Windows for every mouse event (signature imposed by Windows).</summary>
+        internal delegate IntPtr LowLevelMouseProc(int code, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern IntPtr SetWindowsHookEx(int hookId, LowLevelMouseProc callback, IntPtr module, uint threadId);
+
+        internal const int WH_MOUSE_LL = 14;        // "low-level" mouse hook, for the whole system
+        internal const int WM_MOUSEMOVE = 0x0200;   // the mouse moves
+
+        /// <summary>
+        /// In the structure received by the mouse hook (MSLLHOOKSTRUCT): the new position X, Y
+        /// first, then "mouseData", then the "flags" field (12 bytes after the start). This
+        /// flag says the movement was SIMULATED by a program (SendInput).
+        /// </summary>
+        internal const int MouseHookFlagsOffset = 12;
+        internal const int LLMHF_INJECTED = 0x01;
     }
 }

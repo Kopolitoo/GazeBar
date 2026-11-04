@@ -125,7 +125,8 @@ Loading "Automatic backup" restores the changed radius.
 
 Start GazeBar with `--mouse` (Visual Studio profile "GazeBar (mouse as gaze)"). The log says
 "Gaze: mouse as gaze (developer mode)". The gaze circle follows the mouse; the cursor goes to
-it and does not fight the hand. Mouse still on an icon: fixed gaze then the action choice open
+it and does not fight the hand. In the magnifier, the circle stays on the cursor, even near the
+edges. Mouse still on an icon: fixed gaze then the action choice open
 as with the gaze. Move the mouse down past the bottom edge: the menu opens. Diagnostic window:
 about 30 measures per second. Settings, Tools, "Calibration": a message says the eyetracker is
 not connected. Started without `--mouse`: the eyetracker works as before.
