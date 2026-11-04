@@ -42,10 +42,9 @@ pause automatique, thèmes de couleur, assistant de premier lancement, synthèse
 ## Documentation
 
 - [Guide d'utilisation](docs/user-guide.fr.md) : comment se servir de GazeBar.
-- [Architecture](docs/architecture.md) (en anglais) : organisation du code, pour les
-  développeurs.
+- [Architecture](docs/architecture.fr.md) : organisation du code, pour les développeurs.
 - [Tests manuels](docs/manual-tests.fr.md) : ce qu'il faut vérifier à la main avec un eyetracker.
-- [Contribuer](CONTRIBUTING.md) (en anglais) : règles pour le code, les textes et les pull requests.
+- [Contribuer](CONTRIBUTING.fr.md) : règles pour le code, les textes et les pull requests.
 - [Guide Git](docs/GUIDE-GIT.md) : branches et pull requests dans Visual Studio.
 
 ## Avertissement
@@ -60,7 +59,7 @@ pause automatique, thèmes de couleur, assistant de premier lancement, synthèse
 
 MIT : voir [LICENSE.txt](LICENSE.txt). Les dictionnaires de mots sont sous licence CC BY-SA 4.0,
 et les DLL de l'eyetracker appartiennent à Tobii AB : voir
-[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+[THIRD-PARTY-NOTICES.fr.md](THIRD-PARTY-NOTICES.fr.md).
 
 ## Mentions légales
 

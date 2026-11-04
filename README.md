@@ -43,7 +43,7 @@ themes, a first-run assistant, text-to-speech.
 - [Architecture](docs/architecture.md): how the code is organised (for developers).
 - [Manual tests](docs/manual-tests.md): what to check by hand on an eyetracker.
 - [Contributing](CONTRIBUTING.md): rules for code, texts and pull requests.
-- [Git guide](docs/GUIDE-GIT.md) (in French): branches and pull requests in Visual Studio.
+- [Git guide](docs/GUIDE-GIT.md) (in French only): branches and pull requests in Visual Studio.
 
 ## Important notice
 
