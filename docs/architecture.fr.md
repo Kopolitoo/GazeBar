@@ -336,6 +336,8 @@ dans `Properties/launchSettings.json`), GazeBar utilise `MouseGazeSource` au lie
   garde un point de « regard virtuel » déplacé seulement par les mouvements de la vraie souris.
   Sur l'écran, un crochet souris de bas niveau (`WH_MOUSE_LL`) donne chaque mouvement avec la
   vitesse et l'accélération du pointeur de Windows : le point bouge exactement comme le curseur.
+  Le crochet tourne sur son propre fil d'exécution (avec son propre `Dispatcher` WPF) : sur le fil
+  de l'interface, occupé, sa réponse arriverait en retard et des mouvements seraient perdus.
   Les mouvements injectés par un programme (le `SendInput` de GazeBar) sont marqués par Windows et
   ignorés.
 - Le point peut sortir de l'écran de 15 % de la hauteur de l'écran : descendre la souris sous le

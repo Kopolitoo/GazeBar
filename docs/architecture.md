@@ -324,7 +324,9 @@ Started with the `--mouse` option (Visual Studio: launch profile "GazeBar (mouse
 - GazeBar moves the cursor itself, so the source does not read the cursor position: it keeps a
   "virtual gaze" point moved only by the movements of the real mouse. On the screen, a low-level
   mouse hook (`WH_MOUSE_LL`) gives each movement with the Windows pointer speed and acceleration,
-  so the point moves exactly like the cursor would. Movements injected by a program (GazeBar's
+  so the point moves exactly like the cursor would. The hook runs on its own thread (with its own
+  WPF `Dispatcher`): on the busy UI thread, its answer would come late and movements would be
+  lost. Movements injected by a program (GazeBar's
   own `SendInput`) are flagged by Windows and ignored.
 - The point can go outside the screen by 15 % of the screen height: moving the mouse down past
   the bottom edge opens the menu, as with the gaze. There the cursor is stuck at the edge, so the

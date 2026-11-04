@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Interop;
 using System.Windows.Threading;
 
@@ -27,6 +28,12 @@ namespace GazeBar
     /// A timer sends the point about 30 times per second, like the PCEye 5, even when the
     /// mouse does not move: a still mouse is a fixation.
     ///
+    /// All this runs on its own thread, with its own message loop (a WPF Dispatcher). Why?
+    /// Windows waits for the hook's answer before moving the cursor; if the hook were on the
+    /// UI thread, busy drawing or taking the magnifier photo, the answer would come late, the
+    /// cursor would already have moved, and the movement would be lost: the circle would drift
+    /// away from the cursor little by little.
+    ///
     /// Only the latest point is kept in memory: nothing is saved.
     /// </summary>
     internal sealed class MouseGazeSource : GazeSource
@@ -45,12 +52,15 @@ namespace GazeBar
         private readonly NativeMethods.LowLevelMouseProc _hookFunction;
         private IntPtr _hook = IntPtr.Zero;
 
+        private Thread _thread;
+        private Dispatcher _dispatcher;
         private HwndSource _window;
         private DispatcherTimer _timer;
         private IntPtr _buffer = IntPtr.Zero;
         private uint _bufferSize;
 
-        // The virtual gaze point and its limits, in screen pixels. Only used on the UI thread.
+        // The virtual gaze point and its limits, in screen pixels. Only used on the source's
+        // own thread (after Start).
         private double _x;
         private double _y;
         private double _screenWidth;
@@ -62,70 +72,109 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Installs the mouse hook, opens the invisible window, asks Windows for the raw mouse
-        /// movements and starts the timer. Must be called on the UI thread.
+        /// Starts the source's own thread and waits until it is ready (hook, invisible window,
+        /// raw movements, timer). Never throws: on failure, IsRunning stays false.
         /// </summary>
         public override void Start()
         {
-            try
+            NativeMethods.PrimaryScreenSize(out _screenWidth, out _screenHeight);
+
+            // The virtual point starts where the cursor is.
+            NativeMethods.POINT cursor;
+            if (NativeMethods.GetCursorPos(out cursor))
             {
-                NativeMethods.PrimaryScreenSize(out _screenWidth, out _screenHeight);
+                _x = cursor.X;
+                _y = cursor.Y;
+            }
+            else
+            {
+                _x = _screenWidth / 2;
+                _y = _screenHeight / 2;
+            }
 
-                // The virtual point starts where the cursor is.
-                NativeMethods.POINT cursor;
-                if (NativeMethods.GetCursorPos(out cursor))
+            Exception error = null;
+            using (ManualResetEvent ready = new ManualResetEvent(false))
+            {
+                _thread = new Thread(() =>
                 {
-                    _x = cursor.X;
-                    _y = cursor.Y;
-                }
-                else
+                    try
+                    {
+                        SetUp();
+                    }
+                    catch (Exception ex)
+                    {
+                        error = ex;
+                        TearDown();
+                        ready.Set();
+                        return;
+                    }
+                    ready.Set();
+                    // The message loop of this thread: runs until Dispose.
+                    Dispatcher.Run();
+                });
+                _thread.Name = "Mouse as gaze";
+                _thread.IsBackground = true;           // never keeps GazeBar alive
+                _thread.SetApartmentState(ApartmentState.STA);   // required by HwndSource
+                _thread.Start();
+
+                if (!ready.WaitOne(5000))
                 {
-                    _x = _screenWidth / 2;
-                    _y = _screenHeight / 2;
+                    error = new TimeoutException("Mouse as gaze: the thread did not start");
                 }
+            }
 
-                // For a low-level hook, Windows asks for the program's "module";
-                // GetModuleHandle(null) gives the one of GazeBar.exe.
-                _hook = NativeMethods.SetWindowsHookEx(
-                    NativeMethods.WH_MOUSE_LL, _hookFunction, NativeMethods.GetModuleHandle(null), 0);
-                if (_hook == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException(
-                        "Mouse hook refused (Windows error " + Marshal.GetLastWin32Error() + ")");
-                }
-
-                HwndSourceParameters parameters = new HwndSourceParameters("GazeBar mouse gaze");
-                parameters.ParentWindow = MessageOnlyParent;
-                parameters.WindowStyle = 0;
-                _window = new HwndSource(parameters);
-                _window.AddHook(WindowProc);
-
-                NativeMethods.RAWINPUTDEVICE[] devices = new NativeMethods.RAWINPUTDEVICE[1];
-                devices[0].UsagePage = 0x01;   // generic desktop controls
-                devices[0].Usage = 0x02;       // mouse
-                devices[0].Flags = NativeMethods.RIDEV_INPUTSINK;
-                devices[0].TargetWindow = _window.Handle;
-                if (!NativeMethods.RegisterRawInputDevices(devices, 1,
-                        (uint)Marshal.SizeOf(typeof(NativeMethods.RAWINPUTDEVICE))))
-                {
-                    throw new InvalidOperationException(
-                        "RegisterRawInputDevices failed (Windows error " + Marshal.GetLastWin32Error() + ")");
-                }
-
-                _timer = new DispatcherTimer(DispatcherPriority.Normal);
-                _timer.Interval = TimeSpan.FromMilliseconds(MeasureIntervalMs);
-                _timer.Tick += (sender, args) => OnGaze(_x, _y);
-                _timer.Start();
-
+            if (error == null)
+            {
                 IsRunning = true;
                 App.Log("Gaze: mouse as gaze (developer mode)");
             }
-            catch (Exception ex)
+            else
             {
                 IsRunning = false;
-                ErrorMessage = ex.Message;
-                App.Log("Gaze: mouse as gaze failed: " + ex);
+                ErrorMessage = error.Message;
+                App.Log("Gaze: mouse as gaze failed: " + error);
             }
+        }
+
+        /// <summary>On the source's own thread: installs everything.</summary>
+        private void SetUp()
+        {
+            _dispatcher = Dispatcher.CurrentDispatcher;
+
+            // For a low-level hook, Windows asks for the program's "module";
+            // GetModuleHandle(null) gives the one of GazeBar.exe. Windows calls the hook on
+            // this thread, through its message loop.
+            _hook = NativeMethods.SetWindowsHookEx(
+                NativeMethods.WH_MOUSE_LL, _hookFunction, NativeMethods.GetModuleHandle(null), 0);
+            if (_hook == IntPtr.Zero)
+            {
+                throw new InvalidOperationException(
+                    "Mouse hook refused (Windows error " + Marshal.GetLastWin32Error() + ")");
+            }
+
+            HwndSourceParameters parameters = new HwndSourceParameters("GazeBar mouse gaze");
+            parameters.ParentWindow = MessageOnlyParent;
+            parameters.WindowStyle = 0;
+            _window = new HwndSource(parameters);
+            _window.AddHook(WindowProc);
+
+            NativeMethods.RAWINPUTDEVICE[] devices = new NativeMethods.RAWINPUTDEVICE[1];
+            devices[0].UsagePage = 0x01;   // generic desktop controls
+            devices[0].Usage = 0x02;       // mouse
+            devices[0].Flags = NativeMethods.RIDEV_INPUTSINK;
+            devices[0].TargetWindow = _window.Handle;
+            if (!NativeMethods.RegisterRawInputDevices(devices, 1,
+                    (uint)Marshal.SizeOf(typeof(NativeMethods.RAWINPUTDEVICE))))
+            {
+                throw new InvalidOperationException(
+                    "RegisterRawInputDevices failed (Windows error " + Marshal.GetLastWin32Error() + ")");
+            }
+
+            // A DispatcherTimer ticks on the thread that created it: this one.
+            _timer = new DispatcherTimer(DispatcherPriority.Normal);
+            _timer.Interval = TimeSpan.FromMilliseconds(MeasureIntervalMs);
+            _timer.Tick += (sender, args) => OnGaze(_x, _y);
+            _timer.Start();
         }
 
         /// <summary>Receives the messages of the invisible window; only WM_INPUT matters.</summary>
@@ -212,7 +261,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Called by Windows for every mouse event, on the UI thread. Must answer very quickly.
+        /// Called by Windows for every mouse event, on the source's own thread. Must answer very quickly.
         /// For a real movement, moves the virtual point by the movement of the cursor, on each
         /// axis where the point is on the screen.
         /// </summary>
@@ -246,7 +295,20 @@ namespace GazeBar
             return Math.Max(0, Math.Min(last, position + move));
         }
 
+        /// <summary>Stops the source's thread (from any thread).</summary>
         public override void Dispose()
+        {
+            Dispatcher dispatcher = _dispatcher;
+            if (dispatcher != null && !dispatcher.HasShutdownStarted)
+            {
+                dispatcher.Invoke(new Action(TearDown));
+                dispatcher.InvokeShutdown();
+            }
+            _dispatcher = null;
+        }
+
+        /// <summary>On the source's own thread: removes everything SetUp installed.</summary>
+        private void TearDown()
         {
             if (_timer != null)
             {
