@@ -17,13 +17,7 @@ try {
     if (Test-Path $ShortcutPath) { Remove-Item $ShortcutPath -Force }
     Remove-GazeBarCertificates
 
-    # "Start with Windows" (Platform/WindowsStartup.cs): its entry is removed if it starts the
-    # copy that was just deleted.
-    $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
-    $command = (Get-ItemProperty -Path $runKey -Name 'GazeBar' -ErrorAction SilentlyContinue).GazeBar
-    if ($command -and $command -like "*$InstallFolder*") {
-        Remove-ItemProperty -Path $runKey -Name 'GazeBar'
-    }
+    Remove-GazeBarStartup
 
     Say 'GazeBar is removed. Your settings are kept.' 'GazeBar est désinstallé. Vos réglages sont gardés.'
     $success = $true

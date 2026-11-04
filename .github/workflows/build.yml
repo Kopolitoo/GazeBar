@@ -55,6 +55,14 @@ jobs:
         shell: pwsh
         run: ./.github/scripts/make-full-install.ps1 bin/uiaccess bin/full-install
 
+      # The installer (Setup.exe, made with Inno Setup) of this same build. Its version number
+      # is the <Version> of GazeBar.csproj.
+      - name: Make the installer (Setup.exe)
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content GazeBar.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          ./.github/scripts/make-setup.ps1 bin/uiaccess $version bin/setup
+
       - name: Compile GazeBar (Release, x86)
         run: dotnet build GazeBar.csproj --configuration Release
 
@@ -88,4 +96,13 @@ jobs:
         with:
           name: GazeBar-full-install-${{ github.sha }}
           path: bin/full-install/
+          retention-days: 14
+
+      # The installer, to test it before a release: double-click GazeBar-<version>-setup.exe
+      # in the downloaded zip (see docs/manual-tests.md, "Installer (Setup.exe)").
+      - name: Keep the installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: GazeBar-setup-${{ github.sha }}
+          path: bin/setup/
           retention-days: 14

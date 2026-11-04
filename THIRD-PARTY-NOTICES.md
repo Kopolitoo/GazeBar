@@ -33,6 +33,14 @@ Images first generated with ChatGPT (OpenAI), then edited by the project owner w
 OpenAI's terms of use give the rights on generated images to the person who made them; the icon
 and the logo are distributed under the MIT licence like the rest of the project.
 
+### Inno Setup (installer only)
+
+- The installer `GazeBar-x.y.z-setup.exe` and its uninstaller are made with
+  [Inno Setup](https://jrsoftware.org/isinfo.php) 6, © Jordan Russell and Martijn Laan, and
+  contain its code.
+- Licence: [Inno Setup License](https://jrsoftware.org/files/is/license.txt) (free, also for
+  distributing the installers it makes).
+
 ## Used but not shipped
 
 ### Tobii.Interaction (eyetracker library)

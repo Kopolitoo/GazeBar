@@ -149,6 +149,25 @@ souris) pendant l'installation.
    sont toujours dans `%APPDATA%\GazeBar`.
 6. Le zip simple et Visual Studio marchent comme avant, avec « UI access: no » dans le journal.
 
+## Installateur (Setup.exe)
+
+Prendre le zip `GazeBar-setup-…` de la compilation automatique (page Actions de la pull request,
+« Artifacts »). Garder un autre moyen de cliquer (voix, souris) pendant l'installation.
+
+1. Le décompresser et double-cliquer sur `GazeBar-…-setup.exe`. Windows peut dire « éditeur
+   inconnu » (« Informations complémentaires », « Exécuter quand même »), puis demande « Oui »
+   pour l'administrateur. L'installateur parle la langue de Windows ; cliquer sur « Installer »,
+   puis « Terminer » avec « Exécuter GazeBar » coché : GazeBar démarre, le journal dit « UI access:
+   yes », et le cercle reste au-dessus du menu Démarrer.
+2. `C:\Program Files\GazeBar` existe, GazeBar est dans le menu Démarrer et dans « Paramètres >
+   Applications » de Windows.
+3. Relancer l'installateur (mise à jour) : pas de question pour fermer GazeBar (il est fermé),
+   même résultat, réglages inchangés. Marche aussi par-dessus une copie installée par
+   `Install.cmd`.
+4. Le désinstaller depuis « Paramètres > Applications » : le dossier, le raccourci et le
+   certificat « GazeBar local signature » (`certlm.msc`, « Autorités de certification racines de
+   confiance ») ont disparu ; les réglages sont toujours dans `%APPDATA%\GazeBar`.
+
 ## Avant de publier une version
 
 Télécharger le zip du brouillon de release et le décompresser dans un nouveau dossier (pas le

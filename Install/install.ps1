@@ -45,28 +45,8 @@ try {
 
     # 3. Certificate and signature.
     Say 'Signing GazeBar.exe with a certificate made on this computer...' 'Signature de GazeBar.exe avec un certificat créé sur cet ordinateur...'
-    Remove-GazeBarCertificates
-    $certificate = New-SelfSignedCertificate -Type CodeSigningCert -Subject $CertificateSubject `
-        -CertStoreLocation 'Cert:\LocalMachine\My' -KeyUsage DigitalSignature `
-        -NotAfter (Get-Date).AddYears(10)
-
-    # The computer trusts this certificate: "Trusted Root" (it is its own authority) and
-    # "Trusted Publishers". Only the public part goes there (a .cer file, without the key).
-    $publicFile = Join-Path $env:TEMP 'GazeBar-signature.cer'
-    Export-Certificate -Cert $certificate -FilePath $publicFile | Out-Null
-    Import-Certificate -FilePath $publicFile -CertStoreLocation 'Cert:\LocalMachine\Root' | Out-Null
-    Import-Certificate -FilePath $publicFile -CertStoreLocation 'Cert:\LocalMachine\TrustedPublisher' | Out-Null
-    Remove-Item $publicFile -Force
-
     $exe = Join-Path $InstallFolder 'GazeBar.exe'
-    $signature = Set-AuthenticodeSignature -FilePath $exe -Certificate $certificate -HashAlgorithm SHA256
-
-    # The private key is deleted: the certificate can no longer sign anything.
-    Remove-Item $certificate.PSPath -DeleteKey
-
-    if ($signature.Status -ne 'Valid') {
-        throw "Signature: $($signature.Status) $($signature.StatusMessage)"
-    }
+    Set-GazeBarSignature $exe
 
     # 4. Start menu shortcut.
     $shell = New-Object -ComObject WScript.Shell

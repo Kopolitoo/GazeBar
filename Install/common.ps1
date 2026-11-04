@@ -55,6 +55,46 @@ function Remove-GazeBarCertificates {
     }
 }
 
+# Signs GazeBar.exe (UI access needs a signature that the computer trusts):
+#  - removes the old GazeBar certificates (a new one is made at each installation);
+#  - creates a certificate ON THIS COMPUTER and makes the computer trust it;
+#  - signs the program with it;
+#  - DELETES its private key: nobody (not even a virus) can sign anything else with it later.
+# Used by install.ps1 and by the Setup.exe installer (setup-certificate.ps1).
+function Set-GazeBarSignature([string]$exe) {
+    Remove-GazeBarCertificates
+    $certificate = New-SelfSignedCertificate -Type CodeSigningCert -Subject $CertificateSubject `
+        -CertStoreLocation 'Cert:\LocalMachine\My' -KeyUsage DigitalSignature `
+        -NotAfter (Get-Date).AddYears(10)
+
+    # The computer trusts this certificate: "Trusted Root" (it is its own authority) and
+    # "Trusted Publishers". Only the public part goes there (a .cer file, without the key).
+    $publicFile = Join-Path $env:TEMP 'GazeBar-signature.cer'
+    Export-Certificate -Cert $certificate -FilePath $publicFile | Out-Null
+    Import-Certificate -FilePath $publicFile -CertStoreLocation 'Cert:\LocalMachine\Root' | Out-Null
+    Import-Certificate -FilePath $publicFile -CertStoreLocation 'Cert:\LocalMachine\TrustedPublisher' | Out-Null
+    Remove-Item $publicFile -Force
+
+    $signature = Set-AuthenticodeSignature -FilePath $exe -Certificate $certificate -HashAlgorithm SHA256
+
+    # The private key is deleted: the certificate can no longer sign anything.
+    Remove-Item $certificate.PSPath -DeleteKey
+
+    if ($signature.Status -ne 'Valid') {
+        throw "Signature: $($signature.Status) $($signature.StatusMessage)"
+    }
+}
+
+# "Start with Windows" (Platform/WindowsStartup.cs): removes its entry if it starts the copy of
+# GazeBar installed in $InstallFolder (called when that copy is removed).
+function Remove-GazeBarStartup {
+    $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+    $command = (Get-ItemProperty -Path $runKey -Name 'GazeBar' -ErrorAction SilentlyContinue).GazeBar
+    if ($command -and $command -like "*$InstallFolder*") {
+        Remove-ItemProperty -Path $runKey -Name 'GazeBar'
+    }
+}
+
 # Starts GazeBar as a NORMAL user, not as administrator: explorer.exe opens it like a
 # double-click would. (Started directly from this administrator window, GazeBar would also be
 # administrator.)
