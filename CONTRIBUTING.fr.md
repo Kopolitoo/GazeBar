@@ -55,6 +55,23 @@ Commencez par l'[architecture](docs/architecture.fr.md) pour vous repérer dans 
 - Un nouveau fichier qui vient de quelqu'un d'autre (liste de mots, image, code) est ajouté à
   `THIRD-PARTY-NOTICES.md` (et `THIRD-PARTY-NOTICES.fr.md`) avec sa licence.
 
+## Publier une version
+
+Une version a un numéro MAJEUR.MINEUR.CORRECTIF (par exemple `0.1.0`) : CORRECTIF augmente pour
+une correction, MINEUR pour une nouveauté, MAJEUR pour un grand changement (`1.0.0` = première
+version stable). Le numéro de `GazeBar.csproj` (`<Version>`) est celui de la prochaine version ;
+GazeBar l'écrit dans son journal au démarrage.
+
+1. Sur GitHub, onglet « Actions », « Release » à gauche, « Run workflow » : garder la branche
+   `main`, taper le numéro (par exemple `0.1.0`), cliquer sur « Run workflow ».
+2. GitHub compile GazeBar, vérifie qu'aucune DLL de l'eyetracker ni aucun fichier personnel
+   n'est dedans, fabrique `GazeBar-0.1.0.zip` et prépare un **brouillon** de release
+   (`.github/workflows/release.yml`).
+3. Page « Releases » (colonne de droite de la page d'accueil du dépôt) : ouvrir le brouillon,
+   relire la liste des changements, puis « Publish release ». Le tag `v0.1.0` est posé sur ce
+   code à ce moment-là.
+4. Ensuite, augmenter `<Version>` dans `GazeBar.csproj` dans la pull request suivante.
+
 ## Tests
 
 GazeBar est testé par son utilisateur sur un Tobii PCEye 5. Dites clairement dans votre pull

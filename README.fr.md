@@ -20,9 +20,10 @@ espérons qu'il pourra vous aider aussi.
 
 ## État du projet
 
-GazeBar est un projet jeune : il n'y a pas encore de téléchargement ni d'installateur, il faut
-le compiler avec Visual Studio. Prévu ensuite : téléchargement prêt à lancer, retour sonore,
-pause automatique, thèmes de couleur, assistant de premier lancement, synthèse vocale.
+GazeBar est un projet jeune (version 0.x) : des versions prêtes à lancer sont sur la page
+[Releases](https://github.com/Kopolitoo/GazeBar/releases), sans installateur pour l'instant.
+Prévu ensuite : retour sonore, pause automatique, thèmes de couleur, assistant de premier
+lancement, synthèse vocale.
 
 ## Prérequis
 
@@ -36,10 +37,18 @@ pause automatique, thèmes de couleur, assistant de premier lancement, synthèse
 ## Installation
 
 1. Installer le pilote de l'eyetracker depuis le site du fabricant.
-2. Cloner ce dépôt, ouvrir `GazeBar.slnx` dans Visual Studio, appuyer sur F5.
-3. Les DLL de l'eyetracker ne sont pas livrées avec GazeBar : sur le PC où on le compile,
-   GazeBar les trouve tout seul. Sur un autre PC, voir
+2. Sur la page [Releases](https://github.com/Kopolitoo/GazeBar/releases), télécharger
+   `GazeBar-x.y.z.zip` (sous « Assets ») et le décompresser, par exemple dans
+   `Documents\GazeBar`.
+3. Lancer `GazeBar.exe`. Le programme n'est pas signé : Windows peut afficher « Windows a protégé
+   votre ordinateur » ; cliquer sur « Informations complémentaires », puis « Exécuter quand
+   même ».
+4. Les DLL de l'eyetracker ne sont pas livrées avec GazeBar : GazeBar les cherche dans le
+   logiciel de l'eyetracker. Si la fenêtre Diagnostic dit qu'elles manquent, voir
    [Fichiers de l'eyetracker](docs/user-guide.fr.md#fichiers-de-leyetracker).
+
+Pour le compiler soi-même à la place : cloner ce dépôt, ouvrir `GazeBar.slnx` dans Visual
+Studio, appuyer sur F5.
 
 ## Documentation
 

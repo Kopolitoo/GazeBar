@@ -120,3 +120,11 @@ profile, and the file appears in `Documents\GazeBar\Profiles`. Change the circle
 radius (Display). Profiles, "Load a profile": the list shows the profile; look at it: "Load the
 profile …?"; "No" changes nothing; "Yes" restores the old radius and creates "Automatic backup".
 Loading "Automatic backup" restores the changed radius.
+
+## Before publishing a version
+
+Download the zip of the draft release and unzip it in a new folder (not the Visual Studio
+folder). It contains `GazeBar.exe`, the `Languages`, `Keyboards` and `Dictionaries` folders, the
+licences, and no `Tobii.*.dll`. Start `GazeBar.exe` (Windows may ask "Run anyway"): the gaze
+works, the gaze keyboard suggests words, and the first lines of
+`%LOCALAPPDATA%\GazeBar\gazebar.log` say "GazeBar 0.1.0 starting" (the number of the version).

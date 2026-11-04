@@ -129,3 +129,12 @@ message donne le nom du profil, et le fichier apparaît dans `Documents\GazeBar\
 change le rayon du cercle (Affichage). Profils, « Charger un profil » : la liste montre le profil ;
 on le regarde : « Charger le profil … ? » ; « Non » ne change rien ; « Oui » remet l'ancien rayon et
 crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet le rayon modifié.
+
+## Avant de publier une version
+
+Télécharger le zip du brouillon de release et le décompresser dans un nouveau dossier (pas le
+dossier de Visual Studio). Il contient `GazeBar.exe`, les dossiers `Languages`, `Keyboards` et
+`Dictionaries`, les licences, et aucun `Tobii.*.dll`. Lancer `GazeBar.exe` (Windows peut demander
+« Exécuter quand même ») : le regard fonctionne, le clavier du regard propose des mots, et les
+premières lignes de `%LOCALAPPDATA%\GazeBar\gazebar.log` disent « GazeBar 0.1.0 starting » (le
+numéro de la version).

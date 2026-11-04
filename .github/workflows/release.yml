@@ -1,0 +1,110 @@
+# Publishing a version ("release").
+#
+# Started by hand: "Actions" tab > "Release" > "Run workflow", type the version number
+# (for example 0.1.0). GitHub then compiles GazeBar on a Windows machine, checks that no
+# eyetracker DLL and no personal file is inside, makes GazeBar-0.1.0.zip and prepares a DRAFT
+# release with this zip. Nothing is public yet: open the "Releases" page, read the draft and
+# click "Publish release". The tag v0.1.0 is created at that moment.
+# See CONTRIBUTING.md, "Publishing a version".
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number, three numbers separated by dots (for example 0.1.0)"
+        required: true
+
+# Write access: needed to create the draft release.
+permissions:
+  contents: write
+
+# Only one release at a time.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    env:
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check the version number and the branch
+        shell: pwsh
+        run: |
+          if ($env:VERSION -notmatch '^\d+\.\d+\.\d+$') {
+            Write-Host "::error::'$env:VERSION' is not a version number like 0.1.0"
+            exit 1
+          }
+          if ('${{ github.ref }}' -ne 'refs/heads/main') {
+            Write-Host "::error::A version is published from the main branch only."
+            exit 1
+          }
+
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Check that this version does not exist yet
+        shell: pwsh
+        run: |
+          gh release view "v$env:VERSION" 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "::error::Version $env:VERSION already exists (Releases page)."
+            exit 1
+          }
+          $global:LASTEXITCODE = 0
+
+      - name: Check the language and keyboard files
+        shell: pwsh
+        run: ./.github/scripts/check-data-files.ps1
+
+      # The version typed above replaces the <Version> of GazeBar.csproj, without the commit
+      # identifier, so that the log says exactly "GazeBar 0.1.0 starting".
+      - name: Compile GazeBar (Release, x86)
+        run: dotnet build GazeBar.csproj --configuration Release -p:Version=${{ env.VERSION }} -p:IncludeSourceRevisionInInformationalVersion=false
+
+      - name: Make the folder to ship
+        shell: pwsh
+        run: |
+          $folder = "release/GazeBar-$env:VERSION"
+          New-Item -ItemType Directory -Force $folder | Out-Null
+          # The program and its data files (languages, keyboards, public dictionaries).
+          # Debug files (.pdb) are left out.
+          Copy-Item bin/Release/net48/* $folder -Recurse -Exclude '*.pdb'
+          # The licences and the short presentation.
+          Copy-Item LICENSE.txt, THIRD-PARTY-NOTICES.md, THIRD-PARTY-NOTICES.fr.md, README.md, README.fr.md $folder
+
+      # Same rules as the repository: the eyetracker DLLs belong to Tobii AB, and personal
+      # files (personal dictionary, settings, profiles, log, gaze positions) never ship.
+      - name: Check that no eyetracker DLL and no personal file is inside
+        shell: pwsh
+        run: |
+          $forbidden = 'Tobii*.dll', 'personal-dictionary*', 'settings.json', '*.log', 'positions-*', '*.perso.*'
+          $found = Get-ChildItem release -Recurse -Include $forbidden
+          $found += Get-ChildItem release -Recurse -Directory | Where-Object { $_.Name -in 'Eyetracker', 'Profiles' }
+          if ($found) {
+            $found | ForEach-Object { Write-Host "::error::Must not be shipped: $($_.FullName)" }
+            exit 1
+          }
+          Write-Host 'OK: nothing forbidden in the folder to ship.'
+
+      - name: Make the zip
+        shell: pwsh
+        run: Compress-Archive -Path "release/GazeBar-$env:VERSION" -DestinationPath "release/GazeBar-$env:VERSION.zip"
+
+      # The draft lists the pull requests merged since the previous version (--generate-notes).
+      # The tag v<version> is created on this commit when the draft is published.
+      - name: Prepare the draft release
+        shell: pwsh
+        run: |
+          gh release create "v$env:VERSION" "release/GazeBar-$env:VERSION.zip" `
+            --draft `
+            --target "${{ github.sha }}" `
+            --title "GazeBar $env:VERSION" `
+            --generate-notes

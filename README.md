@@ -19,9 +19,10 @@ Tobii Dynavox PCEye 5. If you are in the same situation, we hope it can help you
 
 ## Status
 
-GazeBar is a young project: there is no download or installer yet, it must be compiled with
-Visual Studio. Planned next: ready-to-run downloads, sound feedback, automatic pause, colour
-themes, a first-run assistant, text-to-speech.
+GazeBar is a young project (version 0.x): ready-to-run versions are on the
+[Releases](https://github.com/Kopolitoo/GazeBar/releases) page, without an installer yet.
+Planned next: sound feedback, automatic pause, colour themes, a first-run assistant,
+text-to-speech.
 
 ## Requirements
 
@@ -34,10 +35,16 @@ themes, a first-run assistant, text-to-speech.
 ## Installation
 
 1. Install the eyetracker driver from the manufacturer's website.
-2. Clone this repository, open `GazeBar.slnx` in Visual Studio, press F5.
-3. The eyetracker DLLs are not shipped with GazeBar: on the PC where it is compiled, GazeBar
-   finds them by itself. On another PC, see
+2. On the [Releases](https://github.com/Kopolitoo/GazeBar/releases) page, download
+   `GazeBar-x.y.z.zip` (under "Assets") and unzip it, for example in `Documents\GazeBar`.
+3. Start `GazeBar.exe`. The program is not signed, so Windows may show "Windows protected your
+   PC": click "More info", then "Run anyway".
+4. The eyetracker DLLs are not shipped with GazeBar: GazeBar looks for them in the eyetracker
+   software. If the Diagnostic window says they are missing, see
    [Eyetracker files](docs/user-guide.md#eyetracker-files).
+
+To compile it yourself instead: clone this repository, open `GazeBar.slnx` in Visual Studio,
+press F5.
 
 ## Documentation
 

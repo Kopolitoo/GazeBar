@@ -329,3 +329,9 @@ To add a language: copy `en.json` to `xx.json` and translate the values (never t
 `.github/workflows/build.yml` compiles GazeBar on Windows for every pull request and every push
 to `main`. `.github/scripts/check-data-files.ps1` checks that the keyboard and language JSON
 files are valid and that every language has the same keys and `{n}` placeholders as `en.json`.
+
+`.github/workflows/release.yml`, started by hand, builds a version with the number typed
+(`-p:Version=…`, which replaces `<Version>` of `GazeBar.csproj`), checks that no eyetracker DLL
+and no personal file is in the folder to ship, zips it with the licences and prepares a draft
+GitHub release. `App.Version` reads the number back (assembly informational version) for the
+log.

@@ -49,6 +49,21 @@ Start with the [architecture](docs/architecture.md) to find your way in the code
 - A new file taken from someone else (word list, image, code) is listed in
   `THIRD-PARTY-NOTICES.md` (and `THIRD-PARTY-NOTICES.fr.md`) with its licence.
 
+## Publishing a version
+
+A version has a number MAJOR.MINOR.PATCH (for example `0.1.0`): PATCH grows for a fix, MINOR
+for a new feature, MAJOR for a big change (`1.0.0` = first stable version). The number in
+`GazeBar.csproj` (`<Version>`) is the one of the next version; GazeBar writes it to its log at
+startup.
+
+1. On GitHub, "Actions" tab, "Release" on the left, "Run workflow": keep the `main` branch,
+   type the number (for example `0.1.0`), click "Run workflow".
+2. GitHub compiles GazeBar, checks that no eyetracker DLL and no personal file is inside, makes
+   `GazeBar-0.1.0.zip` and prepares a **draft** release (`.github/workflows/release.yml`).
+3. "Releases" page (right column of the repository home page): open the draft, read the list
+   of changes, then "Publish release". The tag `v0.1.0` is created on this code at that moment.
+4. Then raise `<Version>` in `GazeBar.csproj` in the next pull request.
+
 ## Testing
 
 GazeBar is tested by its user on a Tobii PCEye 5. Please say clearly in your pull request
