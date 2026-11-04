@@ -27,11 +27,11 @@ qui viennent d'autres personnes, et ce que GazeBar utilise sans le livrer.
   filtre pour le construire ; aucun de ses mots n'a été ajouté. Détails (en anglais) :
   [Dictionaries/LICENSE-FrequencyWords.txt](Dictionaries/LICENSE-FrequencyWords.txt).
 
-### Icône de l'application : `Resources/GazeBar.ico`
+### Icône et logo de l'application : `Resources/GazeBar.ico`, `docs/images/gazebar-logo*.png`
 
-Image d'abord créée avec ChatGPT (OpenAI), puis retouchée par l'auteur du projet avec
+Images d'abord créées avec ChatGPT (OpenAI), puis retouchées par l'auteur du projet avec
 Photocraft. Les conditions d'utilisation d'OpenAI donnent les droits sur les images créées à la
-personne qui les a demandées ; l'icône est distribuée sous licence MIT comme le reste du projet.
+personne qui les a demandées ; l'icône et le logo sont distribués sous licence MIT comme le reste du projet.
 
 ## Utilisé mais pas livré
 

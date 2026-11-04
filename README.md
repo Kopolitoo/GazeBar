@@ -2,6 +2,8 @@
 
 *Version française : [README.fr.md](README.fr.md).*
 
+<p align="center"><img src="docs/images/gazebar-logo.png" alt="GazeBar logo: an eye with a mouse pointer" width="600"></p>
+
 [![Build](https://github.com/Kopolitoo/GazeBar/actions/workflows/build.yml/badge.svg)](https://github.com/Kopolitoo/GazeBar/actions/workflows/build.yml)
 
 **GazeBar lets you use a Windows computer with your eyes only**, with an eyetracker. A circle

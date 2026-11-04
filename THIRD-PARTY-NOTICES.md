@@ -27,11 +27,11 @@ that come from others, and what GazeBar uses without shipping it.
   when building it; none of its words were added. Details:
   [Dictionaries/LICENSE-FrequencyWords.txt](Dictionaries/LICENSE-FrequencyWords.txt).
 
-### Application icon: `Resources/GazeBar.ico`
+### Application icon and logo: `Resources/GazeBar.ico`, `docs/images/gazebar-logo*.png`
 
-Image first generated with ChatGPT (OpenAI), then edited by the project owner with Photocraft.
+Images first generated with ChatGPT (OpenAI), then edited by the project owner with Photocraft.
 OpenAI's terms of use give the rights on generated images to the person who made them; the icon
-is distributed under the MIT licence like the rest of the project.
+and the logo are distributed under the MIT licence like the rest of the project.
 
 ## Used but not shipped
 
