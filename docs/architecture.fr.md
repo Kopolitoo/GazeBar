@@ -12,7 +12,9 @@ décrivent le code tel qu'il est.
 
 ## Fonctionnement
 
-- **Regard** : `GazeSource` lit le regard dans le moteur de l'eyetracker (paquet NuGet
+- **Regard** : les modes lisent le regard par l'interface `IGazeSource`, que toute source du
+  regard fournit (`GazeSource` contient la partie commune : horloge, dernière position, cadence).
+  La source normale, `EyetrackerGazeSource`, lit le regard dans le moteur de l'eyetracker (paquet NuGet
   `Tobii.Interaction` 0.7.3), environ 30 mesures par seconde, en pixels de l'écran, y compris un
   peu hors de l'écran (coordonnées négatives ou plus grandes que l'écran). Le logiciel de commande
   au regard fourni avec l'eyetracker (TD Control) est mis en pause pendant que GazeBar tourne.
@@ -43,7 +45,7 @@ l'explication de la classe.
 | Dossier | Contenu |
 |---|---|
 | (racine) | `App.xaml` (point d'entrée : lit les réglages, ouvre la surcouche et le gestionnaire de modes), `GazeBar.csproj`, `app.manifest` |
-| `Gaze` | lecture du regard et traitement : `GazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
+| `Gaze` | lecture du regard et traitement : `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
 | `Modes` | une classe par mode, et `ModeManager` |
 | `Actions` | ce que propose le choix d'action : `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
 | `Typing` | le clavier au regard et la prédiction de mots : `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
@@ -70,7 +72,7 @@ Au démarrage, `EyetrackerLoader` les cherche sur le PC, dans cet ordre :
    compile GazeBar, il n'y a rien à faire.
 
 Les DLL .NET sont données à .NET par l'événement `AssemblyResolve` ; la DLL native est chargée
-avant, avec `LoadLibrary`, en 32 bits. `GazeSource` n'utilise les types de Tobii.Interaction que
+avant, avec `LoadLibrary`, en 32 bits. `EyetrackerGazeSource` n'utilise les types de Tobii.Interaction que
 dans `ConnectEyetracker`, pour que GazeBar démarre même sans ces DLL. Le journal note où chaque
 DLL a été trouvée. Comment un utilisateur les récupère : voir le
 [guide d'utilisation](user-guide.fr.md#fichiers-de-leyetracker).
@@ -202,7 +204,7 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
 - `EyetrackerLoader` (02/11/2026) : trouve et charge au démarrage les DLL de l'eyetracker
   (Tobii.Interaction), qui ne sont pas livrées avec GazeBar (voir « Installation »). Les DLL .NET sont fournies à .NET par l'événement
   `AssemblyResolve` ; la DLL native est chargée à l'avance par `LoadLibrary`, en 32 bits.
-  `GazeSource` n'utilise les types de Tobii.Interaction que dans `ConnectEyetracker`, pour que GazeBar démarre
+  `EyetrackerGazeSource` n'utilise les types de Tobii.Interaction que dans `ConnectEyetracker`, pour que GazeBar démarre
   même sans ces DLL.
 - `Modes/CalibrationMode` et `Calibration` (étape 4) : bouton « Calibration » de l'onglet
   « Outils » des paramètres (avec « Diagnostic » ; tous deux étaient dans la barre de menu avant

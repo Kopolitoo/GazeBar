@@ -24,7 +24,7 @@ namespace GazeBar
     /// </summary>
     public partial class App : Application
     {
-        private GazeSource _gaze;
+        private IGazeSource _gaze;
         private OverlayWindow _layer;
         private ModeManager _modes;
         private KeyboardHook _keyboard;
@@ -96,11 +96,11 @@ namespace GazeBar
             WheelScroller.Apply(AppSettings.Current.ScrollInactiveWindows);
 
             // The real gaze, provided by the eyetracker engine. If it is unavailable, the
-            // program still starts (see GazeSource.ErrorMessage).
+            // program still starts (see IGazeSource.ErrorMessage).
             // The eyetracker DLLs are not shipped with GazeBar: they are
             // first searched for on the PC (see EyetrackerLoader.cs), before any use of the gaze.
             EyetrackerLoader.Install();
-            _gaze = new GazeSource();
+            _gaze = new EyetrackerGazeSource();
             _gaze.Start();
 
             // The program only stops on request ("Quit GazeBar" button of the menu): closing

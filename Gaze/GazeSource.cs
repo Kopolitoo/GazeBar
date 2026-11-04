@@ -1,38 +1,19 @@
-using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using Tobii.Interaction;
 
 namespace GazeBar
 {
     /// <summary>
-    /// MODEL: the real gaze position, provided by the eyetracker through the Tobii.Interaction
-    /// library (the same as Mill Mouse). It does not depend on the cursor driven by the
-    /// vendor's software.
+    /// The part shared by all gaze sources (see IGazeSource): the clock, the latest position,
+    /// the measure counter and the rate computation.
     ///
-    /// Coordinates are in screen pixels. They can be NEGATIVE or beyond the screen size when
-    /// looking outside it: this is useful (off-screen menu, etc.).
-    ///
-    /// If the eyetracker engine is not available, the program keeps working: IsRunning stays
-    /// false and ErrorMessage explains why.
-    ///
-    /// The eyetracker DLLs are not shipped with GazeBar: they are
-    /// searched for on the PC at startup (see EyetrackerLoader.cs). So that GazeBar starts
-    /// even when they cannot be found, the Tobii.Interaction types (Host, GazePointDataStream)
-    /// only appear in the ConnectEyetracker method: .NET only looks for a DLL when it prepares
-    /// ("just-in-time compiles") a method that uses it. If the DLL is missing, the error
-    /// therefore happens when ConnectEyetracker is called, inside the try of Start, instead of
-    /// crashing the whole program.
+    /// "abstract": this class is never used alone. A real source (EyetrackerGazeSource...)
+    /// inherits from it, writes its own Start and Dispose, and calls OnGaze for each new
+    /// measure. Only the latest position is kept: nothing is saved.
     /// </summary>
-    internal sealed class GazeSource : IDisposable
+    internal abstract class GazeSource : IGazeSource
     {
         private readonly object _lock = new object();
         private readonly Stopwatch _clock = Stopwatch.StartNew();
-
-        // The Host object and the gaze stream (Tobii.Interaction types). Deliberately stored
-        // under "neutral" types (IDisposable, object): see the comment at the top of the class.
-        private IDisposable _host;
-        private object _stream;
 
         private double _x;
         private double _y;
@@ -45,21 +26,11 @@ namespace GazeBar
         private double _windowStartMs;
         private double _samplesPerSecond;
 
-        /// <summary>True if the connection to the eyetracker engine succeeded.</summary>
-        public bool IsRunning { get; private set; }
+        /// <summary>True if the source started correctly.</summary>
+        public bool IsRunning { get; protected set; }
 
-        /// <summary>Error message if the connection failed (empty otherwise).</summary>
-        public string ErrorMessage { get; private set; }
-
-        /// <summary>
-        /// The Host object (Tobii.Interaction) (null if the connection failed). Only used to start
-        /// the calibration tool (see Calibration.cs). Its type is "object" so that the
-        /// rest of the program does not need to know Tobii.Interaction.
-        /// </summary>
-        public object Host
-        {
-            get { return _host; }
-        }
+        /// <summary>Error message if the source could not start (empty otherwise).</summary>
+        public string ErrorMessage { get; protected set; }
 
         /// <summary>True as soon as at least one measure has been received.</summary>
         public bool HasData
@@ -92,50 +63,30 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Connects to the eyetracker engine and starts receiving the gaze.</summary>
-        public void Start()
+        /// <summary>Current time on the source's clock, in milliseconds (same scale as instantMs).</summary>
+        public double NowMs
         {
-            // Were the eyetracker DLLs found on the PC? (see EyetrackerLoader.cs)
-            if (!EyetrackerLoader.Available)
-            {
-                IsRunning = false;
-                ErrorMessage = EyetrackerLoader.Message;
-                App.Log("Gaze: no connection: " + ErrorMessage);
-                return;
-            }
-
-            try
-            {
-                ConnectEyetracker();
-                IsRunning = true;
-                App.Log("Gaze: connected");
-            }
-            catch (Exception ex)
-            {
-                IsRunning = false;
-                ErrorMessage = ex.Message;
-                App.Log("Gaze: connection failed: " + ex);
-            }
+            get { return _clock.Elapsed.TotalMilliseconds; }
         }
 
         /// <summary>
-        /// The only place that uses the Tobii.Interaction types directly. "NoInlining" forbids
-        /// the compiler from copying this method inside Start: otherwise, a missing DLL would
-        /// make Start itself fail, outside its try.
+        /// Factor applied to the positions read (see ScreenMetrics.GazeFactor for the
+        /// eyetracker). 1 by default: positions are already in screen pixels.
         /// </summary>
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ConnectEyetracker()
+        protected virtual double ScaleFactor
         {
-            Host host = new Host();
-            _host = host;
-            GazePointDataStream stream = host.Streams.CreateGazePointDataStream();
-            _stream = stream;
-
-            // Called by Tobii.Interaction, on one of its threads, for each new measure.
-            stream.Next += (sender, measure) => OnGaze(measure.Data.X, measure.Data.Y);
+            get { return 1; }
         }
 
-        private void OnGaze(double x, double y)
+        public abstract void Start();
+
+        public abstract void Dispose();
+
+        /// <summary>
+        /// To call for each new measure (from any thread): stores the position, counts the
+        /// measure and updates the rate.
+        /// </summary>
+        protected void OnGaze(double x, double y)
         {
             double now = _clock.Elapsed.TotalMilliseconds;
             lock (_lock)
@@ -160,15 +111,9 @@ namespace GazeBar
         /// <summary>Latest known gaze position (screen pixels).</summary>
         public void GetLatest(out double x, out double y)
         {
-            lock (_lock)
-            {
-                x = _x;
-                y = _y;
-            }
-            // Scale correction (see ScreenMetrics.GazeFactor): usually 1.
-            double factor = ScreenMetrics.GazeFactor;
-            x *= factor;
-            y *= factor;
+            long num;
+            double instantMs;
+            GetLatest(out x, out y, out num, out instantMs);
         }
 
         /// <summary>
@@ -178,7 +123,7 @@ namespace GazeBar
         /// sends about 30 measures per second: so one tick out of two sees the SAME measure as
         /// the previous tick. By comparing the numbers, a mode knows whether the measure is new,
         /// and counts it only once.
-        /// The time (in milliseconds, on GazeSource's clock) allows computing a speed or a
+        /// The time (in milliseconds, on the source's clock) allows computing a speed or a
         /// duration in real time, whatever the rate.
         /// </summary>
         public void GetLatest(out double x, out double y, out long num, out double instantMs)
@@ -190,31 +135,9 @@ namespace GazeBar
                 num = _measureNumber;
                 instantMs = _lastSampleMs;
             }
-            // Scale correction (see ScreenMetrics.GazeFactor): usually 1.
-            double factor = ScreenMetrics.GazeFactor;
+            double factor = ScaleFactor;
             x *= factor;
             y *= factor;
-        }
-
-        /// <summary>Current time on GazeSource's clock, in milliseconds (same scale as instantMs).</summary>
-        public double NowMs
-        {
-            get { return _clock.Elapsed.TotalMilliseconds; }
-        }
-
-        /// <summary>True if the position is outside the primary screen.</summary>
-        public static bool IsOffScreen(double x, double y, double screenWidth, double screenHeight)
-        {
-            return x < 0 || y < 0 || x >= screenWidth || y >= screenHeight;
-        }
-
-        public void Dispose()
-        {
-            if (_host != null)
-            {
-                _host.Dispose();
-                _host = null;
-            }
         }
     }
 }
