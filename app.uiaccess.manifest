@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  app.uiaccess.manifest: the manifest of the "full installation" (with UI access).
+
+  Same content as app.manifest (read its comments), with ONE difference:
+  uiAccess="true". Keep the two files identical otherwise: the automatic build checks it
+  (.github/scripts/check-manifests.ps1).
+
+  uiAccess="true" asks Windows for "UI access" (see Platform/UiAccess.cs): the gaze circle is
+  shown above the Start menu, and the clicks and keys reach the windows started as
+  administrator. Windows starts such a program ONLY if it is digitally signed by a trusted
+  certificate and installed in a protected folder (C:\Program Files). Otherwise it refuses
+  to start it ("A referral was returned from the server").
+
+  That is why this manifest is used only when the UiAccess=true property is given to the
+  build (see GazeBar.csproj). Visual Studio and the simple .zip keep app.manifest.
+-->
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="GazeBar.app" />
+
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- Runs with the user's rights, without asking for administrator rights,
+             but asks for UI access. -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="true" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 and Windows 11 (same identifier). Required for per-monitor DPI in WPF. -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
+    </windowsSettings>
+  </application>
+</assembly>

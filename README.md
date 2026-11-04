@@ -43,6 +43,10 @@ text-to-speech.
    software. If the Diagnostic window says they are missing, see
    [Eyetracker files](docs/user-guide.md#eyetracker-files).
 
+For the **full installation** (circle above the Start menu, clicks in administrator windows),
+download `GazeBar-x.y.z-full-install.zip` instead and double-click `Install.cmd`: see
+[Full installation](docs/user-guide.md#full-installation-ui-access).
+
 To compile it yourself instead: clone this repository, open `GazeBar.slnx` in Visual Studio,
 press F5.
 

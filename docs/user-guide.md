@@ -145,11 +145,45 @@ If the Diagnostic window says they are missing, get them yourself, accepting Tob
 3. Copy the two DLLs of `lib\net45` and the one of `build\x86` into the `Eyetracker` folder next
    to `GazeBar.exe` (create it if needed).
 
+## Full installation (UI access)
+
+The simple zip runs from any folder, but Windows keeps two things out of its reach: the Start
+menu, search and notifications are drawn above the gaze circle, and windows started "as
+administrator" ignore its clicks and keys. The **full installation** removes both limits. Windows
+allows this "UI access" only to a program that is signed and installed in `C:\Program Files`, so
+it has its own zip and an installation script.
+
+To install or update:
+
+1. On the [Releases](https://github.com/Kopolitoo/GazeBar/releases) page, download
+   `GazeBar-x.y.z-full-install.zip` and unzip it (anywhere, for example in `Downloads`).
+2. In the unzipped folder, double-click `Install.cmd`. Windows asks "Do you want to allow this
+   app to make changes to your device?": answer "Yes". GazeBar closes during the installation,
+   so keep another way to click (voice, mouse, TD Control) for this step.
+3. A blue window shows the steps, then GazeBar starts again from `C:\Program Files\GazeBar`.
+   The window closes by itself after 10 seconds.
+
+What the script does: it copies GazeBar to `C:\Program Files\GazeBar`, creates a certificate on
+this computer, makes the computer trust it, signs `GazeBar.exe` with it, then deletes the
+certificate's private key (nothing else can ever be signed with it). A new certificate is made at
+each update. It also adds GazeBar to the Start menu. Your settings are kept. If "Start with
+Windows" is on, GazeBar updates the startup entry itself.
+
+To check: the log (`%LOCALAPPDATA%\GazeBar\gazebar.log`) says "UI access: yes" at startup.
+
+To remove it: double-click `Uninstall.cmd` (same folder) and answer "Yes". It deletes the
+program folder, the shortcut and the certificate. Your settings are kept.
+
+If the eyetracker files had to be copied by hand (see [Eyetracker files](#eyetracker-files)),
+put the `Eyetracker` folder in `C:\Program Files\GazeBar` (Windows asks for administrator
+rights). Updates keep it.
+
 ## Known limits
 
 - One screen only.
-- A window started "as administrator" ignores GazeBar's clicks and keys, unless GazeBar is also
-  started as administrator. The Windows Start menu can hide the circle.
+- With the simple zip, a window started "as administrator" ignores GazeBar's clicks and keys,
+  and the Windows Start menu can hide the circle. The
+  [full installation](#full-installation-ui-access) removes these two limits.
 - Tested with the Tobii Dynavox PCEye 5 only.
 - The game mode with relative mouse movement has not been tested yet.
 - The personal dictionary is shared between languages.

@@ -15,6 +15,9 @@
     PerMonitorV2  the best support (Windows 10 version 1703 and later);
     PerMonitor    fallback for older Windows versions.
   The old dpiAware tag is read by Windows versions that do not know dpiAwareness.
+
+  uiAccess="false": this manifest does not ask for "UI access". The "full installation" uses
+  app.uiaccess.manifest instead, identical except uiAccess="true" (see Platform/UiAccess.cs).
 -->
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
   <assemblyIdentity version="1.0.0.0" name="GazeBar.app" />

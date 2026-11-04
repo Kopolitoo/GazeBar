@@ -38,8 +38,29 @@ jobs:
         shell: pwsh
         run: ./.github/scripts/check-data-files.ps1
 
+      - name: Check the two manifests (normal and with UI access)
+        shell: pwsh
+        run: ./.github/scripts/check-manifests.ps1
+
+      - name: Check the installation scripts
+        shell: powershell
+        run: ./.github/scripts/check-install-scripts.ps1
+
+      # First the "full installation" build, with UI access (UiAccess=true, see
+      # GazeBar.csproj), in its own folders (bin/uiaccess, obj/uiaccess), apart from the normal build.
+      - name: Compile the full installation build (UI access)
+        run: dotnet build GazeBar.csproj --configuration Release -p:UiAccess=true -p:OutDir=${{ github.workspace }}/bin/uiaccess/ -p:IntermediateOutputPath=obj/uiaccess/
+
+      - name: Make the full installation folder
+        shell: pwsh
+        run: ./.github/scripts/make-full-install.ps1 bin/uiaccess bin/full-install
+
       - name: Compile GazeBar (Release, x86)
         run: dotnet build GazeBar.csproj --configuration Release
+
+      - name: Check that the normal build does not ask for UI access
+        shell: pwsh
+        run: ./.github/scripts/check-exe-manifest.ps1 bin/Release/net48/GazeBar.exe false
 
       - name: Check that no eyetracker DLL is in the output
         shell: pwsh
@@ -58,4 +79,13 @@ jobs:
         with:
           name: GazeBar-${{ github.sha }}
           path: bin/Release/net48/
+          retention-days: 14
+
+      # The full installation, to test it before a release: extract the downloaded zip, then
+      # double-click Install.cmd (see docs/user-guide.md, "Full installation").
+      - name: Keep the full installation
+        uses: actions/upload-artifact@v4
+        with:
+          name: GazeBar-full-install-${{ github.sha }}
+          path: bin/full-install/
           retention-days: 14

@@ -41,16 +41,17 @@ The three biggest classes are "partial" classes: one class written in several fi
 
 | Folder | Contents |
 |---|---|
-| (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `GazeBar.csproj`, `app.manifest` |
+| (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `GazeBar.csproj`, `app.manifest`, `app.uiaccess.manifest` |
 | `Gaze` | reading the gaze and processing it: `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
 | `Modes` | one class per mode, and `ModeManager` |
 | `Actions` | what the action choice offers: `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
 | `Typing` | the gaze keyboard and word prediction: `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
 | `Settings` | the settings file, profiles and settings window: `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow`, `SettingTarget` |
 | `Ui` | windows and gaze buttons: `OverlayWindow`, `DiagnosticWindow`, `CursorSampler`, `GazeButton`, `ButtonAimer`, `IGazeTarget`, `Texts` |
-| `Platform` | calls to Windows: `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup` |
+| `Platform` | calls to Windows: `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess` |
 | `Languages`, `Keyboards`, `Dictionaries` | data files copied next to `GazeBar.exe` (texts, keyboard layouts, prediction dictionaries) |
 | `Resources` | the program icon |
+| `Install` | scripts of the full installation (UI access): `Install.cmd`, `install.ps1`, `Uninstall.cmd`, `uninstall.ps1`, `common.ps1` |
 
 ## Eyetracker DLLs
 
@@ -267,6 +268,16 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
 - The overlay puts itself back above all windows twice per second.
 - `app.manifest`: declares GazeBar "DPI aware", so that the gaze, the cursor and the drawing use
   the same pixels, even with a Windows scaling of 125 % or 150 %.
+- `app.uiaccess.manifest` (step `ui-access`): same manifest with `uiAccess="true"`, used only by
+  the "full installation" build (`dotnet build -p:UiAccess=true`). "UI access" puts the gaze
+  circle above the Start menu and lets clicks and keys reach windows started as administrator.
+  Windows starts such a program only if it is signed by a trusted certificate and installed in
+  `C:\Program Files`, so Visual Studio and the simple .zip keep `app.manifest`. The automatic
+  build checks that the two manifests differ only by `uiAccess`. `UiAccess.IsActive()` writes
+  "UI access: yes" or "no" to the log at startup. The `Install` scripts copy this build to
+  `C:\Program Files\GazeBar`, sign it with a certificate made on the user's computer (its
+  private key deleted right after) and add a Start menu shortcut; `make-full-install.ps1`
+  (`.github/scripts`) puts the build and the scripts together for the CI artifact and the release.
 
 ## Settings file
 

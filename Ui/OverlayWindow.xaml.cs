@@ -43,7 +43,8 @@ namespace GazeBar
             // centre live in a "band" reserved for the system, higher than every "always on
             // top" window. The overlay therefore goes below them despite this timer. Only a
             // program declared "uiAccess" (manifest), digitally signed and installed in
-            // C:\Program Files can be shown above them.
+            // C:\Program Files can be shown above them: the "full installation" build (see
+            // Platform/UiAccess.cs).
             _foreground = new DispatcherTimer();
             _foreground.Interval = TimeSpan.FromMilliseconds(500);
             _foreground.Tick += (sender, e) => BringToFront();

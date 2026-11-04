@@ -154,12 +154,50 @@ licence de Tobii :
 3. Copier les deux DLL de `lib\net45` et celle de `build\x86` dans le dossier `Eyetracker` à côté
    de `GazeBar.exe` (le créer si besoin).
 
+## Installation complète (accès à l'interface)
+
+Le zip simple se lance depuis n'importe quel dossier, mais Windows lui interdit deux choses : le
+menu Démarrer, la recherche et les notifications passent au-dessus du cercle du regard, et les
+fenêtres lancées « en administrateur » ignorent ses clics et ses touches. L'**installation
+complète** enlève ces deux limites. Windows ne donne cet « accès à l'interface » qu'à un programme
+signé et installé dans `C:\Program Files` : elle a donc son propre zip et un script
+d'installation.
+
+Pour installer ou mettre à jour :
+
+1. Sur la page [Releases](https://github.com/Kopolitoo/GazeBar/releases), télécharger
+   `GazeBar-x.y.z-full-install.zip` et le décompresser (n'importe où, par exemple dans
+   `Téléchargements`).
+2. Dans le dossier décompressé, double-cliquer sur `Install.cmd`. Windows demande « Voulez-vous
+   autoriser cette application à apporter des modifications à votre appareil ? » : répondre
+   « Oui ». GazeBar se ferme pendant l'installation : garder un autre moyen de cliquer (voix,
+   souris, TD Control) pour cette étape.
+3. Une fenêtre bleue montre les étapes, puis GazeBar redémarre depuis
+   `C:\Program Files\GazeBar`. La fenêtre se ferme seule après 10 secondes.
+
+Ce que fait le script : il copie GazeBar dans `C:\Program Files\GazeBar`, crée un certificat sur
+cet ordinateur, le fait approuver par l'ordinateur, signe `GazeBar.exe` avec, puis supprime la clé
+privée du certificat (plus rien ne pourra jamais être signé avec). Un nouveau certificat est créé
+à chaque mise à jour. Il ajoute aussi GazeBar au menu Démarrer. Vos réglages sont gardés. Si
+« Démarrer avec Windows » est activé, GazeBar met lui-même à jour son lancement au démarrage.
+
+Pour vérifier : le journal (`%LOCALAPPDATA%\GazeBar\gazebar.log`) dit « UI access: yes » au
+démarrage.
+
+Pour la retirer : double-cliquer sur `Uninstall.cmd` (même dossier) et répondre « Oui ». Il
+supprime le dossier du programme, le raccourci et le certificat. Vos réglages sont gardés.
+
+Si les fichiers de l'eyetracker ont dû être copiés à la main (voir
+[Fichiers de l'eyetracker](#fichiers-de-leyetracker)), mettre le dossier `Eyetracker` dans
+`C:\Program Files\GazeBar` (Windows demande les droits d'administrateur). Les mises à jour le
+gardent.
+
 ## Limites connues
 
 - Un seul écran.
-- Une fenêtre lancée « en tant qu'administrateur » ignore les clics et les touches de GazeBar,
-  sauf si GazeBar est lui aussi lancé en administrateur. Le menu Démarrer de Windows peut cacher
-  le cercle.
+- Avec le zip simple, une fenêtre lancée « en tant qu'administrateur » ignore les clics et les
+  touches de GazeBar, et le menu Démarrer de Windows peut cacher le cercle.
+  L'[installation complète](#installation-complète-accès-à-linterface) enlève ces deux limites.
 - Testé uniquement avec le Tobii Dynavox PCEye 5.
 - Le mode jeu avec déplacement relatif de la souris n'a pas encore été testé.
 - Le dictionnaire personnel est commun à toutes les langues.

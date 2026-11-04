@@ -474,5 +474,33 @@ namespace GazeBar
         /// </summary>
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern IntPtr LoadLibrary(string dllPath);
+
+        // ───────────────────────── Rights of the GazeBar process ─────────────────────────
+
+        /// <summary>A "pseudo handle" to the GazeBar process itself (no need to close it).</summary>
+        [DllImport("kernel32.dll")]
+        internal static extern IntPtr GetCurrentProcess();
+
+        /// <summary>Asks for read access to TOKEN_QUERY: reading the process token.</summary>
+        internal const uint TOKEN_QUERY = 0x0008;
+
+        /// <summary>
+        /// Opens the "access token" of a process: the Windows object that holds its rights.
+        /// The handle must then be closed with CloseHandle.
+        /// </summary>
+        [DllImport("advapi32.dll", SetLastError = true)]
+        internal static extern bool OpenProcessToken(IntPtr processHandle, uint desiredAccess, out IntPtr tokenHandle);
+
+        /// <summary>TokenUIAccess: the information "does this process have UI access" (a number, 0 or 1).</summary>
+        internal const int TokenUIAccess = 26;
+
+        /// <summary>Reads one piece of information from an access token (here a 4-byte number).</summary>
+        [DllImport("advapi32.dll", SetLastError = true)]
+        internal static extern bool GetTokenInformation(IntPtr tokenHandle, int tokenInformationClass,
+            out uint tokenInformation, uint tokenInformationLength, out uint returnLength);
+
+        /// <summary>Closes a handle opened by Windows (here the token).</summary>
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern bool CloseHandle(IntPtr handle);
     }
 }

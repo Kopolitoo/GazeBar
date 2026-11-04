@@ -43,7 +43,8 @@
     <Nullable>disable</Nullable>
 
     <!-- The "manifest": a small XML file read by Windows when the program starts.
-         It declares GazeBar "DPI aware": see app.manifest. -->
+         It declares GazeBar "DPI aware": see app.manifest. (The "full installation"
+         uses app.uiaccess.manifest instead: see below.) -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
     <!-- The program icon: the one shown by Windows Explorer, the taskbar, Alt+Tab and
@@ -51,6 +52,16 @@
          (16, 24, 32, 48, 64 and 256 pixels): Windows picks the best one for the screen.
          WPF windows that do not set an icon automatically use this one. -->
     <ApplicationIcon>Resources\GazeBar.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- "Full installation" build, with UI access (see Platform/UiAccess.cs):
+         dotnet build GazeBar.csproj -c Release -p:UiAccess=true
+       It uses app.uiaccess.manifest (uiAccess="true"). Such a GazeBar.exe only starts once
+       signed and installed in C:\Program Files: it can NOT be started from Visual Studio
+       or from the build folder. Without this property (Visual Studio, simple .zip),
+       app.manifest is used and GazeBar starts from anywhere. -->
+  <PropertyGroup Condition="'$(UiAccess)' == 'true'">
+    <ApplicationManifest>app.uiaccess.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
