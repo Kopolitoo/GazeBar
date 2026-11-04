@@ -2,6 +2,8 @@
 
 *English version: [README.md](README.md).*
 
+<p align="center"><img src="docs/images/gazebar-logo.fr.png" alt="Logo de GazeBar : un œil avec un pointeur de souris" width="600"></p>
+
 [![Build](https://github.com/Kopolitoo/GazeBar/actions/workflows/build.yml/badge.svg)](https://github.com/Kopolitoo/GazeBar/actions/workflows/build.yml)
 
 **GazeBar permet d'utiliser un ordinateur Windows uniquement avec les yeux**, grâce à un
