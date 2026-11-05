@@ -130,6 +130,15 @@ change le rayon du cercle (Affichage). Profils, « Charger un profil » : la lis
 on le regarde : « Charger le profil … ? » ; « Non » ne change rien ; « Oui » remet l'ancien rayon et
 crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet le rayon modifié.
 
+## 15. Retour sonore
+
+Paramètres, « Interface », onglet « Sons » : les deux interrupteurs sont sur non ; rien ne
+fait de son. Activer « Son des touches » : ouvrir le clavier et taper : un petit « tic » aigu à
+chaque touche (aussi avec la répétition), mais aucun son pour le menu ni le choix d'action. Le
+désactiver et activer « Son des boutons » : les touches sont muettes ; l'icône d'options, le choix
+d'action, les boutons du menu et ceux des paramètres font un petit son de deux notes. Tout
+désactiver : de nouveau le silence. Relancer GazeBar : les choix sont gardés.
+
 ## Installation complète (Setup.exe, accès à l'interface)
 
 Prendre le zip `GazeBar-setup-…` de la compilation automatique (page Actions de la pull request,

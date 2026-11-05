@@ -103,7 +103,7 @@ contient les options du jeu.
 ## Paramètres
 
 Menu, « Paramètres ». Une page noire en plein écran, avec quatre catégories à gauche :
-**Regard**, **Actions**, **Affichage**, **Système**. Chaque réglage a « − » et « + » (garder le
+**Regard**, **Actions**, **Interface**, **Système**. Chaque réglage a « − » et « + » (garder le
 regard dessus répète) ou un interrupteur oui / non. Les changements s'appliquent tout de suite et
 sont enregistrés.
 
@@ -115,6 +115,10 @@ sont enregistrés.
   cette langue.
 - **Profils** (onglet « Profils ») : enregistrer les réglages actuels sous un nom, et les
   recharger plus tard au regard (par exemple un profil « Matin » et un profil « Soir »).
+- Onglet **Sons** : deux options oui / non, toutes deux désactivées au départ. **Son des
+  touches** : un petit « tic » à chaque touche du clavier du regard. **Son des boutons** : un petit
+  son pour tous les autres boutons (menu, choix d'action, icône d'options, paramètres). Le son
+  suit le volume de Windows.
 - Onglet **Outils** : **Calibration** (lance la calibration de l'eyetracker) et **Diagnostic**
   (montre le regard et le curseur en direct).
 

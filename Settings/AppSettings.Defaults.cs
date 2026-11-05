@@ -70,6 +70,9 @@ namespace GazeBar
             StartWithWindows = false;
             DetailedLog = false;
 
+            KeySound = false;
+            ButtonSound = false;
+
             KeyDelay = 0.6;
             KeyRepeat = true;
             AutoCapitalize = true;
@@ -282,7 +285,8 @@ namespace GazeBar
                 App.Log("Settings: updated to version 12 (interface language)");
             }
 
-            // Version 13 (DetailedLog): nothing to fix, the setting keeps its default value (no).
+            // Version 13 (DetailedLog) and 14 (KeySound, ButtonSound): nothing to fix, the
+            // settings keep their default value (no).
             FileVersion = CurrentVersion;
             return true;
         }

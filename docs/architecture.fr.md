@@ -51,7 +51,7 @@ l'explication de la classe.
 | `Typing` | le clavier au regard et la prédiction de mots : `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
 | `Settings` | le fichier des réglages, les profils et la fenêtre des paramètres : `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow`, `SettingTarget` |
 | `Ui` | fenêtres et boutons au regard : `OverlayWindow`, `DiagnosticWindow`, `CursorSampler`, `GazeButton`, `ButtonAimer`, `IGazeTarget`, `Texts` |
-| `Platform` | appels à Windows : `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess` |
+| `Platform` | appels à Windows : `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess`, `SoundFeedback` |
 | `Languages`, `Keyboards`, `Dictionaries` | fichiers de données copiés à côté de `GazeBar.exe` (textes, dispositions de clavier, dictionnaires de prédiction) |
 | `Resources` | l'icône du programme |
 | `Install` | l'installateur de l'installation complète (accès à l'interface) : `GazeBar.iss` (Inno Setup) et `setup-certificate.ps1` |
@@ -182,6 +182,12 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   fenêtre sous le curseur (sans cliquer), pour ne plus avoir à cliquer avant de défiler.
   Onglet « Défilement » : option « Défiler les fenêtres inactives » (oui par défaut), qui
   règle l'option Windows du même nom (`WheelScroller`, appliquée au démarrage et à chaque changement).
+- `Platform/SoundFeedback` (étape sound-feedback) : petit son optionnel quand un bouton s'active.
+  `ButtonAimer` le joue à chaque activation (sa propriété `Sound` : `Button` par défaut, `Key` pour
+  le clavier du regard), `FixedGazeMode` pour l'icône d'options. Deux réglages dans l'onglet
+  « Sons », `KeySound` et `ButtonSound` (non par défaut). Les deux sons sont de petits WAV calculés
+  en mémoire et joués avec `System.Media.SoundPlayer` (dans .NET Framework, sans bibliothèque en
+  plus).
 - `Modes/IconConfigMode` (étape 10) : onglet « Icônes » des paramètres, bouton « Configurer les
   icônes ». Même mise en page que le choix d'action (`ActionChoiceLayout`, partagée par les
   deux modes), avec un cadre gris à la place de la photo. Les quatorze emplacements (huit de la

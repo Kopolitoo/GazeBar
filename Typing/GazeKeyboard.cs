@@ -149,6 +149,8 @@ namespace GazeBar
             // "1": a single gaze sample is enough to light a key (2 for GazeBar's other
             // buttons). Hover thus reacts one sample earlier (about 30 ms).
             _aimer = new ButtonAimer(_targets, 1);
+            // The keys have their own sound ([KeySound] setting).
+            _aimer.Sound = SoundKind.Key;
 
             // The dictionary is the one of the INTERFACE language (Language setting):
             // the keyboard layout does not change it. It is read as

@@ -98,7 +98,7 @@ choose "Quit the game" to go back. The "Game" tab of the settings has the game o
 ## Settings
 
 Menu, "Settings". A black full-screen page with four categories on the left: **Gaze**,
-**Actions**, **Display**, **System**. Each setting has "−" and "+" (keep your gaze on them to
+**Actions**, **Interface**, **System**. Each setting has "−" and "+" (keep your gaze on them to
 repeat) or a yes / no switch. Changes apply at once and are saved.
 
 - **Default** (top right): puts back the original values of the shown tab.
@@ -108,6 +108,9 @@ repeat) or a yes / no switch. Changes apply at once and are saved.
   language.
 - **Profiles** ("Profiles" tab): save the current settings under a name, and load them later
   with your eyes (for example a "Morning" and an "Evening" profile).
+- **Sound** tab: two yes / no options, both off at first. **Key sound**: a short "tick" for each
+  key of the gaze keyboard. **Button sound**: a short sound for every other button (menu, action
+  choice, options icon, settings). The sound plays at the Windows volume.
 - **Tools** tab: **Calibration** (starts the eyetracker calibration) and **Diagnostic** (shows
   the gaze and the cursor live).
 

@@ -236,6 +236,8 @@ namespace GazeBar
         /// </summary>
         private void ActivateIcon()
         {
+            // The icon is a button like the others: same optional sound ([ButtonSound]).
+            SoundFeedback.Play(SoundKind.Button);
             PlaceCursor();
             if (AppSettings.Current.MagnifierBeforeAction)
             {

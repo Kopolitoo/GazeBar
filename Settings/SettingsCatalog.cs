@@ -371,7 +371,7 @@ namespace GazeBar
         {
             new SettingsCategory("category.gaze", "\uE890", "tab.gaze", "tab.fixation", "tab.delays"),
             new SettingsCategory("category.actions", "\uE7C9", "tab.magnifierDrag", "tab.scroll", IconsTabName),
-            new SettingsCategory("category.display", "\uE7F4", "tab.display", "tab.keyboard", "tab.game"),
+            new SettingsCategory("category.display", "\uE7F4", "tab.display", "tab.keyboard", "tab.sound", "tab.game"),
             new SettingsCategory("category.system", "\uE770", GeneralTabName, ProfilesTabName, ToolsTabName)
         };
 
@@ -505,6 +505,13 @@ namespace GazeBar
                 // 50, 75 or 100 % (Fix rounds to the quarter); also in the keyboard bar.
                 Setting.Number("setting.keyboardSize", " %", 25,
                                p => p.KeyboardSize, (p, v) => p.KeyboardSize = v)),
+
+            // E767 = speaker ("Sound"): the optional sound feedback (see SoundFeedback).
+            new SettingsTab("tab.sound", "\uE767",
+                Setting.YesOrNo("setting.keySound",
+                                 p => p.KeySound, (p, v) => p.KeySound = v),
+                Setting.YesOrNo("setting.buttonSound",
+                                 p => p.ButtonSound, (p, v) => p.ButtonSound = v)),
 
             // E713 = gear ("General")
             new SettingsTab(GeneralTabName, "",

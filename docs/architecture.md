@@ -48,7 +48,7 @@ The three biggest classes are "partial" classes: one class written in several fi
 | `Typing` | the gaze keyboard and word prediction: `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
 | `Settings` | the settings file, profiles and settings window: `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow`, `SettingTarget` |
 | `Ui` | windows and gaze buttons: `OverlayWindow`, `DiagnosticWindow`, `CursorSampler`, `GazeButton`, `ButtonAimer`, `IGazeTarget`, `Texts` |
-| `Platform` | calls to Windows: `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess` |
+| `Platform` | calls to Windows: `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess`, `SoundFeedback` |
 | `Languages`, `Keyboards`, `Dictionaries` | data files copied next to `GazeBar.exe` (texts, keyboard layouts, prediction dictionaries) |
 | `Resources` | the program icon |
 | `Install` | the installer of the full installation (UI access): `GazeBar.iss` (Inno Setup) and `setup-certificate.ps1` |
@@ -174,6 +174,11 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   activates the window under the cursor (without clicking), so there is no need to click before
   scrolling. "Scroll" tab: option "Scroll inactive windows" (yes by default), which sets the
   Windows option of the same name (`WheelScroller`, applied at startup and at each change).
+- `Platform/SoundFeedback` (step sound-feedback): optional short sound when a button activates.
+  `ButtonAimer` plays it at each activation (its `Sound` property: `Button` by default, `Key` for
+  the gaze keyboard), `FixedGazeMode` for the options icon. Two settings in the "Sound" tab,
+  `KeySound` and `ButtonSound` (no by default). The two sounds are small WAVs computed in memory
+  and played with `System.Media.SoundPlayer` (in .NET Framework, no extra library).
 - `Modes/IconConfigMode` (step 10): "Icons" tab of the settings, "Configure the icons" button.
   Same layout as the action choice (`ActionChoiceLayout`, shared by both modes), with a grey
   frame in place of the picture. The fourteen slots (eight of the crown, three modifiers on the
