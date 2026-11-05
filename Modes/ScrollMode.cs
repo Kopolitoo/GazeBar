@@ -38,6 +38,12 @@ namespace GazeBar
     ///     counted in WHOLE radii of [CircleRadius]: shrinking the dead zone only brought the
     ///     start of scrolling closer, without making the speed-up more abrupt.
     ///     Further away, it no longer increases;
+    ///   - GENTLE START (issue #52: "scrolling starts a bit too fast"), two curves together:
+    ///       · distance: the speed follows a curve, not a straight line ([SpeedCurvePower]):
+    ///         very slow near the circle, faster further away. Halfway: a quarter of the
+    ///         maximum speed (instead of half);
+    ///       · time: each start (leaving the dead zone, or a new direction) begins at
+    ///         [RampStartFraction] of this speed, which then reaches 100 % in [RampMs];
     ///   - Windows "wheel events" are sent: the window under the cursor scrolls (Windows setting
     ///     "Scroll inactive windows when I hover over them", on by default).
     ///
@@ -112,6 +118,21 @@ namespace GazeBar
         /// <summary>Below this speed (notches per second), it is considered zero.</summary>
         private const double NegligibleSpeed = 0.05;
 
+        /// <summary>
+        /// Shape of the speed curve with the distance (see the class comment): 1 = straight line,
+        /// 2 = slow near the circle then faster. Larger = even slower near the circle.
+        /// </summary>
+        private const double SpeedCurvePower = 2;
+
+        /// <summary>
+        /// Gentle start in time (see the class comment): each start begins at this fraction of
+        /// the speed (0.2 = 20 %)...
+        /// </summary>
+        private const double RampStartFraction = 0.2;
+
+        /// <summary>...and reaches 100 % after this time, in milliseconds.</summary>
+        private const double RampMs = 1500;
+
         /// <summary>One wheel notch, in Windows units (WHEEL_DELTA).</summary>
         private const int Notch = 120;
 
@@ -170,6 +191,9 @@ namespace GazeBar
         // The smoothed speed, in notches per second (always positive; the direction is _reserveDirection).
         private double _speed;
 
+        // Time when the current start began (gentle start in time); -1 = not scrolling.
+        private double _rampStartMs = -1;
+
         private double _lastTickMs = -1;
 
         // The direction arc: a black line underneath and a green line on top (readable on every background).
@@ -212,6 +236,7 @@ namespace GazeBar
             _enteredMs = gaze.NowMs;
             _reserve = 0;
             _speed = 0;
+            _rampStartMs = -1;
             _lastTickMs = gaze.NowMs;
 
             BuildSurface();
@@ -249,6 +274,7 @@ namespace GazeBar
             {
                 _reserve = 0;
                 _speed = 0;
+                _rampStartMs = -1;
                 return;
             }
 
@@ -288,7 +314,8 @@ namespace GazeBar
             // 5. The wanted speed and, outside the dead zone, the direction (one axis only: the
             //    one with the largest gap).
             //    Speed: from 0 at the edge of the dead zone to [MaxScrollSpeed] three whole
-            //    [CircleRadius] further (see the class comment).
+            //    [CircleRadius] further, along a curve, and lowered during the first moments of
+            //    each start (see the class comment).
             //    In the dead zone, the previous direction is kept: the speed goes smoothly back
             //    down to 0 there, in the same direction.
             double wantedSpeed = 0;
@@ -298,17 +325,32 @@ namespace GazeBar
                 // Wheel: up and right = positive (see MouseInjector.Wheel).
                 int direction = horizontal ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
                 double fraction = Math.Min(1.0, (distance - radius) / (MaxSpeedRadii * p.CircleRadiusPx));
-                wantedSpeed = fraction * p.MaxScrollSpeed;
+                fraction = Math.Pow(fraction, SpeedCurvePower);
 
                 // Change of direction: start from zero (speed and reserve), so as not to carry the
-                // momentum of the old direction into the new one.
+                // momentum of the old direction into the new one. It is a new start.
                 if (horizontal != _horizontalReserve || direction != _reserveDirection)
                 {
                     _reserve = 0;
                     _speed = 0;
                     _horizontalReserve = horizontal;
                     _reserveDirection = direction;
+                    _rampStartMs = now;
                 }
+                // Leaving the dead zone: a new start too.
+                if (_rampStartMs < 0)
+                {
+                    _rampStartMs = now;
+                }
+                double ramp = Math.Min(1.0, (now - _rampStartMs) / RampMs);
+                double timeFactor = RampStartFraction + (1 - RampStartFraction) * ramp;
+
+                wantedSpeed = fraction * timeFactor * p.MaxScrollSpeed;
+            }
+            else
+            {
+                // In the dead zone: the next exit will be a new start.
+                _rampStartMs = -1;
             }
 
             // 6. The smoothed speed moves towards the wanted speed, according to the elapsed time

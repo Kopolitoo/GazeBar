@@ -65,7 +65,9 @@ Depuis le 02/11/2026 : à vitesse lente, la page doit glisser sans petits sauts,
 ou s'arrêter en douceur ; sans avoir cliqué dans la page avant, elle doit défiler quand même
 (le journal note « fenêtre … rendue active » et l'état du réglage Windows de la molette).
 On rouvre le défilement et on regarde directement sous le cercle, sans passer dedans : la page
-doit commencer à descendre en moins d'une demi-seconde, sans bouger le regard.
+doit commencer à descendre en moins d'une demi-seconde, sans bouger le regard. Chaque départ doit
+être doux : lent au début, puis plus rapide en une seconde et demie environ ; juste au bord du
+cercle, très lent.
 
 ## 8. Configuration des icônes
 

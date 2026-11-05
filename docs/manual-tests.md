@@ -60,7 +60,8 @@ the right edge goes back to movement mode. At low speed, the page must slide wit
 jumps, and start and stop gently; without having clicked in the page first, it must scroll
 anyway (the log notes the window made active and the state of the Windows wheel setting).
 Open scrolling again and look straight below the circle, without passing through it: the page
-must start going down within half a second, without moving the gaze.
+must start going down within half a second, without moving the gaze. Each start must be gentle:
+slow at first, then faster over about a second and a half; just outside the circle, very slow.
 
 ## 8. Icon configuration
 

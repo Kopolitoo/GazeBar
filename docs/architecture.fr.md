@@ -173,7 +173,9 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   fixé sur le curseur. Regard dans le cercle : rien ne défile (zone morte). Regard au-dessus, en
   dessous, à droite ou à gauche : la fenêtre sous le curseur défile dans ce sens (molette Windows,
   un seul sens à la fois), d'autant plus vite que le regard est loin du cercle, jusqu'à
-  `MaxScrollSpeed` (5 crans/s par défaut depuis le 02/11/2026) trois `CircleRadius` au-delà du bord. Un petit arc vert sur le
+  `MaxScrollSpeed` (5 crans/s par défaut depuis le 02/11/2026) trois `CircleRadius` au-delà du bord. Démarrage doux (issue #52) : la
+  vitesse suit une courbe avec la distance (au carré : lente près du cercle) et chaque départ
+  commence à 20 % de cette vitesse, puis atteint 100 % en 1,5 s. Un petit arc vert sur le
   cercle montre la direction. Rien ne défile pendant les 0,4 premières secondes, sauf si le regard
   est passé dans le cercle (à l'entrée, le regard est encore sur l'icône de la couronne), ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
   l'écran compte, pour agrandir la plage de vitesse) ou sur le bouton « retour » (bord droit, centré),

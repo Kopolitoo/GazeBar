@@ -166,7 +166,9 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   the cursor. Gaze inside the circle: nothing scrolls (dead zone). Gaze above, below, right or
   left: the window under the cursor scrolls in that direction (Windows mouse wheel, one direction
   at a time), faster as the gaze gets further from the circle, up to `MaxScrollSpeed` (5 notches/s
-  by default) three `CircleRadius` beyond the edge. A small green arc on the circle shows the
+  by default) three `CircleRadius` beyond the edge. Gentle start (issue #52): the speed follows a
+  curve with the distance (squared: slow near the circle) and each start begins at 20 % of it,
+  reaching 100 % in 1.5 s. A small green arc on the circle shows the
   direction. Nothing scrolls during the first 0.4 s, unless the gaze has been inside the circle
   (on entry the gaze is still on the crown icon), nor when the gaze is lost, more than 200 px off the screen (a gaze slightly off the screen counts, to widen the
   speed range), or on the "back" button (right edge, centred), which goes back to movement mode.
