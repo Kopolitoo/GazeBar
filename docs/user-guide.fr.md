@@ -133,7 +133,8 @@ sont enregistrés.
 
 ## Pour l'aidant
 
-- **Échap** sur le clavier physique ramène GazeBar au mode mouvement, d'où que l'on soit.
+- **Échap** sur le clavier physique ramène GazeBar au mode mouvement, d'où que l'on soit. Échap
+  dit à un logiciel de reconnaissance vocale (comme Dragon) aussi.
 - Lancer GazeBar une deuxième fois ne fait rien : il tourne déjà.
 - « Démarrer avec Windows » (onglet « Général ») lance GazeBar automatiquement.
 

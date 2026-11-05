@@ -69,7 +69,8 @@ doit commencer à descendre en moins d'une demi-seconde, sans bouger le regard. 
 être doux : lent au début, puis plus rapide en une seconde et demie environ ; juste au bord du
 cercle, très lent. On regarde hors de l'écran à droite pendant une seconde : retour au mode
 mouvement. On regarde hors de l'écran en haut, en bas et à gauche : ça défile toujours à vitesse
-maximale dans ce sens.
+maximale dans ce sens. On rouvre le défilement et on dit « Échap » à Dragon : retour au mode
+mouvement.
 
 ## 8. Configuration des icônes
 

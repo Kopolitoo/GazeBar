@@ -134,8 +134,13 @@ namespace GazeBar
         /// safety (a drag and drop in progress is interrupted) and we return to movement mode,
         /// unless we are already there. In movement mode, it closes the gaze keyboard.
         /// The key also reaches the active program normally (it is not "eaten" by GazeBar).
+        ///
+        /// fromOtherSoftware: the key was simulated by other software, such as Dragon when the
+        /// user says "Escape" (issue #51). It acts like the real key, except in movement mode:
+        /// there it does NOT close the gaze keyboard, because saying "Escape" usually aims at
+        /// the active program (closing a menu or a dialog box).
         /// </summary>
-        private void OnEscape()
+        private void OnEscape(bool fromOtherSoftware)
         {
             if (_modes == null)
             {
@@ -147,7 +152,7 @@ namespace GazeBar
             // KeyboardHook.)
             if (_modes.CurrentMode is MovementMode)
             {
-                if (_modes.Keyboard.IsOpen)
+                if (_modes.Keyboard.IsOpen && !fromOtherSoftware)
                 {
                     App.LogDetail("Escape key: closing the gaze keyboard");
                     _modes.Keyboard.Close();
@@ -176,7 +181,7 @@ namespace GazeBar
                 list.Back();
                 return;
             }
-            App.LogDetail("Escape key: back to movement mode");
+            App.LogDetail("Escape key" + (fromOtherSoftware ? " (simulated by other software)" : "") + ": back to movement mode");
             MouseInjector.ReleaseAll();
             KeyboardInjector.ReleaseAll();
             _modes.ChangeMode(new MovementMode());

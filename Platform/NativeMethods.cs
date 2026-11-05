@@ -455,6 +455,19 @@ namespace GazeBar
         internal const int HookFlagsOffset = 8;
         internal const int LLKHF_INJECTED = 0x10;
 
+        /// <summary>
+        /// In the same structure, the "dwExtraInfo" field (5th field, 16 bytes after the start):
+        /// it carries back the value the simulating program put in KEYBDINPUT.dwExtraInfo.
+        /// </summary>
+        internal const int HookExtraInfoOffset = 16;
+
+        /// <summary>
+        /// Value GazeBar puts in dwExtraInfo of every key it simulates ("GBR!" in ASCII), so the
+        /// keyboard hook can tell GazeBar's own keys from keys simulated by other software
+        /// (for example the Escape key said to Dragon, issue #51).
+        /// </summary>
+        internal const int GazeBarKeyMarker = 0x47425221;
+
         // ───────────────────────── Clock precision ─────────────────────────
 
         /// <summary>Asks Windows for a more precise clock (1 ms instead of about ~15 ms).</summary>

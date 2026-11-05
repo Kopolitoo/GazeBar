@@ -31,8 +31,12 @@ namespace GazeBar
             _function = OnKey;
         }
 
-        /// <summary>Raised (on the UI thread) when the Escape key is pressed.</summary>
-        public event Action EscapePressed;
+        /// <summary>
+        /// Raised (on the UI thread) when the Escape key is pressed. The argument is true when
+        /// the key was simulated by other software (for example Dragon, by voice), false for a
+        /// real keyboard.
+        /// </summary>
+        public event Action<bool> EscapePressed;
 
         /// <summary>Installs the hook. Returns false if Windows refuses it (written to the log).</summary>
         public bool Install()
@@ -78,15 +82,19 @@ namespace GazeBar
                     int key = Marshal.ReadInt32(lParam);
                     // The Escape key of the gaze keyboard is SIMULATED by GazeBar.
                     // It must reach the application, but must neither return to movement mode
-                    // nor close the keyboard: we only react to a real keyboard (the caregiver's).
+                    // nor close the keyboard: GazeBar's own keys carry a mark (dwExtraInfo, see
+                    // KeyboardInjector) and are ignored. A key simulated by OTHER software
+                    // (Dragon, when the user says "Escape") counts (issue #51).
                     int flagsValue = Marshal.ReadInt32(lParam, NativeMethods.HookFlagsOffset);
                     bool simulated = (flagsValue & NativeMethods.LLKHF_INJECTED) != 0;
-                    if (key == NativeMethods.VK_ESCAPE && !simulated)
+                    long extraInfo = Marshal.ReadIntPtr(lParam, NativeMethods.HookExtraInfoOffset).ToInt64();
+                    bool fromGazeBar = simulated && extraInfo == NativeMethods.GazeBarKeyMarker;
+                    if (key == NativeMethods.VK_ESCAPE && !fromGazeBar)
                     {
-                        Action subscribers = EscapePressed;
+                        Action<bool> subscribers = EscapePressed;
                         if (subscribers != null)
                         {
-                            System.Windows.Application.Current.Dispatcher.BeginInvoke(subscribers);
+                            System.Windows.Application.Current.Dispatcher.BeginInvoke(subscribers, simulated);
                         }
                     }
                 }

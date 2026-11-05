@@ -123,7 +123,8 @@ repeat) or a yes / no switch. Changes apply at once and are saved.
 
 ## For the caregiver
 
-- **Escape** on the physical keyboard brings GazeBar back to movement mode from anywhere.
+- **Escape** on the physical keyboard brings GazeBar back to movement mode from anywhere. Escape
+  said to voice recognition software (such as Dragon) does too.
 - Starting GazeBar a second time does nothing: it is already running.
 - "Start with Windows" ("General" tab) starts GazeBar automatically.
 

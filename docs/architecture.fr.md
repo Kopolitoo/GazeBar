@@ -225,7 +225,10 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
 - `KeyboardHook` (étape 4) : la touche **Échap** ramène au mode mouvement depuis n'importe quel
   mode, pour l'aidant. La touche arrive aussi normalement au programme actif. Depuis l'étape 12,
   en mode mouvement, elle ferme le clavier au regard ; la touche « Esc » du clavier au regard,
-  simulée par GazeBar, est ignorée par le crochet (elle va seulement à l'application).
+  simulée par GazeBar, est ignorée par le crochet (elle va seulement à l'application) : GazeBar
+  marque ses propres touches simulées (`dwExtraInfo`). Depuis l'issue #51, un Échap simulé par un
+  autre logiciel (Dragon, à la voix) compte comme la vraie touche, sauf qu'il ne ferme pas le
+  clavier au regard.
 - Clavier au regard (étape 12, `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`) : bouton
   « Clavier » du menu, ou action « Clavier » du choix d'action (ouvre / ferme le clavier ; avant de l'ouvrir, un clic
   gauche sur P donne le focus au champ visé et y place le curseur de texte ; pas
