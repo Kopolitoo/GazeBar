@@ -124,7 +124,8 @@ repeat) or a yes / no switch. Changes apply at once and are saved.
 ## For the caregiver
 
 - **Escape** on the physical keyboard brings GazeBar back to movement mode from anywhere. Escape
-  said to voice recognition software (such as Dragon) does too.
+  said to voice recognition software (such as Dragon) does too. When scrolling or when the gaze
+  keyboard is open, GazeBar keeps Escape for itself: other programs do not receive it.
 - Starting GazeBar a second time does nothing: it is already running.
 - "Start with Windows" ("General" tab) starts GazeBar automatically.
 

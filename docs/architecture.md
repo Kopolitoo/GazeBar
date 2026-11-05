@@ -217,7 +217,8 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   it closes the gaze keyboard; the "Esc" key of the gaze keyboard, simulated by GazeBar, is
   ignored by the hook (it only goes to the application): GazeBar marks its own simulated keys
   (`dwExtraInfo`). Since issue #51, an Escape simulated by other software (Dragon, by voice)
-  counts like the real key, except that it does not close the gaze keyboard.
+  counts like the real key. In scroll mode and when the gaze keyboard is open, GazeBar KEEPS
+  Escape (press and release): the other programs do not receive it (`KeepEscape`).
 - Gaze keyboard (step 12, `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`): "Keyboard" button of
   the menu, or "Keyboard" action of the action choice (opens / closes the keyboard; before opening it, a left
   click on P gives the focus to the aimed field and places the text cursor there; not placed by

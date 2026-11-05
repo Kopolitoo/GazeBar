@@ -134,7 +134,9 @@ sont enregistrés.
 ## Pour l'aidant
 
 - **Échap** sur le clavier physique ramène GazeBar au mode mouvement, d'où que l'on soit. Échap
-  dit à un logiciel de reconnaissance vocale (comme Dragon) aussi.
+  dit à un logiciel de reconnaissance vocale (comme Dragon) aussi. Pendant le défilement ou
+  quand le clavier au regard est ouvert, GazeBar garde Échap pour lui : les autres logiciels ne
+  le reçoivent pas.
 - Lancer GazeBar une deuxième fois ne fait rien : il tourne déjà.
 - « Démarrer avec Windows » (onglet « Général ») lance GazeBar automatiquement.
 

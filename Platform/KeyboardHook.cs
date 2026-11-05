@@ -12,8 +12,11 @@ namespace GazeBar
     ///
     /// How: we install a "low-level keyboard hook" (WH_KEYBOARD_LL). Windows then calls our
     /// OnKey function on every key press, wherever the focus is.
-    /// We only observe: the key is always passed on to the active program
-    /// (CallNextHookEx). Escape therefore still closes a dialog box, for example.
+    /// Usually we only observe: the key is passed on to the active program (CallNextHookEx).
+    /// Escape therefore still closes a dialog box, for example.
+    /// EXCEPTION (user request): when GazeBar itself uses Escape (see KeepEscape: scroll mode,
+    /// or gaze keyboard open), the key is KEPT: the other programs do not receive it, neither
+    /// the press nor the release.
     ///
     /// Windows calls OnKey on the UI thread (the one that installed the hook), while it
     /// processes its messages: so we could change mode directly. But we must answer quickly
@@ -37,6 +40,16 @@ namespace GazeBar
         /// real keyboard.
         /// </summary>
         public event Action<bool> EscapePressed;
+
+        /// <summary>
+        /// Asked at the moment Escape is pressed: true if GazeBar uses it and the other programs
+        /// must not receive it. Must answer very quickly (it runs inside the hook).
+        /// </summary>
+        public Func<bool> KeepEscape;
+
+        // True between a kept Escape press and its release: the release (and the automatic
+        // repeats while the key is held) are kept too.
+        private bool _escapeKept;
 
         /// <summary>Installs the hook. Returns false if Windows refuses it (written to the log).</summary>
         public bool Install()
@@ -77,6 +90,13 @@ namespace GazeBar
             if (code >= 0)
             {
                 int message = wParam.ToInt32();
+                bool release = message == NativeMethods.WM_KEYUP || message == NativeMethods.WM_SYSKEYUP;
+                if (release && _escapeKept && Marshal.ReadInt32(lParam) == NativeMethods.VK_ESCAPE)
+                {
+                    // Release of a kept Escape: kept too.
+                    _escapeKept = false;
+                    return new IntPtr(1);
+                }
                 if (message == NativeMethods.WM_KEYDOWN || message == NativeMethods.WM_SYSKEYDOWN)
                 {
                     int key = Marshal.ReadInt32(lParam);
@@ -91,10 +111,28 @@ namespace GazeBar
                     bool fromGazeBar = simulated && extraInfo == NativeMethods.GazeBarKeyMarker;
                     if (key == NativeMethods.VK_ESCAPE && !fromGazeBar)
                     {
+                        // Automatic repeat of a kept Escape (key held down): kept, no new event.
+                        if (_escapeKept)
+                        {
+                            return new IntPtr(1);
+                        }
+
+                        // Decided NOW, before the mode changes (the event is handled afterwards).
+                        Func<bool> keep = KeepEscape;
+                        bool kept = keep != null && keep();
+
                         Action<bool> subscribers = EscapePressed;
                         if (subscribers != null)
                         {
                             System.Windows.Application.Current.Dispatcher.BeginInvoke(subscribers, simulated);
+                        }
+
+                        if (kept)
+                        {
+                            // A non-zero answer without CallNextHookEx: Windows does not pass
+                            // the key on to the other programs.
+                            _escapeKept = true;
+                            return new IntPtr(1);
                         }
                     }
                 }

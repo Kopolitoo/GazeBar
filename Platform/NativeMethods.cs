@@ -445,6 +445,8 @@ namespace GazeBar
         internal const int WH_KEYBOARD_LL = 13;     // "low-level" keyboard hook, for the whole system
         internal const int WM_KEYDOWN = 0x0100;     // a key is pressed
         internal const int WM_SYSKEYDOWN = 0x0104;  // same, with Alt
+        internal const int WM_KEYUP = 0x0101;       // a key is released
+        internal const int WM_SYSKEYUP = 0x0105;    // same, with Alt
         internal const int VK_ESCAPE = 0x1B;        // code of the Escape key
 
         /// <summary>

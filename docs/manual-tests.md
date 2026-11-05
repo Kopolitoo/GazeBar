@@ -64,7 +64,9 @@ must start going down within half a second, without moving the gaze. Each start 
 slow at first, then faster over about a second and a half; just outside the circle, very slow.
 Look off the screen on the right for one second: back to movement mode. Look off the screen
 above, below and on the left: it still scrolls at full speed in that direction. Open scrolling
-again and say "Escape" to Dragon: back to movement mode.
+again and say "Escape" to Dragon: back to movement mode. With a menu of a program open under the
+circle, Escape in scroll mode must not close that menu (GazeBar keeps the key). Same with the
+gaze keyboard open: Escape closes the keyboard only.
 
 ## 8. Icon configuration
 
