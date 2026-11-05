@@ -60,9 +60,9 @@ namespace GazeBar
         // Distances in pixels of the 4K screen, converted for the current screen (ScreenMetrics.Px).
         private const double Margin4K = 16;          // between the keyboard edge and the keys
         private const double KeyGap4K = 12;   // gap between two keys
-        // Between the Close button and the keyboard (60 px: closer, the button is too near the
-        // keys).
-        private const double CloseGap4K = 60;
+        // Between the Close button and the keyboard: 120 px, so the button is not activated
+        // by mistake while typing on the top row (60 px was still too near, issue #56).
+        private const double CloseGap4K = 120;
 
         /// <summary>Activation zone of the Close button: 20 % larger than its drawing.</summary>
         private const double CloseZoneFactor = 1.2;

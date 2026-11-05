@@ -81,7 +81,9 @@ movement mode; the pause, the game and the settings stay open).
 
 In Notepad, open the menu, "Keyboard": the keyboard appears at the bottom. Look at
 keys: they light up, flash and the text is written ("é" from the accents page). Look above the
-keyboard: the circle comes back and fixed gaze works. Look below the screen: the keyboard bar
+keyboard: the circle comes back and fixed gaze works. Type for a while on the top
+right keys: the Close button, clearly apart from the keyboard, is never triggered by mistake
+(same below the keyboard when it is at the top). Look below the screen: the keyboard bar
 opens and the keyboard slides up above it; "Up / down" puts it at the top (it reopens there next
 time), "Size" goes to 75 % then 50 %, "Pause" hides it until resuming. In the icon configuration,
 place "Keyboard" on the crown: in the action choice, this button opens the keyboard. In Notepad with several lines of text,
