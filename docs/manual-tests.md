@@ -84,7 +84,10 @@ keys: they light up, flash and the text is written ("é" from the accents page).
 keyboard: the circle comes back and fixed gaze works. Look below the screen: the keyboard bar
 opens and the keyboard slides up above it; "Up / down" puts it at the top (it reopens there next
 time), "Size" goes to 75 % then 50 %, "Pause" hides it until resuming. In the icon configuration,
-place "Keyboard" on the crown: in the action choice, this button opens the keyboard.
+place "Keyboard" on the crown: in the action choice, this button opens the keyboard. In Notepad with several lines of text,
+fix your gaze in the middle of a line (Notepad not active, or another window in front), choose
+"Keyboard": the text cursor goes to that place and typed keys are written there. With the
+keyboard open, the same button closes it, without a click.
 
 ## 11. Word prediction
 
