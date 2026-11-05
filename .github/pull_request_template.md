@@ -3,7 +3,9 @@
 ### What changes / Ce qui change
 
 
-Closes / Corrige #
+<!-- Keep "Closes #N" exactly like this (keyword right before the number) so GitHub closes the issue at merge.
+     Gardez « Closes #N » tel quel (le mot juste avant le numéro) pour que GitHub ferme l'issue à la fusion. -->
+Closes #
 
 ### Checks / Vérifications
 - [ ] Compiled in Visual Studio / Compilé dans Visual Studio
