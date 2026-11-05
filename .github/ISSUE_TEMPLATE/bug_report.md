@@ -22,7 +22,7 @@ Never paste typed text or gaze data here. / Ne collez jamais ici de texte tapé 
 3.
 
 ### Computer / Ordinateur
-- GazeBar version (or date) / Version de GazeBar (ou date) :
+- Prunel version (or date) / Version de Prunel (ou date) :
 - Eyetracker (PCEye 5, 4C…) :
 - Windows version / Version de Windows :
 - Screen size and scaling / Taille de l'écran et mise à l'échelle :

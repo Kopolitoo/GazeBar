@@ -1,8 +1,8 @@
-# Guide d'utilisation de GazeBar
+# Guide d'utilisation de Prunel
 
 *English version: [user-guide.md](user-guide.md).*
 
-GazeBar permet d'utiliser un ordinateur Windows uniquement avec les yeux : on déplace un cercle
+Prunel permet d'utiliser un ordinateur Windows uniquement avec les yeux : on déplace un cercle
 au regard, on fixe un endroit, puis on choisit quoi y faire (clic, double clic, glisser-déposer,
 défilement, écriture…). Ce guide explique comment s'en servir. Pour l'installer, voir le
 [README](../README.fr.md).
@@ -12,9 +12,9 @@ défilement, écriture…). Ce guide explique comment s'en servir. Pour l'instal
 - Installer le pilote officiel de l'eyetracker (Tobii) depuis le site du fabricant, et faire
   sa calibration.
 - **Mettre en pause** le logiciel de commande au regard fourni avec l'eyetracker (TD Control)
-  pendant l'utilisation de GazeBar, pour que les deux logiciels ne déplacent pas la souris en
+  pendant l'utilisation de Prunel, pour que les deux logiciels ne déplacent pas la souris en
   même temps.
-- GazeBar a besoin de trois fichiers de l'eyetracker (voir
+- Prunel a besoin de trois fichiers de l'eyetracker (voir
   [Fichiers de l'eyetracker](#fichiers-de-leyetracker)). Sur la plupart des ordinateurs, il les
   trouve tout seul.
 
@@ -75,7 +75,7 @@ le mode jeu. Boutons :
 - **Pause** / **Reprendre** : plus rien ne suit le regard, jusqu'à ce qu'on rouvre le menu et
   qu'on choisisse « Reprendre ».
 - **Suivi souris** : activé / désactivé (bord vert quand il est activé).
-- **Quitter GazeBar** : demande d'abord « Oui » ou « Non ».
+- **Quitter Prunel** : demande d'abord « Oui » ou « Non ».
 
 Regarder hors de la barre pendant une seconde la ferme.
 
@@ -87,14 +87,14 @@ s'allume, clignote en vert et écrit. Au-dessus du clavier, le cercle fonctionne
 navigation, F1 à F12.
 
 On peut aussi placer « Clavier » sur la couronne du choix d'action (configuration des icônes).
-On fixe le champ où l'on veut écrire, puis on choisit « Clavier » : GazeBar clique d'abord à cet
+On fixe le champ où l'on veut écrire, puis on choisit « Clavier » : Prunel clique d'abord à cet
 endroit, le champ prend le focus et le curseur de texte se place là où l'on regardait.
 
 - **Prédiction de mots** : les trois cases du haut proposent des mots. En regarder une l'écrit
   avec une espace. Un mot inconnu apparaît avec un « + » orangé : le regarder l'ajoute au
   dictionnaire personnel. Les nombres ne sont jamais ajoutés (un mot mêlant lettres et chiffres,
   comme « mp3 », peut l'être). Les mots courts passent devant, sauf si un mot plus long est beaucoup
-  plus courant ou souvent utilisé. GazeBar apprend aussi quel mot suit souvent un autre.
+  plus courant ou souvent utilisé. Prunel apprend aussi quel mot suit souvent un autre.
 - **Barre du clavier** (regarder sous l'écran quand le clavier est ouvert) : monter ou descendre
   le clavier, changer sa taille, rendre son fond transparent (« Transparence » : 0, 25, 50 ou
   75 %, les lettres restent nettes), le mettre en pause, afficher la « Zone de saisie » (un aperçu de
@@ -133,12 +133,12 @@ sont enregistrés.
 
 ## Pour l'aidant
 
-- **Échap** sur le clavier physique ramène GazeBar au mode mouvement, d'où que l'on soit. Échap
+- **Échap** sur le clavier physique ramène Prunel au mode mouvement, d'où que l'on soit. Échap
   dit à un logiciel de reconnaissance vocale (comme Dragon) aussi. Pendant le défilement ou
-  quand le clavier au regard est ouvert, GazeBar garde Échap pour lui : les autres logiciels ne
+  quand le clavier au regard est ouvert, Prunel garde Échap pour lui : les autres logiciels ne
   le reçoivent pas.
-- Lancer GazeBar une deuxième fois ne fait rien : il tourne déjà.
-- « Démarrer avec Windows » (onglet « Général ») lance GazeBar automatiquement.
+- Lancer Prunel une deuxième fois ne fait rien : il tourne déjà.
+- « Démarrer avec Windows » (onglet « Général ») lance Prunel automatiquement.
 
 ## Fichiers sur l'ordinateur
 
@@ -149,7 +149,7 @@ sont enregistrés.
 | Profils | `Documents\GazeBar\Profiles` |
 | Journal | `%LOCALAPPDATA%\GazeBar\gazebar.log` |
 
-GazeBar n'enregistre jamais l'endroit où l'on regarde (la licence de l'eyetracker l'interdit) et
+Prunel n'enregistre jamais l'endroit où l'on regarde (la licence de l'eyetracker l'interdit) et
 n'écrit jamais dans le journal ce que l'on tape. Le journal est court par défaut ; « Journal
 détaillé » (onglet « Général ») note davantage, pour chercher un problème.
 
@@ -157,7 +157,7 @@ détaillé » (onglet « Général ») note davantage, pour chercher un problèm
 
 Le regard est lu par trois fichiers de Tobii (`Tobii.Interaction.Net.dll`,
 `Tobii.Interaction.Model.dll`, `Tobii.EyeX.Client.dll`). Ils appartiennent à Tobii AB, donc
-GazeBar ne les contient pas. GazeBar les cherche dans le dossier `Eyetracker` à côté de
+Prunel ne les contient pas. Prunel les cherche dans le dossier `Eyetracker` à côté de
 `GazeBar.exe`, puis dans les dossiers des logiciels Tobii, puis dans le cache NuGet de Visual
 Studio.
 
@@ -180,29 +180,29 @@ signé et installé dans `C:\Program Files` : elle a donc son propre installateu
 
 Pour installer ou mettre à jour :
 
-1. Sur la page [Releases](https://github.com/Kopolitoo/GazeBar/releases), télécharger
+1. Sur la page [Releases](https://github.com/Kopolitoo/Prunel/releases), télécharger
    `GazeBar-x.y.z-setup.exe` (sous « Assets ») et double-cliquer dessus. Garder un autre moyen
-   de cliquer (voix, souris, TD Control) pour cette étape : GazeBar se ferme pendant
+   de cliquer (voix, souris, TD Control) pour cette étape : Prunel se ferme pendant
    l'installation.
 2. L'installateur n'est pas signé par un éditeur connu : Windows peut afficher « Windows a
    protégé votre ordinateur » ; cliquer sur « Informations complémentaires », puis « Exécuter
    quand même ». Windows demande ensuite « Voulez-vous autoriser cette application à apporter des
    modifications à votre appareil ? » : répondre « Oui ».
 3. L'installateur parle la langue de Windows. Cliquer sur « Installer », puis « Terminer » avec
-   « Exécuter GazeBar » coché : GazeBar démarre depuis `C:\Program Files\GazeBar`.
+   « Exécuter Prunel » coché : Prunel démarre depuis `C:\Program Files\GazeBar`.
 
-Ce que fait l'installateur : il copie GazeBar dans `C:\Program Files\GazeBar`, crée un
+Ce que fait l'installateur : il copie Prunel dans `C:\Program Files\GazeBar`, crée un
 certificat sur cet ordinateur, le fait approuver par l'ordinateur, signe `GazeBar.exe` avec, puis
 supprime la clé privée du certificat (plus rien ne pourra jamais être signé avec). Un nouveau
-certificat est créé à chaque mise à jour. Il ajoute aussi GazeBar au menu Démarrer et à
+certificat est créé à chaque mise à jour. Il ajoute aussi Prunel au menu Démarrer et à
 « Paramètres > Applications » de Windows. Vos réglages sont gardés. Si « Démarrer avec Windows »
-est activé, GazeBar met lui-même à jour son lancement au démarrage. Il met aussi à jour une copie
+est activé, Prunel met lui-même à jour son lancement au démarrage. Il met aussi à jour une copie
 installée par l'ancien script `Install.cmd`.
 
 Pour vérifier : le journal (`%LOCALAPPDATA%\GazeBar\gazebar.log`) dit « UI access: yes » au
 démarrage.
 
-Pour la retirer : « Paramètres > Applications > Applications installées » de Windows, GazeBar,
+Pour la retirer : « Paramètres > Applications > Applications installées » de Windows, Prunel,
 « Désinstaller ». Il supprime le dossier du programme, le raccourci et le certificat. Vos réglages
 sont gardés.
 
@@ -215,7 +215,7 @@ gardent.
 
 - Un seul écran.
 - Avec le zip simple, une fenêtre lancée « en tant qu'administrateur » ignore les clics et les
-  touches de GazeBar, et le menu Démarrer de Windows peut cacher le cercle.
+  touches de Prunel, et le menu Démarrer de Windows peut cacher le cercle.
   L'[installation complète](#installation-complète-accès-à-linterface) enlève ces deux limites.
 - Testé uniquement avec le Tobii Dynavox PCEye 5.
 - Le mode jeu avec déplacement relatif de la souris n'a pas encore été testé.

@@ -1,4 +1,4 @@
-# Guide Git et GitHub pour GazeBar
+# Guide Git et GitHub pour Prunel
 
 Ce guide explique comment publier le projet et travailler à plusieurs (vous et Claude)
 avec des branches. Tout se fait dans Visual Studio, sans ligne de commande.
@@ -22,7 +22,7 @@ Avantage : si un essai échoue, `main` reste intact, et on peut toujours revenir
 2. Menu **Git → Créer un dépôt Git…**
 3. Se connecter à son compte GitHub si demandé.
 4. Remplir :
-   - Nom du dépôt : `GazeBar`
+   - Nom du dépôt : `Prunel`
    - Description : courte phrase (ex. « Commande de l’ordinateur au regard avec un eyetracker »)
    - Visibilité : **Public** (projet open source)
    - Modèle .gitignore : **Aucun** (le projet a déjà le sien)
@@ -49,7 +49,7 @@ Petits commits fréquents valent mieux qu'un gros : chacun est un point de retou
 
 ## 4. Travailler avec Claude
 
-- Donnez à Claude le nom du dépôt (`votre-compte/GazeBar`). Claude crée une branche,
+- Donnez à Claude le nom du dépôt (`votre-compte/Prunel`). Claude crée une branche,
   propose son code et ouvre une pull request avec une explication.
 - Pour essayer son travail : dans Visual Studio, **Git → Extraire** puis changer de branche
   (**Git → Gérer les branches** → double-clic sur la branche de Claude), F5.

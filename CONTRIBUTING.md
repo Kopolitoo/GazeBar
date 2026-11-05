@@ -1,8 +1,8 @@
-# Contributing to GazeBar
+# Contributing to Prunel
 
 *Version française : [CONTRIBUTING.fr.md](CONTRIBUTING.fr.md).*
 
-Thank you for your interest in GazeBar, a Windows tool that controls the mouse with eye gaze.
+Thank you for your interest in Prunel, a Windows tool that controls the mouse with eye gaze.
 Start with the [architecture](docs/architecture.md) to find your way in the code.
 
 ## Language rules
@@ -41,7 +41,7 @@ Start with the [architecture](docs/architecture.md) to find your way in the code
 
 - Every explanatory file exists in English (`name.md`) and in French (`name.fr.md`), with a
   link at the top to the other version. Keep both in step.
-- `README.md` stays short: what GazeBar is, how to install it, links.
+- `README.md` stays short: what Prunel is, how to install it, links.
 - Details go in `docs/`: `user-guide.md` (for users), `architecture.md` (for developers),
   `manual-tests.md`. `docs/GUIDE-GIT.md` is in French only.
 - A pull request that changes what the user sees updates the user guide; one that adds a class
@@ -53,12 +53,12 @@ Start with the [architecture](docs/architecture.md) to find your way in the code
 
 A version has a number MAJOR.MINOR.PATCH (for example `0.1.0`): PATCH grows for a fix, MINOR
 for a new feature, MAJOR for a big change (`1.0.0` = first stable version). The number in
-`GazeBar.csproj` (`<Version>`) is the one of the next version; GazeBar writes it to its log at
+`GazeBar.csproj` (`<Version>`) is the one of the next version; Prunel writes it to its log at
 startup.
 
 1. On GitHub, "Actions" tab, "Release" on the left, "Run workflow": keep the `main` branch,
    type the number (for example `0.1.0`), click "Run workflow".
-2. GitHub compiles GazeBar, checks that no eyetracker DLL and no personal file is inside, makes
+2. GitHub compiles Prunel, checks that no eyetracker DLL and no personal file is inside, makes
    `GazeBar-0.1.0.zip` (simple) and the installer `GazeBar-0.1.0-setup.exe` (full installation,
    with UI access, made with Inno Setup) and prepares a **draft** release (`.github/workflows/release.yml`).
 3. "Releases" page (right column of the repository home page): open the draft, read the list
@@ -67,7 +67,7 @@ startup.
 
 ## Testing
 
-GazeBar is tested by its user on a Tobii PCEye 5. Please say clearly in your pull request
+Prunel is tested by its user on a Tobii PCEye 5. Please say clearly in your pull request
 what was compiled and what was tested on real hardware, using the
 [manual tests](docs/manual-tests.md). Every pull request is compiled automatically on GitHub
 (see `.github/workflows/build.yml`).

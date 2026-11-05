@@ -1,9 +1,9 @@
-# GazeBar website
+# Prunel website
 
 *Version française : [README.fr.md](README.fr.md).*
 
-The small website that presents GazeBar to non-technical visitors, at
-<https://gazebar.kopol.xyz>. Plain HTML and CSS, no tool and no dependency.
+The small website that presents Prunel to non-technical visitors, at
+<https://prunel.kopol.xyz>. Plain HTML and CSS, no tool and no dependency.
 
 - `index.html`: French page (home page of the site).
 - `en.html`: English page. Both pages have the same content: change them together.

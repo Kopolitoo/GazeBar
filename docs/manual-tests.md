@@ -2,7 +2,7 @@
 
 *Version française : [manual-tests.fr.md](manual-tests.fr.md).*
 
-GazeBar cannot be tested automatically: these tests are done by hand, with an eyetracker. Run
+Prunel cannot be tested automatically: these tests are done by hand, with an eyetracker. Run
 the ones that match what a pull request changes, and say in the pull request which ones passed.
 
 Before testing, turn on "Detailed log" (Settings, System, "General" tab): the log lines
@@ -49,7 +49,7 @@ Menu, "Settings": the black screen opens on the Gaze tab. Keep the gaze on the "
 of the smoothing: the value goes up by one step every 0.4 s. Look at the Fixation tab, then the
 direct click switch: it turns blue, knob on the right, "Yes". "Default", then "Yes": the values
 of the tab come back. The caregiver clicks a value, types 0.5 then Enter. "Back" goes back to
-movement mode. Starting GazeBar a second time does nothing (see the log).
+movement mode. Starting Prunel a second time does nothing (see the log).
 
 ## 7. Scrolling
 
@@ -65,7 +65,7 @@ slow at first, then faster over about a second and a half; just outside the circ
 Look off the screen on the right for one second: back to movement mode. Look off the screen
 above, below and on the left: it still scrolls at full speed in that direction. Open scrolling
 again and say "Escape" to Dragon: back to movement mode. With a menu of a program open under the
-circle, Escape in scroll mode must not close that menu (GazeBar keeps the key). Same with the
+circle, Escape in scroll mode must not close that menu (Prunel keeps the key). Same with the
 gaze keyboard open: Escape closes the keyboard only.
 
 ## 8. Icon configuration
@@ -82,7 +82,7 @@ at the top of the action choice. "Default" in the "Icons" tab puts everything ba
 Screen at 1920 × 1080, 100 %. At the first start, the log notes "updated to
 version 7" and the detected screen; the circle, the icons and the menu bar look the same size as
 before in 4K. "Display" tab: "Detected screen" gives the resolution, the scaling and the text
-size; "Interface size" at 150 % enlarges the circle, the icons and the menu. While GazeBar runs,
+size; "Interface size" at 150 % enlarges the circle, the icons and the menu. While Prunel runs,
 change the resolution, then the scaling (125 %), then the Windows text size: each time, the log
 notes the change and the sizes adapt (an open action choice or magnifier closes, back to
 movement mode; the pause, the game and the settings stay open).
@@ -109,7 +109,7 @@ suggest "bon", "bonne"…; look at "bonjour" (after "bonj"): "bonjour" and a spa
 look at it: a space is written, and typing "zo" suggests the word. Type "2026": no "+" box
 appears; type "mp3x": "+ mp3x" appears. Write "je suis" twice (typing
 "suis" in full then a space): after "je" and a space, the 1st box suggests "suis". After closing
-GazeBar, `%APPDATA%\GazeBar\personal-dictionary.json` contains the word.
+Prunel, `%APPDATA%\GazeBar\personal-dictionary.json` contains the word.
 
 ## 12. Keyboard options
 
@@ -122,7 +122,7 @@ disappears; "Back to the settings" goes back to the General tab. Typing "zo", it
 suggested.
 "Transparency" (shows "0 %"): look at it: "25 %", the keyboard backgrounds let the window behind
 show through; again: "50 %", "75 %", then "0 %" (opaque as before). At 75 %, the letters,
-the green flash and the hover stay clearly visible. Close and reopen GazeBar: the value is kept.
+the green flash and the hover stay clearly visible. Close and reopen Prunel: the value is kept.
 
 ## 13. English keyboard
 
@@ -146,7 +146,7 @@ Settings, "Interface", "Sound" tab: both switches are off; nothing makes a sound
 "Key sound": open the keyboard and type: a short high "tick" for each key (also with key
 repeat), but no sound for the menu or the action choice. Turn it off and turn on "Button sound":
 the keys are silent; the options icon, the action choice, the menu buttons and the settings
-buttons make a short two-note sound. Turn both off: silence again. Restart GazeBar: the choices
+buttons make a short two-note sound. Turn both off: silence again. Restart Prunel: the choices
 are kept.
 
 ## Full installation (Setup.exe, UI access)
@@ -157,17 +157,17 @@ Use the `GazeBar-setup-…` zip of the automatic build (Actions page of the pull
 
 1. Double-click `GazeBar-…-setup.exe`. Windows may say "unknown publisher" ("More info", "Run
    anyway"), then asks "Yes" for administrator. The installer speaks the language of Windows;
-   click "Install", then "Finish" with "Launch GazeBar" ticked: GazeBar starts and the log says
+   click "Install", then "Finish" with "Launch Prunel" ticked: Prunel starts and the log says
    "UI access: yes".
-2. `C:\Program Files\GazeBar` exists, GazeBar is in the Start menu and in "Settings > Apps"
+2. `C:\Program Files\GazeBar` exists, Prunel is in the Start menu and in "Settings > Apps"
    of Windows.
 3. Open the Windows Start menu: the gaze circle stays visible above it, and a fixed gaze then a
    left click opens an item of the menu.
 4. Start Notepad as administrator (right click, "Run as administrator"): a click by gaze puts
    the text cursor in it, and the gaze keyboard types in it.
-5. Run the installer again (update): no question about closing GazeBar (it is closed), same
+5. Run the installer again (update): no question about closing Prunel (it is closed), same
    result, settings unchanged.
-6. Uninstall it from "Settings > Apps": the folder, the shortcut and the certificate "GazeBar
+6. Uninstall it from "Settings > Apps": the folder, the shortcut and the certificate "Prunel
    local signature" (`certlm.msc`, "Trusted Root Certification Authorities") are gone; the
    settings are still in `%APPDATA%\GazeBar`.
 7. The simple zip and Visual Studio still work as before, with "UI access: no" in the log.

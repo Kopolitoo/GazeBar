@@ -1,8 +1,8 @@
-# Contribuer à GazeBar
+# Contribuer à Prunel
 
 *English version: [CONTRIBUTING.md](CONTRIBUTING.md).*
 
-Merci de votre intérêt pour GazeBar, un outil Windows qui commande la souris au regard.
+Merci de votre intérêt pour Prunel, un outil Windows qui commande la souris au regard.
 Commencez par l'[architecture](docs/architecture.fr.md) pour vous repérer dans le code.
 
 ## Règles de langue
@@ -46,7 +46,7 @@ Commencez par l'[architecture](docs/architecture.fr.md) pour vous repérer dans 
 
 - Chaque fichier explicatif existe en anglais (`nom.md`) et en français (`nom.fr.md`), avec en
   haut un lien vers l'autre version. Les garder à jour ensemble.
-- `README.md` reste court : ce qu'est GazeBar, comment l'installer, des liens.
+- `README.md` reste court : ce qu'est Prunel, comment l'installer, des liens.
 - Les détails vont dans `docs/` : `user-guide.md` (pour les utilisateurs), `architecture.md`
   (pour les développeurs), `manual-tests.md`. `docs/GUIDE-GIT.md` existe seulement en français.
 - Une pull request qui change ce que voit l'utilisateur met à jour le guide d'utilisation ; celle
@@ -60,11 +60,11 @@ Commencez par l'[architecture](docs/architecture.fr.md) pour vous repérer dans 
 Une version a un numéro MAJEUR.MINEUR.CORRECTIF (par exemple `0.1.0`) : CORRECTIF augmente pour
 une correction, MINEUR pour une nouveauté, MAJEUR pour un grand changement (`1.0.0` = première
 version stable). Le numéro de `GazeBar.csproj` (`<Version>`) est celui de la prochaine version ;
-GazeBar l'écrit dans son journal au démarrage.
+Prunel l'écrit dans son journal au démarrage.
 
 1. Sur GitHub, onglet « Actions », « Release » à gauche, « Run workflow » : garder la branche
    `main`, taper le numéro (par exemple `0.1.0`), cliquer sur « Run workflow ».
-2. GitHub compile GazeBar, vérifie qu'aucune DLL de l'eyetracker ni aucun fichier personnel
+2. GitHub compile Prunel, vérifie qu'aucune DLL de l'eyetracker ni aucun fichier personnel
    n'est dedans, fabrique `GazeBar-0.1.0.zip` (simple) et l'installateur `GazeBar-0.1.0-setup.exe`
    (installation complète, avec accès à l'interface, fait avec Inno Setup) et prépare un **brouillon** de release
    (`.github/workflows/release.yml`).
@@ -75,7 +75,7 @@ GazeBar l'écrit dans son journal au démarrage.
 
 ## Tests
 
-GazeBar est testé par son utilisateur sur un Tobii PCEye 5. Dites clairement dans votre pull
+Prunel est testé par son utilisateur sur un Tobii PCEye 5. Dites clairement dans votre pull
 request ce qui a été compilé et ce qui a été testé sur le vrai matériel, à l'aide des
 [tests manuels](docs/manual-tests.fr.md). Chaque pull request est compilée automatiquement sur
 GitHub (voir `.github/workflows/build.yml`).

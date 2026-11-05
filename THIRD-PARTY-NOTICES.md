@@ -2,10 +2,10 @@
 
 *Version française : [THIRD-PARTY-NOTICES.fr.md](THIRD-PARTY-NOTICES.fr.md).*
 
-GazeBar itself is under the MIT licence ([LICENSE.txt](LICENSE.txt)). This file lists the parts
-that come from others, and what GazeBar uses without shipping it.
+Prunel itself is under the MIT licence ([LICENSE.txt](LICENSE.txt)). This file lists the parts
+that come from others, and what Prunel uses without shipping it.
 
-## Shipped with GazeBar
+## Shipped with Prunel
 
 ### French word list: `Dictionaries/fr.txt`
 
@@ -48,19 +48,19 @@ and the logo are distributed under the MIT licence like the rest of the project.
 - NuGet package `Tobii.Interaction` 0.7.3 (Tobii Core SDK), © Tobii AB.
 - Proprietary licence: "Tobii Core SDK and Gaming SDK License Agreement", accepted by whoever
   downloads it.
-- GazeBar only uses the package to **compile**. Its DLLs (`Tobii.Interaction.Net.dll`,
+- Prunel only uses the package to **compile**. Its DLLs (`Tobii.Interaction.Net.dll`,
   `Tobii.Interaction.Model.dll`, `Tobii.EyeX.Client.dll`) are not in this repository and are
-  not distributed with GazeBar: GazeBar finds them on the computer at startup (see
+  not distributed with Prunel: Prunel finds them on the computer at startup (see
   [docs/architecture.md](docs/architecture.md#eyetracker-dlls)).
-- The licence forbids saving gaze data: GazeBar never writes gaze positions to disk.
+- The licence forbids saving gaze data: Prunel never writes gaze positions to disk.
 
 ### Microsoft .NET Framework 4.8, WPF and Windows fonts
 
-Part of Windows. GazeBar uses the icon symbols of the Windows fonts (Segoe MDL2 Assets / Segoe
+Part of Windows. Prunel uses the icon symbols of the Windows fonts (Segoe MDL2 Assets / Segoe
 Fluent Icons) without copying the fonts.
 
 ## Trademarks
 
-Tobii, Dynavox and TD Control are registered trademarks of Tobii AB. GazeBar is independent and
+Tobii, Dynavox and TD Control are registered trademarks of Tobii AB. Prunel is independent and
 is not affiliated with, endorsed by or supported by Tobii Dynavox. Windows is a trademark of
 Microsoft Corporation.
