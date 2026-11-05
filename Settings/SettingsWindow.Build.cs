@@ -42,7 +42,8 @@ namespace GazeBar
             // ── The left column: the "collapsible" CATEGORIES.
             //    All four categories are visible; only the one holding the open tab shows its
             //    tabs, right below it and indented.
-            //    At most 4 + 3 = 7 buttons (instead of 11 before), hence taller buttons.
+            //    At most 4 + 4 = 8 buttons (instead of 12 if all tabs were shown), hence taller
+            //    buttons.
             BuildLeftColumn();
 
             // ── The content: the settings, or the "Défaut" confirmation, or the profile
@@ -117,8 +118,8 @@ namespace GazeBar
             List<int> openTabs = SettingsCatalog.TabsOf(openCategory);
 
             // Number of rows in the column: all categories + the tabs of the open category.
-            // Rows share the page height, without exceeding the maximum height (140): with 7
-            // rows, each one is about 120 high.
+            // Rows share the page height, without exceeding the maximum height (140): with 8
+            // rows (category "Display, sound" open), each one is about 105 high.
             int rowCount = SettingsCatalog.Categories.Count + openTabs.Count;
             double step = Math.Min(TabMaxHeight + TabGap,
                                   (BottomTabs - TopTabs + TabGap) / Math.Max(1, rowCount));

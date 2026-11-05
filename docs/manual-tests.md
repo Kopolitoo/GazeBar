@@ -121,6 +121,15 @@ radius (Display). Profiles, "Load a profile": the list shows the profile; look a
 profile …?"; "No" changes nothing; "Yes" restores the old radius and creates "Automatic backup".
 Loading "Automatic backup" restores the changed radius.
 
+## 15. Sound feedback
+
+Settings, "Display, sound", "Sound" tab: both switches are off; nothing makes a sound. Turn on
+"Key sound": open the keyboard and type: a short high "tick" for each key (also with key
+repeat), but no sound for the menu or the action choice. Turn it off and turn on "Button sound":
+the keys are silent; the options icon, the action choice, the menu buttons and the settings
+buttons make a short two-note sound. Turn both off: silence again. Restart GazeBar: the choices
+are kept.
+
 ## Full installation (Setup.exe, UI access)
 
 Use the `GazeBar-setup-…` zip of the automatic build (Actions page of the pull request,

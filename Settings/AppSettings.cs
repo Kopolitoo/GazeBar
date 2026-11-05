@@ -75,8 +75,10 @@ namespace GazeBar
         ///      French user, so it gets "fr".
         ///  13: step logging — DetailedLog (no by default). Nothing to fix: missing from an
         ///      older file, it keeps its default value.
+        ///  14: step sound-feedback — KeySound and ButtonSound (no by default). Nothing to fix:
+        ///      missing from an older file, they keep their default value.
         /// </summary>
-        public const int CurrentVersion = 13;
+        public const int CurrentVersion = 14;
 
         /// <summary>Format number of the file, so it can evolve one day without breaking everything.</summary>
         [DataMember(Order = 0)]
@@ -437,5 +439,21 @@ namespace GazeBar
         /// </summary>
         [DataMember(Order = 131)]
         public bool DetailedLog { get; set; }
+
+        // ───────────────────────── Sound ─────────────────────────
+
+        /// <summary>
+        /// A short sound when a key of the gaze keyboard activates (yes / no). No by default.
+        /// See SoundFeedback.
+        /// </summary>
+        [DataMember(Order = 140)]
+        public bool KeySound { get; set; }
+
+        /// <summary>
+        /// A short sound when any other button activates: menu, action choice, options icon,
+        /// settings... (yes / no). No by default. See SoundFeedback.
+        /// </summary>
+        [DataMember(Order = 141)]
+        public bool ButtonSound { get; set; }
     }
 }

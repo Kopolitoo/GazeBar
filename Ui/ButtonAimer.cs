@@ -24,7 +24,8 @@ namespace GazeBar
     ///    it, it would be turned on and off endlessly;
     ///  - after ResetAndBlock (the buttons were just replaced), the button under the gaze at
     ///    the first measure is blocked the same way. This way, a new button appearing under
-    ///    the gaze does not activate on its own.
+    ///    the gaze does not activate on its own;
+    ///  - on activation, the optional sound [Sound] is played (see SoundFeedback).
     /// </summary>
     internal sealed class ButtonAimer
     {
@@ -53,6 +54,12 @@ namespace GazeBar
 
         // True after ResetAndBlock, until the first new measure.
         private bool _blockFirst;
+
+        /// <summary>
+        /// The sound played when a button activates: Button by default, Key for the gaze
+        /// keyboard. It only plays if its setting is on (see SoundFeedback).
+        /// </summary>
+        public SoundKind Sound { get; set; } = SoundKind.Button;
 
         public ButtonAimer(IReadOnlyList<IGazeTarget> buttons) : this(buttons, 2)
         {
@@ -157,6 +164,7 @@ namespace GazeBar
             {
                 int active = Aimed;
                 _aimStartMs = -1;
+                SoundFeedback.Play(Sound);
                 return active;
             }
 
