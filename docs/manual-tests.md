@@ -25,7 +25,8 @@ without touching the mouse.
 
 Look at the bottom, off the screen: the menu bar appears: buttons only, with no
 dark background behind them, and clearly spaced (also in the keyboard's menu bar). Look at "Pause":
-everything stops. Look at the bottom again, then "Resume": the circle comes back. All with the
+everything stops. Look at the bottom again: only "Resume" shows, and the circle
+stays hidden, even when looking quickly away (issue #49). After "Resume", the circle comes back. All with the
 eyes only. Escape also goes back to movement mode.
 
 ## 4. Magnifier
