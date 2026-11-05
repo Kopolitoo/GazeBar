@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check the language and keyboard files
         shell: pwsh
@@ -79,7 +79,7 @@ jobs:
       # The compiled program can be downloaded from the build page for 14 days
       # (for testing a pull request without compiling it yourself).
       - name: Keep the compiled program
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: GazeBar-${{ github.sha }}
           path: bin/Release/net48/
@@ -88,7 +88,7 @@ jobs:
       # The installer, to test it before a release: double-click GazeBar-<version>-setup.exe
       # in the downloaded zip (see docs/manual-tests.md, "Installer (Setup.exe)").
       - name: Keep the installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: GazeBar-setup-${{ github.sha }}
           path: bin/setup/
