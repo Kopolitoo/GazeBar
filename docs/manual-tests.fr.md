@@ -100,7 +100,7 @@ Dans le Bloc-notes, on ouvre le clavier et on tape « bo » : les cases
 proposent « bon », « bonne »… ; on regarde « bonjour » (après « bonj ») : « bonjour » et une espace
 s'écrivent. « ete » propose « été ». « pr » propose des mots courts (« pris », « près »…) avant « prendre ». On tape un mot inventé (« zorglub ») : la 1re case montre
 « + zorglub » en ambre ; on la regarde : une espace s'écrit, et en tapant « zo » le mot est
-proposé. On écrit deux fois « je suis » (en tapant « suis » en entier puis une espace) : après
+proposé. On tape « 2026 » : aucune case « + » n'apparaît ; on tape « mp3x » : « + mp3x » apparaît. On écrit deux fois « je suis » (en tapant « suis » en entier puis une espace) : après
 « je » et une espace, la 1re case propose « suis ». Après avoir fermé GazeBar, `%APPDATA%\GazeBar\personal-dictionary.json` contient le mot.
 
 ## 12. Options du clavier

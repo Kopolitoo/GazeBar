@@ -241,8 +241,9 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   space after it. Looking at a box writes the whole word followed by a space (no space after the
   French elided forms "l'", "qu'"…); the word keeps the starting capital. Ranking: frequency in
   the dictionary + 20 per use, divided by 1.6 for each letter still to type (short words first,
-  issue #71). An unknown word of 2 letters or more shows in the 1st box with a
-  "+" (amber): looking at it adds it to the personal dictionary. Files: `Dictionaries/<language>.txt`
+  issue #71). An unknown word of 2 characters or more shows in the 1st box with a
+  "+" (amber): looking at it adds it to the personal dictionary. A number (digits and hyphens
+  only, such as "2026") never gets a "+"; a word mixing letters and digits ("mp3") does (issue #61). Files: `Dictionaries/<language>.txt`
   (copied next to GazeBar.exe, read in the background at startup) and
   `%APPDATA%\GazeBar\personal-dictionary.json` (added words and usage counts; never in the
   repository), saved after each addition and, for the usage counts, once a minute and at
