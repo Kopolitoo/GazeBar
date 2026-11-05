@@ -64,6 +64,8 @@ plus vite. Au-dessus : elle remonte. « Retour » au bord droit ramène au mode 
 Depuis le 02/11/2026 : à vitesse lente, la page doit glisser sans petits sauts, et démarrer
 ou s'arrêter en douceur ; sans avoir cliqué dans la page avant, elle doit défiler quand même
 (le journal note « fenêtre … rendue active » et l'état du réglage Windows de la molette).
+On rouvre le défilement et on regarde directement sous le cercle, sans passer dedans : la page
+doit commencer à descendre en moins d'une demi-seconde, sans bouger le regard.
 
 ## 8. Configuration des icônes
 

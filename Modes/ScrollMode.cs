@@ -64,7 +64,10 @@ namespace GazeBar
     ///
     /// Precautions:
     ///   - on entry, the gaze is still on the crown icon, often outside the circle: nothing
-    ///     scrolls until the gaze has been inside the circle once;
+    ///     scrolls until the gaze has been inside the circle once, or for at most
+    ///     [ArmingDelayMs] (the time for the eye to leave the icon). After that, scrolling
+    ///     follows the gaze even if it never entered the circle (issue #50: looking straight
+    ///     above or below the circle did nothing until the gaze moved);
     ///   - nothing scrolls when the gaze is lost, too far off screen or on the back button
     ///     (otherwise, while going to look at the button, it would scroll to the right).
     ///
@@ -99,6 +102,12 @@ namespace GazeBar
         /// stage). Larger = softer but slower starts and stops; smaller = livelier.
         /// </summary>
         private const double SpeedTimeConstantMs = 150;
+
+        /// <summary>
+        /// Longest wait, in milliseconds after entering the mode, before scrolling may start
+        /// when the gaze has not been inside the circle (see the precautions).
+        /// </summary>
+        private const double ArmingDelayMs = 400;
 
         /// <summary>Below this speed (notches per second), it is considered zero.</summary>
         private const double NegligibleSpeed = 0.05;
@@ -147,8 +156,9 @@ namespace GazeBar
         private readonly Smoother _smoothed = new Smoother();
         private bool _placed;
 
-        // True once the gaze has been inside the circle (see the precautions).
+        // True once the gaze has been inside the circle or [ArmingDelayMs] has passed (see the precautions).
         private bool _armed;
+        private double _enteredMs;
 
         // Amount of wheel not sent yet (in Windows units). The speed gives, on each tick, a small
         // amount (for example 10 notches/s × 120 × 0.016 s = 19 units); it is added here, and
@@ -199,6 +209,7 @@ namespace GazeBar
             _placed = Usable(gaze);
             _smoothed.Place(gaze.X, gaze.Y);
             _armed = false;
+            _enteredMs = gaze.NowMs;
             _reserve = 0;
             _speed = 0;
             _lastTickMs = gaze.NowMs;
@@ -262,10 +273,10 @@ namespace GazeBar
                 DrawArc(dx, dy, radius);
             }
 
-            if (distance <= radius)
+            if (distance <= radius || now - _enteredMs >= ArmingDelayMs)
             {
-                // In the circle (the dead zone): the wanted speed is zero. Scrolling is now
-                // allowed (see the precautions).
+                // In the circle (the dead zone, where the wanted speed is zero), or the eye has
+                // had time to leave the crown icon: scrolling is now allowed (see the precautions).
                 _armed = true;
             }
 

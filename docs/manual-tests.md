@@ -59,6 +59,8 @@ little below the circle: the page goes down slowly; lower: faster. Above: it goe
 the right edge goes back to movement mode. At low speed, the page must slide without small
 jumps, and start and stop gently; without having clicked in the page first, it must scroll
 anyway (the log notes the window made active and the state of the Windows wheel setting).
+Open scrolling again and look straight below the circle, without passing through it: the page
+must start going down within half a second, without moving the gaze.
 
 ## 8. Icon configuration
 
