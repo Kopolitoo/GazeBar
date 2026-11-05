@@ -54,7 +54,8 @@ namespace GazeBar
     ///
     /// The "Keyboard" action (of the crown, to place oneself in the icon configuration
     /// screen) opens the gaze keyboard, or closes it if it is already
-    /// open.
+    /// open. Before opening it, a left click on P gives the focus to the field one was looking
+    /// at and puts the insertion point there (like "Paste").
     ///
     /// The "Scroll" action (slot 0) opens scroll mode, centered on P.
     ///
@@ -260,25 +261,16 @@ namespace GazeBar
                 return;
             }
 
-            if (action == ChoiceAction.Keyboard)
+            if (action == ChoiceAction.Keyboard && Manager.Keyboard.IsOpen)
             {
-                // The gaze keyboard: closed, it opens;
-                // already open (hidden during this choice), it closes. It appears when back in
-                // movement mode (GazeKeyboard.OnModeChange).
-                // Layout file missing or incorrect: nothing opens, the error is written to the
-                // log (and shown if going through the menu bar).
-                if (Manager.Keyboard.IsOpen)
-                {
-                    Manager.Keyboard.Close();
-                }
-                else
-                {
-                    string message;
-                    Manager.Keyboard.Open(out message);
-                }
+                // The gaze keyboard is already open (hidden during this choice): it closes,
+                // without a click.
+                Manager.Keyboard.Close();
                 Manager.ChangeMode(new MovementMode());
                 return;
             }
+            // A closed keyboard opens in the execution step, after a left click on P (see
+            // Execute).
 
             if (action == ChoiceAction.Magnifier)
             {
@@ -327,6 +319,15 @@ namespace GazeBar
                     // Click first: the insertion point goes where one was looking.
                     MouseInjector.Click(MouseSide.Left);
                     CtrlShortcut(NativeMethods.VK_V);
+                    break;
+                case ChoiceAction.Keyboard:
+                    // Click first: the field one was looking at gets the focus and the
+                    // insertion point goes there. Then the keyboard opens; it appears when
+                    // back in movement mode (GazeKeyboard.OnModeChange). Layout file missing
+                    // or incorrect: nothing opens, the error is written to the log.
+                    MouseInjector.Click(MouseSide.Left);
+                    string message;
+                    Manager.Keyboard.Open(out message);
                     break;
             }
 

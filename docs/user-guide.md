@@ -80,6 +80,10 @@ flashes green and types. Above the keyboard, the circle works as usual (you can 
 another place). Five pages: letters, accents, numbers and punctuation, symbols and navigation,
 F1 to F12.
 
+You can also put "Keyboard" on the crown of the action choice (icon configuration). Fix your
+gaze on the field where you want to write, then choose "Keyboard": GazeBar first clicks there,
+so the field gets the focus and the text cursor goes where you looked.
+
 - **Word prediction**: the three boxes at the top suggest words. Look at one to write it with a
   space. An unknown word appears with an amber "+": look at it to add it to your personal
   dictionary. Numbers are never added (a word with letters and digits, such as "mp3", can be). Short words come first, unless a longer word is much more common or used often. GazeBar also learns which word usually comes next.

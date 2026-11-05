@@ -92,7 +92,10 @@ la page « À,È,Ê »). On regarde au-dessus du clavier : le cercle revient et 
 On regarde sous l'écran : la barre du clavier s'ouvre et le clavier remonte au-dessus d'elle ;
 « Haut / bas » le met en haut (il s'y rouvre la fois suivante), « Taille » passe à 75 % puis 50 %,
 « Pause » le cache jusqu'à la reprise. Dans la configuration des icônes, on place « Clavier » sur la couronne : dans le choix
-d'action, ce bouton ouvre le clavier.
+d'action, ce bouton ouvre le clavier. Dans le Bloc-notes avec plusieurs lignes de texte, on fixe
+le milieu d'une ligne (Bloc-notes pas actif, ou une autre fenêtre devant), on choisit « Clavier » :
+le curseur de texte va à cet endroit et les touches tapées s'y écrivent. Clavier ouvert, le même
+bouton le ferme, sans clic.
 
 ## 11. Prédiction de mots
 

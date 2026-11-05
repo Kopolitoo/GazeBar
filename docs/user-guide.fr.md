@@ -84,6 +84,10 @@ s'allume, clignote en vert et écrit. Au-dessus du clavier, le cercle fonctionne
 (on peut cliquer ailleurs). Cinq pages : lettres, accents, chiffres et ponctuation, symboles et
 navigation, F1 à F12.
 
+On peut aussi placer « Clavier » sur la couronne du choix d'action (configuration des icônes).
+On fixe le champ où l'on veut écrire, puis on choisit « Clavier » : GazeBar clique d'abord à cet
+endroit, le champ prend le focus et le curseur de texte se place là où l'on regardait.
+
 - **Prédiction de mots** : les trois cases du haut proposent des mots. En regarder une l'écrit
   avec une espace. Un mot inconnu apparaît avec un « + » orangé : le regarder l'ajoute au
   dictionnaire personnel. Les nombres ne sont jamais ajoutés (un mot mêlant lettres et chiffres,
