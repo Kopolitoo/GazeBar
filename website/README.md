@@ -3,7 +3,7 @@
 *Version française : [README.fr.md](README.fr.md).*
 
 The small website that presents Prunel to non-technical visitors, at
-<https://gazebar.kopol.xyz>. Plain HTML and CSS, no tool and no dependency.
+<https://prunel.kopol.xyz>. Plain HTML and CSS, no tool and no dependency.
 
 - `index.html`: French page (home page of the site).
 - `en.html`: English page. Both pages have the same content: change them together.

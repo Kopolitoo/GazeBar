@@ -1,4 +1,4 @@
-# Web server rules for the Prunel website (https://gazebar.kopol.xyz).
+# Web server rules for the Prunel website (https://prunel.kopol.xyz).
 #
 # The OVH hosting copies the whole repository from GitHub, but only the website/
 # folder is the site: every address is served from website/, so the rest of the
@@ -8,5 +8,10 @@ DirectoryIndex index.html
 Options -Indexes
 
 RewriteEngine On
+
+# The old address (gazebar.kopol.xyz, the former name of Prunel) sends visitors to the new one.
+RewriteCond %{HTTP_HOST} ^gazebar\.kopol\.xyz$ [NC]
+RewriteRule ^(.*)$ https://prunel.kopol.xyz/$1 [R=301,L]
+
 RewriteCond %{REQUEST_URI} !^/website/
 RewriteRule ^(.*)$ website/$1 [L]

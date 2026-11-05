@@ -3,7 +3,7 @@
 *English version: [README.md](README.md).*
 
 Le petit site qui présente Prunel aux visiteurs non techniciens, à l'adresse
-<https://gazebar.kopol.xyz>. Du HTML et du CSS simples, sans outil ni dépendance.
+<https://prunel.kopol.xyz>. Du HTML et du CSS simples, sans outil ni dépendance.
 
 - `index.html` : page en français (page d'accueil du site).
 - `en.html` : page en anglais. Les deux pages ont le même contenu : les modifier ensemble.
