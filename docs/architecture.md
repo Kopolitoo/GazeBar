@@ -234,7 +234,8 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   the backgrounds: keyboard, keys and input box; labels, hover and green flash stay opaque:
   `KeyboardTransparency`, `settings.json` version 15, issue #55), Pause. When it opens, the keyboard at
   the bottom slides up above it (and back down). Closing: button on the right above the keyboard
-  (below it if the keyboard is at the top), keyboard bar, or Escape. Tab is a real tab: its width
+  (below it if the keyboard is at the top), 120 px away from it on a 4K screen (`CloseGap4K`,
+  issue #56) so it is not triggered by mistake, keyboard bar, or Escape. Tab is a real tab: its width
   (2 or 4 spaces) is set in the software being typed in. Typed text is never written to the log.
   Settings: "Keyboard" tab of the settings (`settings.json` version 9).
 - Word prediction (step 13, `WordPredictor`): the three boxes at the top of the keyboard suggest

@@ -245,7 +245,8 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   saisie ; les lettres, le survol et l'éclair vert restent opaques : `KeyboardTransparency`,
   `settings.json` version 15, issue #55), Pause (le bouton Fermer de cette barre a été retiré à l'étape 14 : il
   doublait celui au-dessus du clavier). Quand elle s'ouvre, le clavier en bas remonte au-dessus
-  d'elle en glissant (et redescend de même). Fermeture : bouton à droite au-dessus du clavier (en dessous s'il est en haut), barre
+  d'elle en glissant (et redescend de même). Fermeture : bouton à droite au-dessus du clavier (en dessous s'il est en haut),
+  à 120 px de lui sur un écran 4K (`CloseGap4K`, issue #56) pour ne pas le déclencher par erreur, barre
   du clavier, ou Échap. Tab est une vraie tabulation : sa largeur (2 ou 4 espaces) se règle
   dans le logiciel où l'on écrit. Le texte tapé n'est jamais écrit dans le journal.
   Réglages : onglet « Clavier » des paramètres (`settings.json` version 9).

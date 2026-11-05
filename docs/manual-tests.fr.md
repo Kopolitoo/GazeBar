@@ -89,6 +89,8 @@ ferment, retour au mode mouvement ; la pause, le jeu et les paramètres restent 
 Dans le Bloc-notes, on ouvre le menu, « Clavier » : le clavier apparaît en
 bas. On regarde des touches : elles s'éclaircissent, flashent et le texte s'écrit (« é » depuis
 la page « À,È,Ê »). On regarde au-dessus du clavier : le cercle revient et le regard fixe marche.
+On tape un moment sur les touches en haut à droite : le bouton Fermer, bien séparé du clavier,
+ne se déclenche jamais par erreur (de même sous le clavier quand il est en haut).
 On regarde sous l'écran : la barre du clavier s'ouvre et le clavier remonte au-dessus d'elle ;
 « Haut / bas » le met en haut (il s'y rouvre la fois suivante), « Taille » passe à 75 % puis 50 %,
 « Pause » le cache jusqu'à la reprise. Dans la configuration des icônes, on place « Clavier » sur la couronne : dans le choix
