@@ -71,6 +71,9 @@ cercle, très lent. On regarde hors de l'écran à droite pendant une seconde : 
 mouvement. On regarde hors de l'écran en haut, en bas et à gauche : ça défile toujours à vitesse
 maximale dans ce sens. On rouvre le défilement et on dit « Échap » à Dragon : retour au mode
 mouvement.
+Avec un menu d'un logiciel ouvert sous le cercle, Échap en mode défilement ne doit pas fermer
+ce menu (GazeBar garde la touche). Pareil avec le clavier au regard ouvert : Échap ferme
+seulement le clavier.
 
 ## 8. Configuration des icônes
 
