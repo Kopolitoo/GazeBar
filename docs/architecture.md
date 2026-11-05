@@ -137,7 +137,8 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
 - `ButtonAimer` (step 4): decides which button is looked at and when it activates; shared by the
   action choice and the menu.
 - `Modes/MenuMode` (step 4): looking at the bottom, off the screen, for `MenuDelay` (0.5 s)
-  opens a bar centred at the bottom of the screen, only from the movement, pause and game modes
+  opens a bar centred at the bottom of the screen (buttons only, no background, 100 px apart
+  on a 4K screen: issue #54), only from the movement, pause and game modes
   (the `ModeManager` watches for it). The magnifier, the action choice and the drag and drop
   have their own "back" button. Buttons: Settings, Game, Keyboard (the gaze keyboard, step 12),
   Pause (or Resume when coming from pause), Mouse tracking (switch, green border when on), Quit

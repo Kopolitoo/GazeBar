@@ -142,7 +142,8 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
 - `ButtonAimer` (étape 4) : décide quel bouton est regardé et quand il s'active ; partagé par
   le choix d'action et le menu.
 - `Modes/MenuMode` (étape 4) : regarder en bas, hors de l'écran, pendant `MenuDelay` (0,5 s)
-  ouvre une barre centrée en bas de l'écran, uniquement depuis les modes mouvement et pause
+  ouvre une barre centrée en bas de l'écran (boutons seuls, sans fond, espacés de 100 px sur
+  un écran 4K : issue #54), uniquement depuis les modes mouvement et pause
   (et plus tard jeu, depuis l'étape 6 ; c'est le `ModeManager` qui surveille). La loupe, le
   choix d'action et le glisser-déposer ont leur bouton « retour ». Boutons : Paramètres, Jeu, Clavier
   (le clavier au regard, étape 12), Pause (ou Reprendre si l'on vient de la pause), Suivi souris (interrupteur, bord vert

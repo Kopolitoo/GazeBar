@@ -23,7 +23,8 @@ without touching the mouse.
 
 ## 3. Menu and pause
 
-Look at the bottom, off the screen: the menu bar appears. Look at "Pause":
+Look at the bottom, off the screen: the menu bar appears: buttons only, with no
+dark background behind them, and clearly spaced (also in the keyboard's menu bar). Look at "Pause":
 everything stops. Look at the bottom again, then "Resume": the circle comes back. All with the
 eyes only. Escape also goes back to movement mode.
 
