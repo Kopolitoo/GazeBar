@@ -25,7 +25,8 @@ s'ouvre, sans toucher la souris.
 
 ## 3. Menu et pause
 
-On regarde en bas, hors de l'écran : la barre de menu apparaît. On regarde
+On regarde en bas, hors de l'écran : la barre de menu apparaît : seulement des
+boutons, sans fond sombre derrière eux, bien espacés (aussi dans la barre de menu du clavier). On regarde
 « Pause » : tout s'arrête. On regarde de nouveau en bas, puis « Reprendre » : le cercle revient.
 Le tout uniquement au regard. Échap ramène aussi au mode mouvement.
 

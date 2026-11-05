@@ -64,8 +64,9 @@ c'est rapide. Regarder dans le cercle arrête. « Retour » (bord droit) termine
 
 ## Menu
 
-Regarder **sous l'écran** une demi-seconde : la barre de menu s'ouvre en bas. Elle s'ouvre depuis
-le mode mouvement, la pause et le mode jeu. Boutons :
+Regarder **sous l'écran** une demi-seconde : la barre de menu s'ouvre en bas : une rangée de
+boutons bien espacés, sans fond derrière eux. Elle s'ouvre depuis le mode mouvement, la pause et
+le mode jeu. Boutons :
 
 - **Paramètres** : voir plus bas.
 - **Jeu** : mode jeu (voir plus bas).

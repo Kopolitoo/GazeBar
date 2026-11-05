@@ -60,8 +60,9 @@ right of it to scroll that way: the further away, the faster. Look inside the ci
 
 ## Menu
 
-Look **below the screen** for half a second: the menu bar opens at the bottom. It opens from
-movement mode, pause and game mode. Buttons:
+Look **below the screen** for half a second: the menu bar opens at the bottom: a row of
+well-spaced buttons, with no background behind them. It opens from movement mode, pause and
+game mode. Buttons:
 
 - **Settings**: see below.
 - **Game**: game mode (see below).

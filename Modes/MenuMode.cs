@@ -12,7 +12,8 @@ namespace GazeBar
     /// Entry: looking down, below the screen, for [MenuDelay]. The ModeManager watches for
     /// this, only from movement, pause and game modes: see Mode.MenuAllowed.
     ///
-    /// Display: a bar centered at the bottom of the screen, with buttons activated by the gaze
+    /// Display: a row of buttons centered at the bottom of the screen, with no bar background
+    /// (issue #54), activated by the gaze
     /// (GazeButton): one looks at a button for [ActivationDelay], its ring fills up, then it
     /// activates. From left to right:
     ///   Settings       opens settings mode;
@@ -85,16 +86,28 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Space between two buttons, and between the buttons and the edge of the bar, in pixels.
-        /// Large enough so that the progress ring of a button does not touch its neighbour.
-        /// These three distances are pixels of the 4K screen, converted for the current
+        /// Space between two buttons, in pixels. Wide enough so that the progress ring of a
+        /// button does not touch its neighbour, and so that the gaze does not slip onto the
+        /// neighbour (issue #54: 60 was too tight on a 4K screen).
+        /// These distances are pixels of the 4K screen, converted for the current
         /// screen (ScreenMetrics.Px, or ScreenMetrics.GazePx for the gaze margin).
         /// </summary>
-        private const double Gap4K = 60;
+        private const double ButtonGap4K = 100;
 
-        private static double Gap
+        private static double ButtonGap
         {
-            get { return ScreenMetrics.Px(Gap4K); }
+            get { return ScreenMetrics.Px(ButtonGap4K); }
+        }
+
+        /// <summary>
+        /// Space around the row of buttons, in 4K screen pixels. The bar has no background
+        /// (issue #54): this padding only sets where the buttons sit and the "in the bar" zone.
+        /// </summary>
+        private const double Padding4K = 60;
+
+        private static double Padding
+        {
+            get { return ScreenMetrics.Px(Padding4K); }
         }
 
         /// <summary>Space between the bar and the bottom of the screen, in 4K screen pixels.</summary>
@@ -492,33 +505,23 @@ namespace GazeBar
             int n = buttons.Count;
             // The menu buttons are twice as big as the other icons.
             double size = 2 * p.IconSizePx;
-            double maxSize = (width - ScreenMetrics.Px(20) - (n + 1) * Gap) / n;
+            double maxSize = (width - ScreenMetrics.Px(20) - 2 * Padding - (n - 1) * ButtonGap) / n;
             size = Math.Max(ScreenMetrics.Px(20), Math.Min(size, maxSize));
 
-            // ── The bar background: a dark rectangle with rounded corners, centered at the bottom.
-            double barWidth = n * size + (n + 1) * Gap;
-            double barHeight = size + 2 * Gap;
+            // ── The bar rectangle, centered at the bottom. Nothing is drawn for it: the bar has
+            //    no background, only its buttons (each one has its own dark disc). The
+            //    rectangle sets where the buttons go and the "in the bar" zone.
+            double barWidth = n * size + (n - 1) * ButtonGap + 2 * Padding;
+            double barHeight = size + 2 * Padding;
             double left = (width - barWidth) / 2;
             double top = height - ScreenMetrics.Px(BottomMargin4K) - barHeight;
-
-            Border background = new Border();
-            background.Background = new SolidColorBrush(Color.FromArgb(0xE0, 0x20, 0x21, 0x24));
-            background.BorderBrush = Brushes.Gray;
-            background.BorderThickness = new Thickness(ScreenMetrics.Units(1));
-            background.CornerRadius = new CornerRadius(ScreenMetrics.Units(16));
-            background.Width = layer.LengthToWpf(barWidth);
-            background.Height = layer.LengthToWpf(barHeight);
-            Point corner = layer.ToWpf(left, top);
-            Canvas.SetLeft(background, corner.X);
-            Canvas.SetTop(background, corner.Y);
-            surface.Children.Add(background);
 
             // ── The buttons, from left to right (label above: below, it would be off the
             //    screen).
             for (int i = 0; i < n; i++)
             {
-                double x = left + Gap + size / 2 + i * (size + Gap);
-                double y = top + Gap + size / 2;
+                double x = left + Padding + size / 2 + i * (size + ButtonGap);
+                double y = top + Padding + size / 2;
                 buttons[i].Place(layer, surface, x, y, size, true);
                 _buttons.Add(buttons[i]);
                 _actions.Add(actions[i]);
