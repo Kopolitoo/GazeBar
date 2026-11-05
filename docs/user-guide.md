@@ -82,7 +82,7 @@ F1 to F12.
 
 - **Word prediction**: the three boxes at the top suggest words. Look at one to write it with a
   space. An unknown word appears with an amber "+": look at it to add it to your personal
-  dictionary. GazeBar also learns which word usually comes next.
+  dictionary. Short words come first, unless a longer word is much more common or used often. GazeBar also learns which word usually comes next.
 - **Keyboard bar** (look below the screen while the keyboard is open): move the keyboard up or
   down, change its size, pause it, show the "Input box" (a preview of what you typed), choose
   the "Keyboard layout" (QWERTY, AZERTY…).

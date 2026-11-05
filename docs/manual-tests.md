@@ -90,7 +90,7 @@ place "Keyboard" on the crown: in the action choice, this button opens the keybo
 
 Interface in French. In Notepad, open the keyboard and type "bo": the boxes
 suggest "bon", "bonne"…; look at "bonjour" (after "bonj"): "bonjour" and a space are written.
-"ete" suggests "été". Type an invented word ("zorglub"): the 1st box shows "+ zorglub" in amber;
+"ete" suggests "été". "pr" suggests short words ("pris", "près"…) before "prendre". Type an invented word ("zorglub"): the 1st box shows "+ zorglub" in amber;
 look at it: a space is written, and typing "zo" suggests the word. Write "je suis" twice (typing
 "suis" in full then a space): after "je" and a space, the 1st box suggests "suis". After closing
 GazeBar, `%APPDATA%\GazeBar\personal-dictionary.json` contains the word.

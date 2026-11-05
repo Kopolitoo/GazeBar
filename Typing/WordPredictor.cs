@@ -34,6 +34,9 @@ namespace GazeBar
     /// Ranking of a word (specification):
     ///     score = frequency in Lexique + [UsageBonus] × number of uses
     /// Usual words therefore rise quickly. An added word (not in Lexique) starts at 0.
+    /// Then SHORT WORDS FIRST (issue #71): the score is divided by [LengthPenalty] for each
+    /// letter still to type. A longer word must be much more frequent (or much used) to come
+    /// before a shorter one.
     ///
     /// NEXT WORD: the prediction also remembers PAIRS of words
     /// written one after the other ("je" → "suis", "l'" → "homme"), in the personal
@@ -73,6 +76,15 @@ namespace GazeBar
         /// To tune after testing.
         /// </summary>
         private const double FollowBonus = 200;
+
+        /// <summary>
+        /// Short words first (issue #71): the score is divided by this number for each letter
+        /// still to type. With 1.6, a word 3 letters longer needs about 4 times the score of
+        /// the shorter one to come before it. Example in French: "pr" suggests "pris", "près",
+        /// "prie" instead of "prendre" first; "p" still suggests "pas", "pour", "plus".
+        /// 1 means no preference for short words. To tune after testing.
+        /// </summary>
+        private const double LengthPenalty = 1.6;
 
         /// <summary>Number of suggestion boxes.</summary>
         public const int SuggestionCount = 3;
@@ -387,7 +399,8 @@ namespace GazeBar
 
         /// <summary>
         /// Adds a candidate to the best list if it fits (score = frequency + usage bonus +
-        /// follow bonus if this word already followed the previous word). The list stays
+        /// follow bonus if this word already followed the previous word, then divided by
+        /// LengthPenalty for each letter still to type). The list stays
         /// sorted and holds at most 3 words. followers: the words that followed the previous
         /// word (or null).
         /// </summary>
@@ -409,6 +422,12 @@ namespace GazeBar
             if (followers != null && followers.TryGetValue(word, out times))
             {
                 score += FollowBonus * times;
+            }
+            // Short words first: divide by LengthPenalty for each letter still to type. Not
+            // for the next word (nothing typed yet): there, only the habits count.
+            if (typed.Length > 0)
+            {
+                score /= Math.Pow(LengthPenalty, word.Length - typed.Length);
             }
 
             // Find its place: before the first one with a lower score. On equal scores, the
