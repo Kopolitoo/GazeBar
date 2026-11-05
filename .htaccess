@@ -1,8 +1,8 @@
-# Web server rules for the GazeBar website (https://gazebar.kopol.xyz).
+# Web server rules for the Prunel website (https://gazebar.kopol.xyz).
 #
 # The OVH hosting copies the whole repository from GitHub, but only the website/
 # folder is the site: every address is served from website/, so the rest of the
-# repository (code, .git) is never shown. This file has no effect on GazeBar itself.
+# repository (code, .git) is never shown. This file has no effect on Prunel itself.
 
 DirectoryIndex index.html
 Options -Indexes

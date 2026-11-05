@@ -10,7 +10,7 @@ by Hermit Dave, built from the OpenSubtitles 2018 corpus (http://opus.nlpl.eu/Op
 Licence of the FrequencyWords content: Creative Commons Attribution-ShareAlike 4.0
 International (CC BY-SA 4.0): https://creativecommons.org/licenses/by-sa/4.0/
 
-Changes made for GazeBar (2026-11-02):
+Changes made for Prunel (2026-11-02):
   - only words seen at least 20 times in the corpus are kept (words with a hyphen: at
     least 200 times);
   - only words accepted by the en_US Hunspell spelling dictionary (SCOWL, version
@@ -22,7 +22,7 @@ Changes made for GazeBar (2026-11-02):
     "I'm", "it's", "can't"…) are added with an estimated frequency;
   - frequency = number of occurrences per million words of the corpus (decimal point);
   - format: one line per word, "word<Tab>frequency", sorted; the first line,
-    "#apostropheInWord", tells GazeBar that an apostrophe stays inside English words.
+    "#apostropheInWord", tells Prunel that an apostrophe stays inside English words.
 
 The file en.txt, a derived work, is distributed under the same CC BY-SA 4.0 licence.
-The rest of GazeBar stays under the MIT licence (see LICENSE.txt at the root of the repository).
+The rest of Prunel stays under the MIT licence (see LICENSE.txt at the root of the repository).

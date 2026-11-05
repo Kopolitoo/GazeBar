@@ -1,4 +1,4 @@
-# GazeBar architecture
+# Prunel architecture
 
 *Version française : [architecture.fr.md](architecture.fr.md).*
 
@@ -16,11 +16,11 @@ code comments do not use them: they describe the code as it is now.
   `EyetrackerGazeSource`, reads the gaze from the eyetracker engine (NuGet package
   `Tobii.Interaction` 0.7.3), about 30 samples per second, in screen pixels, including slightly
   off the screen (negative coordinates or coordinates larger than the screen). The gaze software
-  supplied with the eyetracker (TD Control) is paused while GazeBar runs.
+  supplied with the eyetracker (TD Control) is paused while Prunel runs.
 - **Drawing**: `OverlayWindow` is a transparent window that covers the whole screen, always on
   top. Clicks go through it and it never takes the focus, so the window being used is never
   disturbed.
-- **Acting**: GazeBar moves the Windows cursor and injects clicks, wheel and keys itself
+- **Acting**: Prunel moves the Windows cursor and injects clicks, wheel and keys itself
   (`SendInput`: `MouseInjector`, `WheelScroller`, `KeyboardInjector`).
 - **Modes**: `Modes/ModeManager` knows the current mode and gives it the gaze about 60 times
   per second. Each mode is one class of the `Modes` folder (list below).
@@ -56,7 +56,7 @@ The three biggest classes are "partial" classes: one class written in several fi
 ## Eyetracker DLLs
 
 The three Tobii DLLs (`Tobii.Interaction.Net.dll`, `Tobii.Interaction.Model.dll`,
-`Tobii.EyeX.Client.dll`) are proprietary and are not shipped with GazeBar. The NuGet package is
+`Tobii.EyeX.Client.dll`) are proprietary and are not shipped with Prunel. The NuGet package is
 only used to compile (`ExcludeAssets="runtime;build"` in `GazeBar.csproj`), and a build target
 deletes any `Tobii.*.dll` from the output folder; the CI build fails if one is left.
 
@@ -66,11 +66,11 @@ At startup, `EyetrackerLoader` looks for them on the PC, in this order:
 2. the installation folders of the manufacturer's software (`Program Files\Tobii`,
    `Program Files\Tobii Dynavox`);
 3. the NuGet cache (`%USERPROFILE%\.nuget\packages\tobii.interaction\0.7.3`): on the PC where
-   GazeBar is compiled, there is nothing to do.
+   Prunel is compiled, there is nothing to do.
 
 The .NET DLLs are given to .NET through the `AssemblyResolve` event; the native DLL is loaded
 beforehand with `LoadLibrary`, in 32-bit. `EyetrackerGazeSource` uses the Tobii.Interaction types only in
-`ConnectEyetracker`, so that GazeBar starts even without these DLLs. The log notes where each
+`ConnectEyetracker`, so that Prunel starts even without these DLLs. The log notes where each
 DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetracker-files).
 
 ## Classes and modes
@@ -107,7 +107,7 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   60 px apart. An empty slot is drawn greyed with a "+". On the right, a "back" icon. A small
   circle (half of `CircleRadius`), above everything, shows where the gaze is. Looking at an icon
   for `ActivationDelay` activates it (progress ring). Before the click, the black screen is
-  hidden and GazeBar waits 60 ms for it to disappear; then back to movement mode.
+  hidden and Prunel waits 60 ms for it to disappear; then back to movement mode.
 - `Modes/MagnifierMode` (step 5): refines the cursor position. The same area is captured, then
   shown enlarged ×`MagnifierZoom` (×4, i.e. 800 × 800 px) in the middle of a black screen; a
   small 50 px circle follows the gaze. When the gaze fixes on the picture (same detection as in
@@ -142,7 +142,7 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   (the `ModeManager` watches for it). The magnifier, the action choice and the drag and drop
   have their own "back" button. Buttons: Settings, Game, Keyboard (the gaze keyboard, step 12),
   Pause (or Resume when coming from pause), Mouse tracking (switch, green border when on), Quit
-  GazeBar (with a "Yes" / "No" confirmation). Looking outside the bar for `MenuCloseDelay` (1 s)
+  Prunel (with a "Yes" / "No" confirmation). Looking outside the bar for `MenuCloseDelay` (1 s)
   closes it and goes back to the previous mode. A small circle shows where the gaze is.
 - `Modes/SettingsMode` and `SettingsWindow` (step 7): "Settings" button of the menu. A
   full-screen window, black background, with four collapsible categories on the left: Gaze
@@ -157,9 +157,9 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   Escape cancels; point or comma accepted). Each change is applied at once and saved. Unlike the
   overlay, this window accepts the mouse and the keyboard. `IGazeTarget` lets the `ButtonAimer`
   aim at its targets.
-- Single instance (step 7, `App`): if GazeBar is already running, a second start closes at once,
+- Single instance (step 7, `App`): if Prunel is already running, a second start closes at once,
   without showing anything, and notes it in the log.
-- `WindowsStartup` (step 7): the `StartWithWindows` option (General tab) adds GazeBar to the
+- `WindowsStartup` (step 7): the `StartWithWindows` option (General tab) adds Prunel to the
   Windows startup list (registry, `HKEY_CURRENT_USER\...\Run`), without administrator rights:
   administrator windows still ignore its clicks.
 - `Modes/ScrollMode` (step 8): "Scroll" action of the crown. The white circle stays fixed on
@@ -175,7 +175,7 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   Looking off the screen on the right for 1 s also goes back to movement mode (issue #51); nothing
   scrolls there.
   Ctrl on in the action choice: Ctrl + wheel (zoom). Fine scrolling (small wheel amounts, up to
-  once per frame, and a smoothed speed that rises and falls gently); on entering, GazeBar
+  once per frame, and a smoothed speed that rises and falls gently); on entering, Prunel
   activates the window under the cursor (without clicking), so there is no need to click before
   scrolling. "Scroll" tab: option "Scroll inactive windows" (yes by default), which sets the
   Windows option of the same name (`WheelScroller`, applied at startup and at each change).
@@ -204,9 +204,9 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
 - `Modes/PauseMode` (step 4): nothing follows the gaze any more; only the menu can still open
   ("Resume" button).
 - `EyetrackerLoader`: finds and loads the eyetracker DLLs (Tobii.Interaction) at startup; they
-  are not shipped with GazeBar (see "Installation"). The .NET DLLs are given to .NET through the
+  are not shipped with Prunel (see "Installation"). The .NET DLLs are given to .NET through the
   `AssemblyResolve` event; the native DLL is loaded beforehand with `LoadLibrary`, in 32-bit.
-  `EyetrackerGazeSource` uses the Tobii.Interaction types only in `ConnectEyetracker`, so that GazeBar
+  `EyetrackerGazeSource` uses the Tobii.Interaction types only in `ConnectEyetracker`, so that Prunel
   starts even without these DLLs.
 - `Modes/CalibrationMode` and `Calibration` (step 4): "Calibration" button of the "Tools" tab of
   the settings (with "Diagnostic"). They start the eyetracker calibration tool and wait for its
@@ -214,10 +214,10 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   checked: the log notes what was found and tried.
 - `KeyboardHook` (step 4): the **Escape** key goes back to movement mode from any mode, for the
   caregiver. The key also reaches the active program normally. Since step 12, in movement mode,
-  it closes the gaze keyboard; the "Esc" key of the gaze keyboard, simulated by GazeBar, is
-  ignored by the hook (it only goes to the application): GazeBar marks its own simulated keys
+  it closes the gaze keyboard; the "Esc" key of the gaze keyboard, simulated by Prunel, is
+  ignored by the hook (it only goes to the application): Prunel marks its own simulated keys
   (`dwExtraInfo`). Since issue #51, an Escape simulated by other software (Dragon, by voice)
-  counts like the real key. In scroll mode and when the gaze keyboard is open, GazeBar KEEPS
+  counts like the real key. In scroll mode and when the gaze keyboard is open, Prunel KEEPS
   Escape (press and release): the other programs do not receive it (`KeepEscape`).
 - Gaze keyboard (step 12, `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`): "Keyboard" button of
   the menu, or "Keyboard" action of the action choice (opens / closes the keyboard; before opening it, a left
@@ -259,7 +259,7 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   (copied next to GazeBar.exe, read in the background at startup) and
   `%APPDATA%\GazeBar\personal-dictionary.json` (added words and usage counts; never in the
   repository), saved after each addition and, for the usage counts, once a minute and at
-  closing. Next word: GazeBar remembers the pairs of words written one after the other ("I" →
+  closing. Next word: Prunel remembers the pairs of words written one after the other ("I" →
   "am"); right after a space, the boxes suggest the words that most often followed the previous
   word, and while typing these words move ahead (+ 200 per time). The dictionaries have no
   pairs: these suggestions appear as sentences are written. Punctuation or a line end breaks
@@ -285,7 +285,7 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   word removes it from the personal dictionary (with its usage counts and pairs).
   `settings.json` version 10.
 - The overlay puts itself back above all windows twice per second.
-- `app.manifest`: declares GazeBar "DPI aware", so that the gaze, the cursor and the drawing use
+- `app.manifest`: declares Prunel "DPI aware", so that the gaze, the cursor and the drawing use
   the same pixels, even with a Windows scaling of 125 % or 150 %.
 - `app.uiaccess.manifest` (step `ui-access`): same manifest with `uiAccess="true"`, used only by
   the "full installation" build (`dotnet build -p:UiAccess=true`). "UI access" puts the gaze
@@ -300,16 +300,16 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   to `C:\Program Files\GazeBar`, runs `setup-certificate.ps1`, which signs it with a certificate
   made on the user's computer (its private key deleted right after), and adds a Start menu
   shortcut and an entry in "Settings > Apps" of Windows. Its uninstaller removes the certificate
-  and the "Start with Windows" entry. It starts GazeBar with ShellExecute (flag `shellexec`):
+  and the "Start with Windows" entry. It starts Prunel with ShellExecute (flag `shellexec`):
   CreateProcess refuses a program with UI access (error 740). Its texts are in the `.iss` file
-  (French or English, from the Windows language), not in `Languages/`, because GazeBar is not
+  (French or English, from the Windows language), not in `Languages/`, because Prunel is not
   running then.
 
 ## Settings file
 
 All settings are in the `AppSettings` class (file `AppSettings.cs`) and saved in
 `%APPDATA%\GazeBar\settings.json`, created at the first start with the default values of the
-specification. It can be opened with Notepad (decimal numbers with a point: `0.3`), then GazeBar
+specification. It can be opened with Notepad (decimal numbers with a point: `0.3`), then Prunel
 restarted. An unreadable file is set aside (`settings.json.unreadable`) and replaced by the
 default values.
 `FileVersion` (currently 13) says which version wrote the file: an older file is converted at
@@ -322,7 +322,7 @@ pixels: `CircleRadius` 8.8 (190 px in 4K, 95 px in 1920 × 1080), `IconSize` 5.6
 (version 6) is converted once, by dividing the pixels by 21.6 (values tuned on a screen 2160 px
 high). `InterfaceSize` (75, 100, 125 or 150 %, "Display" tab) enlarges or shrinks everything
 that is drawn, except the gaze settings. The overlay texts also follow the Windows text size
-(Accessibility). Changes of resolution, scaling and text size are detected while GazeBar runs.
+(Accessibility). Changes of resolution, scaling and text size are detected while Prunel runs.
 
 ### Settings profiles
 
@@ -363,7 +363,7 @@ To add a language: copy `en.json` to `xx.json` and translate the values (never t
 
 ## Build check (CI)
 
-`.github/workflows/build.yml` compiles GazeBar on Windows for every pull request and every push
+`.github/workflows/build.yml` compiles Prunel on Windows for every pull request and every push
 to `main`. `.github/scripts/check-data-files.ps1` checks that the keyboard and language JSON
 files are valid and that every language has the same keys and `{n}` placeholders as `en.json`.
 

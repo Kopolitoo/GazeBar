@@ -1,8 +1,8 @@
-# GazeBar user guide
+# Prunel user guide
 
 *Version française : [user-guide.fr.md](user-guide.fr.md).*
 
-GazeBar lets you use a Windows computer with your eyes only: you move a circle with your gaze,
+Prunel lets you use a Windows computer with your eyes only: you move a circle with your gaze,
 stare at a place, then choose what to do there (click, double click, drag and drop, scroll,
 type…). This guide explains how to use it. To install it, see the [README](../README.md).
 
@@ -10,9 +10,9 @@ type…). This guide explains how to use it. To install it, see the [README](../
 
 - Install the official driver of your eyetracker (Tobii) from the manufacturer's website, and
   calibrate it.
-- **Pause** the gaze software supplied with the eyetracker (TD Control) while GazeBar is used,
+- **Pause** the gaze software supplied with the eyetracker (TD Control) while Prunel is used,
   so that the two programs do not both move the mouse.
-- GazeBar needs three files of the eyetracker (see [Eyetracker files](#eyetracker-files)). On
+- Prunel needs three files of the eyetracker (see [Eyetracker files](#eyetracker-files)). On
   most computers it finds them by itself.
 
 ## Moving and staring
@@ -71,7 +71,7 @@ game mode. Buttons:
 - **Pause** / **Resume**: nothing follows your gaze any more, until you open the menu again
   and choose "Resume".
 - **Mouse tracking**: on / off (green border when on).
-- **Quit GazeBar**: asks "Yes" or "No" first.
+- **Quit Prunel**: asks "Yes" or "No" first.
 
 Look away from the bar for one second to close it.
 
@@ -83,12 +83,12 @@ another place). Five pages: letters, accents, numbers and punctuation, symbols a
 F1 to F12.
 
 You can also put "Keyboard" on the crown of the action choice (icon configuration). Fix your
-gaze on the field where you want to write, then choose "Keyboard": GazeBar first clicks there,
+gaze on the field where you want to write, then choose "Keyboard": Prunel first clicks there,
 so the field gets the focus and the text cursor goes where you looked.
 
 - **Word prediction**: the three boxes at the top suggest words. Look at one to write it with a
   space. An unknown word appears with an amber "+": look at it to add it to your personal
-  dictionary. Numbers are never added (a word with letters and digits, such as "mp3", can be). Short words come first, unless a longer word is much more common or used often. GazeBar also learns which word usually comes next.
+  dictionary. Numbers are never added (a word with letters and digits, such as "mp3", can be). Short words come first, unless a longer word is much more common or used often. Prunel also learns which word usually comes next.
 - **Keyboard bar** (look below the screen while the keyboard is open): move the keyboard up or
   down, change its size, make its background see-through ("Transparency": 0, 25, 50 or 75 %, the
   letters stay clear), pause it, show the "Input box" (a preview of what you typed), choose
@@ -123,11 +123,11 @@ repeat) or a yes / no switch. Changes apply at once and are saved.
 
 ## For the caregiver
 
-- **Escape** on the physical keyboard brings GazeBar back to movement mode from anywhere. Escape
+- **Escape** on the physical keyboard brings Prunel back to movement mode from anywhere. Escape
   said to voice recognition software (such as Dragon) does too. When scrolling or when the gaze
-  keyboard is open, GazeBar keeps Escape for itself: other programs do not receive it.
-- Starting GazeBar a second time does nothing: it is already running.
-- "Start with Windows" ("General" tab) starts GazeBar automatically.
+  keyboard is open, Prunel keeps Escape for itself: other programs do not receive it.
+- Starting Prunel a second time does nothing: it is already running.
+- "Start with Windows" ("General" tab) starts Prunel automatically.
 
 ## Files on the computer
 
@@ -138,15 +138,15 @@ repeat) or a yes / no switch. Changes apply at once and are saved.
 | Profiles | `Documents\GazeBar\Profiles` |
 | Log | `%LOCALAPPDATA%\GazeBar\gazebar.log` |
 
-GazeBar never saves where you look (the eyetracker licence forbids it) and never writes what you
+Prunel never saves where you look (the eyetracker licence forbids it) and never writes what you
 type in the log. The log is short by default; "Detailed log" ("General" tab) notes more, to
 track down a problem.
 
 ## Eyetracker files
 
 The gaze is read by three Tobii files (`Tobii.Interaction.Net.dll`,
-`Tobii.Interaction.Model.dll`, `Tobii.EyeX.Client.dll`). They belong to Tobii AB, so GazeBar
-does not include them. GazeBar looks for them in the `Eyetracker` folder next to `GazeBar.exe`,
+`Tobii.Interaction.Model.dll`, `Tobii.EyeX.Client.dll`). They belong to Tobii AB, so Prunel
+does not include them. Prunel looks for them in the `Eyetracker` folder next to `GazeBar.exe`,
 then in the folders of the Tobii software, then in the Visual Studio NuGet cache.
 
 If the Diagnostic window says they are missing, get them yourself, accepting Tobii's licence:
@@ -167,25 +167,25 @@ it comes with its own installer.
 
 To install or update:
 
-1. On the [Releases](https://github.com/Kopolitoo/GazeBar/releases) page, download
+1. On the [Releases](https://github.com/Kopolitoo/Prunel/releases) page, download
    `GazeBar-x.y.z-setup.exe` (under "Assets") and double-click it. Keep another way to click
-   (voice, mouse, TD Control) for this step: GazeBar closes during the installation.
+   (voice, mouse, TD Control) for this step: Prunel closes during the installation.
 2. The installer is not signed by a known publisher, so Windows may show "Windows protected
    your PC": click "More info", then "Run anyway". Windows then asks "Do you want to allow this
    app to make changes to your device?": answer "Yes".
 3. The installer speaks the language of Windows. Click "Install", then "Finish" with "Launch
-   GazeBar" ticked: GazeBar starts from `C:\Program Files\GazeBar`.
+   Prunel" ticked: Prunel starts from `C:\Program Files\GazeBar`.
 
-What the installer does: it copies GazeBar to `C:\Program Files\GazeBar`, creates a certificate
+What the installer does: it copies Prunel to `C:\Program Files\GazeBar`, creates a certificate
 on this computer, makes the computer trust it, signs `GazeBar.exe` with it, then deletes the
 certificate's private key (nothing else can ever be signed with it). A new certificate is made at
-each update. It also adds GazeBar to the Start menu and to "Settings > Apps" of Windows. Your
-settings are kept. If "Start with Windows" is on, GazeBar updates the startup entry itself. It
+each update. It also adds Prunel to the Start menu and to "Settings > Apps" of Windows. Your
+settings are kept. If "Start with Windows" is on, Prunel updates the startup entry itself. It
 also updates a copy installed by the old `Install.cmd` script.
 
 To check: the log (`%LOCALAPPDATA%\GazeBar\gazebar.log`) says "UI access: yes" at startup.
 
-To remove it: Windows "Settings > Apps > Installed apps", GazeBar, "Uninstall". It deletes the
+To remove it: Windows "Settings > Apps > Installed apps", Prunel, "Uninstall". It deletes the
 program folder, the shortcut and the certificate. Your settings are kept.
 
 If the eyetracker files had to be copied by hand (see [Eyetracker files](#eyetracker-files)),
@@ -195,7 +195,7 @@ rights). Updates keep it.
 ## Known limits
 
 - One screen only.
-- With the simple zip, a window started "as administrator" ignores GazeBar's clicks and keys,
+- With the simple zip, a window started "as administrator" ignores Prunel's clicks and keys,
   and the Windows Start menu can hide the circle. The
   [full installation](#full-installation-ui-access) removes these two limits.
 - Tested with the Tobii Dynavox PCEye 5 only.

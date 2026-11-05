@@ -2,10 +2,10 @@
 
 *English version: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).*
 
-GazeBar lui-même est sous licence MIT ([LICENSE.txt](LICENSE.txt)). Ce fichier liste les parties
-qui viennent d'autres personnes, et ce que GazeBar utilise sans le livrer.
+Prunel lui-même est sous licence MIT ([LICENSE.txt](LICENSE.txt)). Ce fichier liste les parties
+qui viennent d'autres personnes, et ce que Prunel utilise sans le livrer.
 
-## Livré avec GazeBar
+## Livré avec Prunel
 
 ### Liste de mots français : `Dictionaries/fr.txt`
 
@@ -48,20 +48,20 @@ personne qui les a demandées ; l'icône et le logo sont distribués sous licenc
 - Paquet NuGet `Tobii.Interaction` 0.7.3 (Tobii Core SDK), © Tobii AB.
 - Licence propriétaire : « Tobii Core SDK and Gaming SDK License Agreement », acceptée par
   quiconque le télécharge.
-- GazeBar utilise ce paquet seulement pour **compiler**. Ses DLL (`Tobii.Interaction.Net.dll`,
+- Prunel utilise ce paquet seulement pour **compiler**. Ses DLL (`Tobii.Interaction.Net.dll`,
   `Tobii.Interaction.Model.dll`, `Tobii.EyeX.Client.dll`) ne sont pas dans ce dépôt et ne sont
-  pas distribuées avec GazeBar : GazeBar les trouve sur l'ordinateur au démarrage (voir
+  pas distribuées avec Prunel : Prunel les trouve sur l'ordinateur au démarrage (voir
   [docs/architecture.fr.md](docs/architecture.fr.md#dll-de-leyetracker)).
-- La licence interdit d'enregistrer les données du regard : GazeBar n'écrit jamais les positions
+- La licence interdit d'enregistrer les données du regard : Prunel n'écrit jamais les positions
   du regard sur le disque.
 
 ### Microsoft .NET Framework 4.8, WPF et polices de Windows
 
-Inclus dans Windows. GazeBar utilise les symboles des polices de Windows (Segoe MDL2 Assets /
+Inclus dans Windows. Prunel utilise les symboles des polices de Windows (Segoe MDL2 Assets /
 Segoe Fluent Icons) sans copier les polices.
 
 ## Marques
 
-Tobii, Dynavox et TD Control sont des marques déposées de Tobii AB. GazeBar est indépendant et
+Tobii, Dynavox et TD Control sont des marques déposées de Tobii AB. Prunel est indépendant et
 n'est ni affilié, ni approuvé, ni soutenu par Tobii Dynavox. Windows est une marque de Microsoft
 Corporation.

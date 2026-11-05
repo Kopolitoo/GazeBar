@@ -1,8 +1,8 @@
-# Site de GazeBar
+# Site de Prunel
 
 *English version: [README.md](README.md).*
 
-Le petit site qui présente GazeBar aux visiteurs non techniciens, à l'adresse
+Le petit site qui présente Prunel aux visiteurs non techniciens, à l'adresse
 <https://gazebar.kopol.xyz>. Du HTML et du CSS simples, sans outil ni dépendance.
 
 - `index.html` : page en français (page d'accueil du site).

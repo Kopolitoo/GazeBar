@@ -1,27 +1,30 @@
-# GazeBar
+# Prunel
 
 *English version: [README.md](README.md).*
 
-<p align="center"><img src="docs/images/gazebar-logo.fr.png" alt="Logo de GazeBar : un œil avec un pointeur de souris" width="600"></p>
+<p align="center"><img src="docs/images/gazebar-logo.fr.png" alt="Logo de Prunel : un œil avec un pointeur de souris" width="600"></p>
 
-[![Build](https://github.com/Kopolitoo/GazeBar/actions/workflows/build.yml/badge.svg)](https://github.com/Kopolitoo/GazeBar/actions/workflows/build.yml)
+[![Build](https://github.com/Kopolitoo/Prunel/actions/workflows/build.yml/badge.svg)](https://github.com/Kopolitoo/Prunel/actions/workflows/build.yml)
 
-**GazeBar permet d'utiliser un ordinateur Windows uniquement avec les yeux**, grâce à un
+**Prunel permet d'utiliser un ordinateur Windows uniquement avec les yeux**, grâce à un
 eyetracker. Un cercle suit le regard ; on fixe un endroit, puis on choisit quoi y faire : clic,
 double clic, clic droit, glisser-déposer, défilement, loupe pour les petites cibles. Il propose
 aussi un clavier au regard avec prédiction de mots, un mode jeu, des paramètres réglables au
 regard, et une interface en français et en anglais.
 
-GazeBar est conçu par et pour une personne tétraplégique atteinte de SLA (maladie de Charcot),
+Prunel est conçu par et pour une personne tétraplégique atteinte de SLA (maladie de Charcot),
 qui le développe uniquement avec la voix et les yeux, avec l'aide de l'assistant d'IA Claude.
-Depuis novembre 2026, il utilise GazeBar seul, tous les jours, sans TD Control : il est donc
+Depuis novembre 2026, il utilise Prunel seul, tous les jours, sans TD Control : il est donc
 testé en permanence, sur un Tobii Dynavox PCEye 5. Si vous êtes dans la même situation, nous
 espérons qu'il pourra vous aider aussi.
 
+Prunel s'appelait GazeBar jusqu'en novembre 2026. Le programme, ses fichiers et ses dossiers
+gardent l'ancien nom pour l'instant : ils seront renommés dans une prochaine version.
+
 ## État du projet
 
-GazeBar est un projet jeune (version 0.x) : des versions prêtes à lancer sont sur la page
-[Releases](https://github.com/Kopolitoo/GazeBar/releases), sans installateur pour l'instant.
+Prunel est un projet jeune (version 0.x) : des versions prêtes à lancer sont sur la page
+[Releases](https://github.com/Kopolitoo/Prunel/releases), sans installateur pour l'instant.
 Prévu ensuite : retour sonore, pause automatique, thèmes de couleur, assistant de premier
 lancement, synthèse vocale.
 
@@ -30,20 +33,20 @@ lancement, synthèse vocale.
 - Windows 10 ou 11, un seul écran.
 - Un eyetracker Tobii avec son pilote officiel (testé : PCEye 5 ; autres modèles non testés).
 - Le logiciel de commande au regard fourni avec l'eyetracker (TD Control) est **mis en pause**
-  pendant l'utilisation de GazeBar.
+  pendant l'utilisation de Prunel.
 - Pour compiler : Visual Studio 2026 avec la charge de travail « Développement d'applications de
   bureau .NET » et le kit de développement .NET Framework 4.8.
 
 ## Installation
 
 1. Installer le pilote de l'eyetracker depuis le site du fabricant.
-2. Sur la page [Releases](https://github.com/Kopolitoo/GazeBar/releases), télécharger
+2. Sur la page [Releases](https://github.com/Kopolitoo/Prunel/releases), télécharger
    `GazeBar-x.y.z.zip` (sous « Assets ») et le décompresser, par exemple dans
    `Documents\GazeBar`.
 3. Lancer `GazeBar.exe`. Le programme n'est pas signé : Windows peut afficher « Windows a protégé
    votre ordinateur » ; cliquer sur « Informations complémentaires », puis « Exécuter quand
    même ».
-4. Les DLL de l'eyetracker ne sont pas livrées avec GazeBar : GazeBar les cherche dans le
+4. Les DLL de l'eyetracker ne sont pas livrées avec Prunel : Prunel les cherche dans le
    logiciel de l'eyetracker. Si la fenêtre Diagnostic dit qu'elles manquent, voir
    [Fichiers de l'eyetracker](docs/user-guide.fr.md#fichiers-de-leyetracker).
 
@@ -56,7 +59,7 @@ Studio, appuyer sur F5.
 
 ## Documentation
 
-- [Guide d'utilisation](docs/user-guide.fr.md) : comment se servir de GazeBar.
+- [Guide d'utilisation](docs/user-guide.fr.md) : comment se servir de Prunel.
 - [Architecture](docs/architecture.fr.md) : organisation du code, pour les développeurs.
 - [Tests manuels](docs/manual-tests.fr.md) : ce qu'il faut vérifier à la main avec un eyetracker.
 - [Contribuer](CONTRIBUTING.fr.md) : règles pour le code, les textes et les pull requests.
@@ -64,10 +67,10 @@ Studio, appuyer sur F5.
 
 ## Avertissement
 
-- **GazeBar n'est pas un dispositif médical.** Il n'est pas certifié, est fourni sans aucune
+- **Prunel n'est pas un dispositif médical.** Il n'est pas certifié, est fourni sans aucune
   garantie, et ne doit pas être le seul moyen d'appeler à l'aide.
-- Un seul écran. Les fenêtres lancées « en tant qu'administrateur » ignorent les clics de GazeBar.
-- GazeBar n'enregistre jamais les données du regard et n'écrit jamais le texte tapé dans son
+- Un seul écran. Les fenêtres lancées « en tant qu'administrateur » ignorent les clics de Prunel.
+- Prunel n'enregistre jamais les données du regard et n'écrit jamais le texte tapé dans son
   journal.
 
 ## Licence

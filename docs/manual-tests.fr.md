@@ -2,7 +2,7 @@
 
 *English version: [manual-tests.md](manual-tests.md).*
 
-GazeBar ne peut pas être testé automatiquement : ces tests se font à la main, avec un
+Prunel ne peut pas être testé automatiquement : ces tests se font à la main, avec un
 eyetracker. On fait ceux qui correspondent à ce que change une pull request, et on note dans la
 pull request ceux qui ont réussi.
 
@@ -52,7 +52,7 @@ Menu, « Paramètres » : l'écran noir s'ouvre sur l'onglet Regard. On garde
 le regard sur « + » du lissage : la valeur monte d'un pas toutes les 0,4 s. On regarde l'onglet
 Fixation, puis l'interrupteur du clic direct : il passe au bleu, rond à droite, « Oui ». « Défaut », puis « Oui » :
 les valeurs de l'onglet reviennent. L'aidant clique sur une valeur, tape 0,5 puis Entrée.
-« Retour » ramène au mode mouvement. Lancer GazeBar une deuxième fois ne fait rien (voir le
+« Retour » ramène au mode mouvement. Lancer Prunel une deuxième fois ne fait rien (voir le
 journal).
 
 ## 7. Défilement
@@ -72,7 +72,7 @@ mouvement. On regarde hors de l'écran en haut, en bas et à gauche : ça défil
 maximale dans ce sens. On rouvre le défilement et on dit « Échap » à Dragon : retour au mode
 mouvement.
 Avec un menu d'un logiciel ouvert sous le cercle, Échap en mode défilement ne doit pas fermer
-ce menu (GazeBar garde la touche). Pareil avec le clavier au regard ouvert : Échap ferme
+ce menu (Prunel garde la touche). Pareil avec le clavier au regard ouvert : Échap ferme
 seulement le clavier.
 
 ## 8. Configuration des icônes
@@ -91,7 +91,7 @@ du choix d'action. « Défaut » dans l'onglet « Icônes » remet tout comme av
 « mise à jour en version 7 » et l'écran détecté ; le cercle, les icônes et la barre de menu ont
 à l'œil la même taille qu'avant en 4K. Onglet « Affichage » : « Écran détecté » donne la
 résolution, l'échelle et la taille du texte ; « Taille de l'interface » à 150 % agrandit le
-cercle, les icônes et le menu. Pendant que GazeBar tourne, on change la résolution, puis la
+cercle, les icônes et le menu. Pendant que Prunel tourne, on change la résolution, puis la
 mise à l'échelle (125 %), puis la taille du texte de Windows : à chaque fois, le journal note
 « changement détecté » et les tailles s'adaptent (un choix d'action ou une loupe ouverts se
 ferment, retour au mode mouvement ; la pause, le jeu et les paramètres restent ouverts).
@@ -118,7 +118,7 @@ proposent « bon », « bonne »… ; on regarde « bonjour » (après « bonj �
 s'écrivent. « ete » propose « été ». « pr » propose des mots courts (« pris », « près »…) avant « prendre ». On tape un mot inventé (« zorglub ») : la 1re case montre
 « + zorglub » en ambre ; on la regarde : une espace s'écrit, et en tapant « zo » le mot est
 proposé. On tape « 2026 » : aucune case « + » n'apparaît ; on tape « mp3x » : « + mp3x » apparaît. On écrit deux fois « je suis » (en tapant « suis » en entier puis une espace) : après
-« je » et une espace, la 1re case propose « suis ». Après avoir fermé GazeBar, `%APPDATA%\GazeBar\personal-dictionary.json` contient le mot.
+« je » et une espace, la 1re case propose « suis ». Après avoir fermé Prunel, `%APPDATA%\GazeBar\personal-dictionary.json` contient le mot.
 
 ## 12. Options du clavier
 
@@ -131,7 +131,7 @@ l'étape 13) est dans la liste ; on le regarde : il disparaît ; « Retour aux p
 l'onglet Général. En tapant « zo », il n'est plus proposé.
 « Transparence » (montre « 0 % ») : on la regarde : « 25 % », les fonds du clavier laissent
 voir la fenêtre derrière ; encore : « 50 % », « 75 % », puis « 0 % » (opaque comme avant). À 75 %,
-les lettres, l'éclair vert et le survol restent bien visibles. On ferme et rouvre GazeBar : la
+les lettres, l'éclair vert et le survol restent bien visibles. On ferme et rouvre Prunel : la
 valeur est gardée.
 
 ## 13. Clavier anglais
@@ -158,7 +158,7 @@ fait de son. Activer « Son des touches » : ouvrir le clavier et taper : un pet
 chaque touche (aussi avec la répétition), mais aucun son pour le menu ni le choix d'action. Le
 désactiver et activer « Son des boutons » : les touches sont muettes ; l'icône d'options, le choix
 d'action, les boutons du menu et ceux des paramètres font un petit son de deux notes. Tout
-désactiver : de nouveau le silence. Relancer GazeBar : les choix sont gardés.
+désactiver : de nouveau le silence. Relancer Prunel : les choix sont gardés.
 
 ## Installation complète (Setup.exe, accès à l'interface)
 
@@ -169,18 +169,18 @@ de cliquer (voix, souris) pendant l'installation.
 1. Double-cliquer sur `GazeBar-…-setup.exe`. Windows peut dire « éditeur inconnu »
    (« Informations complémentaires », « Exécuter quand même »), puis demande « Oui » pour
    l'administrateur. L'installateur parle la langue de Windows ; cliquer sur « Installer », puis
-   « Terminer » avec « Exécuter GazeBar » coché : GazeBar démarre et le journal dit « UI access:
+   « Terminer » avec « Exécuter Prunel » coché : Prunel démarre et le journal dit « UI access:
    yes ».
-2. `C:\Program Files\GazeBar` existe, GazeBar est dans le menu Démarrer et dans « Paramètres >
+2. `C:\Program Files\GazeBar` existe, Prunel est dans le menu Démarrer et dans « Paramètres >
    Applications » de Windows.
 3. Ouvrir le menu Démarrer de Windows : le cercle du regard reste visible au-dessus, et un regard
    fixe puis un clic gauche ouvre un élément du menu.
 4. Lancer le Bloc-notes en administrateur (clic droit, « Exécuter en tant qu'administrateur ») :
    un clic au regard y met le curseur de texte, et le clavier du regard y écrit.
-5. Relancer l'installateur (mise à jour) : pas de question pour fermer GazeBar (il est fermé),
+5. Relancer l'installateur (mise à jour) : pas de question pour fermer Prunel (il est fermé),
    même résultat, réglages inchangés.
 6. Le désinstaller depuis « Paramètres > Applications » : le dossier, le raccourci et le
-   certificat « GazeBar local signature » (`certlm.msc`, « Autorités de certification racines de
+   certificat « Prunel local signature » (`certlm.msc`, « Autorités de certification racines de
    confiance ») ont disparu ; les réglages sont toujours dans `%APPDATA%\GazeBar`.
 7. Le zip simple et Visual Studio marchent comme avant, avec « UI access: no » dans le journal.
 

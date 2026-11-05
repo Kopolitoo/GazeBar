@@ -1,4 +1,4 @@
-# Architecture de GazeBar
+# Architecture de Prunel
 
 *English version: [architecture.md](architecture.md).*
 
@@ -17,11 +17,11 @@ décrivent le code tel qu'il est.
   La source normale, `EyetrackerGazeSource`, lit le regard dans le moteur de l'eyetracker (paquet NuGet
   `Tobii.Interaction` 0.7.3), environ 30 mesures par seconde, en pixels de l'écran, y compris un
   peu hors de l'écran (coordonnées négatives ou plus grandes que l'écran). Le logiciel de commande
-  au regard fourni avec l'eyetracker (TD Control) est mis en pause pendant que GazeBar tourne.
+  au regard fourni avec l'eyetracker (TD Control) est mis en pause pendant que Prunel tourne.
 - **Dessin** : `OverlayWindow` est une fenêtre transparente qui couvre tout l'écran, toujours au
   premier plan. Les clics la traversent et elle ne prend jamais le focus : la fenêtre utilisée
   n'est jamais dérangée.
-- **Action** : GazeBar déplace lui-même le curseur de Windows et injecte les clics, la molette
+- **Action** : Prunel déplace lui-même le curseur de Windows et injecte les clics, la molette
   et les touches (`SendInput` : `MouseInjector`, `WheelScroller`, `KeyboardInjector`).
 - **Modes** : `Modes/ModeManager` connaît le mode courant et lui donne le regard environ 60 fois
   par seconde. Chaque mode est une classe du dossier `Modes` (liste plus bas).
@@ -59,7 +59,7 @@ l'explication de la classe.
 ## DLL de l'eyetracker
 
 Les trois DLL de Tobii (`Tobii.Interaction.Net.dll`, `Tobii.Interaction.Model.dll`,
-`Tobii.EyeX.Client.dll`) sont propriétaires et ne sont pas livrées avec GazeBar. Le paquet NuGet
+`Tobii.EyeX.Client.dll`) sont propriétaires et ne sont pas livrées avec Prunel. Le paquet NuGet
 sert seulement à compiler (`ExcludeAssets="runtime;build"` dans `GazeBar.csproj`), et une cible
 de compilation efface tout `Tobii.*.dll` du dossier de sortie ; la compilation automatique (CI)
 échoue s'il en reste un.
@@ -70,11 +70,11 @@ Au démarrage, `EyetrackerLoader` les cherche sur le PC, dans cet ordre :
 2. les dossiers d'installation des logiciels du fabricant (`Program Files\Tobii`,
    `Program Files\Tobii Dynavox`) ;
 3. le cache NuGet (`%USERPROFILE%\.nuget\packages\tobii.interaction\0.7.3`) : sur le PC où l'on
-   compile GazeBar, il n'y a rien à faire.
+   compile Prunel, il n'y a rien à faire.
 
 Les DLL .NET sont données à .NET par l'événement `AssemblyResolve` ; la DLL native est chargée
 avant, avec `LoadLibrary`, en 32 bits. `EyetrackerGazeSource` n'utilise les types de Tobii.Interaction que
-dans `ConnectEyetracker`, pour que GazeBar démarre même sans ces DLL. Le journal note où chaque
+dans `ConnectEyetracker`, pour que Prunel démarre même sans ces DLL. Le journal note où chaque
 DLL a été trouvée. Comment un utilisateur les récupère : voir le
 [guide d'utilisation](user-guide.fr.md#fichiers-de-leyetracker).
 
@@ -147,7 +147,7 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   (et plus tard jeu, depuis l'étape 6 ; c'est le `ModeManager` qui surveille). La loupe, le
   choix d'action et le glisser-déposer ont leur bouton « retour ». Boutons : Paramètres, Jeu, Clavier
   (le clavier au regard, étape 12), Pause (ou Reprendre si l'on vient de la pause), Suivi souris (interrupteur, bord vert
-  quand il est activé), Quitter GazeBar (avec confirmation « Oui » / « Non »).
+  quand il est activé), Quitter Prunel (avec confirmation « Oui » / « Non »).
   Regarder hors de la barre pendant `MenuCloseDelay` (1 s) la ferme et ramène au mode
   d'avant. Un petit cercle montre où est le regard.
 - `Modes/SettingsMode` et `SettingsWindow` (étape 7) : bouton « Paramètres » du menu. Une
@@ -164,9 +164,9 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   valeur pour la taper (Entrée valide, Échap annule ; point ou virgule acceptés). Chaque
   changement est appliqué tout de suite et enregistré. Contrairement au calque, cette fenêtre
   accepte la souris et le clavier. `IGazeTarget` permet au `ButtonAimer` de viser ses cibles.
-- Instance unique (étape 7, `App`) : si GazeBar tourne déjà, un deuxième lancement se ferme
+- Instance unique (étape 7, `App`) : si Prunel tourne déjà, un deuxième lancement se ferme
   aussitôt, sans rien afficher, et le note dans le journal.
-- `WindowsStartup` (étape 7) : l'option `StartWithWindows` (onglet Général) inscrit GazeBar
+- `WindowsStartup` (étape 7) : l'option `StartWithWindows` (onglet Général) inscrit Prunel
   dans la liste de démarrage de Windows (registre, `HKEY_CURRENT_USER\...\Run`), sans droits
   d'administrateur : les fenêtres administrateur continuent d'ignorer ses clics.
 - `Modes/ScrollMode` (étape 8) : action « Défilement » de la couronne. Le cercle blanc reste
@@ -182,7 +182,7 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   qui ramène au mode mouvement. Regarder hors de l'écran à droite pendant 1 s ramène aussi au
   mode mouvement (issue #51) ; rien n'y défile. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
   Depuis le 02/11/2026 : défilement fin (petites quantités de molette, jusqu'à une fois par
-  image, et vitesse lissée qui monte et descend en douceur) ; en entrant, GazeBar rend active la
+  image, et vitesse lissée qui monte et descend en douceur) ; en entrant, Prunel rend active la
   fenêtre sous le curseur (sans cliquer), pour ne plus avoir à cliquer avant de défiler.
   Onglet « Défilement » : option « Défiler les fenêtres inactives » (oui par défaut), qui
   règle l'option Windows du même nom (`WheelScroller`, appliquée au démarrage et à chaque changement).
@@ -213,9 +213,9 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
 - `Modes/PauseMode` (étape 4) : plus rien ne suit le regard ; seul le menu peut encore s'ouvrir
   (bouton « Reprendre »).
 - `EyetrackerLoader` (02/11/2026) : trouve et charge au démarrage les DLL de l'eyetracker
-  (Tobii.Interaction), qui ne sont pas livrées avec GazeBar (voir « Installation »). Les DLL .NET sont fournies à .NET par l'événement
+  (Tobii.Interaction), qui ne sont pas livrées avec Prunel (voir « Installation »). Les DLL .NET sont fournies à .NET par l'événement
   `AssemblyResolve` ; la DLL native est chargée à l'avance par `LoadLibrary`, en 32 bits.
-  `EyetrackerGazeSource` n'utilise les types de Tobii.Interaction que dans `ConnectEyetracker`, pour que GazeBar démarre
+  `EyetrackerGazeSource` n'utilise les types de Tobii.Interaction que dans `ConnectEyetracker`, pour que Prunel démarre
   même sans ces DLL.
 - `Modes/CalibrationMode` et `Calibration` (étape 4) : bouton « Calibration » de l'onglet
   « Outils » des paramètres (avec « Diagnostic » ; tous deux étaient dans la barre de menu avant
@@ -225,10 +225,10 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
 - `KeyboardHook` (étape 4) : la touche **Échap** ramène au mode mouvement depuis n'importe quel
   mode, pour l'aidant. La touche arrive aussi normalement au programme actif. Depuis l'étape 12,
   en mode mouvement, elle ferme le clavier au regard ; la touche « Esc » du clavier au regard,
-  simulée par GazeBar, est ignorée par le crochet (elle va seulement à l'application) : GazeBar
+  simulée par Prunel, est ignorée par le crochet (elle va seulement à l'application) : Prunel
   marque ses propres touches simulées (`dwExtraInfo`). Depuis l'issue #51, un Échap simulé par un
   autre logiciel (Dragon, à la voix) compte comme la vraie touche. En mode défilement et quand le
-  clavier au regard est ouvert, GazeBar GARDE Échap (appui et relâchement) : les autres logiciels
+  clavier au regard est ouvert, Prunel GARDE Échap (appui et relâchement) : les autres logiciels
   ne le reçoivent pas (`KeepEscape`).
 - Clavier au regard (étape 12, `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`) : bouton
   « Clavier » du menu, ou action « Clavier » du choix d'action (ouvre / ferme le clavier ; avant de l'ouvrir, un clic
@@ -272,7 +272,7 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   `Dictionaries/fr.txt` (environ 125 000 mots tirés de Lexique 3.83, copié à côté de
   GazeBar.exe, lu en arrière-plan au démarrage) et `%APPDATA%\GazeBar\personal-dictionary.json`
   (mots ajoutés et nombres d'utilisations ; jamais dans le dépôt), enregistré après chaque ajout
-  et, pour les utilisations, une fois par minute et à la fermeture. Mot suivant : GazeBar retient les
+  et, pour les utilisations, une fois par minute et à la fermeture. Mot suivant : Prunel retient les
   paires de mots écrits l'un après l'autre (« je » → « suis ») ; juste après une espace, les
   cases proposent les mots qui ont le plus souvent suivi le mot d'avant, et pendant la frappe
   ces mots passent devant (+ 200 par fois). Lexique n'a pas de paires : ces propositions
@@ -297,7 +297,7 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   ajoutés avec « + », par pages de 12 ; regarder un mot le retire du dictionnaire personnel (avec ses utilisations et ses paires).
   `settings.json` version 10.
 - Le calque se remet au-dessus de toutes les fenêtres deux fois par seconde.
-- `app.manifest` : déclare GazeBar « sensible au DPI », pour que le regard, le curseur et le
+- `app.manifest` : déclare Prunel « sensible au DPI », pour que le regard, le curseur et le
   dessin utilisent les mêmes pixels, même avec une mise à l'échelle de Windows à 125 % ou 150 %.
 - `app.uiaccess.manifest` (étape `ui-access`) : le même manifeste avec `uiAccess="true"`, utilisé
   seulement par la version « installation complète » (`dotnet build -p:UiAccess=true`).
@@ -314,17 +314,17 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   qui la signe avec un certificat créé sur l'ordinateur de l'utilisateur (sa clé privée supprimée
   aussitôt), et ajoute un raccourci au menu Démarrer et une entrée dans « Paramètres >
   Applications » de Windows. Son programme de désinstallation retire le certificat et l'entrée
-  « Démarrer avec Windows ». Il lance GazeBar par ShellExecute (option `shellexec`) :
+  « Démarrer avec Windows ». Il lance Prunel par ShellExecute (option `shellexec`) :
   CreateProcess refuse un programme avec accès à l'interface (erreur 740). Ses textes sont dans le
   fichier `.iss` (français ou anglais, selon la langue de Windows), pas dans `Languages/`, car
-  GazeBar ne tourne pas à ce moment-là.
+  Prunel ne tourne pas à ce moment-là.
 
 ## Fichier des réglages
 
 Tous les réglages sont dans la classe `AppSettings` (fichier `AppSettings.cs`) et enregistrés dans
 `%APPDATA%\GazeBar\settings.json`, créé au premier lancement avec les valeurs par défaut du
 cahier des charges. On peut l'ouvrir avec le Bloc-notes (nombres décimaux avec un point : `0.3`),
-puis relancer GazeBar. Un fichier illisible est mis de côté (`settings.json.unreadable`) et
+puis relancer Prunel. Un fichier illisible est mis de côté (`settings.json.unreadable`) et
 remplacé par les valeurs par défaut.
 `FileVersion` (13 actuellement) indique quelle version a écrit le fichier : un fichier plus
 ancien est converti au démarrage (voir la liste des versions en haut de `AppSettings.cs`). La
@@ -337,7 +337,7 @@ ancien (version 6) est converti une fois, en divisant les pixels par 21.6 (valeu
 un écran de 2160 px de haut). `InterfaceSize` (75, 100, 125 ou 150 %, onglet « Affichage »)
 agrandit ou réduit tout ce qui est dessiné, sauf les réglages du regard. Les textes du calque
 suivent aussi la taille du texte de Windows (Accessibilité). Les changements de résolution, de
-mise à l'échelle et de taille du texte sont détectés pendant que GazeBar tourne.
+mise à l'échelle et de taille du texte sont détectés pendant que Prunel tourne.
 
 ### Profils de réglages
 
@@ -379,7 +379,7 @@ Pour ajouter une langue : copier `en.json` en `xx.json`, traduire les valeurs (j
 
 ## Vérification de la compilation (CI)
 
-`.github/workflows/build.yml` compile GazeBar sous Windows pour chaque pull request et chaque
+`.github/workflows/build.yml` compile Prunel sous Windows pour chaque pull request et chaque
 envoi sur `main`. `.github/scripts/check-data-files.ps1` vérifie que les fichiers JSON des
 claviers et des langues sont valides, et que chaque langue a les mêmes clés et les mêmes `{n}`
 que `en.json`.
