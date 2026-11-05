@@ -67,7 +67,9 @@ ou s'arrêter en douceur ; sans avoir cliqué dans la page avant, elle doit déf
 On rouvre le défilement et on regarde directement sous le cercle, sans passer dedans : la page
 doit commencer à descendre en moins d'une demi-seconde, sans bouger le regard. Chaque départ doit
 être doux : lent au début, puis plus rapide en une seconde et demie environ ; juste au bord du
-cercle, très lent.
+cercle, très lent. On regarde hors de l'écran à droite pendant une seconde : retour au mode
+mouvement. On regarde hors de l'écran en haut, en bas et à gauche : ça défile toujours à vitesse
+maximale dans ce sens.
 
 ## 8. Configuration des icônes
 

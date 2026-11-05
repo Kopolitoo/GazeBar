@@ -56,7 +56,8 @@ edge cancels.
 
 Choose "Scroll" in the action choice. The circle stays in place. Look above, below, left or
 right of it to scroll that way: the further away, the faster. Look inside the circle to stop.
-"Back" (right edge) ends scrolling.
+"Back" (right edge) ends scrolling; looking off the screen on the right for one second
+does too.
 
 ## Menu
 

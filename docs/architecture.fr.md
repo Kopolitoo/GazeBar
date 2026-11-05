@@ -179,7 +179,8 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   cercle montre la direction. Rien ne défile pendant les 0,4 premières secondes, sauf si le regard
   est passé dans le cercle (à l'entrée, le regard est encore sur l'icône de la couronne), ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
   l'écran compte, pour agrandir la plage de vitesse) ou sur le bouton « retour » (bord droit, centré),
-  qui ramène au mode mouvement. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
+  qui ramène au mode mouvement. Regarder hors de l'écran à droite pendant 1 s ramène aussi au
+  mode mouvement (issue #51) ; rien n'y défile. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
   Depuis le 02/11/2026 : défilement fin (petites quantités de molette, jusqu'à une fois par
   image, et vitesse lissée qui monte et descend en douceur) ; en entrant, GazeBar rend active la
   fenêtre sous le curseur (sans cliquer), pour ne plus avoir à cliquer avant de défiler.

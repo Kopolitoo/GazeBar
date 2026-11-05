@@ -62,6 +62,8 @@ anyway (the log notes the window made active and the state of the Windows wheel 
 Open scrolling again and look straight below the circle, without passing through it: the page
 must start going down within half a second, without moving the gaze. Each start must be gentle:
 slow at first, then faster over about a second and a half; just outside the circle, very slow.
+Look off the screen on the right for one second: back to movement mode. Look off the screen
+above, below and on the left: it still scrolls at full speed in that direction.
 
 ## 8. Icon configuration
 

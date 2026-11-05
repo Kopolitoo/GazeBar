@@ -172,6 +172,8 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   direction. Nothing scrolls during the first 0.4 s, unless the gaze has been inside the circle
   (on entry the gaze is still on the crown icon), nor when the gaze is lost, more than 200 px off the screen (a gaze slightly off the screen counts, to widen the
   speed range), or on the "back" button (right edge, centred), which goes back to movement mode.
+  Looking off the screen on the right for 1 s also goes back to movement mode (issue #51); nothing
+  scrolls there.
   Ctrl on in the action choice: Ctrl + wheel (zoom). Fine scrolling (small wheel amounts, up to
   once per frame, and a smoothed speed that rises and falls gently); on entering, GazeBar
   activates the window under the cursor (without clicking), so there is no need to click before

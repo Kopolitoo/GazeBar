@@ -60,7 +60,8 @@ bouton retour au bord droit annule.
 
 On choisit « Défilement » dans le choix d'action. Le cercle reste en place. On regarde au-dessus,
 en dessous, à gauche ou à droite pour faire défiler dans ce sens : plus le regard est loin, plus
-c'est rapide. Regarder dans le cercle arrête. « Retour » (bord droit) termine le défilement.
+c'est rapide. Regarder dans le cercle arrête. « Retour » (bord droit) termine le défilement ; regarder hors de l'écran à droite pendant une
+seconde aussi.
 
 ## Menu
 
