@@ -9,6 +9,7 @@
   "menu.keyboardBottom": "Keyboard at the bottom of the screen",
   "menu.keyboardTop": "Keyboard at the top of the screen",
   "menu.keyboardSize": "Keyboard size (100, 75, 50 %)",
+  "menu.keyboardTransparency": "Transparency (0, 25, 50, 75 %)",
   "menu.inputBox": "Input box",
   "menu.keyboardLayout": "Keyboard layout",
   "menu.pause": "Pause",

@@ -230,7 +230,9 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   "⌫ ABC" deletes the current word (or Ctrl + Backspace). Keyboard menu bar (gaze below the
   screen, which then replaces the usual bar): Up / down (keyboard at the top of the screen,
   position remembered: `KeyboardAtTop`), Size (100, 75 or 50 %, width and height together,
-  keyboard centred: `KeyboardSize`, also in the settings), Pause. When it opens, the keyboard at
+  keyboard centred: `KeyboardSize`, also in the settings), Transparency (0, 25, 50 or 75 % of
+  the backgrounds: keyboard, keys and input box; labels, hover and green flash stay opaque:
+  `KeyboardTransparency`, `settings.json` version 15, issue #55), Pause. When it opens, the keyboard at
   the bottom slides up above it (and back down). Closing: button on the right above the keyboard
   (below it if the keyboard is at the top), keyboard bar, or Escape. Tab is a real tab: its width
   (2 or 4 spaces) is set in the software being typed in. Typed text is never written to the log.

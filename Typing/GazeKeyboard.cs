@@ -27,7 +27,8 @@ namespace GazeBar
     /// width, above everything and WITHOUT reserving room: other windows keep their size.
     /// The keyboard menu bar also offers: moving it to the
     /// top of the screen (position remembered, [KeyboardAtTop]), and shrinking it to 75 % or
-    /// 50 % ([KeyboardSize], centred). When this bar is open, the keyboard moves up above it
+    /// 50 % ([KeyboardSize], centred), and making its backgrounds see-through
+    /// ([KeyboardTransparency]: 0, 25, 50 or 75 %, labels stay opaque). When this bar is open, the keyboard moves up above it
     /// (SetBottomReserve). The overlay never takes focus: the application being typed in
     /// keeps its text cursor, and the simulated keys do reach it.
     ///
@@ -400,6 +401,23 @@ namespace GazeBar
             p.KeyboardSize = p.KeyboardSize > 75 ? 75 : p.KeyboardSize > 50 ? 50 : 100;
             p.Save();
             App.LogDetail("Keyboard: size " + p.KeyboardSize + " %");
+            if (_visible)
+            {
+                Build();
+            }
+        }
+
+        /// <summary>
+        /// "Transparence" button of the keyboard bar (issue #55): 0 % → 25 % → 50 % → 75 % →
+        /// 0 %… of the BACKGROUNDS (keyboard, keys, input box); the labels stay opaque.
+        /// Saved.
+        /// </summary>
+        public void ChangeTransparency()
+        {
+            AppSettings p = AppSettings.Current;
+            p.KeyboardTransparency = p.KeyboardTransparency >= 75 ? 0 : p.KeyboardTransparency + 25;
+            p.Save();
+            App.LogDetail("Keyboard: transparency " + p.KeyboardTransparency + " %");
             if (_visible)
             {
                 Build();

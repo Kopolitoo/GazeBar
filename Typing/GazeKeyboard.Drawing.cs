@@ -32,6 +32,9 @@ namespace GazeBar
             KeyboardPage page = _layout.Page(_page) ?? _layout.Page(_layout.StartPage);
 
             AppSettings p = AppSettings.Current;
+            // Opacity of the backgrounds (keyboard, keys, input box): 1 at 0 % transparency,
+            // 0.25 at 75 %. The labels always stay opaque, so they remain readable.
+            double backgroundOpacity = 1 - p.KeyboardTransparency / 100.0;
             double width = ScreenMetrics.WidthPixels;
             double height = ScreenMetrics.HeightPixels;
 
@@ -70,9 +73,12 @@ namespace GazeBar
             _layer.PrepareKeyboardSurface();
             Canvas surface = _layer.KeyboardSurface;
 
-            // ── The background: an almost black rectangle, as on the user's screenshots.
+            // ── The background: an almost black rectangle, as on the user's screenshots,
+            //    more or less see-through ([KeyboardTransparency]).
             Border background = new Border();
-            background.Background = new SolidColorBrush(Color.FromArgb(0xF5, 0x12, 0x12, 0x12));
+            SolidColorBrush backgroundBrush = new SolidColorBrush(Color.FromArgb(0xF5, 0x12, 0x12, 0x12));
+            backgroundBrush.Opacity = backgroundOpacity;
+            background.Background = backgroundBrush;
             background.Width = _layer.LengthToWpf(keyboardWidth);
             background.Height = _layer.LengthToWpf(keyboardHeight);
             Point corner = _layer.ToWpf(_left, _top);
@@ -87,7 +93,9 @@ namespace GazeBar
             if (zoneHeight > 0)
             {
                 Border zone = new Border();
-                zone.Background = InputBoxBackground;
+                SolidColorBrush zoneBrush = (SolidColorBrush)InputBoxBackground.Clone();
+                zoneBrush.Opacity = backgroundOpacity;
+                zone.Background = zoneBrush;
                 zone.CornerRadius = new CornerRadius(ScreenMetrics.Units(4));
                 double zoneWidth = keyboardWidth - 2 * margin - gap;
                 zone.Width = _layer.LengthToWpf(zoneWidth);
@@ -114,7 +122,7 @@ namespace GazeBar
             double keysTop = _top + zoneHeight;
             foreach (LayoutKey d in page.Keys)
             {
-                KeyboardKey key = new KeyboardKey(d);
+                KeyboardKey key = new KeyboardKey(d, backgroundOpacity);
                 key.Place(_layer, surface,
                               _left + margin + d.Col * cellWidth,
                               keysTop + margin + d.Row * cellHeight,

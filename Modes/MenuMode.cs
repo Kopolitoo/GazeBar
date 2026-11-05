@@ -45,12 +45,14 @@ namespace GazeBar
     ///   Up / down     puts the keyboard at the top of the screen, or brings it back down
     ///                 (remembered);
     ///   Size          100 % → 75 % → 50 % → 100 %... (the button shows the current size);
+    ///   Transparency  0 % → 25 % → 50 % → 75 % → 0 %... of the keyboard backgrounds (the
+    ///                 button shows the current value; issue #55);
     ///   Input box     switch (green border): the band of the last typed words;
     ///   Language      opens the list of the layouts of the Keyboards folder;
     ///   Pause         switches to pause mode (the keyboard is hidden, and comes back on resume).
     /// No "Close" button: it duplicated the one placed above the keyboard (removed at the
     /// user's).
-    /// Up / down, Size and Input box leave the menu open, like "Mouse tracking".
+    /// Up / down, Size, Transparency and Input box leave the menu open, like "Mouse tracking".
     /// Language opens a full-screen list (KeyboardListMode). "My words" is in the General tab
     /// of the settings. The keyboard stays shown, and if it is at
     /// the bottom it MOVES UP above the bar instead of being covered
@@ -71,6 +73,7 @@ namespace GazeBar
             Keyboard,
             KeyboardPosition,
             KeyboardSize,
+            KeyboardTransparency,
             InputBox,
             Language,
             Pause,
@@ -318,6 +321,13 @@ namespace GazeBar
                     Build();
                     break;
 
+                case MenuAction.KeyboardTransparency:
+                    // Like the size: the menu stays open, the keyboard above the bar is
+                    // redrawn at once, so the result is seen right away.
+                    Manager.Keyboard.ChangeTransparency();
+                    Build();
+                    break;
+
                 case MenuAction.InputBox:
                     // Switch, like "Mouse tracking": the menu stays open. The bar is rebuilt
                     // (green border); the button waits for the gaze to leave it.
@@ -433,6 +443,9 @@ namespace GazeBar
                 Add(buttons, actions,
                         GazeButton.Text(p.KeyboardSize.ToString("F0") + " %", Texts.Get("menu.keyboardSize")),
                         MenuAction.KeyboardSize);
+                Add(buttons, actions,
+                        GazeButton.Text(p.KeyboardTransparency.ToString("F0") + " %", Texts.Get("menu.keyboardTransparency")),
+                        MenuAction.KeyboardTransparency);
                 // Input box (switch) and language ("My words" is in the settings).
                 GazeButton zone = new GazeButton("\uE70F", null, Texts.Get("menu.inputBox"));
                 zone.SetLit(p.InputBox);

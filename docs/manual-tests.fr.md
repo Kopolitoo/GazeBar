@@ -115,6 +115,10 @@ flèche la vide. « Disposition du clavier » : la liste montre « Français AZE
 clavier » ramène au clavier. Paramètres, onglet Général, « Mes mots » : « zorglub » (ajouté à
 l'étape 13) est dans la liste ; on le regarde : il disparaît ; « Retour aux paramètres » ramène à
 l'onglet Général. En tapant « zo », il n'est plus proposé.
+« Transparence » (montre « 0 % ») : on la regarde : « 25 % », les fonds du clavier laissent
+voir la fenêtre derrière ; encore : « 50 % », « 75 % », puis « 0 % » (opaque comme avant). À 75 %,
+les lettres, l'éclair vert et le survol restent bien visibles. On ferme et rouvre GazeBar : la
+valeur est gardée.
 
 ## 13. Clavier anglais
 

@@ -77,8 +77,10 @@ namespace GazeBar
         ///      older file, it keeps its default value.
         ///  14: step sound-feedback — KeySound and ButtonSound (no by default). Nothing to fix:
         ///      missing from an older file, they keep their default value.
+        ///  15: issue #55 — KeyboardTransparency (0 % by default). Nothing to fix: missing from
+        ///      an older file, it keeps its default value.
         /// </summary>
-        public const int CurrentVersion = 14;
+        public const int CurrentVersion = 15;
 
         /// <summary>Format number of the file, so it can evolve one day without breaking everything.</summary>
         [DataMember(Order = 0)]
@@ -418,6 +420,16 @@ namespace GazeBar
         /// </summary>
         [DataMember(Order = 117)]
         public bool InputBox { get; set; }
+
+        /// <summary>
+        /// Transparency of the keyboard BACKGROUNDS, in %: 0, 25, 50 or 75 (issue #55). The
+        /// keyboard background, the key backgrounds and the input box let what is behind them
+        /// show through; the labels, the hover and the green flash stay fully visible.
+        /// "Transparence" button of the keyboard menu bar (0 → 25 → 50 → 75 → 0 %). Not in the
+        /// Clavier settings tab: it already has five rows, the maximum that fits on the page.
+        /// </summary>
+        [DataMember(Order = 118)]
+        public double KeyboardTransparency { get; set; }
 
         // ───────────────────────── Language ─────────────────────────
 

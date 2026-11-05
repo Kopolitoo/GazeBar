@@ -22,6 +22,8 @@ namespace GazeBar
     ///   - when it activates, it "flashes" green for a short moment (Flash).
     /// An active modifier (Shift, Caps Lock, Ctrl, Alt, Win) has a green border, like the lit
     /// switches of the menu bar.
+    /// With [KeyboardTransparency], the normal key background lets what is behind show
+    /// through; the label, the hover background and the green flash stay opaque.
     ///
     /// Like GazeButton, it "implements" IGazeTarget: ButtonAimer decides whether it is looked
     /// at and when it activates, and tells it what to draw.
@@ -81,8 +83,11 @@ namespace GazeBar
         private double _widthWpf;
         private double _cellHeightWpf;
 
-        /// <summary>Creates the key described by the layout file.</summary>
-        public KeyboardKey(LayoutKey description)
+        /// <summary>
+        /// Creates the key described by the layout file. backgroundOpacity: opacity of the
+        /// normal key background, from 0 (invisible) to 1 (opaque), see [KeyboardTransparency].
+        /// </summary>
+        public KeyboardKey(LayoutKey description, double backgroundOpacity)
         {
             Description = description;
 
@@ -99,7 +104,9 @@ namespace GazeBar
             {
                 style = "function";
             }
-            _normalBackground = style == "light" ? LightBackground : style == "letter" ? LetterBackground : FunctionBackground;
+            _normalBackground = Translucent(
+                style == "light" ? LightBackground : style == "letter" ? LetterBackground : FunctionBackground,
+                backgroundOpacity);
 
             _text = new TextBlock();
             _text.Foreground = Active ? White : Gray;
@@ -284,6 +291,22 @@ namespace GazeBar
             bool highlight = hover && Active;
             _background.Background = highlight ? HoverBackground : _normalBackground;
             ApplyBorder(highlight);
+        }
+
+        /// <summary>
+        /// The brush with its opacity multiplied by "opacity" (1 = the brush itself). The text
+        /// is a child of the Border, not of its background: it keeps its full opacity.
+        /// </summary>
+        private static Brush Translucent(Brush brush, double opacity)
+        {
+            if (opacity >= 1)
+            {
+                return brush;
+            }
+            Brush copy = brush.Clone();
+            copy.Opacity = brush.Opacity * Math.Max(0, opacity);
+            copy.Freeze();
+            return copy;
         }
 
         private static Brush Freeze(Color color)
