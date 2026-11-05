@@ -252,7 +252,8 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   ni des majuscules (« ete » propose « été »). Si ce qui est tapé est déjà un mot connu, il est
   en 1re case : le regarder écrit juste l'espace après lui. En regarder une écrit le mot entier suivi d'une
   espace (pas d'espace après « l' », « qu' »…) ; le mot garde la majuscule de départ. Classement :
-  fréquence dans Lexique + 20 par utilisation. Un mot inconnu de 2 lettres ou plus s'affiche dans
+  fréquence dans Lexique + 20 par utilisation, divisé par 1,6 pour chaque lettre qui reste à taper
+  (les mots courts d'abord, issue #71). Un mot inconnu de 2 lettres ou plus s'affiche dans
   la 1re case avec un « + » (en ambre) : la regarder l'ajoute au dictionnaire personnel. Fichiers :
   `Dictionaries/fr.txt` (environ 125 000 mots tirés de Lexique 3.83, copié à côté de
   GazeBar.exe, lu en arrière-plan au démarrage) et `%APPDATA%\GazeBar\personal-dictionary.json`
