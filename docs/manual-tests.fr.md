@@ -27,7 +27,8 @@ s'ouvre, sans toucher la souris.
 
 On regarde en bas, hors de l'écran : la barre de menu apparaît : seulement des
 boutons, sans fond sombre derrière eux, bien espacés (aussi dans la barre de menu du clavier). On regarde
-« Pause » : tout s'arrête. On regarde de nouveau en bas, puis « Reprendre » : le cercle revient.
+« Pause » : tout s'arrête. On regarde de nouveau en bas : seul « Reprendre » apparaît, et le cercle
+reste caché, même en regardant vite ailleurs (issue #49). Après « Reprendre », le cercle revient.
 Le tout uniquement au regard. Échap ramène aussi au mode mouvement.
 
 ## 4. Loupe

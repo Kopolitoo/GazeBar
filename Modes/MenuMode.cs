@@ -38,7 +38,8 @@ namespace GazeBar
     /// buttons, one then opens the menu again.
     ///
     /// The gaze circle keeps its normal size ([CircleRadius], as in movement mode).
-    /// It is hidden while the gaze is in the bar zone.
+    /// It is hidden while the gaze is in the bar zone. From PAUSE mode it is never shown:
+    /// the pause hides it, and it only comes back after "Resume" (issue #49).
     ///
     /// KEYBOARD MENU BAR: when the gaze keyboard is
     /// shown, looking below the screen does NOT open the classic bar, but the keyboard's one
@@ -175,6 +176,12 @@ namespace GazeBar
             get { return "Menu"; }
         }
 
+        /// <summary>True when the menu was opened from pause mode (only "Resume" is shown).</summary>
+        private bool FromPause
+        {
+            get { return _back is PauseMode; }
+        }
+
         public override void Enter(GazeState gaze)
         {
             // The ModeManager has already noted the previous mode: that is where we will return.
@@ -188,6 +195,11 @@ namespace GazeBar
             layer.HideRing();
             layer.HideIcon();
             layer.HideChoiceScreen();
+            if (FromPause)
+            {
+                // During the pause the circle stays hidden (issue #49).
+                layer.HideCircle();
+            }
 
             // The circle starts from where the current circle is (no jump), otherwise it will
             // appear at the first on-screen gaze measure.
@@ -244,7 +256,13 @@ namespace GazeBar
             //    the screen: it would hinder reading the buttons.
             //    Its position keeps being tracked: it reappears without a jump when leaving the
             //    zone. Gaze lost: it stays where it is.
-            if (gaze.Available)
+            //    From the pause, it is never shown (issue #49): looking quickly away from
+            //    "Resume" must not bring it back before the pause ends.
+            if (FromPause)
+            {
+                Manager.Layer.HideCircle();
+            }
+            else if (gaze.Available)
             {
                 if (!_circlePlaced)
                 {
