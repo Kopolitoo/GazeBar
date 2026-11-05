@@ -108,6 +108,9 @@ layouts, the one in use with a green border; "Back to the keyboard" goes back to
 Settings, General tab, "My words": "zorglub" (added in step 13) is in the list; look at it: it
 disappears; "Back to the settings" goes back to the General tab. Typing "zo", it is no longer
 suggested.
+"Transparency" (shows "0 %"): look at it: "25 %", the keyboard backgrounds let the window behind
+show through; again: "50 %", "75 %", then "0 %" (opaque as before). At 75 %, the letters,
+the green flash and the hover stay clearly visible. Close and reopen GazeBar: the value is kept.
 
 ## 13. English keyboard
 

@@ -94,7 +94,8 @@ endroit, le champ prend le focus et le curseur de texte se place là où l'on re
   comme « mp3 », peut l'être). Les mots courts passent devant, sauf si un mot plus long est beaucoup
   plus courant ou souvent utilisé. GazeBar apprend aussi quel mot suit souvent un autre.
 - **Barre du clavier** (regarder sous l'écran quand le clavier est ouvert) : monter ou descendre
-  le clavier, changer sa taille, le mettre en pause, afficher la « Zone de saisie » (un aperçu de
+  le clavier, changer sa taille, rendre son fond transparent (« Transparence » : 0, 25, 50 ou
+  75 %, les lettres restent nettes), le mettre en pause, afficher la « Zone de saisie » (un aperçu de
   ce qui est écrit), choisir la « Disposition du clavier » (AZERTY, QWERTY…).
 - **Mes mots** (Paramètres, onglet « Général ») : les mots ajoutés ; en regarder un le retire.
 - On ferme le clavier par le bouton au-dessus de lui, par la barre du clavier, ou avec Échap.

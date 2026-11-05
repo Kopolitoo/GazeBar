@@ -81,6 +81,7 @@ namespace GazeBar
             KeyboardAtTop = false;
             KeyboardLayout = GazeBar.KeyboardLayout.DefaultName;
             InputBox = false;
+            KeyboardTransparency = 0;
             Language = Texts.FallbackLanguage;
 
             DefaultIcons();
@@ -145,6 +146,8 @@ namespace GazeBar
             KeyboardHeight = Clamp(KeyboardHeight, 25, 75);
             // Only 50, 75 or 100: another value goes to the nearest (60 → 50, 90 → 100).
             KeyboardSize = Math.Round(Clamp(KeyboardSize, 50, 100) / 25) * 25;
+            // Only 0, 25, 50 or 75: another value goes to the nearest (40 → 50, 90 → 75).
+            KeyboardTransparency = Math.Round(Clamp(KeyboardTransparency, 0, 75) / 25) * 25;
             // An empty file name or one containing a path ("..\", "C:\"…) becomes the default
             // layout again: only files of the Keyboards folder are read.
             if (string.IsNullOrWhiteSpace(KeyboardLayout) ||
@@ -285,8 +288,9 @@ namespace GazeBar
                 App.Log("Settings: updated to version 12 (interface language)");
             }
 
-            // Version 13 (DetailedLog) and 14 (KeySound, ButtonSound): nothing to fix, the
-            // settings keep their default value (no).
+            // Version 13 (DetailedLog), 14 (KeySound, ButtonSound) and 15
+            // (KeyboardTransparency): nothing to fix, the settings keep their default value
+            // (no, 0 %).
             FileVersion = CurrentVersion;
             return true;
         }
