@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: simulates pressing and releasing keyboard keys.
@@ -19,10 +19,10 @@ namespace GazeBar
     {
         private static readonly object LockState = new object();
 
-        // The codes of the keys currently pressed by GazeBar.
+        // The codes of the keys currently pressed by Prunel.
         private static readonly List<ushort> Pressed = new List<ushort>();
 
-        /// <summary>Presses the key (if GazeBar has not already pressed it).</summary>
+        /// <summary>Presses the key (if Prunel has not already pressed it).</summary>
         public static void PressDown(ushort keyCode)
         {
             lock (LockState)
@@ -38,7 +38,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Releases the key (if GazeBar pressed it).</summary>
+        /// <summary>Releases the key (if Prunel pressed it).</summary>
         public static void Release(ushort keyCode)
         {
             lock (LockState)
@@ -53,7 +53,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Releases all keys pressed by GazeBar, in the reverse order of pressing.</summary>
+        /// <summary>Releases all keys pressed by Prunel, in the reverse order of pressing.</summary>
         public static void ReleaseAll()
         {
             lock (LockState)
@@ -122,10 +122,10 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Mark of GazeBar's own keys (see NativeMethods.GazeBarKeyMarker): the keyboard hook
+        /// Mark of Prunel's own keys (see NativeMethods.PrunelKeyMarker): the keyboard hook
         /// ignores the Escape key of the gaze keyboard, but not the one of other software.
         /// </summary>
-        private static readonly UIntPtr Marker = new UIntPtr((uint)NativeMethods.GazeBarKeyMarker);
+        private static readonly UIntPtr Marker = new UIntPtr((uint)NativeMethods.PrunelKeyMarker);
 
         /// <summary>A "Unicode character" input (press or release).</summary>
         private static NativeMethods.INPUT Character(char c, uint flagsValue)

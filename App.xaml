@@ -12,7 +12,7 @@
   There is no StartupUri: the code (App.xaml.cs) opens the first window.
 -->
 <Application
-    x:Class="GazeBar.App"
+    x:Class="Prunel.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 

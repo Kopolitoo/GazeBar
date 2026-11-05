@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// ACTION CHOICE MODE.
@@ -133,7 +133,7 @@ namespace GazeBar
         {
             _aimer.Reset();
 
-            // 1. CAPTURE: hide everything GazeBar draws, and wait a bit before the photo.
+            // 1. CAPTURE: hide everything Prunel draws, and wait a bit before the photo.
             Manager.Layer.HideAll();
             _step = Step.Capture;
             _stepStartMs = gaze.NowMs;

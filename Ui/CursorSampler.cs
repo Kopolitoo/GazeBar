@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// One measure: where the cursor was, and when.

@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using Microsoft.Win32;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: the [StartWithWindows] option.
@@ -10,11 +10,11 @@ namespace GazeBar
     /// How does Windows start a program when the session opens? It reads the list stored
     /// in the registry (the Windows settings database), at this location:
     ///     HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run
-    /// Each value of this "key" is a program to start: its name (here "GazeBar") and the
+    /// Each value of this "key" is a program to start: its name (here "Prunel") and the
     /// full path of the .exe, in quotes.
     ///
     /// HKEY_CURRENT_USER: only for the current user, and without administrator rights.
-    /// Consequence (see the specification): GazeBar started this way is not administrator,
+    /// Consequence (see the specification): Prunel started this way is not administrator,
     /// and administrator windows will keep ignoring its clicks.
     ///
     /// Microsoft.Win32.Registry ships with .NET Framework: no new dependency.
@@ -22,13 +22,13 @@ namespace GazeBar
     internal static class WindowsStartup
     {
         private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-        private const string ValueName = "GazeBar";
+        private const string ValueName = "Prunel";
 
         /// <summary>
-        /// Adds GazeBar to the Windows startup list (active = true) or removes it.
+        /// Adds Prunel to the Windows startup list (active = true) or removes it.
         /// Never crashes the program: an error is only written to the log.
         ///
-        /// Called when GazeBar starts (so that the registry matches the settings file, and
+        /// Called when Prunel starts (so that the registry matches the settings file, and
         /// to update the path if the .exe was moved) and each time the option is changed
         /// in settings mode.
         /// </summary>
@@ -45,10 +45,18 @@ namespace GazeBar
                         return;
                     }
 
+                    // The value of the former name (GazeBar, before version 0.3.0) would start
+                    // the old program: it is always removed.
+                    if (key.GetValue(FormerName.Name) != null)
+                    {
+                        key.DeleteValue(FormerName.Name, false);
+                        App.Log("Start with Windows: old " + FormerName.Name + " value removed");
+                    }
+
                     if (active)
                     {
                         // The path of the running program (for example
-                        // D:\TRAVAIL\YEUX\GazeBar\bin\Debug\net48\GazeBar.exe).
+                        // D:\TRAVAIL\YEUX\Prunel\bin\Debug\net48\Prunel.exe).
                         string path = Process.GetCurrentProcess().MainModule.FileName;
                         string command = "\"" + path + "\"";
                         if (!command.Equals(key.GetValue(ValueName) as string, StringComparison.OrdinalIgnoreCase))

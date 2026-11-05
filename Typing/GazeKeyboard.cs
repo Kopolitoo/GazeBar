@@ -6,12 +6,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// LOGIC: the gaze keyboard ("clavier-base").
     ///
-    /// It is not a mode: the keyboard stays shown WHILE GazeBar works normally above it:
+    /// It is not a mode: the keyboard stays shown WHILE Prunel works normally above it:
     ///   - gaze OUTSIDE the keyboard: movement mode applies (fixed gaze, action choice,
     ///     magnifier…);
     ///   - gaze ON the keyboard: the mouse cursor does not move, the gaze circle is hidden,
@@ -148,7 +148,7 @@ namespace GazeBar
         public GazeKeyboard(OverlayWindow layer)
         {
             _layer = layer;
-            // "1": a single gaze sample is enough to light a key (2 for GazeBar's other
+            // "1": a single gaze sample is enough to light a key (2 for Prunel's other
             // buttons). Hover thus reacts one sample earlier (about 30 ms).
             _aimer = new ButtonAimer(_targets, 1);
             // The keys have their own sound ([KeySound] setting).
@@ -156,7 +156,7 @@ namespace GazeBar
 
             // The dictionary is the one of the INTERFACE language (Language setting):
             // the keyboard layout does not change it. It is read as
-            // soon as GazeBar starts, in the background (specification): it is ready when the
+            // soon as Prunel starts, in the background (specification): it is ready when the
             // keyboard opens. When the interface language changes ("Langue" button of the
             // settings), the dictionary of the new language is loaded.
             _predictor = new WordPredictor();
@@ -165,7 +165,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Call when GazeBar closes: saves the word usage counts not saved yet (otherwise
+        /// Call when Prunel closes: saves the word usage counts not saved yet (otherwise
         /// they are saved once a minute).
         /// </summary>
         public void Stop()

@@ -1,6 +1,6 @@
 using System;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: the [ScrollInactiveWindows] option (user request, "Scroll" tab
@@ -10,13 +10,13 @@ namespace GazeBar
     /// (Windows Settings → Bluetooth & devices → Mouse). It decides which window Windows
     /// sends the wheel to:
     ///   - on: to the window UNDER THE CURSOR, even if it is not active. This is what
-    ///     GazeBar's scroll mode needs, since it puts the cursor on the aimed point;
+    ///     Prunel's scroll mode needs, since it puts the cursor on the aimed point;
     ///   - off: always to the ACTIVE window, even if the cursor is elsewhere. A window must
     ///     then be clicked before it can be scrolled.
     ///
-    /// GazeBar only changes this Windows setting, with the SystemParametersInfo function
+    /// Prunel only changes this Windows setting, with the SystemParametersInfo function
     /// (provided by Windows: no new dependency). Windows saves the change: it stays valid
-    /// even when GazeBar is closed.
+    /// even when Prunel is closed.
     ///
     /// Values of the setting in Windows: 0 = active window, 1 = hybrid (active window for
     /// classic programs, window under the cursor for Store apps), 2 = window under the cursor.
@@ -63,11 +63,11 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Makes the Windows setting match GazeBar's option (active = true: the wheel goes to
+        /// Makes the Windows setting match Prunel's option (active = true: the wheel goes to
         /// the window under the cursor). Does nothing if it already matches. Never crashes
         /// the program: an error is only written to the log.
         ///
-        /// Called when GazeBar starts and each time the option is changed in settings mode
+        /// Called when Prunel starts and each time the option is changed in settings mode
         /// (like WindowsStartup.Apply).
         /// </summary>
         public static void Apply(bool active)
@@ -97,7 +97,7 @@ namespace GazeBar
                 }
 
                 App.Log("Wheel: Windows setting \"scroll inactive windows\" " +
-                        (active ? "turned on" : "turned off") + " by GazeBar, result: " + Description());
+                        (active ? "turned on" : "turned off") + " by Prunel, result: " + Description());
             }
             catch (Exception ex)
             {

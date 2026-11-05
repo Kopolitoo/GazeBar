@@ -1,6 +1,6 @@
 using System;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// GAZE SMOOTHING, shared by every mode that makes a circle follow the gaze.

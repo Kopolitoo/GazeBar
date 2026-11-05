@@ -6,12 +6,12 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// The application class: entry point of the program.
     ///
-    /// Only one instance of GazeBar at a time, and the [StartWithWindows] option.
+    /// Only one instance of Prunel at a time, and the [StartWithWindows] option.
     ///
     /// It reads the settings, creates the shared "model" objects (cursor, gaze), opens the
     /// full-screen overlay and the mode manager, and watches the Escape key.
@@ -33,14 +33,14 @@ namespace GazeBar
 
         /// <summary>
         /// The single-instance "lock". A Mutex is a named Windows object; only one
-        /// program at a time can own it. The first GazeBar takes it; a second GazeBar sees it
+        /// program at a time can own it. The first Prunel takes it; a second Prunel sees it
         /// is already taken, and closes at once.
         /// "Local\": the name applies to the user's Windows session.
         /// </summary>
-        private const string LockName = "Local\\GazeBar-InstanceUnique";
+        private const string LockName = "Local\\Prunel-InstanceUnique";
         private Mutex _singleInstanceMutex;
 
-        // True for a second GazeBar, which closes without doing anything (see OnStartup / OnExit).
+        // True for a second Prunel, which closes without doing anything (see OnStartup / OnExit).
         private bool _extraInstance;
 
         /// <summary>
@@ -50,20 +50,25 @@ namespace GazeBar
         {
             base.OnStartup(e);
 
-            // A single instance (specification, "General operation"): two GazeBars at the same
+            // A single instance (specification, "General operation"): two Prunels at the same
             // time would draw two circles and send double clicks.
-            // If GazeBar is already running, this one closes at once, without showing anything.
+            // If Prunel is already running, this one closes at once, without showing anything.
             bool isFirst;
             _singleInstanceMutex = new Mutex(true, LockName, out isFirst);
             if (!isFirst)
             {
                 _extraInstance = true;
-                Log("Second launch of GazeBar: an instance is already running, closing");
+                Log("Second launch of Prunel: an instance is already running, closing");
                 Shutdown();
                 return;
             }
 
-            Log("GazeBar " + Version + " starting");
+            // Prunel was called GazeBar before: its old folders become the Prunel folders,
+            // before anything is read or written (see FormerName).
+            FormerName.Migrate();
+
+            Log("Prunel " + Version + " starting");
+            FormerName.WriteLog();
 
             // "UI access" (see Platform/UiAccess.cs): only the "full installation" has it.
             Log("UI access: " + (UiAccess.IsActive() ? "yes" : "no"));
@@ -101,13 +106,13 @@ namespace GazeBar
 
             // The real gaze, provided by the eyetracker engine. If it is unavailable, the
             // program still starts (see IGazeSource.ErrorMessage).
-            // The eyetracker DLLs are not shipped with GazeBar: they are
+            // The eyetracker DLLs are not shipped with Prunel: they are
             // first searched for on the PC (see EyetrackerLoader.cs), before any use of the gaze.
             EyetrackerLoader.Install();
             _gaze = new EyetrackerGazeSource();
             _gaze.Start();
 
-            // The program only stops on request ("Quit GazeBar" button of the menu): closing
+            // The program only stops on request ("Quit Prunel" button of the menu): closing
             // the Diagnostic window must not close everything.
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
@@ -119,24 +124,24 @@ namespace GazeBar
             _layer.BringToFront();
             _modes.Start(new MovementMode());
 
-            // If Windows hid the cursor (GazeBar started alone at startup,
+            // If Windows hid the cursor (Prunel started alone at startup,
             // without a physical mouse), make it reappear (see CursorWaker).
             CursorWaker.Check();
 
             // The caregiver's Escape key: back to movement mode, from any mode.
             _keyboard = new KeyboardHook();
             _keyboard.EscapePressed += OnEscape;
-            _keyboard.KeepEscape = EscapeKeptByGazeBar;
+            _keyboard.KeepEscape = EscapeKeptByPrunel;
             _keyboard.Install();
         }
 
         /// <summary>
-        /// True if GazeBar uses Escape for itself and the other programs must not receive it
+        /// True if Prunel uses Escape for itself and the other programs must not receive it
         /// (user request): in scroll mode (Escape leaves it) and when the gaze keyboard is open
         /// in movement mode (Escape closes it). Elsewhere, Escape is also passed on to the active
         /// program. Called inside the keyboard hook: it must answer very quickly.
         /// </summary>
-        private bool EscapeKeptByGazeBar()
+        private bool EscapeKeptByPrunel()
         {
             if (_modes == null)
             {
@@ -151,7 +156,7 @@ namespace GazeBar
         /// safety (a drag and drop in progress is interrupted) and we return to movement mode,
         /// unless we are already there. In movement mode, it closes the gaze keyboard.
         /// The key also reaches the active program, except in scroll mode and when the gaze
-        /// keyboard is open (see EscapeKeptByGazeBar).
+        /// keyboard is open (see EscapeKeptByPrunel).
         ///
         /// fromOtherSoftware: the key was simulated by other software, such as Dragon when the
         /// user says "Escape" (issue #51). It acts exactly like the real key; only the log
@@ -226,8 +231,8 @@ namespace GazeBar
         {
             if (_extraInstance)
             {
-                // Second GazeBar: it started nothing, it touches nothing (above all not the
-                // mouse buttons, which the first GazeBar may be holding).
+                // Second Prunel: it started nothing, it touches nothing (above all not the
+                // mouse buttons, which the first Prunel may be holding).
                 _singleInstanceMutex.Dispose();
                 base.OnExit(e);
                 return;
@@ -250,7 +255,7 @@ namespace GazeBar
             {
                 _gaze.Dispose();
             }
-            Log("GazeBar stopping");
+            Log("Prunel stopping");
             if (_singleInstanceMutex != null)
             {
                 _singleInstanceMutex.ReleaseMutex();
@@ -259,19 +264,19 @@ namespace GazeBar
             base.OnExit(e);
         }
 
-        /// <summary>Maximum size of gazebar.log (5 MB). Beyond it, the file becomes gazebar.old.log.</summary>
+        /// <summary>Maximum size of prunel.log (5 MB). Beyond it, the file becomes prunel.old.log.</summary>
         private const long MaxLogBytes = 5L * 1024 * 1024;
 
         // Several threads may write to the log at the same time: the lock makes them wait
         // for each other, so that two lines are never mixed up.
         private static readonly object LogLock = new object();
 
-        // Current size of gazebar.log in bytes (-1 = not measured yet).
+        // Current size of prunel.log in bytes (-1 = not measured yet).
         private static long _logBytes = -1;
 
         /// <summary>
-        /// The GazeBar version, for example "0.1.0". It comes from the &lt;Version&gt; of
-        /// GazeBar.csproj; the release workflow replaces it with the version being published.
+        /// The Prunel version, for example "0.1.0". It comes from the &lt;Version&gt; of
+        /// Prunel.csproj; the release workflow replaces it with the version being published.
         /// The build may add "+" and the commit identifier after it.
         /// </summary>
         internal static string Version
@@ -309,26 +314,26 @@ namespace GazeBar
 
         /// <summary>
         /// Writes one line, in two places:
-        ///  1. the Visual Studio "Output" window (prefix [GazeBar]);
-        ///  2. the gazebar.log file in %LOCALAPPDATA%\GazeBar
+        ///  1. the Visual Studio "Output" window (prefix [Prunel]);
+        ///  2. the prunel.log file in %LOCALAPPDATA%\Prunel
         ///     (useful when the program is started without the debugger).
-        /// When gazebar.log reaches 5 MB, it is renamed gazebar.old.log (replacing the previous
-        /// one) and a new gazebar.log starts: the log never fills the disk.
+        /// When prunel.log reaches 5 MB, it is renamed prunel.old.log (replacing the previous
+        /// one) and a new prunel.log starts: the log never fills the disk.
         /// Reminder: no gaze coordinates and no typed text in the log (see CONTRIBUTING.md).
         /// </summary>
         private static void Write(string message)
         {
             string line = DateTime.Now.ToString("HH:mm:ss.fff") + "  " + message;
-            Debug.WriteLine("[GazeBar] " + line);
+            Debug.WriteLine("[Prunel] " + line);
 
             lock (LogLock)
             {
                 try
                 {
                     string folder = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GazeBar");
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Prunel");
                     Directory.CreateDirectory(folder);
-                    string path = Path.Combine(folder, "gazebar.log");
+                    string path = Path.Combine(folder, "prunel.log");
                     string text = line + Environment.NewLine;
 
                     if (_logBytes < 0)
@@ -337,7 +342,7 @@ namespace GazeBar
                     }
                     if (_logBytes > 0 && _logBytes + text.Length > MaxLogBytes)
                     {
-                        string oldPath = Path.Combine(folder, "gazebar.old.log");
+                        string oldPath = Path.Combine(folder, "prunel.old.log");
                         File.Delete(oldPath);   // does nothing if the file does not exist
                         File.Move(path, oldPath);
                         _logBytes = 0;

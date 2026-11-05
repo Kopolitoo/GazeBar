@@ -2,7 +2,7 @@
 
 *English version: [README.md](README.md).*
 
-<p align="center"><img src="docs/images/gazebar-logo.fr.png" alt="Logo de Prunel : un œil avec un pointeur de souris" width="600"></p>
+<p align="center"><img src="docs/images/prunel-logo.fr.png" alt="Logo de Prunel : un œil avec un pointeur de souris" width="600"></p>
 
 [![Build](https://github.com/Kopolitoo/Prunel/actions/workflows/build.yml/badge.svg)](https://github.com/Kopolitoo/Prunel/actions/workflows/build.yml)
 
@@ -18,8 +18,9 @@ Depuis novembre 2026, il utilise Prunel seul, tous les jours, sans TD Control : 
 testé en permanence, sur un Tobii Dynavox PCEye 5. Si vous êtes dans la même situation, nous
 espérons qu'il pourra vous aider aussi.
 
-Prunel s'appelait GazeBar jusqu'en novembre 2026. Le programme, ses fichiers et ses dossiers
-gardent l'ancien nom pour l'instant : ils seront renommés dans une prochaine version.
+Prunel s'appelait GazeBar jusqu'en novembre 2026 (version 0.2.0). À partir de la version 0.3.0,
+Prunel reprend tout seul les réglages, les mots personnels et les profils de GazeBar, et son
+installateur remplace l'ancien GazeBar.
 
 ## État du projet
 
@@ -41,9 +42,9 @@ lancement, synthèse vocale.
 
 1. Installer le pilote de l'eyetracker depuis le site du fabricant.
 2. Sur la page [Releases](https://github.com/Kopolitoo/Prunel/releases), télécharger
-   `GazeBar-x.y.z.zip` (sous « Assets ») et le décompresser, par exemple dans
-   `Documents\GazeBar`.
-3. Lancer `GazeBar.exe`. Le programme n'est pas signé : Windows peut afficher « Windows a protégé
+   `Prunel-x.y.z.zip` (sous « Assets ») et le décompresser, par exemple dans
+   `Documents\Prunel`.
+3. Lancer `Prunel.exe`. Le programme n'est pas signé : Windows peut afficher « Windows a protégé
    votre ordinateur » ; cliquer sur « Informations complémentaires », puis « Exécuter quand
    même ».
 4. Les DLL de l'eyetracker ne sont pas livrées avec Prunel : Prunel les cherche dans le
@@ -51,10 +52,10 @@ lancement, synthèse vocale.
    [Fichiers de l'eyetracker](docs/user-guide.fr.md#fichiers-de-leyetracker).
 
 Pour l'**installation complète** (cercle au-dessus du menu Démarrer, clics dans les fenêtres
-administrateur), télécharger plutôt l'installateur `GazeBar-x.y.z-setup.exe` et double-cliquer
+administrateur), télécharger plutôt l'installateur `Prunel-x.y.z-setup.exe` et double-cliquer
 dessus : voir [Installation complète](docs/user-guide.fr.md#installation-complète-accès-à-linterface).
 
-Pour le compiler soi-même à la place : cloner ce dépôt, ouvrir `GazeBar.slnx` dans Visual
+Pour le compiler soi-même à la place : cloner ce dépôt, ouvrir `Prunel.slnx` dans Visual
 Studio, appuyer sur F5.
 
 ## Documentation

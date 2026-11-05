@@ -33,8 +33,8 @@
          when a version is published. It is written to the log at startup. -->
     <Version>0.3.0</Version>
 
-    <RootNamespace>GazeBar</RootNamespace>
-    <AssemblyName>GazeBar</AssemblyName>
+    <RootNamespace>Prunel</RootNamespace>
+    <AssemblyName>Prunel</AssemblyName>
 
     <!-- Two options deliberately disabled so that the code stays explicit:
          - ImplicitUsings: otherwise invisible "using" directives would be added automatically;
@@ -43,7 +43,7 @@
     <Nullable>disable</Nullable>
 
     <!-- The "manifest": a small XML file read by Windows when the program starts.
-         It declares GazeBar "DPI aware": see app.manifest. (The "full installation"
+         It declares Prunel "DPI aware": see app.manifest. (The "full installation"
          uses app.uiaccess.manifest instead: see below.) -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
@@ -51,26 +51,26 @@
          shortcuts. The .ico file contains the same image in several sizes
          (16, 24, 32, 48, 64 and 256 pixels): Windows picks the best one for the screen.
          WPF windows that do not set an icon automatically use this one. -->
-    <ApplicationIcon>Resources\GazeBar.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\Prunel.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!-- "Full installation" build, with UI access (see Platform/UiAccess.cs):
-         dotnet build GazeBar.csproj -c Release -p:UiAccess=true
-       It uses app.uiaccess.manifest (uiAccess="true"). Such a GazeBar.exe only starts once
+         dotnet build Prunel.csproj -c Release -p:UiAccess=true
+       It uses app.uiaccess.manifest (uiAccess="true"). Such a Prunel.exe only starts once
        signed and installed in C:\Program Files: it can NOT be started from Visual Studio
        or from the build folder. Without this property (Visual Studio, simple .zip),
-       app.manifest is used and GazeBar starts from anywhere. -->
+       app.manifest is used and Prunel starts from anywhere. -->
   <PropertyGroup Condition="'$(UiAccess)' == 'true'">
     <ApplicationManifest>app.uiaccess.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- The gaze keyboard layouts (JSON files of the Keyboards folder) are copied
-         next to GazeBar.exe on each build, if they changed.
-         GazeBar reads them there (see KeyboardLayout.cs). -->
+         next to Prunel.exe on each build, if they changed.
+         Prunel reads them there (see KeyboardLayout.cs). -->
     <None Update="Keyboards\*.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- The word prediction dictionary (Dictionaries/fr.txt, taken from
-         Lexique 3.83) and its license are copied next to GazeBar.exe in the same way
+         Lexique 3.83) and its license are copied next to Prunel.exe in the same way
          (see WordPredictor.cs). -->
     <None Update="Dictionaries\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- The interface language files (Languages/fr.json…), read by
@@ -81,15 +81,15 @@
   <ItemGroup>
     <!-- The gaze, through the eyetracker engine (same source as Mill Mouse).
          The eyetracker (Tobii) DLLs are proprietary code, we do NOT ship them with
-         GazeBar. The package is only used to COMPILE:
-         - ExcludeAssets="runtime": the eyetracker .NET DLLs are not copied next to GazeBar.exe;
+         Prunel. The package is only used to COMPILE:
+         - ExcludeAssets="runtime": the eyetracker .NET DLLs are not copied next to Prunel.exe;
          - ExcludeAssets="build": the package's small script, which copied the native DLL
            Tobii.EyeX.Client.dll, does not run.
-         At startup, GazeBar looks for these DLLs on the PC (see EyetrackerLoader.cs). -->
+         At startup, Prunel looks for these DLLs on the PC (see EyetrackerLoader.cs). -->
     <PackageReference Include="Tobii.Interaction" Version="0.7.3" ExcludeAssets="runtime;build" />
   </ItemGroup>
 
-  <!-- Belt and braces: if an eyetracker DLL still ended up next to GazeBar.exe (old build,
+  <!-- Belt and braces: if an eyetracker DLL still ended up next to Prunel.exe (old build,
        other setting...), it is deleted after each build, so that it never ships with what
        we distribute.
        The "Eyetracker" subfolder (a copy made by the user himself) is not touched. -->

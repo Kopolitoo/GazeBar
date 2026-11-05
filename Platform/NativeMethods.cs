@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// Windows functions (written in C/C++) called from C#.
@@ -75,7 +75,7 @@ namespace GazeBar
         /// <summary>
         /// REAL size of the primary screen, in pixels.
         ///
-        /// Why not GetSystemMetrics? The user's test: GazeBar started in 1920 × 1080 at 100 %,
+        /// Why not GetSystemMetrics? The user's test: Prunel started in 1920 × 1080 at 100 %,
         /// then the screen switched to 3840 × 2160 at 200 %: GetSystemMetrics kept answering
         /// 1920 × 1080. Windows "freezes" its answers to the scaling at the program's startup:
         /// 3840 pixels at 200 %, seen with the startup scale (100 %), make 3840 × 100 ÷ 200 =
@@ -336,7 +336,7 @@ namespace GazeBar
 
         // ───────────────────────── Windows of other programs ─────────────────────────
         //
-        // During calibration, GazeBar watches the window of the eyetracker tool to know when it
+        // During calibration, Prunel watches the window of the eyetracker tool to know when it
         // closes (see CalibrationMode).
 
         /// <summary>The active window (the one receiving the keyboard), or IntPtr.Zero.</summary>
@@ -363,13 +363,13 @@ namespace GazeBar
 
         // ───────────────────────── Window under the cursor (scrolling) ─────────────────────────
         //
-        // When entering scroll mode, GazeBar makes the window under the aimed point active:
+        // When entering scroll mode, Prunel makes the window under the aimed point active:
         // some software ignores the wheel as long as its window is not active (the user had to
         // click before being able to scroll).
 
         /// <summary>
         /// The window (or part of a window) at this point of the screen. Windows that the mouse
-        /// "goes through" (like GazeBar's overlay) are ignored.
+        /// "goes through" (like Prunel's overlay) are ignored.
         /// </summary>
         [DllImport("user32.dll")]
         internal static extern IntPtr WindowFromPoint(POINT point);
@@ -387,14 +387,14 @@ namespace GazeBar
 
         /// <summary>
         /// Temporarily "attaches" two threads: they then share the keyboard state, which allows
-        /// GazeBar to change the active window. Otherwise Windows often refuses
+        /// Prunel to change the active window. Otherwise Windows often refuses
         /// SetForegroundWindow to a program that is not itself in the foreground.
         /// </summary>
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool AttachThreadInput(uint threadAttach, uint threadAttachTo, [MarshalAs(UnmanagedType.Bool)] bool attach);
 
-        /// <summary>The number of the calling thread (here, the one of GazeBar's display).</summary>
+        /// <summary>The number of the calling thread (here, the one of Prunel's display).</summary>
         [DllImport("kernel32.dll")]
         internal static extern uint GetCurrentThreadId();
 
@@ -422,7 +422,7 @@ namespace GazeBar
 
         // ───────────────────────── Caregiver's Escape key ─────────────────────────
         //
-        // A "keyboard hook" lets us be notified of every key pressed, in any program. GazeBar
+        // A "keyboard hook" lets us be notified of every key pressed, in any program. Prunel
         // only OBSERVES: the key goes on its way normally to the active program (see
         // KeyboardHook.cs).
 
@@ -464,11 +464,11 @@ namespace GazeBar
         internal const int HookExtraInfoOffset = 16;
 
         /// <summary>
-        /// Value GazeBar puts in dwExtraInfo of every key it simulates ("GBR!" in ASCII), so the
-        /// keyboard hook can tell GazeBar's own keys from keys simulated by other software
+        /// Value Prunel puts in dwExtraInfo of every key it simulates ("GBR!" in ASCII), so the
+        /// keyboard hook can tell Prunel's own keys from keys simulated by other software
         /// (for example the Escape key said to Dragon, issue #51).
         /// </summary>
-        internal const int GazeBarKeyMarker = 0x47425221;
+        internal const int PrunelKeyMarker = 0x47425221;
 
         // ───────────────────────── Clock precision ─────────────────────────
 
@@ -484,15 +484,15 @@ namespace GazeBar
 
         /// <summary>
         /// Loads a native DLL (written in C) from its full path. Used to load in advance the
-        /// eyetracker's native DLL, which is not shipped with GazeBar (see EyetrackerLoader.cs).
+        /// eyetracker's native DLL, which is not shipped with Prunel (see EyetrackerLoader.cs).
         /// Returns IntPtr.Zero on failure (see GetLastWin32Error).
         /// </summary>
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern IntPtr LoadLibrary(string dllPath);
 
-        // ───────────────────────── Rights of the GazeBar process ─────────────────────────
+        // ───────────────────────── Rights of the Prunel process ─────────────────────────
 
-        /// <summary>A "pseudo handle" to the GazeBar process itself (no need to close it).</summary>
+        /// <summary>A "pseudo handle" to the Prunel process itself (no need to close it).</summary>
         [DllImport("kernel32.dll")]
         internal static extern IntPtr GetCurrentProcess();
 

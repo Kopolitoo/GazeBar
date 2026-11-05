@@ -1,11 +1,11 @@
 using System.Runtime.InteropServices;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: makes the cursor reappear if Windows hid it.
     ///
-    /// The observed problem: when GazeBar is started alone at Windows startup, the cursor
+    /// The observed problem: when Prunel is started alone at Windows startup, the cursor
     /// stays invisible; it only appears after a drag and drop.
     ///
     /// The explanation: when Windows thinks there is no mouse (no physical mouse has moved
@@ -15,7 +15,7 @@ namespace GazeBar
     /// goes through SendInput (MouseInjector.MoveTo), which imitates a real mouse: that is
     /// why it made the cursor reappear.
     ///
-    /// The solution: when GazeBar starts, we ask Windows for the cursor state
+    /// The solution: when Prunel starts, we ask Windows for the cursor state
     /// (GetCursorInfo). If it is "suppressed", we simulate a tiny mouse nudge through
     /// SendInput (1 pixel right then 1 pixel left), then put the cursor back exactly in place
     /// with SetCursorPos. The cursor reappears without moving.

@@ -1,4 +1,4 @@
-# Checks the data files read by GazeBar at startup.
+# Checks the data files read by Prunel at startup.
 #
 # - Every Languages/*.json and Keyboards/*.json file must be valid JSON.
 # - Every language file must have exactly the same keys as Languages/en.json

@@ -4,23 +4,23 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: finds and loads the eyetracker DLLs at startup, WITHOUT shipping them with
-    /// GazeBar.
+    /// Prunel.
     ///
     /// The eyetracker is read with the Tobii.Interaction library (Tobii Core SDK): the file
     /// and folder names below are therefore Tobii's, they cannot change.
     ///
     /// Why? The eyetracker DLLs are proprietary code: we do not want to distribute them with
-    /// GazeBar. So the Tobii.Interaction NuGet package is only used to COMPILE (see
-    /// GazeBar.csproj: its DLLs are not copied next to GazeBar.exe). At startup, this
+    /// Prunel. So the Tobii.Interaction NuGet package is only used to COMPILE (see
+    /// Prunel.csproj: its DLLs are not copied next to Prunel.exe). At startup, this
     /// file goes and gets them where they already are on the PC.
     ///
     /// There are three DLLs:
     ///  - Tobii.Interaction.Net.dll and Tobii.Interaction.Model.dll: ".NET" DLLs (written in
-    ///    C#). When .NET does not find them next to GazeBar.exe, it raises the
+    ///    C#). When .NET does not find them next to Prunel.exe, it raises the
     ///    AppDomain.AssemblyResolve event: we answer by loading the file found elsewhere
     ///    (Assembly.LoadFrom).
     ///  - Tobii.EyeX.Client.dll: a "native" DLL (written in C), called by
@@ -29,7 +29,7 @@ namespace GazeBar
     ///    name, Windows sees it is already loaded and reuses it.
     ///
     /// Where to look, in order:
-    ///  1. the "Eyetracker" subfolder next to GazeBar.exe (if the user copied the DLLs there
+    ///  1. the "Eyetracker" subfolder next to Prunel.exe (if the user copied the DLLs there
     ///     himself, see docs/user-guide.md, "Eyetracker files");
     ///  2. the installation folders of the eyetracker vendor's software (Program Files);
     ///  3. the Visual Studio "NuGet cache" (%USERPROFILE%\.nuget\packages): this is where
@@ -92,7 +92,7 @@ namespace GazeBar
                 }
                 App.Log("Eyetracker: .NET DLLs found in " + _netFolder);
 
-                // 2. The native DLL, in 32 bits (GazeBar is a 32-bit program: a 64-bit DLL
+                // 2. The native DLL, in 32 bits (Prunel is a 32-bit program: a 64-bit DLL
                 //    cannot be loaded into it). We look for it first next to the .NET DLLs
                 //    (same version), then in the other folders.
                 string native = FindNative32();
@@ -127,7 +127,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Called by .NET when it does not find a .NET DLL next to GazeBar.exe.
+        /// Called by .NET when it does not find a .NET DLL next to Prunel.exe.
         /// We only answer for the eyetracker DLLs; for the others we return null ("I don't
         /// know"), and .NET carries on as usual.
         /// </summary>
@@ -171,7 +171,7 @@ namespace GazeBar
         {
             List<string> folders = new List<string>();
 
-            // 1. The "Eyetracker" subfolder next to GazeBar.exe.
+            // 1. The "Eyetracker" subfolder next to Prunel.exe.
             folders.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Eyetracker"));
 
             // 2. The vendor's installations (a few levels of subfolders are searched).
@@ -187,7 +187,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Looks for the 32-bit Tobii.EyeX.Client.dll: next to the .NET DLLs, in GazeBar's
+        /// Looks for the 32-bit Tobii.EyeX.Client.dll: next to the .NET DLLs, in Prunel's
         /// "Eyetracker" folder, in the vendor's installations, then in the NuGet cache.
         /// </summary>
         private static string FindNative32()

@@ -2,14 +2,14 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// CALIBRATION MODE.
     ///
     /// We get here from the "Tools" tab of the settings, once the eyetracker calibration tool has
     /// been started (see Calibration.cs).
-    /// During calibration, GazeBar must do nothing: the overlay is empty, nothing follows
+    /// During calibration, Prunel must do nothing: the overlay is empty, nothing follows
     /// the gaze (otherwise the circle would get in the way and a fixation on a calibration
     /// point could trigger an action).
     ///
@@ -18,7 +18,7 @@ namespace GazeBar
     ///  1. when started, the eyetracker tool opens its window, which becomes the active
     ///     window. So we note the active window at the start (the one of the application we
     ///     were using), then wait for ANOTHER window to become active, not belonging to
-    ///     GazeBar, and remember it (its title is written to the log);
+    ///     Prunel, and remember it (its title is written to the log);
     ///  2. when that window no longer exists or is hidden, calibration is over: back to
     ///     movement mode.
     /// Safety nets: if no window appears within [WindowWaitMs], or if calibration lasts more
@@ -80,7 +80,7 @@ namespace GazeBar
             {
                 // 1. Wait for the tool's window.
                 IntPtr active = NativeMethods.GetForegroundWindow();
-                if (active != IntPtr.Zero && active != _previousWindow && !BelongsToGazeBar(active))
+                if (active != IntPtr.Zero && active != _previousWindow && !BelongsToPrunel(active))
                 {
                     _toolWindow = active;
                     App.Log("Calibration: tool window \"" + Title(active) + "\"");
@@ -106,8 +106,8 @@ namespace GazeBar
             }
         }
 
-        /// <summary>True if the window belongs to GazeBar itself.</summary>
-        private bool BelongsToGazeBar(IntPtr window)
+        /// <summary>True if the window belongs to Prunel itself.</summary>
+        private bool BelongsToPrunel(IntPtr window)
         {
             uint process;
             NativeMethods.GetWindowThreadProcessId(window, out process);

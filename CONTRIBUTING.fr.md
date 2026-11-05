@@ -35,7 +35,7 @@ Commencez par l'[architecture](docs/architecture.fr.md) pour vous repérer dans 
   32 bits).
 - Pas de nouvelle dépendance sans en discuter d'abord dans une issue.
 - Une étape de la feuille de route par branche et par pull request.
-- Le dictionnaire personnel (`%APPDATA%\GazeBar\personal-dictionary.json`) et toute donnée
+- Le dictionnaire personnel (`%APPDATA%\Prunel\personal-dictionary.json`) et toute donnée
   personnelle restent hors du dépôt.
 - Le texte tapé n'est jamais écrit dans le journal.
 - Les données du regard ne sont jamais enregistrées (licence de l'eyetracker) : pas de fichier de
@@ -59,19 +59,19 @@ Commencez par l'[architecture](docs/architecture.fr.md) pour vous repérer dans 
 
 Une version a un numéro MAJEUR.MINEUR.CORRECTIF (par exemple `0.1.0`) : CORRECTIF augmente pour
 une correction, MINEUR pour une nouveauté, MAJEUR pour un grand changement (`1.0.0` = première
-version stable). Le numéro de `GazeBar.csproj` (`<Version>`) est celui de la prochaine version ;
+version stable). Le numéro de `Prunel.csproj` (`<Version>`) est celui de la prochaine version ;
 Prunel l'écrit dans son journal au démarrage.
 
 1. Sur GitHub, onglet « Actions », « Release » à gauche, « Run workflow » : garder la branche
    `main`, taper le numéro (par exemple `0.1.0`), cliquer sur « Run workflow ».
 2. GitHub compile Prunel, vérifie qu'aucune DLL de l'eyetracker ni aucun fichier personnel
-   n'est dedans, fabrique `GazeBar-0.1.0.zip` (simple) et l'installateur `GazeBar-0.1.0-setup.exe`
+   n'est dedans, fabrique `Prunel-0.1.0.zip` (simple) et l'installateur `Prunel-0.1.0-setup.exe`
    (installation complète, avec accès à l'interface, fait avec Inno Setup) et prépare un **brouillon** de release
    (`.github/workflows/release.yml`).
 3. Page « Releases » (colonne de droite de la page d'accueil du dépôt) : ouvrir le brouillon,
    relire la liste des changements, puis « Publish release ». Le tag `v0.1.0` est posé sur ce
    code à ce moment-là.
-4. Ensuite, augmenter `<Version>` dans `GazeBar.csproj` dans la pull request suivante.
+4. Ensuite, augmenter `<Version>` dans `Prunel.csproj` dans la pull request suivante.
 
 ## Tests
 

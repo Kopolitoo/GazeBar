@@ -18,7 +18,7 @@ Avantage : si un essai échoue, `main` reste intact, et on peut toujours revenir
 
 ## 2. Publier le projet (une seule fois)
 
-1. Ouvrir `GazeBar.slnx` dans Visual Studio.
+1. Ouvrir `Prunel.slnx` dans Visual Studio.
 2. Menu **Git → Créer un dépôt Git…**
 3. Se connecter à son compte GitHub si demandé.
 4. Remplir :

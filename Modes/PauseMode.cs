@@ -1,9 +1,9 @@
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// PAUSE MODE.
     ///
-    /// Neither the circle nor the cursor follows the gaze: the overlay is empty, GazeBar
+    /// Neither the circle nor the cursor follows the gaze: the overlay is empty, Prunel
     /// does nothing. Handy for watching a video or reading without triggering anything.
     ///
     /// Only one thing stays active: looking down, below the screen, for [MenuDelay]

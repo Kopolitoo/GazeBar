@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// SETTINGS MODE.

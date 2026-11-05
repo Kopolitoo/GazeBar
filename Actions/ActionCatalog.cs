@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// The actions that can be placed on the icons of the action choice.

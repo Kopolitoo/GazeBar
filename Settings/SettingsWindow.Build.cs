@@ -8,7 +8,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// Part of SettingsWindow: building the page (title, categories, tabs, setting rows,
@@ -264,7 +264,7 @@ namespace GazeBar
         private const string DisplayTabName = "tab.display";
 
         /// <summary>
-        /// "Affichage" tab: the screen detected by GazeBar (Windows resolution,
+        /// "Affichage" tab: the screen detected by Prunel (Windows resolution,
         /// scaling and text size), to check that the change was seen.
         /// </summary>
         private void BuildScreenInfo(double top)

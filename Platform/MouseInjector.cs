@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>Which mouse button.</summary>
     internal enum MouseSide
@@ -26,7 +26,7 @@ namespace GazeBar
     /// (ReleaseAll) when closing or on error. A stuck button would be very annoying.
     ///
     /// Known Windows limit: a normal program cannot simulate the mouse over a window started
-    /// "as administrator". To act on such a window, GazeBar would also have to be started as
+    /// "as administrator". To act on such a window, Prunel would also have to be started as
     /// administrator.
     /// </summary>
     internal static class MouseInjector
@@ -103,7 +103,7 @@ namespace GazeBar
             Release(MouseSide.Right);
         }
 
-        /// <summary>True if one of the two buttons is pressed by GazeBar.</summary>
+        /// <summary>True if one of the two buttons is pressed by Prunel.</summary>
         public static bool AnyPressed
         {
             get

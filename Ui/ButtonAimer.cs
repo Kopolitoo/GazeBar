@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// LOGIC: decides which button (GazeButton) is looked at, and when it activates.

@@ -1,11 +1,11 @@
 # Automatic build (continuous integration, "CI").
 #
 # On every pull request and every push to main, GitHub starts a Windows machine,
-# compiles GazeBar and checks the data files. The result (green tick or red cross)
+# compiles Prunel and checks the data files. The result (green tick or red cross)
 # shows on the pull request. Nothing is published: it is only a check.
 #
 # The eyetracker DLLs are not needed: the Tobii.Interaction package is downloaded from
-# NuGet only to compile (see GazeBar.csproj), and nothing is run.
+# NuGet only to compile (see Prunel.csproj), and nothing is run.
 
 name: Build
 
@@ -47,24 +47,24 @@ jobs:
         run: ./.github/scripts/check-install-scripts.ps1
 
       # First the "full installation" build, with UI access (UiAccess=true, see
-      # GazeBar.csproj), in its own folders (bin/uiaccess, obj/uiaccess), apart from the normal build.
+      # Prunel.csproj), in its own folders (bin/uiaccess, obj/uiaccess), apart from the normal build.
       - name: Compile the full installation build (UI access)
-        run: dotnet build GazeBar.csproj --configuration Release -p:UiAccess=true -p:OutDir=${{ github.workspace }}/bin/uiaccess/ -p:IntermediateOutputPath=obj/uiaccess/
+        run: dotnet build Prunel.csproj --configuration Release -p:UiAccess=true -p:OutDir=${{ github.workspace }}/bin/uiaccess/ -p:IntermediateOutputPath=obj/uiaccess/
 
       # The installer (Setup.exe, made with Inno Setup) of this same build. Its version number
-      # is the <Version> of GazeBar.csproj.
+      # is the <Version> of Prunel.csproj.
       - name: Make the installer (Setup.exe)
         shell: pwsh
         run: |
-          $version = ([xml](Get-Content GazeBar.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          $version = ([xml](Get-Content Prunel.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
           ./.github/scripts/make-setup.ps1 bin/uiaccess $version bin/setup
 
-      - name: Compile GazeBar (Release, x86)
-        run: dotnet build GazeBar.csproj --configuration Release
+      - name: Compile Prunel (Release, x86)
+        run: dotnet build Prunel.csproj --configuration Release
 
       - name: Check that the normal build does not ask for UI access
         shell: pwsh
-        run: ./.github/scripts/check-exe-manifest.ps1 bin/Release/net48/GazeBar.exe false
+        run: ./.github/scripts/check-exe-manifest.ps1 bin/Release/net48/Prunel.exe false
 
       - name: Check that no eyetracker DLL is in the output
         shell: pwsh
@@ -81,15 +81,15 @@ jobs:
       - name: Keep the compiled program
         uses: actions/upload-artifact@v6
         with:
-          name: GazeBar-${{ github.sha }}
+          name: Prunel-${{ github.sha }}
           path: bin/Release/net48/
           retention-days: 14
 
-      # The installer, to test it before a release: double-click GazeBar-<version>-setup.exe
+      # The installer, to test it before a release: double-click Prunel-<version>-setup.exe
       # in the downloaded zip (see docs/manual-tests.md, "Installer (Setup.exe)").
       - name: Keep the installer
         uses: actions/upload-artifact@v6
         with:
-          name: GazeBar-setup-${{ github.sha }}
+          name: Prunel-setup-${{ github.sha }}
           path: bin/setup/
           retention-days: 14

@@ -5,13 +5,13 @@ using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// LOGIC: the texts shown to the user, in the chosen language (step "langues-socle").
     ///
     /// Every text of the interface lives in a language file of the Languages folder, next to
-    /// GazeBar.exe: Languages/en.json, Languages/fr.json… A language file is a flat JSON
+    /// Prunel.exe: Languages/en.json, Languages/fr.json… A language file is a flat JSON
     /// object, one entry per text:
     ///     {
     ///       "language.name": "English",
@@ -31,7 +31,7 @@ namespace GazeBar
     /// </summary>
     internal static class Texts
     {
-        /// <summary>Name of the language files folder, next to GazeBar.exe.</summary>
+        /// <summary>Name of the language files folder, next to Prunel.exe.</summary>
         public const string FolderName = "Languages";
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace GazeBar
             }
             catch (FormatException)
             {
-                // A badly written translation ("{1" without "}"…) must not crash GazeBar.
+                // A badly written translation ("{1" without "}"…) must not crash Prunel.
                 App.Log("Texts: bad format in \"" + key + "\"");
                 return pattern;
             }

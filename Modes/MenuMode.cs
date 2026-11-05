@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MENU MODE.
@@ -19,12 +19,12 @@ namespace GazeBar
     ///   Settings       opens settings mode;
     ///   Game           switches to game mode. Coming from game mode, this button
     ///                  becomes "Quit game" and returns to movement mode;
-    ///   Keyboard       opens GazeBar's gaze keyboard (see GazeKeyboard), then closes
+    ///   Keyboard       opens Prunel's gaze keyboard (see GazeKeyboard), then closes
     ///                  the menu. If it is already open (hidden by game mode), closes it;
     ///   Pause          switches to pause mode;
     ///   Mouse tracking switch: green border when the option is on. The menu stays open; the
     ///                  gaze must leave the button before it can be used again;
-    ///   Quit           asks for confirmation ("Yes, quit" / "No"), then closes GazeBar.
+    ///   Quit           asks for confirmation ("Yes, quit" / "No"), then closes Prunel.
     ///
     /// Calibration and Diagnostic are not in the bar: they
     /// are in the "Tools" tab of the settings (see SettingsWindow).
@@ -396,7 +396,7 @@ namespace GazeBar
                     break;
 
                 case MenuAction.ConfirmQuit:
-                    App.Log("Menu: GazeBar exit requested");
+                    App.Log("Menu: Prunel exit requested");
                     Application.Current.Shutdown();
                     break;
 

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  app.manifest: information read by Windows when GazeBar.exe starts.
+  app.manifest: information read by Windows when Prunel.exe starts.
 
-  Main purpose here: declare GazeBar "DPI aware" (DPI = dots per inch).
+  Main purpose here: declare Prunel "DPI aware" (DPI = dots per inch).
 
   The problem: with Windows scaling at 125 % or 150 %, a program that does not declare
   itself DPI aware receives "wrong" (scaled down) coordinates, and Windows enlarges its
   display, making it blurry. The eyetracker gaze, the cursor position and the WPF windows
   would then no longer use the same units: the circle would be offset.
 
-  With this declaration, GazeBar works in REAL screen pixels (like the eyetracker gaze
+  With this declaration, Prunel works in REAL screen pixels (like the eyetracker gaze
   and the cursor). Only the overlay (OverlayWindow) converts these pixels to WPF units.
 
     PerMonitorV2  the best support (Windows 10 version 1703 and later);
@@ -20,7 +20,7 @@
   app.uiaccess.manifest instead, identical except uiAccess="true" (see Platform/UiAccess.cs).
 -->
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="1.0.0.0" name="GazeBar.app" />
+  <assemblyIdentity version="1.0.0.0" name="Prunel.app" />
 
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
     <security>

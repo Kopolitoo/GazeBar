@@ -133,10 +133,16 @@ repeat) or a yes / no switch. Changes apply at once and are saved.
 
 | What | Where |
 | --- | --- |
-| Settings | `%APPDATA%\GazeBar\settings.json` (can be opened with Notepad) |
-| Personal dictionary | `%APPDATA%\GazeBar\personal-dictionary.json` |
-| Profiles | `Documents\GazeBar\Profiles` |
-| Log | `%LOCALAPPDATA%\GazeBar\gazebar.log` |
+| Settings | `%APPDATA%\Prunel\settings.json` (can be opened with Notepad) |
+| Personal dictionary | `%APPDATA%\Prunel\personal-dictionary.json` |
+| Profiles | `Documents\Prunel\Profiles` |
+| Log | `%LOCALAPPDATA%\Prunel\prunel.log` |
+
+Coming from GazeBar (the former name of Prunel, up to version 0.2.0): at its first start,
+Prunel renames the `GazeBar` folders above to `Prunel`, so the settings, the personal dictionary
+and the profiles are kept (the old log stays there as `gazebar.log`). The installer puts
+Prunel in `C:\Program Files\Prunel`, moves an `Eyetracker` folder from
+`C:\Program Files\GazeBar` and deletes the old program and its Start menu shortcut.
 
 Prunel never saves where you look (the eyetracker licence forbids it) and never writes what you
 type in the log. The log is short by default; "Detailed log" ("General" tab) notes more, to
@@ -146,7 +152,7 @@ track down a problem.
 
 The gaze is read by three Tobii files (`Tobii.Interaction.Net.dll`,
 `Tobii.Interaction.Model.dll`, `Tobii.EyeX.Client.dll`). They belong to Tobii AB, so Prunel
-does not include them. Prunel looks for them in the `Eyetracker` folder next to `GazeBar.exe`,
+does not include them. Prunel looks for them in the `Eyetracker` folder next to `Prunel.exe`,
 then in the folders of the Tobii software, then in the Visual Studio NuGet cache.
 
 If the Diagnostic window says they are missing, get them yourself, accepting Tobii's licence:
@@ -155,7 +161,7 @@ If the Diagnostic window says they are missing, get them yourself, accepting Tob
    package".
 2. Rename the downloaded `.nupkg` file to `.zip` and open it.
 3. Copy the two DLLs of `lib\net45` and the one of `build\x86` into the `Eyetracker` folder next
-   to `GazeBar.exe` (create it if needed).
+   to `Prunel.exe` (create it if needed).
 
 ## Full installation (UI access)
 
@@ -168,28 +174,28 @@ it comes with its own installer.
 To install or update:
 
 1. On the [Releases](https://github.com/Kopolitoo/Prunel/releases) page, download
-   `GazeBar-x.y.z-setup.exe` (under "Assets") and double-click it. Keep another way to click
+   `Prunel-x.y.z-setup.exe` (under "Assets") and double-click it. Keep another way to click
    (voice, mouse, TD Control) for this step: Prunel closes during the installation.
 2. The installer is not signed by a known publisher, so Windows may show "Windows protected
    your PC": click "More info", then "Run anyway". Windows then asks "Do you want to allow this
    app to make changes to your device?": answer "Yes".
 3. The installer speaks the language of Windows. Click "Install", then "Finish" with "Launch
-   Prunel" ticked: Prunel starts from `C:\Program Files\GazeBar`.
+   Prunel" ticked: Prunel starts from `C:\Program Files\Prunel`.
 
-What the installer does: it copies Prunel to `C:\Program Files\GazeBar`, creates a certificate
-on this computer, makes the computer trust it, signs `GazeBar.exe` with it, then deletes the
+What the installer does: it copies Prunel to `C:\Program Files\Prunel`, creates a certificate
+on this computer, makes the computer trust it, signs `Prunel.exe` with it, then deletes the
 certificate's private key (nothing else can ever be signed with it). A new certificate is made at
 each update. It also adds Prunel to the Start menu and to "Settings > Apps" of Windows. Your
 settings are kept. If "Start with Windows" is on, Prunel updates the startup entry itself. It
 also updates a copy installed by the old `Install.cmd` script.
 
-To check: the log (`%LOCALAPPDATA%\GazeBar\gazebar.log`) says "UI access: yes" at startup.
+To check: the log (`%LOCALAPPDATA%\Prunel\prunel.log`) says "UI access: yes" at startup.
 
 To remove it: Windows "Settings > Apps > Installed apps", Prunel, "Uninstall". It deletes the
 program folder, the shortcut and the certificate. Your settings are kept.
 
 If the eyetracker files had to be copied by hand (see [Eyetracker files](#eyetracker-files)),
-put the `Eyetracker` folder in `C:\Program Files\GazeBar` (Windows asks for administrator
+put the `Eyetracker` folder in `C:\Program Files\Prunel` (Windows asks for administrator
 rights). Updates keep it.
 
 ## Known limits

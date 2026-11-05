@@ -1,4 +1,4 @@
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// What every mode can do. This is an "abstract" class: we never create a plain "Mode",

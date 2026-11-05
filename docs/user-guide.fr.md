@@ -144,10 +144,17 @@ sont enregistrés.
 
 | Quoi | Où |
 | --- | --- |
-| Réglages | `%APPDATA%\GazeBar\settings.json` (s'ouvre avec le Bloc-notes) |
-| Dictionnaire personnel | `%APPDATA%\GazeBar\personal-dictionary.json` |
-| Profils | `Documents\GazeBar\Profiles` |
-| Journal | `%LOCALAPPDATA%\GazeBar\gazebar.log` |
+| Réglages | `%APPDATA%\Prunel\settings.json` (s'ouvre avec le Bloc-notes) |
+| Dictionnaire personnel | `%APPDATA%\Prunel\personal-dictionary.json` |
+| Profils | `Documents\Prunel\Profiles` |
+| Journal | `%LOCALAPPDATA%\Prunel\prunel.log` |
+
+Si l'on vient de GazeBar (l'ancien nom de Prunel, jusqu'à la version 0.2.0) : au premier
+lancement, Prunel renomme les dossiers `GazeBar` ci-dessus en `Prunel`, donc les réglages, le
+dictionnaire personnel et les profils sont gardés (l'ancien journal y reste sous le nom
+`gazebar.log`). L'installateur met Prunel dans `C:\Program Files\Prunel`, déplace un dossier
+`Eyetracker` depuis `C:\Program Files\GazeBar` et supprime l'ancien programme et son raccourci
+du menu Démarrer.
 
 Prunel n'enregistre jamais l'endroit où l'on regarde (la licence de l'eyetracker l'interdit) et
 n'écrit jamais dans le journal ce que l'on tape. Le journal est court par défaut ; « Journal
@@ -158,7 +165,7 @@ détaillé » (onglet « Général ») note davantage, pour chercher un problèm
 Le regard est lu par trois fichiers de Tobii (`Tobii.Interaction.Net.dll`,
 `Tobii.Interaction.Model.dll`, `Tobii.EyeX.Client.dll`). Ils appartiennent à Tobii AB, donc
 Prunel ne les contient pas. Prunel les cherche dans le dossier `Eyetracker` à côté de
-`GazeBar.exe`, puis dans les dossiers des logiciels Tobii, puis dans le cache NuGet de Visual
+`Prunel.exe`, puis dans les dossiers des logiciels Tobii, puis dans le cache NuGet de Visual
 Studio.
 
 Si la fenêtre Diagnostic indique qu'ils manquent, il faut les récupérer soi-même, en acceptant la
@@ -168,7 +175,7 @@ licence de Tobii :
    package ».
 2. Renommer le fichier `.nupkg` téléchargé en `.zip` et l'ouvrir.
 3. Copier les deux DLL de `lib\net45` et celle de `build\x86` dans le dossier `Eyetracker` à côté
-   de `GazeBar.exe` (le créer si besoin).
+   de `Prunel.exe` (le créer si besoin).
 
 ## Installation complète (accès à l'interface)
 
@@ -181,7 +188,7 @@ signé et installé dans `C:\Program Files` : elle a donc son propre installateu
 Pour installer ou mettre à jour :
 
 1. Sur la page [Releases](https://github.com/Kopolitoo/Prunel/releases), télécharger
-   `GazeBar-x.y.z-setup.exe` (sous « Assets ») et double-cliquer dessus. Garder un autre moyen
+   `Prunel-x.y.z-setup.exe` (sous « Assets ») et double-cliquer dessus. Garder un autre moyen
    de cliquer (voix, souris, TD Control) pour cette étape : Prunel se ferme pendant
    l'installation.
 2. L'installateur n'est pas signé par un éditeur connu : Windows peut afficher « Windows a
@@ -189,17 +196,17 @@ Pour installer ou mettre à jour :
    quand même ». Windows demande ensuite « Voulez-vous autoriser cette application à apporter des
    modifications à votre appareil ? » : répondre « Oui ».
 3. L'installateur parle la langue de Windows. Cliquer sur « Installer », puis « Terminer » avec
-   « Exécuter Prunel » coché : Prunel démarre depuis `C:\Program Files\GazeBar`.
+   « Exécuter Prunel » coché : Prunel démarre depuis `C:\Program Files\Prunel`.
 
-Ce que fait l'installateur : il copie Prunel dans `C:\Program Files\GazeBar`, crée un
-certificat sur cet ordinateur, le fait approuver par l'ordinateur, signe `GazeBar.exe` avec, puis
+Ce que fait l'installateur : il copie Prunel dans `C:\Program Files\Prunel`, crée un
+certificat sur cet ordinateur, le fait approuver par l'ordinateur, signe `Prunel.exe` avec, puis
 supprime la clé privée du certificat (plus rien ne pourra jamais être signé avec). Un nouveau
 certificat est créé à chaque mise à jour. Il ajoute aussi Prunel au menu Démarrer et à
 « Paramètres > Applications » de Windows. Vos réglages sont gardés. Si « Démarrer avec Windows »
 est activé, Prunel met lui-même à jour son lancement au démarrage. Il met aussi à jour une copie
 installée par l'ancien script `Install.cmd`.
 
-Pour vérifier : le journal (`%LOCALAPPDATA%\GazeBar\gazebar.log`) dit « UI access: yes » au
+Pour vérifier : le journal (`%LOCALAPPDATA%\Prunel\prunel.log`) dit « UI access: yes » au
 démarrage.
 
 Pour la retirer : « Paramètres > Applications > Applications installées » de Windows, Prunel,
@@ -208,7 +215,7 @@ sont gardés.
 
 Si les fichiers de l'eyetracker ont dû être copiés à la main (voir
 [Fichiers de l'eyetracker](#fichiers-de-leyetracker)), mettre le dossier `Eyetracker` dans
-`C:\Program Files\GazeBar` (Windows demande les droits d'administrateur). Les mises à jour le
+`C:\Program Files\Prunel` (Windows demande les droits d'administrateur). Les mises à jour le
 gardent.
 
 ## Limites connues

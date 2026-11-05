@@ -10,7 +10,7 @@ The small website that presents Prunel to non-technical visitors, at
 - `style.css`: shared style. Large text and large buttons (at least 72 px tall), because
   visitors may use an eyetracker or a head mouse.
 - `images/`: logo and icon (copies of `docs/images` and the application icon, resized).
-- `favicon.ico`: copy of `Resources/GazeBar.ico`.
+- `favicon.ico`: copy of `Resources/Prunel.ico`.
 
 To see a change, open `index.html` in a web browser.
 

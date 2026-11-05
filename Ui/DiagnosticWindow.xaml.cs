@@ -5,7 +5,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// INTERFACE: diagnostic window. Shows live what the cursor sampler "sees".

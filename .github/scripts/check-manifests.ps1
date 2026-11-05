@@ -1,4 +1,4 @@
-# Checks the two manifests of GazeBar (see app.manifest and app.uiaccess.manifest).
+# Checks the two manifests of Prunel (see app.manifest and app.uiaccess.manifest).
 #
 # app.uiaccess.manifest (the "full installation", with UI access) must be the same as
 # app.manifest except for uiAccess="true". The comments are ignored.

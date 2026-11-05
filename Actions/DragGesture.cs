@@ -1,4 +1,4 @@
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: the description of a drag and drop being prepared.

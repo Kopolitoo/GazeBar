@@ -5,11 +5,11 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Xml;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// Part of AppSettings: the default values, the limits of each value (Fix) and the
-    /// update of a file written by an older version of GazeBar (Refresh).
+    /// update of a file written by an older version of Prunel (Refresh).
     /// </summary>
     internal sealed partial class AppSettings
     {
@@ -79,7 +79,7 @@ namespace GazeBar
             KeyboardHeight = 50;
             KeyboardSize = 100;
             KeyboardAtTop = false;
-            KeyboardLayout = GazeBar.KeyboardLayout.DefaultName;
+            KeyboardLayout = Prunel.KeyboardLayout.DefaultName;
             InputBox = false;
             KeyboardTransparency = 0;
             Language = Texts.FallbackLanguage;
@@ -92,7 +92,7 @@ namespace GazeBar
         ///
         /// Pitfall to know: when reading, DataContractJsonSerializer does NOT call the
         /// constructor. A setting missing from the file (for example one added in a new
-        /// version of GazeBar) would then be 0 or "no". By filling in the default values here
+        /// version of Prunel) would then be 0 or "no". By filling in the default values here
         /// first, a missing setting keeps its default value.
         /// </summary>
         [OnDeserializing]
@@ -154,7 +154,7 @@ namespace GazeBar
                 KeyboardLayout.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
                 KeyboardLayout.Contains(".."))
             {
-                KeyboardLayout = GazeBar.KeyboardLayout.DefaultName;
+                KeyboardLayout = Prunel.KeyboardLayout.DefaultName;
             }
             KeyboardLayout = KeyboardLayout.Trim();
 
@@ -173,7 +173,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Updates a file written by an older version of GazeBar.
+        /// Updates a file written by an older version of Prunel.
         /// Returns true if something changed (the file must then be saved again).
         ///
         /// Why? Changing a default value is not enough: the file already on the computer holds
