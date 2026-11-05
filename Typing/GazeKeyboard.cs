@@ -41,8 +41,9 @@ namespace GazeBar
     ///
     /// The 3 top boxes suggest the most likely words
     /// starting with the current word (WordPredictor); looking at one writes the whole word
-    /// followed by a space. An unknown word (2 letters or more) shows in the 1st box with a
-    /// "+": looking at it adds it to the personal dictionary.
+    /// followed by a space. An unknown word (2 characters or more, at least one letter) shows
+    /// in the 1st box with a "+": looking at it adds it to the personal dictionary. A number
+    /// never gets a "+".
     /// Right after a space, the boxes suggest the words that already followed the previous
     /// word ("next word", learnt as sentences are written).
     ///

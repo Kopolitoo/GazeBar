@@ -86,7 +86,8 @@ navigation, F1 à F12.
 
 - **Prédiction de mots** : les trois cases du haut proposent des mots. En regarder une l'écrit
   avec une espace. Un mot inconnu apparaît avec un « + » orangé : le regarder l'ajoute au
-  dictionnaire personnel. Les mots courts passent devant, sauf si un mot plus long est beaucoup
+  dictionnaire personnel. Les nombres ne sont jamais ajoutés (un mot mêlant lettres et chiffres,
+  comme « mp3 », peut l'être). Les mots courts passent devant, sauf si un mot plus long est beaucoup
   plus courant ou souvent utilisé. GazeBar apprend aussi quel mot suit souvent un autre.
 - **Barre du clavier** (regarder sous l'écran quand le clavier est ouvert) : monter ou descendre
   le clavier, changer sa taille, le mettre en pause, afficher la « Zone de saisie » (un aperçu de

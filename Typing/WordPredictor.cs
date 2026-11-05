@@ -377,7 +377,9 @@ namespace GazeBar
                 }
             }
 
-            unknownWord = !known && prefix.Length >= 2;
+            // A number ("2026", "12-3") is never offered with "+" (issue #61): only what
+            // contains at least one letter can be added ("mp3", "4K" can).
+            unknownWord = !known && prefix.Length >= 2 && HasLetter(typed);
 
             // User request: if what was typed is already a known word, it comes
             // FIRST. Looking at it simply writes the space after it (faster than looking for
@@ -550,11 +552,12 @@ namespace GazeBar
 
         /// <summary>
         /// Adds a word to the personal dictionary ("+" box), as typed, and saves the file
-        /// right away. Does nothing if it is already known.
+        /// right away. Does nothing if it is already known, or if it has no letter (a number
+        /// is never added, issue #61).
         /// </summary>
         public void Add(string word)
         {
-            if (string.IsNullOrWhiteSpace(word) || KnownShape(word) != null)
+            if (string.IsNullOrWhiteSpace(word) || !HasLetter(word) || KnownShape(word) != null)
             {
                 return;
             }
@@ -599,6 +602,22 @@ namespace GazeBar
             }
             App.LogDetail("Prediction: one word removed from the personal dictionary (" + _addedWords.Count + " left)");
             SavePersonal();
+        }
+
+        /// <summary>
+        /// True if the word contains at least one letter. A word made only of digits and
+        /// hyphens ("2026", "06-12") is a number: it is not added to the personal dictionary.
+        /// </summary>
+        private static bool HasLetter(string word)
+        {
+            foreach (char c in word)
+            {
+                if (char.IsLetter(c))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

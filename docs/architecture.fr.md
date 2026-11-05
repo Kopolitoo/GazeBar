@@ -253,8 +253,10 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   en 1re case : le regarder écrit juste l'espace après lui. En regarder une écrit le mot entier suivi d'une
   espace (pas d'espace après « l' », « qu' »…) ; le mot garde la majuscule de départ. Classement :
   fréquence dans Lexique + 20 par utilisation, divisé par 1,6 pour chaque lettre qui reste à taper
-  (les mots courts d'abord, issue #71). Un mot inconnu de 2 lettres ou plus s'affiche dans
-  la 1re case avec un « + » (en ambre) : la regarder l'ajoute au dictionnaire personnel. Fichiers :
+  (les mots courts d'abord, issue #71). Un mot inconnu de 2 caractères ou plus s'affiche dans
+  la 1re case avec un « + » (en ambre) : la regarder l'ajoute au dictionnaire personnel. Un nombre
+  (seulement des chiffres et des tirets, comme « 2026 ») n'a jamais de « + » ; un mot mêlant
+  lettres et chiffres (« mp3 ») en a un (issue #61). Fichiers :
   `Dictionaries/fr.txt` (environ 125 000 mots tirés de Lexique 3.83, copié à côté de
   GazeBar.exe, lu en arrière-plan au démarrage) et `%APPDATA%\GazeBar\personal-dictionary.json`
   (mots ajoutés et nombres d'utilisations ; jamais dans le dépôt), enregistré après chaque ajout
