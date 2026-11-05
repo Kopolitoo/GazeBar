@@ -132,7 +132,7 @@ crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet l
 
 ## 15. Retour sonore
 
-Paramètres, « Affichage, sons », onglet « Sons » : les deux interrupteurs sont sur non ; rien ne
+Paramètres, « Interface », onglet « Sons » : les deux interrupteurs sont sur non ; rien ne
 fait de son. Activer « Son des touches » : ouvrir le clavier et taper : un petit « tic » aigu à
 chaque touche (aussi avec la répétition), mais aucun son pour le menu ni le choix d'action. Le
 désactiver et activer « Son des boutons » : les touches sont muettes ; l'icône d'options, le choix

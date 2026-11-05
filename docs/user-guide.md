@@ -98,7 +98,7 @@ choose "Quit the game" to go back. The "Game" tab of the settings has the game o
 ## Settings
 
 Menu, "Settings". A black full-screen page with four categories on the left: **Gaze**,
-**Actions**, **Display, sound**, **System**. Each setting has "−" and "+" (keep your gaze on them to
+**Actions**, **Interface**, **System**. Each setting has "−" and "+" (keep your gaze on them to
 repeat) or a yes / no switch. Changes apply at once and are saved.
 
 - **Default** (top right): puts back the original values of the shown tab.

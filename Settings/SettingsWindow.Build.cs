@@ -119,7 +119,7 @@ namespace GazeBar
 
             // Number of rows in the column: all categories + the tabs of the open category.
             // Rows share the page height, without exceeding the maximum height (140): with 8
-            // rows (category "Display, sound" open), each one is about 105 high.
+            // rows (category "Interface" open), each one is about 105 high.
             int rowCount = SettingsCatalog.Categories.Count + openTabs.Count;
             double step = Math.Min(TabMaxHeight + TabGap,
                                   (BottomTabs - TopTabs + TabGap) / Math.Max(1, rowCount));

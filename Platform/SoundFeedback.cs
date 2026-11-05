@@ -37,7 +37,7 @@ namespace GazeBar
         private const int SampleRate = 22050;
 
         // Volume of the sounds, from 0 to 1: rather low, so as not to tire with fast typing.
-        private const double Volume = 0.3;
+        private const double Volume = 0.24;
 
         // Created at the first use (null before, or after a failure).
         private static SoundPlayer _keyPlayer;

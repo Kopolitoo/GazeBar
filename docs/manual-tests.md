@@ -123,7 +123,7 @@ Loading "Automatic backup" restores the changed radius.
 
 ## 15. Sound feedback
 
-Settings, "Display, sound", "Sound" tab: both switches are off; nothing makes a sound. Turn on
+Settings, "Interface", "Sound" tab: both switches are off; nothing makes a sound. Turn on
 "Key sound": open the keyboard and type: a short high "tick" for each key (also with key
 repeat), but no sound for the menu or the action choice. Turn it off and turn on "Button sound":
 the keys are silent; the options icon, the action choice, the menu buttons and the settings

@@ -103,7 +103,7 @@ contient les options du jeu.
 ## Paramètres
 
 Menu, « Paramètres ». Une page noire en plein écran, avec quatre catégories à gauche :
-**Regard**, **Actions**, **Affichage, sons**, **Système**. Chaque réglage a « − » et « + » (garder le
+**Regard**, **Actions**, **Interface**, **Système**. Chaque réglage a « − » et « + » (garder le
 regard dessus répète) ou un interrupteur oui / non. Les changements s'appliquent tout de suite et
 sont enregistrés.
 
