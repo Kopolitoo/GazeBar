@@ -173,11 +173,14 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   fixé sur le curseur. Regard dans le cercle : rien ne défile (zone morte). Regard au-dessus, en
   dessous, à droite ou à gauche : la fenêtre sous le curseur défile dans ce sens (molette Windows,
   un seul sens à la fois), d'autant plus vite que le regard est loin du cercle, jusqu'à
-  `MaxScrollSpeed` (5 crans/s par défaut depuis le 02/11/2026) trois `CircleRadius` au-delà du bord. Un petit arc vert sur le
-  cercle montre la direction. Rien ne défile avant un premier passage du regard dans le cercle,
-  ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
+  `MaxScrollSpeed` (5 crans/s par défaut depuis le 02/11/2026) trois `CircleRadius` au-delà du bord. Démarrage doux (issue #52) : la
+  vitesse suit une courbe avec la distance (au carré : lente près du cercle) et chaque départ
+  commence à 20 % de cette vitesse, puis atteint 100 % en 1,5 s. Un petit arc vert sur le
+  cercle montre la direction. Rien ne défile pendant les 0,4 premières secondes, sauf si le regard
+  est passé dans le cercle (à l'entrée, le regard est encore sur l'icône de la couronne), ni quand le regard est perdu, à plus de 200 px hors de l'écran (un regard un peu hors de
   l'écran compte, pour agrandir la plage de vitesse) ou sur le bouton « retour » (bord droit, centré),
-  qui ramène au mode mouvement. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
+  qui ramène au mode mouvement. Regarder hors de l'écran à droite pendant 1 s ramène aussi au
+  mode mouvement (issue #51) ; rien n'y défile. Ctrl actif dans le choix d'action : Ctrl + molette (zoom).
   Depuis le 02/11/2026 : défilement fin (petites quantités de molette, jusqu'à une fois par
   image, et vitesse lissée qui monte et descend en douceur) ; en entrant, GazeBar rend active la
   fenêtre sous le curseur (sans cliquer), pour ne plus avoir à cliquer avant de défiler.
@@ -222,7 +225,11 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
 - `KeyboardHook` (étape 4) : la touche **Échap** ramène au mode mouvement depuis n'importe quel
   mode, pour l'aidant. La touche arrive aussi normalement au programme actif. Depuis l'étape 12,
   en mode mouvement, elle ferme le clavier au regard ; la touche « Esc » du clavier au regard,
-  simulée par GazeBar, est ignorée par le crochet (elle va seulement à l'application).
+  simulée par GazeBar, est ignorée par le crochet (elle va seulement à l'application) : GazeBar
+  marque ses propres touches simulées (`dwExtraInfo`). Depuis l'issue #51, un Échap simulé par un
+  autre logiciel (Dragon, à la voix) compte comme la vraie touche. En mode défilement et quand le
+  clavier au regard est ouvert, GazeBar GARDE Échap (appui et relâchement) : les autres logiciels
+  ne le reçoivent pas (`KeepEscape`).
 - Clavier au regard (étape 12, `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`) : bouton
   « Clavier » du menu, ou action « Clavier » du choix d'action (ouvre / ferme le clavier ; avant de l'ouvrir, un clic
   gauche sur P donne le focus au champ visé et y place le curseur de texte ; pas

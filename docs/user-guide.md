@@ -56,7 +56,8 @@ edge cancels.
 
 Choose "Scroll" in the action choice. The circle stays in place. Look above, below, left or
 right of it to scroll that way: the further away, the faster. Look inside the circle to stop.
-"Back" (right edge) ends scrolling.
+"Back" (right edge) ends scrolling; looking off the screen on the right for one second
+does too.
 
 ## Menu
 
@@ -122,7 +123,9 @@ repeat) or a yes / no switch. Changes apply at once and are saved.
 
 ## For the caregiver
 
-- **Escape** on the physical keyboard brings GazeBar back to movement mode from anywhere.
+- **Escape** on the physical keyboard brings GazeBar back to movement mode from anywhere. Escape
+  said to voice recognition software (such as Dragon) does too. When scrolling or when the gaze
+  keyboard is open, GazeBar keeps Escape for itself: other programs do not receive it.
 - Starting GazeBar a second time does nothing: it is already running.
 - "Start with Windows" ("General" tab) starts GazeBar automatically.
 

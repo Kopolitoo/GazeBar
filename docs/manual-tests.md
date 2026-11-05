@@ -59,6 +59,14 @@ little below the circle: the page goes down slowly; lower: faster. Above: it goe
 the right edge goes back to movement mode. At low speed, the page must slide without small
 jumps, and start and stop gently; without having clicked in the page first, it must scroll
 anyway (the log notes the window made active and the state of the Windows wheel setting).
+Open scrolling again and look straight below the circle, without passing through it: the page
+must start going down within half a second, without moving the gaze. Each start must be gentle:
+slow at first, then faster over about a second and a half; just outside the circle, very slow.
+Look off the screen on the right for one second: back to movement mode. Look off the screen
+above, below and on the left: it still scrolls at full speed in that direction. Open scrolling
+again and say "Escape" to Dragon: back to movement mode. With a menu of a program open under the
+circle, Escape in scroll mode must not close that menu (GazeBar keeps the key). Same with the
+gaze keyboard open: Escape closes the keyboard only.
 
 ## 8. Icon configuration
 

@@ -12,8 +12,11 @@ namespace GazeBar
     ///
     /// How: we install a "low-level keyboard hook" (WH_KEYBOARD_LL). Windows then calls our
     /// OnKey function on every key press, wherever the focus is.
-    /// We only observe: the key is always passed on to the active program
-    /// (CallNextHookEx). Escape therefore still closes a dialog box, for example.
+    /// Usually we only observe: the key is passed on to the active program (CallNextHookEx).
+    /// Escape therefore still closes a dialog box, for example.
+    /// EXCEPTION (user request): when GazeBar itself uses Escape (see KeepEscape: scroll mode,
+    /// or gaze keyboard open), the key is KEPT: the other programs do not receive it, neither
+    /// the press nor the release.
     ///
     /// Windows calls OnKey on the UI thread (the one that installed the hook), while it
     /// processes its messages: so we could change mode directly. But we must answer quickly
@@ -31,8 +34,22 @@ namespace GazeBar
             _function = OnKey;
         }
 
-        /// <summary>Raised (on the UI thread) when the Escape key is pressed.</summary>
-        public event Action EscapePressed;
+        /// <summary>
+        /// Raised (on the UI thread) when the Escape key is pressed. The argument is true when
+        /// the key was simulated by other software (for example Dragon, by voice), false for a
+        /// real keyboard.
+        /// </summary>
+        public event Action<bool> EscapePressed;
+
+        /// <summary>
+        /// Asked at the moment Escape is pressed: true if GazeBar uses it and the other programs
+        /// must not receive it. Must answer very quickly (it runs inside the hook).
+        /// </summary>
+        public Func<bool> KeepEscape;
+
+        // True between a kept Escape press and its release: the release (and the automatic
+        // repeats while the key is held) are kept too.
+        private bool _escapeKept;
 
         /// <summary>Installs the hook. Returns false if Windows refuses it (written to the log).</summary>
         public bool Install()
@@ -73,20 +90,49 @@ namespace GazeBar
             if (code >= 0)
             {
                 int message = wParam.ToInt32();
+                bool release = message == NativeMethods.WM_KEYUP || message == NativeMethods.WM_SYSKEYUP;
+                if (release && _escapeKept && Marshal.ReadInt32(lParam) == NativeMethods.VK_ESCAPE)
+                {
+                    // Release of a kept Escape: kept too.
+                    _escapeKept = false;
+                    return new IntPtr(1);
+                }
                 if (message == NativeMethods.WM_KEYDOWN || message == NativeMethods.WM_SYSKEYDOWN)
                 {
                     int key = Marshal.ReadInt32(lParam);
                     // The Escape key of the gaze keyboard is SIMULATED by GazeBar.
                     // It must reach the application, but must neither return to movement mode
-                    // nor close the keyboard: we only react to a real keyboard (the caregiver's).
+                    // nor close the keyboard: GazeBar's own keys carry a mark (dwExtraInfo, see
+                    // KeyboardInjector) and are ignored. A key simulated by OTHER software
+                    // (Dragon, when the user says "Escape") counts (issue #51).
                     int flagsValue = Marshal.ReadInt32(lParam, NativeMethods.HookFlagsOffset);
                     bool simulated = (flagsValue & NativeMethods.LLKHF_INJECTED) != 0;
-                    if (key == NativeMethods.VK_ESCAPE && !simulated)
+                    long extraInfo = Marshal.ReadIntPtr(lParam, NativeMethods.HookExtraInfoOffset).ToInt64();
+                    bool fromGazeBar = simulated && extraInfo == NativeMethods.GazeBarKeyMarker;
+                    if (key == NativeMethods.VK_ESCAPE && !fromGazeBar)
                     {
-                        Action subscribers = EscapePressed;
+                        // Automatic repeat of a kept Escape (key held down): kept, no new event.
+                        if (_escapeKept)
+                        {
+                            return new IntPtr(1);
+                        }
+
+                        // Decided NOW, before the mode changes (the event is handled afterwards).
+                        Func<bool> keep = KeepEscape;
+                        bool kept = keep != null && keep();
+
+                        Action<bool> subscribers = EscapePressed;
                         if (subscribers != null)
                         {
-                            System.Windows.Application.Current.Dispatcher.BeginInvoke(subscribers);
+                            System.Windows.Application.Current.Dispatcher.BeginInvoke(subscribers, simulated);
+                        }
+
+                        if (kept)
+                        {
+                            // A non-zero answer without CallNextHookEx: Windows does not pass
+                            // the key on to the other programs.
+                            _escapeKept = true;
+                            return new IntPtr(1);
                         }
                     }
                 }

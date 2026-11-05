@@ -64,6 +64,16 @@ plus vite. Au-dessus : elle remonte. « Retour » au bord droit ramène au mode 
 Depuis le 02/11/2026 : à vitesse lente, la page doit glisser sans petits sauts, et démarrer
 ou s'arrêter en douceur ; sans avoir cliqué dans la page avant, elle doit défiler quand même
 (le journal note « fenêtre … rendue active » et l'état du réglage Windows de la molette).
+On rouvre le défilement et on regarde directement sous le cercle, sans passer dedans : la page
+doit commencer à descendre en moins d'une demi-seconde, sans bouger le regard. Chaque départ doit
+être doux : lent au début, puis plus rapide en une seconde et demie environ ; juste au bord du
+cercle, très lent. On regarde hors de l'écran à droite pendant une seconde : retour au mode
+mouvement. On regarde hors de l'écran en haut, en bas et à gauche : ça défile toujours à vitesse
+maximale dans ce sens. On rouvre le défilement et on dit « Échap » à Dragon : retour au mode
+mouvement.
+Avec un menu d'un logiciel ouvert sous le cercle, Échap en mode défilement ne doit pas fermer
+ce menu (GazeBar garde la touche). Pareil avec le clavier au regard ouvert : Échap ferme
+seulement le clavier.
 
 ## 8. Configuration des icônes
 

@@ -445,6 +445,8 @@ namespace GazeBar
         internal const int WH_KEYBOARD_LL = 13;     // "low-level" keyboard hook, for the whole system
         internal const int WM_KEYDOWN = 0x0100;     // a key is pressed
         internal const int WM_SYSKEYDOWN = 0x0104;  // same, with Alt
+        internal const int WM_KEYUP = 0x0101;       // a key is released
+        internal const int WM_SYSKEYUP = 0x0105;    // same, with Alt
         internal const int VK_ESCAPE = 0x1B;        // code of the Escape key
 
         /// <summary>
@@ -454,6 +456,19 @@ namespace GazeBar
         /// </summary>
         internal const int HookFlagsOffset = 8;
         internal const int LLKHF_INJECTED = 0x10;
+
+        /// <summary>
+        /// In the same structure, the "dwExtraInfo" field (5th field, 16 bytes after the start):
+        /// it carries back the value the simulating program put in KEYBDINPUT.dwExtraInfo.
+        /// </summary>
+        internal const int HookExtraInfoOffset = 16;
+
+        /// <summary>
+        /// Value GazeBar puts in dwExtraInfo of every key it simulates ("GBR!" in ASCII), so the
+        /// keyboard hook can tell GazeBar's own keys from keys simulated by other software
+        /// (for example the Escape key said to Dragon, issue #51).
+        /// </summary>
+        internal const int GazeBarKeyMarker = 0x47425221;
 
         // ───────────────────────── Clock precision ─────────────────────────
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -120,6 +121,12 @@ namespace GazeBar
             SendAll(entries, "key " + code);
         }
 
+        /// <summary>
+        /// Mark of GazeBar's own keys (see NativeMethods.GazeBarKeyMarker): the keyboard hook
+        /// ignores the Escape key of the gaze keyboard, but not the one of other software.
+        /// </summary>
+        private static readonly UIntPtr Marker = new UIntPtr((uint)NativeMethods.GazeBarKeyMarker);
+
         /// <summary>A "Unicode character" input (press or release).</summary>
         private static NativeMethods.INPUT Character(char c, uint flagsValue)
         {
@@ -128,6 +135,7 @@ namespace GazeBar
             input.u.ki.wVk = 0;
             input.u.ki.wScan = c;
             input.u.ki.dwFlags = NativeMethods.KEYEVENTF_UNICODE | flagsValue;
+            input.u.ki.dwExtraInfo = Marker;
             return input;
         }
 
@@ -151,6 +159,7 @@ namespace GazeBar
                 flagsValue |= NativeMethods.KEYEVENTF_KEYUP;
             }
             input.u.ki.dwFlags = flagsValue;
+            input.u.ki.dwExtraInfo = Marker;
             return input;
         }
 
@@ -176,6 +185,7 @@ namespace GazeBar
             input.type = NativeMethods.INPUT_KEYBOARD;
             input.u.ki.wVk = keyCode;
             input.u.ki.dwFlags = flagsValue;
+            input.u.ki.dwExtraInfo = Marker;
 
             NativeMethods.INPUT[] inputs = new NativeMethods.INPUT[] { input };
             uint sentCount = NativeMethods.SendInput(1, inputs, Marshal.SizeOf(typeof(NativeMethods.INPUT)));

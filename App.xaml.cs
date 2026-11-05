@@ -126,16 +126,38 @@ namespace GazeBar
             // The caregiver's Escape key: back to movement mode, from any mode.
             _keyboard = new KeyboardHook();
             _keyboard.EscapePressed += OnEscape;
+            _keyboard.KeepEscape = EscapeKeptByGazeBar;
             _keyboard.Install();
+        }
+
+        /// <summary>
+        /// True if GazeBar uses Escape for itself and the other programs must not receive it
+        /// (user request): in scroll mode (Escape leaves it) and when the gaze keyboard is open
+        /// in movement mode (Escape closes it). Elsewhere, Escape is also passed on to the active
+        /// program. Called inside the keyboard hook: it must answer very quickly.
+        /// </summary>
+        private bool EscapeKeptByGazeBar()
+        {
+            if (_modes == null)
+            {
+                return false;
+            }
+            Mode mode = _modes.CurrentMode;
+            return mode is ScrollMode || (mode is MovementMode && _modes.Keyboard.IsOpen);
         }
 
         /// <summary>
         /// Escape key (for the caregiver): the mouse buttons and modifier keys are released for
         /// safety (a drag and drop in progress is interrupted) and we return to movement mode,
         /// unless we are already there. In movement mode, it closes the gaze keyboard.
-        /// The key also reaches the active program normally (it is not "eaten" by GazeBar).
+        /// The key also reaches the active program, except in scroll mode and when the gaze
+        /// keyboard is open (see EscapeKeptByGazeBar).
+        ///
+        /// fromOtherSoftware: the key was simulated by other software, such as Dragon when the
+        /// user says "Escape" (issue #51). It acts exactly like the real key; only the log
+        /// tells them apart.
         /// </summary>
-        private void OnEscape()
+        private void OnEscape(bool fromOtherSoftware)
         {
             if (_modes == null)
             {
@@ -176,7 +198,7 @@ namespace GazeBar
                 list.Back();
                 return;
             }
-            App.LogDetail("Escape key: back to movement mode");
+            App.LogDetail("Escape key" + (fromOtherSoftware ? " (simulated by other software)" : "") + ": back to movement mode");
             MouseInjector.ReleaseAll();
             KeyboardInjector.ReleaseAll();
             _modes.ChangeMode(new MovementMode());

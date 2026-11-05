@@ -38,6 +38,12 @@ namespace GazeBar
     ///     counted in WHOLE radii of [CircleRadius]: shrinking the dead zone only brought the
     ///     start of scrolling closer, without making the speed-up more abrupt.
     ///     Further away, it no longer increases;
+    ///   - GENTLE START (issue #52: "scrolling starts a bit too fast"), two curves together:
+    ///       · distance: the speed follows a curve, not a straight line ([SpeedCurvePower]):
+    ///         very slow near the circle, faster further away. Halfway: a quarter of the
+    ///         maximum speed (instead of half);
+    ///       · time: each start (leaving the dead zone, or a new direction) begins at
+    ///         [RampStartFraction] of this speed, which then reaches 100 % in [RampMs];
     ///   - Windows "wheel events" are sent: the window under the cursor scrolls (Windows setting
     ///     "Scroll inactive windows when I hover over them", on by default).
     ///
@@ -64,7 +70,10 @@ namespace GazeBar
     ///
     /// Precautions:
     ///   - on entry, the gaze is still on the crown icon, often outside the circle: nothing
-    ///     scrolls until the gaze has been inside the circle once;
+    ///     scrolls until the gaze has been inside the circle once, or for at most
+    ///     [ArmingDelayMs] (the time for the eye to leave the icon). After that, scrolling
+    ///     follows the gaze even if it never entered the circle (issue #50: looking straight
+    ///     above or below the circle did nothing until the gaze moved);
     ///   - nothing scrolls when the gaze is lost, too far off screen or on the back button
     ///     (otherwise, while going to look at the button, it would scroll to the right).
     ///
@@ -78,8 +87,11 @@ namespace GazeBar
     /// movement, then released: Ctrl + wheel zooms in most software, Shift + wheel often
     /// scrolls sideways.
     ///
-    /// The menu does not open during this mode: the way out is the
-    /// "back" button (or the caregiver's Escape key).
+    /// The menu does not open during this mode. Ways out: the "back" button, looking off the
+    /// screen ON THE RIGHT (the "back" side) for [RightExitMs] (issue #51: the button is
+    /// sometimes hard to aim at), or the caregiver's Escape key. Off the screen on the right,
+    /// nothing scrolls; above, below and on the left, a gaze slightly off screen still scrolls
+    /// (see above).
     /// </summary>
     internal sealed class ScrollMode : Mode
     {
@@ -100,8 +112,35 @@ namespace GazeBar
         /// </summary>
         private const double SpeedTimeConstantMs = 150;
 
+        /// <summary>
+        /// Longest wait, in milliseconds after entering the mode, before scrolling may start
+        /// when the gaze has not been inside the circle (see the precautions).
+        /// </summary>
+        private const double ArmingDelayMs = 400;
+
         /// <summary>Below this speed (notches per second), it is considered zero.</summary>
         private const double NegligibleSpeed = 0.05;
+
+        /// <summary>
+        /// Shape of the speed curve with the distance (see the class comment): 1 = straight line,
+        /// 2 = slow near the circle then faster. Larger = even slower near the circle.
+        /// </summary>
+        private const double SpeedCurvePower = 2;
+
+        /// <summary>
+        /// Gentle start in time (see the class comment): each start begins at this fraction of
+        /// the speed (0.2 = 20 %)...
+        /// </summary>
+        private const double RampStartFraction = 0.2;
+
+        /// <summary>...and reaches 100 % after this time, in milliseconds.</summary>
+        private const double RampMs = 1500;
+
+        /// <summary>
+        /// How long, in milliseconds, the gaze must stay off the screen on the right to leave
+        /// this mode (see the class comment).
+        /// </summary>
+        private const double RightExitMs = 1000;
 
         /// <summary>One wheel notch, in Windows units (WHEEL_DELTA).</summary>
         private const int Notch = 120;
@@ -147,8 +186,9 @@ namespace GazeBar
         private readonly Smoother _smoothed = new Smoother();
         private bool _placed;
 
-        // True once the gaze has been inside the circle (see the precautions).
+        // True once the gaze has been inside the circle or [ArmingDelayMs] has passed (see the precautions).
         private bool _armed;
+        private double _enteredMs;
 
         // Amount of wheel not sent yet (in Windows units). The speed gives, on each tick, a small
         // amount (for example 10 notches/s × 120 × 0.016 s = 19 units); it is added here, and
@@ -159,6 +199,12 @@ namespace GazeBar
 
         // The smoothed speed, in notches per second (always positive; the direction is _reserveDirection).
         private double _speed;
+
+        // Time when the gaze went off the screen on the right; -1 = it is not there.
+        private double _rightSinceMs = -1;
+
+        // Time when the current start began (gentle start in time); -1 = not scrolling.
+        private double _rampStartMs = -1;
 
         private double _lastTickMs = -1;
 
@@ -199,8 +245,11 @@ namespace GazeBar
             _placed = Usable(gaze);
             _smoothed.Place(gaze.X, gaze.Y);
             _armed = false;
+            _enteredMs = gaze.NowMs;
             _reserve = 0;
             _speed = 0;
+            _rampStartMs = -1;
+            _rightSinceMs = -1;
             _lastTickMs = gaze.NowMs;
 
             BuildSurface();
@@ -229,19 +278,43 @@ namespace GazeBar
                 return;
             }
 
-            // 2. No usable gaze (lost, or too far off screen), or gaze on the button: nothing
-            //    scrolls. A gaze slightly off screen is usable.
+            // 2. Gaze off the screen on the right (any distance, any height): after [RightExitMs],
+            //    back to movement mode, like the "back" button. Meanwhile, nothing scrolls.
+            //    A lost gaze, or a gaze back on the screen, starts the count again.
+            bool offRight = gaze.Available && gaze.X >= Manager.ScreenWidth;
+            if (offRight)
+            {
+                if (_rightSinceMs < 0)
+                {
+                    _rightSinceMs = now;
+                }
+                if (now - _rightSinceMs >= RightExitMs)
+                {
+                    App.LogDetail("Scroll: end (gaze off the screen on the right)");
+                    Manager.ChangeMode(new MovementMode());
+                    return;
+                }
+            }
+            else
+            {
+                _rightSinceMs = -1;
+            }
+
+            // 3. No usable gaze (lost, or too far off screen), gaze off the screen on the right,
+            //    or gaze on the button: nothing scrolls. A gaze slightly off screen above, below
+            //    or on the left is usable.
             bool onBack = gaze.OnScreen && _buttons.Count > 0 && _buttons[0].Contains(gaze.X, gaze.Y);
             //    The arc stays shown at its last place.
             //    Immediate stop (no smooth slowdown): it is a safety measure.
-            if (!Usable(gaze) || onBack)
+            if (!Usable(gaze) || offRight || onBack)
             {
                 _reserve = 0;
                 _speed = 0;
+                _rampStartMs = -1;
                 return;
             }
 
-            // 3. The smoothed gaze moves smoothly towards the gaze (see Smoother.cs).
+            // 4. The smoothed gaze moves smoothly towards the gaze (see Smoother.cs).
             if (!_placed)
             {
                 _smoothed.Place(gaze.X, gaze.Y);
@@ -249,7 +322,7 @@ namespace GazeBar
             }
             _smoothed.Follow(gaze.X, gaze.Y, gaze.NowMs);
 
-            // 4. Where is the gaze relative to the circle?
+            // 5. Where is the gaze relative to the circle?
             double dx = _smoothed.X - _px;
             double dy = _smoothed.Y - _py;
             double distance = Math.Sqrt(dx * dx + dy * dy);
@@ -262,10 +335,10 @@ namespace GazeBar
                 DrawArc(dx, dy, radius);
             }
 
-            if (distance <= radius)
+            if (distance <= radius || now - _enteredMs >= ArmingDelayMs)
             {
-                // In the circle (the dead zone): the wanted speed is zero. Scrolling is now
-                // allowed (see the precautions).
+                // In the circle (the dead zone, where the wanted speed is zero), or the eye has
+                // had time to leave the crown icon: scrolling is now allowed (see the precautions).
                 _armed = true;
             }
 
@@ -274,10 +347,11 @@ namespace GazeBar
                 return;
             }
 
-            // 5. The wanted speed and, outside the dead zone, the direction (one axis only: the
+            // 6. The wanted speed and, outside the dead zone, the direction (one axis only: the
             //    one with the largest gap).
             //    Speed: from 0 at the edge of the dead zone to [MaxScrollSpeed] three whole
-            //    [CircleRadius] further (see the class comment).
+            //    [CircleRadius] further, along a curve, and lowered during the first moments of
+            //    each start (see the class comment).
             //    In the dead zone, the previous direction is kept: the speed goes smoothly back
             //    down to 0 there, in the same direction.
             double wantedSpeed = 0;
@@ -287,20 +361,35 @@ namespace GazeBar
                 // Wheel: up and right = positive (see MouseInjector.Wheel).
                 int direction = horizontal ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
                 double fraction = Math.Min(1.0, (distance - radius) / (MaxSpeedRadii * p.CircleRadiusPx));
-                wantedSpeed = fraction * p.MaxScrollSpeed;
+                fraction = Math.Pow(fraction, SpeedCurvePower);
 
                 // Change of direction: start from zero (speed and reserve), so as not to carry the
-                // momentum of the old direction into the new one.
+                // momentum of the old direction into the new one. It is a new start.
                 if (horizontal != _horizontalReserve || direction != _reserveDirection)
                 {
                     _reserve = 0;
                     _speed = 0;
                     _horizontalReserve = horizontal;
                     _reserveDirection = direction;
+                    _rampStartMs = now;
                 }
+                // Leaving the dead zone: a new start too.
+                if (_rampStartMs < 0)
+                {
+                    _rampStartMs = now;
+                }
+                double ramp = Math.Min(1.0, (now - _rampStartMs) / RampMs);
+                double timeFactor = RampStartFraction + (1 - RampStartFraction) * ramp;
+
+                wantedSpeed = fraction * timeFactor * p.MaxScrollSpeed;
+            }
+            else
+            {
+                // In the dead zone: the next exit will be a new start.
+                _rampStartMs = -1;
             }
 
-            // 6. The smoothed speed moves towards the wanted speed, according to the elapsed time
+            // 7. The smoothed speed moves towards the wanted speed, according to the elapsed time
             //    (same computation as Smoother.cs: the fraction covered is 1 − e^(−dt / τ)).
             _speed += (wantedSpeed - _speed) * (1 - Math.Exp(-dt * 1000 / SpeedTimeConstantMs));
             if (wantedSpeed == 0 && _speed < NegligibleSpeed)
@@ -310,7 +399,7 @@ namespace GazeBar
                 return;
             }
 
-            // 7. The wheel reserve: add this tick's amount, and send everything it contains (in
+            // 8. The wheel reserve: add this tick's amount, and send everything it contains (in
             //    whole units) as soon as it reaches [MinStep].
             _reserve += _speed * Notch * dt;
             if (_reserve >= MinStep)

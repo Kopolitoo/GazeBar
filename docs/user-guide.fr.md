@@ -60,7 +60,8 @@ bouton retour au bord droit annule.
 
 On choisit « Défilement » dans le choix d'action. Le cercle reste en place. On regarde au-dessus,
 en dessous, à gauche ou à droite pour faire défiler dans ce sens : plus le regard est loin, plus
-c'est rapide. Regarder dans le cercle arrête. « Retour » (bord droit) termine le défilement.
+c'est rapide. Regarder dans le cercle arrête. « Retour » (bord droit) termine le défilement ; regarder hors de l'écran à droite pendant une
+seconde aussi.
 
 ## Menu
 
@@ -132,7 +133,10 @@ sont enregistrés.
 
 ## Pour l'aidant
 
-- **Échap** sur le clavier physique ramène GazeBar au mode mouvement, d'où que l'on soit.
+- **Échap** sur le clavier physique ramène GazeBar au mode mouvement, d'où que l'on soit. Échap
+  dit à un logiciel de reconnaissance vocale (comme Dragon) aussi. Pendant le défilement ou
+  quand le clavier au regard est ouvert, GazeBar garde Échap pour lui : les autres logiciels ne
+  le reçoivent pas.
 - Lancer GazeBar une deuxième fois ne fait rien : il tourne déjà.
 - « Démarrer avec Windows » (onglet « Général ») lance GazeBar automatiquement.
 

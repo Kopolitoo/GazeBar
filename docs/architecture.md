@@ -166,10 +166,14 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   the cursor. Gaze inside the circle: nothing scrolls (dead zone). Gaze above, below, right or
   left: the window under the cursor scrolls in that direction (Windows mouse wheel, one direction
   at a time), faster as the gaze gets further from the circle, up to `MaxScrollSpeed` (5 notches/s
-  by default) three `CircleRadius` beyond the edge. A small green arc on the circle shows the
-  direction. Nothing scrolls before the gaze has once been inside the circle, nor when the gaze
-  is lost, more than 200 px off the screen (a gaze slightly off the screen counts, to widen the
+  by default) three `CircleRadius` beyond the edge. Gentle start (issue #52): the speed follows a
+  curve with the distance (squared: slow near the circle) and each start begins at 20 % of it,
+  reaching 100 % in 1.5 s. A small green arc on the circle shows the
+  direction. Nothing scrolls during the first 0.4 s, unless the gaze has been inside the circle
+  (on entry the gaze is still on the crown icon), nor when the gaze is lost, more than 200 px off the screen (a gaze slightly off the screen counts, to widen the
   speed range), or on the "back" button (right edge, centred), which goes back to movement mode.
+  Looking off the screen on the right for 1 s also goes back to movement mode (issue #51); nothing
+  scrolls there.
   Ctrl on in the action choice: Ctrl + wheel (zoom). Fine scrolling (small wheel amounts, up to
   once per frame, and a smoothed speed that rises and falls gently); on entering, GazeBar
   activates the window under the cursor (without clicking), so there is no need to click before
@@ -211,7 +215,10 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
 - `KeyboardHook` (step 4): the **Escape** key goes back to movement mode from any mode, for the
   caregiver. The key also reaches the active program normally. Since step 12, in movement mode,
   it closes the gaze keyboard; the "Esc" key of the gaze keyboard, simulated by GazeBar, is
-  ignored by the hook (it only goes to the application).
+  ignored by the hook (it only goes to the application): GazeBar marks its own simulated keys
+  (`dwExtraInfo`). Since issue #51, an Escape simulated by other software (Dragon, by voice)
+  counts like the real key. In scroll mode and when the gaze keyboard is open, GazeBar KEEPS
+  Escape (press and release): the other programs do not receive it (`KeepEscape`).
 - Gaze keyboard (step 12, `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`): "Keyboard" button of
   the menu, or "Keyboard" action of the action choice (opens / closes the keyboard; before opening it, a left
   click on P gives the focus to the aimed field and places the text cursor there; not placed by
