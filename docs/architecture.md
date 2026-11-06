@@ -31,7 +31,7 @@ code comments do not use them: they describe the code as it is now.
 
 ## Folders
 
-The source code is grouped by topic. Every class stays in the `GazeBar` namespace, whatever its
+The source code is grouped by topic. Every class stays in the `Prunel` namespace, whatever its
 folder. The project file finds the `.cs` and `.xaml` files of every folder by itself.
 
 The three biggest classes are "partial" classes: one class written in several files, named
@@ -41,7 +41,7 @@ The three biggest classes are "partial" classes: one class written in several fi
 
 | Folder | Contents |
 |---|---|
-| (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `GazeBar.csproj`, `app.manifest`, `app.uiaccess.manifest` |
+| (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `Prunel.csproj`, `app.manifest`, `app.uiaccess.manifest` |
 | `Gaze` | reading the gaze and processing it: `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
 | `Modes` | one class per mode, and `ModeManager` |
 | `Actions` | what the action choice offers: `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
@@ -49,20 +49,20 @@ The three biggest classes are "partial" classes: one class written in several fi
 | `Settings` | the settings file, profiles and settings window: `AppSettings`, `SettingsCatalog`, `SettingsProfiles`, `SettingsWindow`, `SettingTarget` |
 | `Ui` | windows and gaze buttons: `OverlayWindow`, `DiagnosticWindow`, `CursorSampler`, `GazeButton`, `ButtonAimer`, `IGazeTarget`, `Texts` |
 | `Platform` | calls to Windows: `NativeMethods`, `MouseInjector`, `KeyboardInjector`, `KeyboardHook`, `WheelScroller`, `CursorWaker`, `ScreenCapture`, `ScreenMetrics`, `WindowsStartup`, `UiAccess`, `SoundFeedback` |
-| `Languages`, `Keyboards`, `Dictionaries` | data files copied next to `GazeBar.exe` (texts, keyboard layouts, prediction dictionaries) |
+| `Languages`, `Keyboards`, `Dictionaries` | data files copied next to `Prunel.exe` (texts, keyboard layouts, prediction dictionaries) |
 | `Resources` | the program icon |
-| `Install` | the installer of the full installation (UI access): `GazeBar.iss` (Inno Setup) and `setup-certificate.ps1` |
+| `Install` | the installer of the full installation (UI access): `Prunel.iss` (Inno Setup) and `setup-certificate.ps1` |
 
 ## Eyetracker DLLs
 
 The three Tobii DLLs (`Tobii.Interaction.Net.dll`, `Tobii.Interaction.Model.dll`,
 `Tobii.EyeX.Client.dll`) are proprietary and are not shipped with Prunel. The NuGet package is
-only used to compile (`ExcludeAssets="runtime;build"` in `GazeBar.csproj`), and a build target
+only used to compile (`ExcludeAssets="runtime;build"` in `Prunel.csproj`), and a build target
 deletes any `Tobii.*.dll` from the output folder; the CI build fails if one is left.
 
 At startup, `EyetrackerLoader` looks for them on the PC, in this order:
 
-1. the `Eyetracker` subfolder next to `GazeBar.exe`;
+1. the `Eyetracker` subfolder next to `Prunel.exe`;
 2. the installation folders of the manufacturer's software (`Program Files\Tobii`,
    `Program Files\Tobii Dynavox`);
 3. the NuGet cache (`%USERPROFILE%\.nuget\packages\tobii.interaction\0.7.3`): on the PC where
@@ -256,8 +256,8 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   issue #71). An unknown word of 2 characters or more shows in the 1st box with a
   "+" (amber): looking at it adds it to the personal dictionary. A number (digits and hyphens
   only, such as "2026") never gets a "+"; a word mixing letters and digits ("mp3") does (issue #61). Files: `Dictionaries/<language>.txt`
-  (copied next to GazeBar.exe, read in the background at startup) and
-  `%APPDATA%\GazeBar\personal-dictionary.json` (added words and usage counts; never in the
+  (copied next to Prunel.exe, read in the background at startup) and
+  `%APPDATA%\Prunel\personal-dictionary.json` (added words and usage counts; never in the
   repository), saved after each addition and, for the usage counts, once a minute and at
   closing. Next word: Prunel remembers the pairs of words written one after the other ("I" →
   "am"); right after a space, the boxes suggest the words that most often followed the previous
@@ -294,10 +294,10 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   `C:\Program Files`, so Visual Studio and the simple .zip keep `app.manifest`. The automatic
   build checks that the two manifests differ only by `uiAccess`. `UiAccess.IsActive()` writes
   "UI access: yes" or "no" to the log at startup. The installer (step `installer`) ships this build:
-  `Install/GazeBar.iss` makes `GazeBar-<version>-setup.exe` with
+  `Install/Prunel.iss` makes `Prunel-<version>-setup.exe` with
   [Inno Setup](https://jrsoftware.org/isinfo.php) 6, a build tool only (`make-setup.ps1` in
   `.github/scripts` installs it on the GitHub machine if needed). The installer copies the build
-  to `C:\Program Files\GazeBar`, runs `setup-certificate.ps1`, which signs it with a certificate
+  to `C:\Program Files\Prunel`, runs `setup-certificate.ps1`, which signs it with a certificate
   made on the user's computer (its private key deleted right after), and adds a Start menu
   shortcut and an entry in "Settings > Apps" of Windows. Its uninstaller removes the certificate
   and the "Start with Windows" entry. It starts Prunel with ShellExecute (flag `shellexec`):
@@ -308,10 +308,16 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
 ## Settings file
 
 All settings are in the `AppSettings` class (file `AppSettings.cs`) and saved in
-`%APPDATA%\GazeBar\settings.json`, created at the first start with the default values of the
+`%APPDATA%\Prunel\settings.json`, created at the first start with the default values of the
 specification. It can be opened with Notepad (decimal numbers with a point: `0.3`), then Prunel
 restarted. An unreadable file is set aside (`settings.json.unreadable`) and replaced by the
 default values.
+Former name: Prunel was called GazeBar up to version 0.2.0. `FormerName.Migrate`
+(`Settings/FormerName.cs`), called at startup before the first log line, renames
+`%APPDATA%\GazeBar`, `%LOCALAPPDATA%\GazeBar` and `Documents\GazeBar` to `Prunel` when the new
+folder does not exist yet (a copy if the move is refused). `WindowsStartup` removes the old
+`GazeBar` value of the Run key, and the installer (same `AppId`) moves to
+`Program Files\Prunel` and deletes `Program Files\GazeBar`.
 `FileVersion` (currently 13) says which version wrote the file: an older file is converted at
 startup (see the list of versions at the top of `AppSettings.cs`). The settings window lists its
 tabs and settings in `SettingsCatalog.cs`.
@@ -330,7 +336,7 @@ Step 15, `SettingsProfiles.cs`. "Profiles" tab of the settings (System
 category). "Save the current settings" opens a name page: a text box already holding a dated
 name (`Settings YYYY-MM-DD HHhMM`, in the interface language) that the user can keep or replace
 with the gaze keyboard, shown for this input; "Save" (or Enter) copies the settings to
-`Documents\GazeBar\Profiles\<name>.json` (if the name exists, a question asks before replacing
+`Documents\Prunel\Profiles\<name>.json` (if the name exists, a question asks before replacing
 it), "Cancel" saves nothing. The caregiver can rename or delete these files in File Explorer. "Load a profile"
 shows the `.json` files of this folder as large buttons (the most recent first, 12 per page);
 after "Yes", the current settings are kept in "Automatic backup" (file `auto-backup.json`,
@@ -342,7 +348,7 @@ does the interface language or the personal dictionary.
 ### Interface language
 
 Step langues-socle, `Texts.cs`. Every displayed text is in language
-files, in the `Languages` folder copied next to GazeBar.exe (`Languages/en.json`,
+files, in the `Languages` folder copied next to Prunel.exe (`Languages/en.json`,
 `Languages/fr.json`). Each text has a key (`"menu.settings": "Settings"`); `{0}`, `{1}` are
 replaced by values. English is the reference language (step langue-anglais): it is the language
 of a new installation, and a text missing from the chosen language is taken in English (the
@@ -354,9 +360,9 @@ To add a language: copy `en.json` to `xx.json` and translate the values (never t
 
 ## Log and diagnostic
 
-- Log: `%LOCALAPPDATA%\GazeBar\gazebar.log`. `App.Log` writes the important events and the
+- Log: `%LOCALAPPDATA%\Prunel\prunel.log`. `App.Log` writes the important events and the
   errors (always); `App.LogDetail` writes the frequent events (modes, actions, keys, menu…)
-  only when the "Detailed log" setting is on. At 5 MB the file becomes `gazebar.old.log` and a
+  only when the "Detailed log" setting is on. At 5 MB the file becomes `prunel.old.log` and a
   new one starts. Never write gaze coordinates or typed text to the log.
 - `DiagnosticWindow` ("Tools" tab of the settings) shows the cursor and the gaze live;
   `CursorSampler` (1000 reads per second) only runs while this window is open.
@@ -368,7 +374,7 @@ to `main`. `.github/scripts/check-data-files.ps1` checks that the keyboard and l
 files are valid and that every language has the same keys and `{n}` placeholders as `en.json`.
 
 `.github/workflows/release.yml`, started by hand, builds a version with the number typed
-(`-p:Version=…`, which replaces `<Version>` of `GazeBar.csproj`), checks that no eyetracker DLL
+(`-p:Version=…`, which replaces `<Version>` of `Prunel.csproj`), checks that no eyetracker DLL
 and no personal file is in the folder to ship, zips it with the licences and prepares a draft
 GitHub release. `App.Version` reads the number back (assembly informational version) for the
 log.

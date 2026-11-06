@@ -1,4 +1,4 @@
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// What a "target" that can be activated with the gaze must provide, so that ButtonAimer

@@ -5,7 +5,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Xml;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// Part of AppSettings: the icon layout of the action choice (crown, modifiers,

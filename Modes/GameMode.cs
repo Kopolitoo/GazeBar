@@ -1,6 +1,6 @@
 using System;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// GAME MODE (section "10. Game mode" of the specification).
@@ -35,7 +35,7 @@ namespace GazeBar
     ///                 screen edge.
     ///   Gaze lost or off screen: no more movement is sent.
     ///
-    /// Note, known limits: a game in "exclusive full screen" may hide GazeBar's overlay (the
+    /// Note, known limits: a game in "exclusive full screen" may hide Prunel's overlay (the
     /// bottom menu might then not be visible), and nothing is guaranteed against the
     /// anti-cheat systems of some online games, which may refuse simulated input.
     /// </summary>

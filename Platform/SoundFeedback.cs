@@ -3,7 +3,7 @@ using System.IO;
 using System.Media;
 using System.Text;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>Which sound confirms an activation (see SoundFeedback).</summary>
     internal enum SoundKind
@@ -48,7 +48,7 @@ namespace GazeBar
 
         /// <summary>
         /// Plays the sound of this kind, if its setting is on. Does nothing for SoundKind.None.
-        /// Never throws: a sound problem must not stop GazeBar.
+        /// Never throws: a sound problem must not stop Prunel.
         /// </summary>
         public static void Play(SoundKind kind)
         {

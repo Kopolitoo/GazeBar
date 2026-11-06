@@ -1,7 +1,7 @@
 <!--
   OverlayWindow.xaml: the "overlay", a transparent window covering the whole screen.
 
-  This is where GazeBar draws what must appear on top of the other applications (the
+  This is where Prunel draws what must appear on top of the other applications (the
   circle following the gaze, the progress ring, the options icon...).
   It must NEVER get in the way of the target application:
     - it is invisible, except what is drawn on it;
@@ -57,11 +57,11 @@
   "Segoe MDL2 Assets" (Windows 10): WPF takes the first one present on the computer.
 -->
 <Window
-    x:Class="GazeBar.OverlayWindow"
+    x:Class="Prunel.OverlayWindow"
     x:ClassModifier="internal"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="GazeBar (calque)"
+    Title="Prunel (calque)"
     WindowStyle="None"
     AllowsTransparency="True"
     Background="Transparent"

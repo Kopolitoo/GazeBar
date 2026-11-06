@@ -1,4 +1,4 @@
-# Makes the installer GazeBar-<version>-setup.exe with Inno Setup (Install/GazeBar.iss), from
+# Makes the installer Prunel-<version>-setup.exe with Inno Setup (Install/Prunel.iss), from
 # the "full installation" build (dotnet build -p:UiAccess=true).
 #
 #   pwsh .github/scripts/make-setup.ps1 <UI access build folder> <version> <destination folder>
@@ -17,7 +17,7 @@ $ErrorActionPreference = 'Stop'
 $root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 
 # The program must ask for UI access, otherwise the installation would be useless.
-& (Join-Path $PSScriptRoot 'check-exe-manifest.ps1') (Join-Path $ProgramFolder 'GazeBar.exe') true
+& (Join-Path $PSScriptRoot 'check-exe-manifest.ps1') (Join-Path $ProgramFolder 'Prunel.exe') true
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
@@ -32,9 +32,9 @@ New-Item -ItemType Directory -Force $Destination | Out-Null
 $programPath = (Resolve-Path $ProgramFolder).Path.TrimEnd('\')
 $destinationPath = (Resolve-Path $Destination).Path.TrimEnd('\')
 
-& $iscc "/DAppVersion=$Version" "/DProgramFolder=$programPath" "/DOutputFolder=$destinationPath" (Join-Path $root 'Install\GazeBar.iss')
+& $iscc "/DAppVersion=$Version" "/DProgramFolder=$programPath" "/DOutputFolder=$destinationPath" (Join-Path $root 'Install\Prunel.iss')
 if ($LASTEXITCODE -ne 0) { Write-Host '::error::Inno Setup could not make the installer.'; exit 1 }
 
-$setup = Join-Path $destinationPath "GazeBar-$Version-setup.exe"
+$setup = Join-Path $destinationPath "Prunel-$Version-setup.exe"
 if (-not (Test-Path $setup)) { Write-Host "::error::Installer not found: $setup"; exit 1 }
 Write-Host "OK: installer ready: $setup"

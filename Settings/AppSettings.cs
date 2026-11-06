@@ -5,15 +5,15 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Xml;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
-    /// MODEL: all of GazeBar's settings, in one place.
+    /// MODEL: all of Prunel's settings, in one place.
     ///
     /// They are read at startup and
     /// saved in the file:
-    ///     %APPDATA%\GazeBar\settings.json
-    /// (for example C:\Users\Name\AppData\Roaming\GazeBar\settings.json).
+    ///     %APPDATA%\Prunel\settings.json
+    /// (for example C:\Users\Name\AppData\Roaming\Prunel\settings.json).
     ///
     /// JSON is readable text, which can be opened with Notepad. Beware: in this file,
     /// decimal numbers are written with a POINT (0.3), not a comma.
@@ -165,7 +165,7 @@ namespace GazeBar
         public double InterfaceSize { get; set; }
 
         // ── The same settings in PIXELS of the current screen. Computed on every
-        //    read (the screen may change while GazeBar runs) and not saved in the file (no
+        //    read (the screen may change while Prunel runs) and not saved in the file (no
         //    [DataMember]). These are what the modes use.
 
         /// <summary>[CursorDeadZone] in pixels of the current screen.</summary>
@@ -337,7 +337,7 @@ namespace GazeBar
         public bool MouseTracking { get; set; }
 
         /// <summary>
-        /// Start GazeBar when the Windows session opens. No by default.
+        /// Start Prunel when the Windows session opens. No by default.
         /// The settings file keeps the choice; WindowsStartup really applies it, in the
         /// Windows registry.
         /// </summary>
@@ -444,7 +444,7 @@ namespace GazeBar
         // ───────────────────────── Log ─────────────────────────
 
         /// <summary>
-        /// Detailed log: no by default. Off, gazebar.log only gets the important events and the
+        /// Detailed log: no by default. Off, prunel.log only gets the important events and the
         /// errors; on, it also gets every frequent event (modes, actions, keys...), useful to
         /// track down a bug. See App.Log and App.LogDetail.
         /// Like StartWithWindows, it belongs to the computer: loading a profile does not change it.

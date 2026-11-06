@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: starts the calibration tool of the eyetracker engine ("Calibration"

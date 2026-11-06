@@ -7,7 +7,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// INTERFACE: the full-screen "overlay", click-through, always on top.
@@ -156,7 +156,7 @@ namespace GazeBar
         }
 
         /// <summary>
-        /// Called by WPF if the Windows scaling changes while GazeBar runs (for example from
+        /// Called by WPF if the Windows scaling changes while Prunel runs (for example from
         /// 100 % to 125 % in the display settings). The size is recomputed at once, then a
         /// second time half a second later: the resolution often changes at the
         /// same time.
@@ -171,7 +171,7 @@ namespace GazeBar
         /// <summary>
         /// Places the window over the whole primary screen.
         ///
-        /// PrimaryScreenSize gives the screen size in real pixels (GazeBar is declared
+        /// PrimaryScreenSize gives the screen size in real pixels (Prunel is declared
         /// "DPI aware" in app.manifest). TransformFromDevice is the "real pixels → WPF units"
         /// conversion provided by WPF for this window.
         ///

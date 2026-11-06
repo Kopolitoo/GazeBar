@@ -1,6 +1,6 @@
 using System;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MOVEMENT MODE (default mode).

@@ -1,4 +1,4 @@
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// A "snapshot" of the gaze at a given moment, prepared by the ModeManager for the modes.

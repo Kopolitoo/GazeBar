@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: a gaze keyboard layout ("clavier-base"), read from a JSON file of the
@@ -44,7 +44,7 @@ namespace GazeBar
     [DataContract(Name = "Layout", Namespace = "")]
     internal sealed class KeyboardLayout
     {
-        /// <summary>The name of the layouts folder, next to GazeBar.exe.</summary>
+        /// <summary>The name of the layouts folder, next to Prunel.exe.</summary>
         public const string FolderName = "Keyboards";
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace GazeBar
             return null;
         }
 
-        /// <summary>The full path of a layout file (next to GazeBar.exe).</summary>
+        /// <summary>The full path of a layout file (next to Prunel.exe).</summary>
         public static string PathOf(string name)
         {
             return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FolderName, name + ".json");

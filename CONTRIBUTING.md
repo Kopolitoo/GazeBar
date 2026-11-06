@@ -31,7 +31,7 @@ Start with the [architecture](docs/architecture.md) to find your way in the code
 - WPF on .NET Framework 4.8, x86 only (the eyetracker libraries are 32-bit).
 - No new dependency without discussing it first in an issue.
 - One roadmap step per branch and per pull request.
-- The personal dictionary (`%APPDATA%\GazeBar\personal-dictionary.json`) and any personal
+- The personal dictionary (`%APPDATA%\Prunel\personal-dictionary.json`) and any personal
   data stay out of the repository.
 - Typed text is never written to the log.
 - Gaze data is never saved (eyetracker licence): no positions file, no gaze coordinates in the
@@ -53,17 +53,17 @@ Start with the [architecture](docs/architecture.md) to find your way in the code
 
 A version has a number MAJOR.MINOR.PATCH (for example `0.1.0`): PATCH grows for a fix, MINOR
 for a new feature, MAJOR for a big change (`1.0.0` = first stable version). The number in
-`GazeBar.csproj` (`<Version>`) is the one of the next version; Prunel writes it to its log at
+`Prunel.csproj` (`<Version>`) is the one of the next version; Prunel writes it to its log at
 startup.
 
 1. On GitHub, "Actions" tab, "Release" on the left, "Run workflow": keep the `main` branch,
    type the number (for example `0.1.0`), click "Run workflow".
 2. GitHub compiles Prunel, checks that no eyetracker DLL and no personal file is inside, makes
-   `GazeBar-0.1.0.zip` (simple) and the installer `GazeBar-0.1.0-setup.exe` (full installation,
+   `Prunel-0.1.0.zip` (simple) and the installer `Prunel-0.1.0-setup.exe` (full installation,
    with UI access, made with Inno Setup) and prepares a **draft** release (`.github/workflows/release.yml`).
 3. "Releases" page (right column of the repository home page): open the draft, read the list
    of changes, then "Publish release". The tag `v0.1.0` is created on this code at that moment.
-4. Then raise `<Version>` in `GazeBar.csproj` in the next pull request.
+4. Then raise `<Version>` in `Prunel.csproj` in the next pull request.
 
 ## Testing
 

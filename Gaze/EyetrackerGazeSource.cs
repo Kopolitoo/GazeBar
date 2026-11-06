@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Tobii.Interaction;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// The gaze source used normally (see IGazeSource): the real gaze position, provided by
@@ -15,8 +15,8 @@ namespace GazeBar
     /// If the eyetracker engine is not available, the program keeps working: IsRunning stays
     /// false and ErrorMessage explains why.
     ///
-    /// The eyetracker DLLs are not shipped with GazeBar: they are
-    /// searched for on the PC at startup (see EyetrackerLoader.cs). So that GazeBar starts
+    /// The eyetracker DLLs are not shipped with Prunel: they are
+    /// searched for on the PC at startup (see EyetrackerLoader.cs). So that Prunel starts
     /// even when they cannot be found, the Tobii.Interaction types (Host, GazePointDataStream)
     /// only appear in the ConnectEyetracker method: .NET only looks for a DLL when it prepares
     /// ("just-in-time compiles") a method that uses it. If the DLL is missing, the error

@@ -1,10 +1,10 @@
 using System;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// Anything that provides a gaze position: the eyetracker (EyetrackerGazeSource) or, later,
-    /// another source used to test GazeBar without an eyetracker.
+    /// another source used to test Prunel without an eyetracker.
     ///
     /// An "interface" is a contract: it lists what a source must offer, without saying how.
     /// The modes, the mode manager and the Diagnostic window only know this contract, so they

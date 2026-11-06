@@ -1,6 +1,6 @@
-# Checks the manifest built into a compiled GazeBar.exe: does it ask for UI access?
+# Checks the manifest built into a compiled Prunel.exe: does it ask for UI access?
 #
-#   pwsh .github/scripts/check-exe-manifest.ps1 <path of GazeBar.exe> <true|false>
+#   pwsh .github/scripts/check-exe-manifest.ps1 <path of Prunel.exe> <true|false>
 #
 # The manifest is stored as plain text inside the .exe, comments included: the script reads
 # the uiAccess value of the requestedExecutionLevel tag (not the one quoted in a comment).

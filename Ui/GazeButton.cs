@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// INTERFACE: a button activated with the gaze, drawn on the overlay.

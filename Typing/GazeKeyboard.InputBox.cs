@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// Part of GazeKeyboard: the input box above the keys, which shows the text being typed.

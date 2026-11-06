@@ -8,7 +8,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// INTERFACE: a gaze target of settings mode (tab, "−", "+", "Non", "Oui", "Défaut",

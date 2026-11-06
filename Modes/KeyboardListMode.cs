@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// KEYBOARD LIST MODE ("clavier-options").
@@ -23,7 +23,7 @@ namespace GazeBar
     ///
     /// A third list, which has nothing to do with the
     /// keyboard but reuses the same layout:
-    ///   - PROFILES: the settings profiles of the Documents\GazeBar\Profiles folder, the most
+    ///   - PROFILES: the settings profiles of the Documents\Prunel\Profiles folder, the most
     ///     recent first (see SettingsProfiles). Looking at one returns to the settings,
     ///     Profiles tab, with the question "Load profile ...?": nothing changes without this
     ///     "Yes". "Back to settings" returns to the same tab without changing anything.

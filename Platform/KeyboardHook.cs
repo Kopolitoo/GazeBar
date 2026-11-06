@@ -1,20 +1,20 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: watches the Escape key, in all programs.
     ///
     /// The specification asks for "always a way out": a keyboard key (Escape) returns to
-    /// movement mode, for the caregiver. It is all the more useful since GazeBar has
+    /// movement mode, for the caregiver. It is all the more useful since Prunel has
     /// no toolbar that could be clicked with the mouse.
     ///
     /// How: we install a "low-level keyboard hook" (WH_KEYBOARD_LL). Windows then calls our
     /// OnKey function on every key press, wherever the focus is.
     /// Usually we only observe: the key is passed on to the active program (CallNextHookEx).
     /// Escape therefore still closes a dialog box, for example.
-    /// EXCEPTION (user request): when GazeBar itself uses Escape (see KeepEscape: scroll mode,
+    /// EXCEPTION (user request): when Prunel itself uses Escape (see KeepEscape: scroll mode,
     /// or gaze keyboard open), the key is KEPT: the other programs do not receive it, neither
     /// the press nor the release.
     ///
@@ -42,7 +42,7 @@ namespace GazeBar
         public event Action<bool> EscapePressed;
 
         /// <summary>
-        /// Asked at the moment Escape is pressed: true if GazeBar uses it and the other programs
+        /// Asked at the moment Escape is pressed: true if Prunel uses it and the other programs
         /// must not receive it. Must answer very quickly (it runs inside the hook).
         /// </summary>
         public Func<bool> KeepEscape;
@@ -60,7 +60,7 @@ namespace GazeBar
             }
 
             // For a low-level hook, Windows asks for the program's "module";
-            // GetModuleHandle(null) gives the one of GazeBar.exe.
+            // GetModuleHandle(null) gives the one of Prunel.exe.
             _hook = NativeMethods.SetWindowsHookEx(
                 NativeMethods.WH_KEYBOARD_LL, _function, NativeMethods.GetModuleHandle(null), 0);
 
@@ -100,16 +100,16 @@ namespace GazeBar
                 if (message == NativeMethods.WM_KEYDOWN || message == NativeMethods.WM_SYSKEYDOWN)
                 {
                     int key = Marshal.ReadInt32(lParam);
-                    // The Escape key of the gaze keyboard is SIMULATED by GazeBar.
+                    // The Escape key of the gaze keyboard is SIMULATED by Prunel.
                     // It must reach the application, but must neither return to movement mode
-                    // nor close the keyboard: GazeBar's own keys carry a mark (dwExtraInfo, see
+                    // nor close the keyboard: Prunel's own keys carry a mark (dwExtraInfo, see
                     // KeyboardInjector) and are ignored. A key simulated by OTHER software
                     // (Dragon, when the user says "Escape") counts (issue #51).
                     int flagsValue = Marshal.ReadInt32(lParam, NativeMethods.HookFlagsOffset);
                     bool simulated = (flagsValue & NativeMethods.LLKHF_INJECTED) != 0;
                     long extraInfo = Marshal.ReadIntPtr(lParam, NativeMethods.HookExtraInfoOffset).ToInt64();
-                    bool fromGazeBar = simulated && extraInfo == NativeMethods.GazeBarKeyMarker;
-                    if (key == NativeMethods.VK_ESCAPE && !fromGazeBar)
+                    bool fromPrunel = simulated && extraInfo == NativeMethods.PrunelKeyMarker;
+                    if (key == NativeMethods.VK_ESCAPE && !fromPrunel)
                     {
                         // Automatic repeat of a kept Escape (key held down): kept, no new event.
                         if (_escapeKept)

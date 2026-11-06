@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MODEL: takes a picture of a rectangle of the screen (action choice mode).
@@ -12,7 +12,7 @@ namespace GazeBar
     /// then convert the resulting image into a WPF image (BitmapSource) to display it.
     /// No extra library is needed.
     ///
-    /// Note: the capture contains everything displayed at that moment, including GazeBar's
+    /// Note: the capture contains everything displayed at that moment, including Prunel's
     /// windows. That is why action choice mode hides the overlay's circle and icon, and
     /// waits a moment, BEFORE calling Capture.
     /// </summary>

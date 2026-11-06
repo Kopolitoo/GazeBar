@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// The part shared by all gaze sources (see IGazeSource): the clock, the latest position,

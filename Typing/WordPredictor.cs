@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using System.Xml;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// LOGIC: word prediction for the gaze keyboard ("clavier-prediction").
@@ -25,9 +25,9 @@ namespace GazeBar
     ///      Dictionaries/LICENSE-FrequencyWords.txt, about 62,000 words). Each word has its
     ///      frequency (occurrences per million words: films and books for French, film
     ///      subtitles for English). It is copied next to
-    ///      GazeBar.exe and read once, at startup, in the background (about half a second,
+    ///      Prunel.exe and read once, at startup, in the background (about half a second,
     ///      without blocking the gaze);
-    ///   2. the PERSONAL DICTIONARY, %APPDATA%\GazeBar\personal-dictionary.json, next to
+    ///   2. the PERSONAL DICTIONARY, %APPDATA%\Prunel\personal-dictionary.json, next to
     ///      settings.json. It is NEVER in the public repository: it holds the words added by
     ///      the user and how many times each word was used (the "learning").
     ///
@@ -51,14 +51,14 @@ namespace GazeBar
     /// for 125,000 words), then the following ones are read while they share the prefix.
     ///
     /// Saving the personal dictionary: right after each added word; usage counts once a
-    /// minute if they changed, and when GazeBar closes (to avoid writing to disk on every
+    /// minute if they changed, and when Prunel closes (to avoid writing to disk on every
     /// word).
     ///
     /// Typed text is never written to the log (privacy).
     /// </summary>
     internal sealed class WordPredictor
     {
-        /// <summary>Name of the dictionaries folder, next to GazeBar.exe.</summary>
+        /// <summary>Name of the dictionaries folder, next to Prunel.exe.</summary>
         public const string FolderName = "Dictionaries";
 
         /// <summary>
@@ -664,7 +664,7 @@ namespace GazeBar
             }
         }
 
-        /// <summary>Call when GazeBar closes: saves pending usages.</summary>
+        /// <summary>Call when Prunel closes: saves pending usages.</summary>
         public void Stop()
         {
             _saveTimer.Stop();

@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// ICON CONFIGURATION MODE.

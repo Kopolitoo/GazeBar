@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// THE LAYOUT of the action choice screen: where the photo, the eight crown

@@ -1,10 +1,10 @@
 using System;
 using Microsoft.Win32;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
-    /// MODEL: the screen measurements, and the conversion of GazeBar's sizes to pixels
+    /// MODEL: the screen measurements, and the conversion of Prunel's sizes to pixels
     /// ("mesures-ecran").
     ///
     /// THE PROBLEM: sizes written in pixels (190 px circle, 120 px
@@ -30,14 +30,14 @@ namespace GazeBar
     ///
     /// Two Windows settings are added:
     ///   - the SCALING (100 %, 125 %, 200 %...): it only changes the conversion between pixels
-    ///     and WPF units, the real size of GazeBar's elements stays the same;
+    ///     and WPF units, the real size of Prunel's elements stays the same;
     ///   - the TEXT SIZE (Windows Settings › Accessibility › Text size, from 100 to 225 %): it
     ///     enlarges the texts of the overlay (labels, menu bar...), Font method.
-    /// And one GazeBar setting: [InterfaceSize] (75, 100, 125 or 150 %), which enlarges or
+    /// And one Prunel setting: [InterfaceSize] (75, 100, 125 or 150 %), which enlarges or
     /// shrinks everything drawn, but not the gaze settings (fixation radius, maximum speed,
     /// anti-jitter): the eye's jitter does not depend on one's taste for large icons.
     ///
-    /// CHANGES WHILE GAZEBAR RUNS: the overlay (OverlayWindow) calls Measure when Windows
+    /// CHANGES WHILE PRUNEL RUNS: the overlay (OverlayWindow) calls Measure when Windows
     /// announces a display change, and also every two seconds as a precaution. If something
     /// changed, the Change event is raised: the mode manager redraws what is needed (see
     /// ModeManager.OnScreenChanged).
@@ -65,7 +65,7 @@ namespace GazeBar
         public static double WindowsText { get; private set; } = 1;
 
         /// <summary>
-        /// The Windows scaling WHEN GazeBar STARTED (1 = 100 %). Windows "freezes" it for the
+        /// The Windows scaling WHEN Prunel STARTED (1 = 100 %). Windows "freezes" it for the
         /// program: it no longer changes afterwards, even if the scaling is changed in the
         /// Windows settings. Read with GetDpiForSystem.
         /// </summary>
@@ -74,7 +74,7 @@ namespace GazeBar
         /// <summary>
         /// Correction of the eyetracker gaze.
         ///
-        /// The user's test: GazeBar started in 1920 × 1080 at 100 %, then the screen switched
+        /// The user's test: Prunel started in 1920 × 1080 at 100 %, then the screen switched
         /// to 3840 × 2160 at 150 %. The log shows that the gaze received from the eyetracker no
         /// longer went beyond about X 1830 (instead of 3840); back at 100 %, it reached 3802
         /// again. So the eyetracker gives the gaze in the units of the STARTUP scale: it is
@@ -251,7 +251,7 @@ namespace GazeBar
         /// The Windows text size (Accessibility › Text size). Windows stores it in the
         /// registry, under HKEY_CURRENT_USER\Software\Microsoft\Accessibility, value
         /// "TextScaleFactor", from 100 to 225 (in %). Missing = never changed = 100 %.
-        /// WPF does not apply it by itself: GazeBar reads it (Font method).
+        /// WPF does not apply it by itself: Prunel reads it (Font method).
         /// </summary>
         private static double ReadTextSize()
         {

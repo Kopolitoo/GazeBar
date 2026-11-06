@@ -8,7 +8,7 @@ pull request ceux qui ont réussi.
 
 Avant de tester, activer « Journal détaillé » (Paramètres, Système, onglet « Général ») : les
 lignes du journal citées plus bas ne sont écrites qu'avec cette option. Journal :
-`%LOCALAPPDATA%\GazeBar\gazebar.log`.
+`%LOCALAPPDATA%\Prunel\prunel.log`.
 
 ## 1. Mouvement et regard fixe
 
@@ -118,7 +118,7 @@ proposent « bon », « bonne »… ; on regarde « bonjour » (après « bonj �
 s'écrivent. « ete » propose « été ». « pr » propose des mots courts (« pris », « près »…) avant « prendre ». On tape un mot inventé (« zorglub ») : la 1re case montre
 « + zorglub » en ambre ; on la regarde : une espace s'écrit, et en tapant « zo » le mot est
 proposé. On tape « 2026 » : aucune case « + » n'apparaît ; on tape « mp3x » : « + mp3x » apparaît. On écrit deux fois « je suis » (en tapant « suis » en entier puis une espace) : après
-« je » et une espace, la 1re case propose « suis ». Après avoir fermé Prunel, `%APPDATA%\GazeBar\personal-dictionary.json` contient le mot.
+« je » et une espace, la 1re case propose « suis ». Après avoir fermé Prunel, `%APPDATA%\Prunel\personal-dictionary.json` contient le mot.
 
 ## 12. Options du clavier
 
@@ -146,7 +146,7 @@ avec l'interface en français, « bonj » propose toujours « bonjour ». Param�
 
 Paramètres, Système, Profils, « Enregistrer les réglages actuels » : le
 clavier du regard apparaît avec la page Nom ; écrire « Soir », regarder « Enregistrer » : le
-message donne le nom du profil, et le fichier apparaît dans `Documents\GazeBar\Profiles`. On
+message donne le nom du profil, et le fichier apparaît dans `Documents\Prunel\Profiles`. On
 change le rayon du cercle (Affichage). Profils, « Charger un profil » : la liste montre le profil ;
 on le regarde : « Charger le profil … ? » ; « Non » ne change rien ; « Oui » remet l'ancien rayon et
 crée « Sauvegarde automatique ». Charger « Sauvegarde automatique » remet le rayon modifié.
@@ -162,16 +162,16 @@ désactiver : de nouveau le silence. Relancer Prunel : les choix sont gardés.
 
 ## Installation complète (Setup.exe, accès à l'interface)
 
-Prendre le zip `GazeBar-setup-…` de la compilation automatique (page Actions de la pull request,
-« Artifacts ») ou le `GazeBar-x.y.z-setup.exe` d'un brouillon de release. Garder un autre moyen
+Prendre le zip `Prunel-setup-…` de la compilation automatique (page Actions de la pull request,
+« Artifacts ») ou le `Prunel-x.y.z-setup.exe` d'un brouillon de release. Garder un autre moyen
 de cliquer (voix, souris) pendant l'installation.
 
-1. Double-cliquer sur `GazeBar-…-setup.exe`. Windows peut dire « éditeur inconnu »
+1. Double-cliquer sur `Prunel-…-setup.exe`. Windows peut dire « éditeur inconnu »
    (« Informations complémentaires », « Exécuter quand même »), puis demande « Oui » pour
    l'administrateur. L'installateur parle la langue de Windows ; cliquer sur « Installer », puis
    « Terminer » avec « Exécuter Prunel » coché : Prunel démarre et le journal dit « UI access:
    yes ».
-2. `C:\Program Files\GazeBar` existe, Prunel est dans le menu Démarrer et dans « Paramètres >
+2. `C:\Program Files\Prunel` existe, Prunel est dans le menu Démarrer et dans « Paramètres >
    Applications » de Windows.
 3. Ouvrir le menu Démarrer de Windows : le cercle du regard reste visible au-dessus, et un regard
    fixe puis un clic gauche ouvre un élément du menu.
@@ -181,15 +181,32 @@ de cliquer (voix, souris) pendant l'installation.
    même résultat, réglages inchangés.
 6. Le désinstaller depuis « Paramètres > Applications » : le dossier, le raccourci et le
    certificat « Prunel local signature » (`certlm.msc`, « Autorités de certification racines de
-   confiance ») ont disparu ; les réglages sont toujours dans `%APPDATA%\GazeBar`.
+   confiance ») ont disparu ; les réglages sont toujours dans `%APPDATA%\Prunel`.
 7. Le zip simple et Visual Studio marchent comme avant, avec « UI access: no » dans le journal.
+
+## Venir de GazeBar (version 0.3.0)
+
+Sur un ordinateur où GazeBar 0.2.0 est installé avec Setup.exe, avec « Démarrer avec Windows »
+activé, un mot personnel et un profil enregistré :
+
+1. Lancer `Prunel-…-setup.exe`. GazeBar est fermé sans question ; Prunel démarre.
+2. `C:\Program Files\Prunel` existe (avec le dossier `Eyetracker` si GazeBar en avait un) ;
+   `C:\Program Files\GazeBar` et le raccourci « GazeBar » du menu Démarrer ont disparu ;
+   « Paramètres > Applications » ne montre que Prunel.
+3. Les réglages sont les mêmes qu'avant (taille du cercle, langue…), le mot personnel est
+   proposé, et le profil est dans la liste. `%APPDATA%\Prunel`, `%LOCALAPPDATA%\Prunel` et
+   `Documents\Prunel` existent, ceux de `GazeBar` plus ; le journal dit « Former name: …
+   renamed GazeBar -> Prunel ».
+4. Redémarrer Windows : seul Prunel démarre (pas d'erreur sur un GazeBar.exe manquant).
+5. Dans `certlm.msc`, « Autorités de certification racines de confiance » : « Prunel local
+   signature » est là, « GazeBar local signature » a disparu.
 
 ## Avant de publier une version
 
 Télécharger le zip du brouillon de release et le décompresser dans un nouveau dossier (pas le
-dossier de Visual Studio). Il contient `GazeBar.exe`, les dossiers `Languages`, `Keyboards` et
-`Dictionaries`, les licences, et aucun `Tobii.*.dll`. Lancer `GazeBar.exe` (Windows peut demander
+dossier de Visual Studio). Il contient `Prunel.exe`, les dossiers `Languages`, `Keyboards` et
+`Dictionaries`, les licences, et aucun `Tobii.*.dll`. Lancer `Prunel.exe` (Windows peut demander
 « Exécuter quand même ») : le regard fonctionne, le clavier du regard propose des mots, et les
-premières lignes de `%LOCALAPPDATA%\GazeBar\gazebar.log` disent « GazeBar 0.1.0 starting » (le
-numéro de la version). Le brouillon contient aussi `GazeBar-0.1.0-setup.exe` : faire avec lui le
+premières lignes de `%LOCALAPPDATA%\Prunel\prunel.log` disent « Prunel 0.1.0 starting » (le
+numéro de la version). Le brouillon contient aussi `Prunel-0.1.0-setup.exe` : faire avec lui le
 test « Installation complète » ci-dessus.

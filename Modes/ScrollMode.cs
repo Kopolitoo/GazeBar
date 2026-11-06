@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// SCROLL MODE (specification, user's description).
@@ -20,7 +20,7 @@ namespace GazeBar
     ///   - a small colored arc, laid on the circle, on the side where the gaze is: it shows the
     ///     scroll direction. It is shown ALL THE TIME, even
     ///     when the gaze is in the dead zone (nothing scrolls then): it always shows where
-    ///     GazeBar sees the gaze. Gaze lost or on the back button: it stays at its last place;
+    ///     Prunel sees the gaze. Gaze lost or on the back button: it stays at its last place;
     ///   - circle and arc are more transparent than in the other modes,
     ///     to see better what scrolls underneath;
     ///   - a "back" button on the right edge of the screen, vertically centered: it returns to
@@ -59,7 +59,7 @@ namespace GazeBar
     ///     small gaze jitter.
     ///
     /// ACTIVE WINDOW (same request: "I often have to click before I can scroll"): when entering
-    /// this mode, GazeBar makes the window under P active, without clicking (so without the risk
+    /// this mode, Prunel makes the window under P active, without clicking (so without the risk
     /// of opening a link). Some software ignores the wheel as long as its window is not active,
     /// and if the Windows setting above is off, the wheel always goes to the active window. The
     /// log notes the state of this setting, which can be changed in the "Scroll" tab of the
@@ -438,11 +438,11 @@ namespace GazeBar
 
         /// <summary>
         /// Makes the window under P active (without clicking). If it already is, or if it is a
-        /// GazeBar window, nothing is done. The result is written to the log.
+        /// Prunel window, nothing is done. The result is written to the log.
         ///
         /// Windows does not allow any program to change the active window (to prevent a window
-        /// from "stealing" the keyboard while one is typing). GazeBar is not in the foreground
-        /// (its overlay never takes the focus): so GazeBar is "attached" for a moment to the
+        /// from "stealing" the keyboard while one is typing). Prunel is not in the foreground
+        /// (its overlay never takes the focus): so Prunel is "attached" for a moment to the
         /// current active window (AttachThreadInput), which gives it this right.
         /// </summary>
         private void ActivateWindowUnderP()
@@ -463,7 +463,7 @@ namespace GazeBar
                     return;
                 }
 
-                // A window of GazeBar itself (for example the keyboard): do not touch it.
+                // A window of Prunel itself (for example the keyboard): do not touch it.
                 uint process;
                 NativeMethods.GetWindowThreadProcessId(window, out process);
                 if (process == (uint)Process.GetCurrentProcess().Id)
@@ -478,13 +478,13 @@ namespace GazeBar
                 }
 
                 uint activeThread = active == IntPtr.Zero ? 0 : NativeMethods.GetWindowThreadProcessId(active, out process);
-                uint gazeBarThread = NativeMethods.GetCurrentThreadId();
-                bool attached = activeThread != 0 && activeThread != gazeBarThread &&
-                               NativeMethods.AttachThreadInput(gazeBarThread, activeThread, true);
+                uint prunelThread = NativeMethods.GetCurrentThreadId();
+                bool attached = activeThread != 0 && activeThread != prunelThread &&
+                               NativeMethods.AttachThreadInput(prunelThread, activeThread, true);
                 bool succeeded = NativeMethods.SetForegroundWindow(window);
                 if (attached)
                 {
-                    NativeMethods.AttachThreadInput(gazeBarThread, activeThread, false);
+                    NativeMethods.AttachThreadInput(prunelThread, activeThread, false);
                 }
 
                 System.Text.StringBuilder title = new System.Text.StringBuilder(128);

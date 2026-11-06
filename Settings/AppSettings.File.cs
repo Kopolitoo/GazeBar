@@ -5,7 +5,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Xml;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// Part of AppSettings: reading and saving the settings file (settings.json, profiles).
@@ -20,7 +20,7 @@ namespace GazeBar
             get
             {
                 string folder = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GazeBar");
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Prunel");
                 return Path.Combine(folder, "settings.json");
             }
         }
@@ -136,7 +136,7 @@ namespace GazeBar
 
         /// <summary>
         /// Saves the settings to the file "path" (also used to write a profile in
-        /// Documents\GazeBar\Profiles). The folder is created if it does not exist.
+        /// Documents\Prunel\Profiles). The folder is created if it does not exist.
         /// Returns false if writing failed (disk full, protected folder…).
         /// </summary>
         public bool SaveTo(string path)

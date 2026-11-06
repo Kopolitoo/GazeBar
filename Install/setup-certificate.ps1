@@ -1,7 +1,7 @@
-﻿# Certificate step of the installer (GazeBar.iss). Started hidden, as administrator, by the
+﻿# Certificate step of the installer (Prunel.iss). Started hidden, as administrator, by the
 # installer and by the uninstaller (they are administrator already).
 #
-#   -Step Sign   -Folder <installation folder>   after the files are copied: signs GazeBar.exe
+#   -Step Sign   -Folder <installation folder>   after the files are copied: signs Prunel.exe
 #                with a certificate made on this computer (UI access needs a signature that the
 #                computer trusts, see Platform/UiAccess.cs).
 #   -Step Remove -Folder <installation folder>   before the files are removed: removes the
@@ -21,15 +21,17 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# The name of the certificate created on this computer to sign GazeBar.exe. Only the
+# The name of the certificate created on this computer to sign Prunel.exe. Only the
 # certificates with exactly this name are ever removed.
-$CertificateSubject = 'CN=GazeBar local signature'
+$CertificateSubject = 'CN=Prunel local signature'
+# The name used before version 0.3.0, when Prunel was called GazeBar: removed the same way.
+$FormerCertificateSubject = 'CN=GazeBar local signature'
 
-# Removes the GazeBar certificates from every store of the computer where this script puts one.
-function Remove-GazeBarCertificates {
+# Removes the Prunel (and former GazeBar) certificates from every store of the computer where this script puts one.
+function Remove-PrunelCertificates {
     foreach ($store in 'Root', 'TrustedPublisher', 'My') {
         Get-ChildItem "Cert:\LocalMachine\$store" |
-            Where-Object { $_.Subject -eq $CertificateSubject } |
+            Where-Object { $_.Subject -eq $CertificateSubject -or $_.Subject -eq $FormerCertificateSubject } |
             ForEach-Object {
                 # -DeleteKey: also deletes the private key, if one is left (store "My").
                 if ($_.HasPrivateKey) { Remove-Item $_.PSPath -DeleteKey } else { Remove-Item $_.PSPath }
@@ -37,20 +39,20 @@ function Remove-GazeBarCertificates {
     }
 }
 
-# Signs GazeBar.exe:
-#  - removes the old GazeBar certificates (a new one is made at each installation);
+# Signs Prunel.exe:
+#  - removes the old Prunel certificates (a new one is made at each installation);
 #  - creates a certificate ON THIS COMPUTER and makes the computer trust it;
 #  - signs the program with it;
 #  - DELETES its private key: nobody (not even a virus) can sign anything else with it later.
-function Set-GazeBarSignature([string]$exe) {
-    Remove-GazeBarCertificates
+function Set-PrunelSignature([string]$exe) {
+    Remove-PrunelCertificates
     $certificate = New-SelfSignedCertificate -Type CodeSigningCert -Subject $CertificateSubject `
         -CertStoreLocation 'Cert:\LocalMachine\My' -KeyUsage DigitalSignature `
         -NotAfter (Get-Date).AddYears(10)
 
     # The computer trusts this certificate: "Trusted Root" (it is its own authority) and
     # "Trusted Publishers". Only the public part goes there (a .cer file, without the key).
-    $publicFile = Join-Path $env:TEMP 'GazeBar-signature.cer'
+    $publicFile = Join-Path $env:TEMP 'Prunel-signature.cer'
     Export-Certificate -Cert $certificate -FilePath $publicFile | Out-Null
     Import-Certificate -FilePath $publicFile -CertStoreLocation 'Cert:\LocalMachine\Root' | Out-Null
     Import-Certificate -FilePath $publicFile -CertStoreLocation 'Cert:\LocalMachine\TrustedPublisher' | Out-Null
@@ -67,25 +69,25 @@ function Set-GazeBarSignature([string]$exe) {
 }
 
 # "Start with Windows" (Platform/WindowsStartup.cs): removes its entry if it starts the copy of
-# GazeBar installed in $Folder.
-function Remove-GazeBarStartup {
+# Prunel installed in $Folder.
+function Remove-PrunelStartup {
     $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
-    $command = (Get-ItemProperty -Path $runKey -Name 'GazeBar' -ErrorAction SilentlyContinue).GazeBar
+    $command = (Get-ItemProperty -Path $runKey -Name 'Prunel' -ErrorAction SilentlyContinue).Prunel
     if ($command -and $command -like "*$Folder*") {
-        Remove-ItemProperty -Path $runKey -Name 'GazeBar'
+        Remove-ItemProperty -Path $runKey -Name 'Prunel'
     }
 }
 
 try {
     $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        throw 'This script must run as administrator (it is started by the GazeBar installer).'
+        throw 'This script must run as administrator (it is started by the Prunel installer).'
     }
     if ($Step -eq 'Sign') {
-        Set-GazeBarSignature (Join-Path $Folder 'GazeBar.exe')
+        Set-PrunelSignature (Join-Path $Folder 'Prunel.exe')
     } else {
-        Remove-GazeBarCertificates
-        Remove-GazeBarStartup
+        Remove-PrunelCertificates
+        Remove-PrunelStartup
     }
     exit 0
 }

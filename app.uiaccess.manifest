@@ -13,10 +13,10 @@
   to start it ("A referral was returned from the server").
 
   That is why this manifest is used only when the UiAccess=true property is given to the
-  build (see GazeBar.csproj). Visual Studio and the simple .zip keep app.manifest.
+  build (see Prunel.csproj). Visual Studio and the simple .zip keep app.manifest.
 -->
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="1.0.0.0" name="GazeBar.app" />
+  <assemblyIdentity version="1.0.0.0" name="Prunel.app" />
 
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
     <security>

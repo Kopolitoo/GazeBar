@@ -6,7 +6,7 @@ Prunel cannot be tested automatically: these tests are done by hand, with an eye
 the ones that match what a pull request changes, and say in the pull request which ones passed.
 
 Before testing, turn on "Detailed log" (Settings, System, "General" tab): the log lines
-mentioned below are only written with this option. Log: `%LOCALAPPDATA%\GazeBar\gazebar.log`.
+mentioned below are only written with this option. Log: `%LOCALAPPDATA%\Prunel\prunel.log`.
 
 ## 1. Movement and fixed gaze
 
@@ -109,7 +109,7 @@ suggest "bon", "bonne"…; look at "bonjour" (after "bonj"): "bonjour" and a spa
 look at it: a space is written, and typing "zo" suggests the word. Type "2026": no "+" box
 appears; type "mp3x": "+ mp3x" appears. Write "je suis" twice (typing
 "suis" in full then a space): after "je" and a space, the 1st box suggests "suis". After closing
-Prunel, `%APPDATA%\GazeBar\personal-dictionary.json` contains the word.
+Prunel, `%APPDATA%\Prunel\personal-dictionary.json` contains the word.
 
 ## 12. Keyboard options
 
@@ -135,7 +135,7 @@ Keyboard open, "Keyboard layout": the list shows "English QWERTY" and
 
 Settings, System, Profiles, "Save the current settings": the gaze keyboard
 appears with the name page; type "Evening", look at "Save": the message gives the name of the
-profile, and the file appears in `Documents\GazeBar\Profiles`. Change the circle
+profile, and the file appears in `Documents\Prunel\Profiles`. Change the circle
 radius (Display). Profiles, "Load a profile": the list shows the profile; look at it: "Load the
 profile …?"; "No" changes nothing; "Yes" restores the old radius and creates "Automatic backup".
 Loading "Automatic backup" restores the changed radius.
@@ -151,15 +151,15 @@ are kept.
 
 ## Full installation (Setup.exe, UI access)
 
-Use the `GazeBar-setup-…` zip of the automatic build (Actions page of the pull request,
-"Artifacts") or the `GazeBar-x.y.z-setup.exe` of a draft release. Keep another way to click
+Use the `Prunel-setup-…` zip of the automatic build (Actions page of the pull request,
+"Artifacts") or the `Prunel-x.y.z-setup.exe` of a draft release. Keep another way to click
 (voice, mouse) during the installation.
 
-1. Double-click `GazeBar-…-setup.exe`. Windows may say "unknown publisher" ("More info", "Run
+1. Double-click `Prunel-…-setup.exe`. Windows may say "unknown publisher" ("More info", "Run
    anyway"), then asks "Yes" for administrator. The installer speaks the language of Windows;
    click "Install", then "Finish" with "Launch Prunel" ticked: Prunel starts and the log says
    "UI access: yes".
-2. `C:\Program Files\GazeBar` exists, Prunel is in the Start menu and in "Settings > Apps"
+2. `C:\Program Files\Prunel` exists, Prunel is in the Start menu and in "Settings > Apps"
    of Windows.
 3. Open the Windows Start menu: the gaze circle stays visible above it, and a fixed gaze then a
    left click opens an item of the menu.
@@ -169,14 +169,31 @@ Use the `GazeBar-setup-…` zip of the automatic build (Actions page of the pull
    result, settings unchanged.
 6. Uninstall it from "Settings > Apps": the folder, the shortcut and the certificate "Prunel
    local signature" (`certlm.msc`, "Trusted Root Certification Authorities") are gone; the
-   settings are still in `%APPDATA%\GazeBar`.
+   settings are still in `%APPDATA%\Prunel`.
 7. The simple zip and Visual Studio still work as before, with "UI access: no" in the log.
+
+## Coming from GazeBar (version 0.3.0)
+
+On a computer where GazeBar 0.2.0 is installed with Setup.exe, with "Start with Windows" on,
+a personal word and a saved profile:
+
+1. Run `Prunel-…-setup.exe`. GazeBar is closed without a question; Prunel starts.
+2. `C:\Program Files\Prunel` exists (with the `Eyetracker` folder if GazeBar had one);
+   `C:\Program Files\GazeBar` and the "GazeBar" Start menu shortcut are gone; "Settings > Apps"
+   shows only Prunel.
+3. The settings are the same as before (circle size, language…), the personal word is
+   suggested, and the profile is in the list. `%APPDATA%\Prunel`, `%LOCALAPPDATA%\Prunel` and
+   `Documents\Prunel` exist, the `GazeBar` ones no longer; the log says "Former name: …
+   renamed GazeBar -> Prunel".
+4. Restart Windows: only Prunel starts (no error about a missing GazeBar.exe).
+5. In `certlm.msc`, "Trusted Root Certification Authorities": "Prunel local signature" is
+   there, "GazeBar local signature" is gone.
 
 ## Before publishing a version
 
 Download the zip of the draft release and unzip it in a new folder (not the Visual Studio
-folder). It contains `GazeBar.exe`, the `Languages`, `Keyboards` and `Dictionaries` folders, the
-licences, and no `Tobii.*.dll`. Start `GazeBar.exe` (Windows may ask "Run anyway"): the gaze
+folder). It contains `Prunel.exe`, the `Languages`, `Keyboards` and `Dictionaries` folders, the
+licences, and no `Tobii.*.dll`. Start `Prunel.exe` (Windows may ask "Run anyway"): the gaze
 works, the gaze keyboard suggests words, and the first lines of
-`%LOCALAPPDATA%\GazeBar\gazebar.log` say "GazeBar 0.1.0 starting" (the number of the version).
-The draft also has `GazeBar-0.1.0-setup.exe`: run the "Full installation" test above with it.
+`%LOCALAPPDATA%\Prunel\prunel.log` say "Prunel 0.1.0 starting" (the number of the version).
+The draft also has `Prunel-0.1.0-setup.exe`: run the "Full installation" test above with it.

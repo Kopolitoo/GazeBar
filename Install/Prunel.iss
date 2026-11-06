@@ -1,12 +1,12 @@
-﻿; Installer of GazeBar (Setup.exe), made with Inno Setup 6 (https://jrsoftware.org/isinfo.php).
+﻿; Installer of Prunel (Setup.exe), made with Inno Setup 6 (https://jrsoftware.org/isinfo.php).
 ;
 ; Installs the "full installation" build (with UI access, see Platform/UiAccess.cs) in
-; C:\Program Files\GazeBar, signs GazeBar.exe with a certificate made on the user's computer,
-; adds GazeBar to the Start menu and to "Settings > Apps" of Windows (to uninstall it).
-; The settings (%APPDATA%\GazeBar) and the log (%LOCALAPPDATA%\GazeBar) are never touched.
+; C:\Program Files\Prunel, signs Prunel.exe with a certificate made on the user's computer,
+; adds Prunel to the Start menu and to "Settings > Apps" of Windows (to uninstall it).
+; The settings (%APPDATA%\Prunel) and the log (%LOCALAPPDATA%\Prunel) are never touched.
 ;
 ; Compiled by .github/scripts/make-setup.ps1:
-;   ISCC.exe /DAppVersion=0.1.0 /DProgramFolder=<UI access build> /DOutputFolder=<folder> GazeBar.iss
+;   ISCC.exe /DAppVersion=0.1.0 /DProgramFolder=<UI access build> /DOutputFolder=<folder> Prunel.iss
 ;
 ; Saved in UTF-8 WITH a BOM: Inno Setup then reads the accented French letters correctly.
 
@@ -22,35 +22,39 @@
 #endif
 
 [Setup]
-; Identifies GazeBar in Windows: never change it, or an update would be a second program.
+; Identifies Prunel in Windows: never change it, or an update would be a second program.
+; (It is the same as when Prunel was called GazeBar: the new installer updates the old program.)
 AppId={{34565D2D-8A8C-48F9-870B-3E9EDE72F182}
-AppName=GazeBar
+AppName=Prunel
 AppVersion={#AppVersion}
-AppVerName=GazeBar {#AppVersion}
-AppPublisher=GazeBar
-AppPublisherURL=https://gazebar.kopol.xyz
-AppSupportURL=https://github.com/Kopolitoo/GazeBar/issues
+AppVerName=Prunel {#AppVersion}
+AppPublisher=Prunel
+AppPublisherURL=https://prunel.kopol.xyz
+AppSupportURL=https://github.com/Kopolitoo/Prunel/issues
 VersionInfoVersion={#AppVersion}
 ; Administrator: Program Files is a protected folder, and Windows gives UI access only to a
 ; program installed there. 64-bit Windows: "C:\Program Files", the folder of the old Install.cmd
 ; script, so that the installer also updates a copy installed by it.
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
-DefaultDirName={autopf}\GazeBar
+DefaultDirName={autopf}\Prunel
+; Always Program Files\Prunel, even over an installation of the former GazeBar (which was in
+; Program Files\GazeBar): see MoveFormerFolder below.
+UsePreviousAppDir=no
 ; As few pages as possible (each click is an effort by gaze): no folder and no Start menu
 ; folder to choose; the language is the one of Windows (French or English).
 DisableDirPage=yes
 DisableProgramGroupPage=yes
 ShowLanguageDialog=no
 LanguageDetectionMethod=uilanguage
-; GazeBar is closed by the [Code] below, without asking.
+; Prunel is closed by the [Code] below, without asking.
 CloseApplications=no
 WizardStyle=modern
-SetupIconFile=..\Resources\GazeBar.ico
-UninstallDisplayIcon={app}\GazeBar.exe
-UninstallDisplayName=GazeBar
+SetupIconFile=..\Resources\Prunel.ico
+UninstallDisplayIcon={app}\Prunel.exe
+UninstallDisplayName=Prunel
 OutputDir={#OutputFolder}
-OutputBaseFilename=GazeBar-{#AppVersion}-setup
+OutputBaseFilename=Prunel-{#AppVersion}-setup
 Compression=lzma2
 SolidCompression=yes
 
@@ -59,10 +63,10 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 
 [CustomMessages]
-en.SignFailed=GazeBar could not be signed, so Windows will not start it. Please run this installation again.%n%nReason: %1
-fr.SignFailed=GazeBar n'a pas pu être signé : Windows ne le démarrera pas. Merci de relancer cette installation.%n%nRaison : %1
-en.RemoveFailed=The GazeBar certificate could not be removed.%n%nReason: %1
-fr.RemoveFailed=Le certificat de GazeBar n'a pas pu être retiré.%n%nRaison : %1
+en.SignFailed=Prunel could not be signed, so Windows will not start it. Please run this installation again.%n%nReason: %1
+fr.SignFailed=Prunel n'a pas pu être signé : Windows ne le démarrera pas. Merci de relancer cette installation.%n%nRaison : %1
+en.RemoveFailed=The Prunel certificate could not be removed.%n%nReason: %1
+fr.RemoveFailed=Le certificat de Prunel n'a pas pu être retiré.%n%nRaison : %1
 en.UnknownReason=unknown (exit code %1)
 fr.UnknownReason=inconnue (code de sortie %1)
 
@@ -74,6 +78,8 @@ Type: filesandordirs; Name: "{app}\Keyboards"
 Type: filesandordirs; Name: "{app}\Dictionaries"
 ; Left by older versions of this installer (its content is now in setup-certificate.ps1).
 Type: files; Name: "{app}\Setup\common.ps1"
+; The Start menu shortcut of the former name (GazeBar, before version 0.3.0).
+Type: files; Name: "{autoprograms}\GazeBar.lnk"
 
 [Files]
 ; The certificate script first: it must be there when the signature step runs.
@@ -89,29 +95,49 @@ Source: "..\README.fr.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 ; For all the users of the computer (same shortcut as the old Install.cmd script).
-Name: "{autoprograms}\GazeBar"; Filename: "{app}\GazeBar.exe"; WorkingDir: "{app}"
+Name: "{autoprograms}\Prunel"; Filename: "{app}\Prunel.exe"; WorkingDir: "{app}"
 
 [Run]
-; Last page: "Launch GazeBar" (ticked). GazeBar starts as the normal user, not as administrator.
+; Last page: "Launch Prunel" (ticked). Prunel starts as the normal user, not as administrator.
 ; "shellexec": started like a double-click (ShellExecute). A program with UI access cannot be
 ; started by CreateProcess: Windows answers "error 740, the operation requires elevation".
-Filename: "{app}\GazeBar.exe"; Description: "{cm:LaunchProgram,GazeBar}"; Flags: nowait postinstall runasoriginaluser shellexec skipifsilent
+Filename: "{app}\Prunel.exe"; Description: "{cm:LaunchProgram,Prunel}"; Flags: nowait postinstall runasoriginaluser shellexec skipifsilent
 
 [UninstallDelete]
 ; Everything left in the folder (for example an "Eyetracker" folder of DLLs
-; copied by the user). The folder is always Program Files\GazeBar (no folder page).
+; copied by the user). The folder is always Program Files\Prunel (no folder page).
 Type: filesandordirs; Name: "{app}"
 
 [Code]
-// Closes every running GazeBar: the files of a running program cannot be replaced.
-procedure CloseGazeBar;
+// Closes every running Prunel: the files of a running program cannot be replaced.
+procedure ClosePrunel;
 var
   ResultCode: Integer;
 begin
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM GazeBar.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  // taskkill returns 0 when GazeBar was running and is now closed.
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM Prunel.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  // taskkill returns 0 when Prunel was running and is now closed.
   if ResultCode = 0 then
     Sleep(2000);
+  // The former name too (GazeBar.exe, before version 0.3.0).
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM GazeBar.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  if ResultCode = 0 then
+    Sleep(2000);
+end;
+
+// Prunel was called GazeBar before version 0.3.0 and was installed in Program Files\GazeBar.
+// After the copy into Program Files\Prunel: an "Eyetracker" folder of DLLs copied there by the
+// user is moved to the new folder, then the old folder is deleted (its program, its
+// uninstaller). The settings are not there: Prunel takes them over itself at startup.
+procedure MoveFormerFolder;
+var
+  FormerFolder: String;
+begin
+  FormerFolder := ExpandConstant('{autopf}\GazeBar');
+  if not DirExists(FormerFolder) then
+    Exit;
+  if DirExists(FormerFolder + '\Eyetracker') and not DirExists(ExpandConstant('{app}\Eyetracker')) then
+    RenameFile(FormerFolder + '\Eyetracker', ExpandConstant('{app}\Eyetracker'));
+  DelTree(FormerFolder, True, True, True);
 end;
 
 // Runs setup-certificate.ps1 (Step "Sign" or "Remove"). Returns True when it worked;
@@ -122,7 +148,7 @@ var
   Lines: TArrayOfString;
   ResultCode, I: Integer;
 begin
-  ErrorFile := AddBackslash(GetTempDir) + 'GazeBar-setup-error.txt';
+  ErrorFile := AddBackslash(GetTempDir) + 'Prunel-setup-error.txt';
   DeleteFile(ErrorFile);
   Parameters := '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{app}\Setup\setup-certificate.ps1') + '"'
     + ' -Step ' + Step
@@ -148,7 +174,7 @@ end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
-  CloseGazeBar;
+  ClosePrunel;
   Result := '';
 end;
 
@@ -156,15 +182,18 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   Reason: String;
 begin
-  // After the copy: sign GazeBar.exe (before it is started from the last page).
+  // After the copy: sign Prunel.exe (before it is started from the last page).
   if CurStep = ssPostInstall then
+  begin
+    MoveFormerFolder;
     if not RunCertificateStep('Sign', Reason) then
       SuppressibleMsgBox(FmtMessage(CustomMessage('SignFailed'), [Reason]), mbError, MB_OK, IDOK);
+  end;
 end;
 
 function InitializeUninstall: Boolean;
 begin
-  CloseGazeBar;
+  ClosePrunel;
   Result := True;
 end;
 

@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// MAGNIFIER MODE: refining the cursor position.
@@ -27,7 +27,7 @@ namespace GazeBar
     ///
     /// Like the action choice, the mode runs in two phases ("steps"):
     ///
-    ///  1. CAPTURE. Everything GazeBar draws is hidden, we wait [WaitMs] for Windows to erase
+    ///  1. CAPTURE. Everything Prunel draws is hidden, we wait [WaitMs] for Windows to erase
     ///     it, then we take a picture of the square enclosing the circle around the aimed
     ///     point P (side 2 × [CircleRadius], i.e. 200 × 200 px).
     ///
@@ -175,7 +175,7 @@ namespace GazeBar
             _zoneY = gaze.Y;
             _knownTarget = false;
 
-            // 1. CAPTURE: hide everything GazeBar draws, and wait a bit before the photo.
+            // 1. CAPTURE: hide everything Prunel draws, and wait a bit before the photo.
             Manager.Layer.HideAll();
             _step = Step.Capture;
             _stepStartMs = gaze.NowMs;

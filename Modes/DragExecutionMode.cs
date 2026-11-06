@@ -1,6 +1,6 @@
 using System;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// DRAG AND DROP MODE, part 3: the execution.
@@ -8,7 +8,7 @@ namespace GazeBar
     /// We get here from the magnifier, once the drop point has been refined. Everything
     /// happens on its own, in a few tenths of a second, without looking anywhere:
     ///
-    ///  1. HIDING.       Everything GazeBar draws is hidden, and we wait [WaitMs] for
+    ///  1. HIDING.       Everything Prunel draws is hidden, and we wait [WaitMs] for
     ///                   Windows to erase it (otherwise the drag would start on the black screen).
     ///  2. PRESS.        The active modifiers (Ctrl, Shift, Alt) are pressed, the cursor is
     ///                   placed on the start point, then the button is pressed.

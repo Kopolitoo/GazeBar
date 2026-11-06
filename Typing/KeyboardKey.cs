@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// INTERFACE: a key of the gaze keyboard, drawn on the overlay.

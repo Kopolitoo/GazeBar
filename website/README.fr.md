@@ -10,7 +10,7 @@ Le petit site qui présente Prunel aux visiteurs non techniciens, à l'adresse
 - `style.css` : style commun. Gros textes et gros boutons (au moins 72 px de haut), car les
   visiteurs peuvent utiliser un eyetracker ou une souris de tête.
 - `images/` : logo et icône (copies de `docs/images` et de l'icône de l'application, réduites).
-- `favicon.ico` : copie de `Resources/GazeBar.ico`.
+- `favicon.ico` : copie de `Resources/Prunel.ico`.
 
 Pour voir une modification, ouvrir `index.html` dans un navigateur.
 

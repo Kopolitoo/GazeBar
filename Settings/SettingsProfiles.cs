@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// A profile found in the profiles folder: its displayed name (the file name without
@@ -32,8 +32,8 @@ namespace GazeBar
     /// SETTINGS PROFILES (specification, "profils-parametres").
     ///
     /// A PROFILE is simply a copy of the settings.json file, stored in the folder
-    ///     Documents\GazeBar\Profiles
-    /// (for example C:\Users\Name\Documents\GazeBar\Profiles\Réglages 2026-11-02 16h45.json).
+    ///     Documents\Prunel\Profiles
+    /// (for example C:\Users\Name\Documents\Prunel\Profiles\Réglages 2026-11-02 16h45.json).
     /// This way several sets of settings can be kept ("Evening", "Tired"...) and switched
     /// with the gaze, from the "Profiles" tab of the settings.
     ///
@@ -63,13 +63,13 @@ namespace GazeBar
         /// </summary>
         public const string BackupName = "auto-backup";
 
-        /// <summary>The profiles folder: Documents\GazeBar\Profiles.</summary>
+        /// <summary>The profiles folder: Documents\Prunel\Profiles.</summary>
         public static string Folder
         {
             get
             {
                 string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                return Path.Combine(documents, "GazeBar", "Profiles");
+                return Path.Combine(documents, "Prunel", "Profiles");
             }
         }
 
@@ -248,7 +248,7 @@ namespace GazeBar
             }
             else if (newItems.FileVersion > AppSettings.CurrentVersion)
             {
-                // Profile written by a newer version of GazeBar: the settings unknown to this
+                // Profile written by a newer version of Prunel: the settings unknown to this
                 // version are simply ignored.
                 App.Log("Profiles: profile from a newer version (" + newItems.FileVersion + ")");
             }

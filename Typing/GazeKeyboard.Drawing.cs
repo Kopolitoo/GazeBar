@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// Part of GazeKeyboard: drawing the keyboard (background, input box, keys, Close button).

@@ -1,6 +1,6 @@
 using System;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// LOGIC: recognizes a FIXATION, that is, a gaze that stays still on a point.

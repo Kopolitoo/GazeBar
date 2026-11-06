@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Media;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// LOGIC: the conductor of the modes.
@@ -60,7 +60,7 @@ namespace GazeBar
             Layer = layer;
             Keyboard = new GazeKeyboard(layer);
 
-            // The screen may change while GazeBar runs.
+            // The screen may change while Prunel runs.
             ScreenMetrics.Change += OnScreenChanged;
         }
 
@@ -112,7 +112,7 @@ namespace GazeBar
 
         /// <summary>
         /// Width of the primary screen, in real pixels, measured by ScreenMetrics
-        /// (GetSystemMetrics does not see a resolution change made while GazeBar runs, see
+        /// (GetSystemMetrics does not see a resolution change made while Prunel runs, see
         /// NativeMethods.PrimaryScreenSize).
         /// </summary>
         public double ScreenWidth

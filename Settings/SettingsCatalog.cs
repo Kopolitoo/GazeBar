@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>
     /// A setting as it is SHOWN in settings mode: its displayed name, an explanation

@@ -1,4 +1,4 @@
-namespace GazeBar
+namespace Prunel
 {
     /// <summary>The three modifier keys of the action choice.</summary>
     internal enum Modifier

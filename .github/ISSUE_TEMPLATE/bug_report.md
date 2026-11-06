@@ -28,5 +28,5 @@ Never paste typed text or gaze data here. / Ne collez jamais ici de texte tapé 
 - Screen size and scaling / Taille de l'écran et mise à l'échelle :
 
 ### Log / Journal (optional / facultatif)
-<!-- %LOCALAPPDATA%\GazeBar\gazebar.log : only the lines around the problem.
+<!-- %LOCALAPPDATA%\Prunel\prunel.log : only the lines around the problem.
      Seulement les lignes autour du problème. -->

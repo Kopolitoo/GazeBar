@@ -27,7 +27,7 @@ that come from others, and what Prunel uses without shipping it.
   when building it; none of its words were added. Details:
   [Dictionaries/LICENSE-FrequencyWords.txt](Dictionaries/LICENSE-FrequencyWords.txt).
 
-### Application icon and logo: `Resources/GazeBar.ico`, `docs/images/gazebar-logo*.png`
+### Application icon and logo: `Resources/Prunel.ico`, `docs/images/prunel-logo*.png`
 
 Images first generated with ChatGPT (OpenAI), then edited by the project owner with Photocraft.
 OpenAI's terms of use give the rights on generated images to the person who made them; the icon
@@ -35,7 +35,7 @@ and the logo are distributed under the MIT licence like the rest of the project.
 
 ### Inno Setup (installer only)
 
-- The installer `GazeBar-x.y.z-setup.exe` and its uninstaller are made with
+- The installer `Prunel-x.y.z-setup.exe` and its uninstaller are made with
   [Inno Setup](https://jrsoftware.org/isinfo.php) 6, © Jordan Russell and Martijn Laan, and
   contain its code.
 - Licence: [Inno Setup License](https://jrsoftware.org/files/is/license.txt) (free, also for
