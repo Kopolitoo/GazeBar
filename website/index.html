@@ -168,7 +168,37 @@
       </div>
     </section>
 
-    <section aria-labelledby="titre-attention">
+    <section id="contact" aria-labelledby="titre-contact">
+      <div class="wrap">
+        <h2 id="titre-contact">Contact</h2>
+        <div class="text">
+          <p>Une question, un problème, une idée ? Deux façons d'écrire :</p>
+        </div>
+        <ul class="cards contact-cards">
+          <li class="card">
+            <h3>Sur GitHub</h3>
+            <p>L'espace de discussion du projet : les questions et les réponses restent visibles
+              pour tout le monde. Il faut un compte GitHub (gratuit).</p>
+            <a class="button button-second" href="https://github.com/Kopolitoo/Prunel/discussions">
+              Ouvrir les discussions</a>
+          </li>
+          <li class="card">
+            <h3>Par e-mail</h3>
+            <p>Pour les personnes qui n'ont pas de compte GitHub : malades, proches,
+              soignants, ergothérapeutes…</p>
+            <div id="email">
+              <button class="button button-second" id="show-email" type="button" hidden>
+                Afficher l'adresse e-mail</button>
+              <noscript><p><strong>prunel (arobase) kopol (point) xyz</strong></p></noscript>
+            </div>
+          </li>
+        </ul>
+        <p class="text contact-note">Prunel est fait par une seule personne, atteinte de SLA, dont
+          l'énergie est limitée : les réponses peuvent prendre du temps. Merci de votre patience.</p>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="titre-attention">
       <div class="wrap">
         <h2 id="titre-attention">À savoir</h2>
         <div class="notice">
@@ -185,10 +215,12 @@
     <div class="wrap">
       <p>Prunel est un logiciel libre (licence MIT). Le code source est sur
         <a href="https://github.com/Kopolitoo/Prunel">GitHub</a>, où l'on peut aussi signaler un
-        problème ou proposer une idée.</p>
+        problème ou proposer une idée. Pour écrire au créateur de Prunel, voir
+        <a href="#contact">Contact</a>.</p>
       <p>Ce projet est indépendant. Il n'est ni affilié, ni approuvé, ni soutenu par Tobii Dynavox.
         TD Control, Tobii et Dynavox sont des marques déposées de Tobii AB.</p>
     </div>
   </footer>
+  <script src="contact.js"></script>
 </body>
 </html>

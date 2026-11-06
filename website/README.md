@@ -9,6 +9,9 @@ The small website that presents Prunel to non-technical visitors, at
 - `en.html`: English page. Both pages have the same content: change them together.
 - `style.css`: shared style. Large text and large buttons (at least 72 px tall), because
   visitors may use an eyetracker or a head mouse.
+- `contact.js`: shows the contact e-mail address only after a click, so that it is never
+  written as plain text in the pages (protection against spam robots). The address is set in
+  this file.
 - `images/`: logo and icon (copies of `docs/images` and the application icon, resized).
 - `favicon.ico`: copy of `Resources/Prunel.ico`.
 
