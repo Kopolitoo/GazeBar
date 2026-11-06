@@ -74,6 +74,17 @@ Studio, appuyer sur F5.
 - Prunel n'enregistre jamais les données du regard et n'écrit jamais le texte tapé dans son
   journal.
 
+## Contact
+
+- Questions et échanges : [GitHub Discussions](https://github.com/Kopolitoo/Prunel/discussions)
+  (il faut un compte GitHub, gratuit).
+- Un problème ou une idée : [issues](https://github.com/Kopolitoo/Prunel/issues/new/choose).
+- Sans compte GitHub : l'adresse e-mail est dans la
+  [section Contact du site](https://prunel.kopol.xyz/#contact).
+
+Prunel est fait par une seule personne, atteinte de SLA, dont l'énergie est limitée : les
+réponses peuvent prendre du temps.
+
 ## Licence
 
 MIT : voir [LICENSE.txt](LICENSE.txt). Les dictionnaires de mots sont sous licence CC BY-SA 4.0,

@@ -9,6 +9,9 @@ Le petit site qui présente Prunel aux visiteurs non techniciens, à l'adresse
 - `en.html` : page en anglais. Les deux pages ont le même contenu : les modifier ensemble.
 - `style.css` : style commun. Gros textes et gros boutons (au moins 72 px de haut), car les
   visiteurs peuvent utiliser un eyetracker ou une souris de tête.
+- `contact.js` : affiche l'adresse e-mail de contact seulement après un clic, pour qu'elle
+  ne soit jamais écrite en clair dans les pages (protection contre les robots qui collectent
+  les adresses pour le spam). L'adresse se règle dans ce fichier.
 - `images/` : logo et icône (copies de `docs/images` et de l'icône de l'application, réduites).
 - `favicon.ico` : copie de `Resources/Prunel.ico`.
 

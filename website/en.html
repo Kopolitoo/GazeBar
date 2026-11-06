@@ -167,7 +167,38 @@
       </div>
     </section>
 
-    <section aria-labelledby="title-notice">
+    <section id="contact" aria-labelledby="title-contact">
+      <div class="wrap">
+        <h2 id="title-contact">Contact</h2>
+        <div class="text">
+          <p>A question, a problem, an idea? There are two ways to write:</p>
+        </div>
+        <ul class="cards contact-cards">
+          <li class="card">
+            <h3>On GitHub</h3>
+            <p>The project's discussion space: questions and answers stay visible to everyone.
+              You need a GitHub account (free).</p>
+            <a class="button button-second" href="https://github.com/Kopolitoo/Prunel/discussions">
+              Open the discussions</a>
+          </li>
+          <li class="card">
+            <h3>By e-mail</h3>
+            <p>For people without a GitHub account: patients, relatives, carers, occupational
+              therapists…</p>
+            <div id="email">
+              <button class="button button-second" id="show-email" type="button" hidden>
+                Show the e-mail address</button>
+              <noscript><p><strong>prunel (at) kopol (dot) xyz</strong></p></noscript>
+            </div>
+          </li>
+        </ul>
+        <p class="text contact-note">Prunel is made by one person with ALS, whose energy is
+          limited: answers may take some time. Thank you for your patience. Messages in French are easiest; English is
+          fine too.</p>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="title-notice">
       <div class="wrap">
         <h2 id="title-notice">Good to know</h2>
         <div class="notice">
@@ -184,10 +215,12 @@
     <div class="wrap">
       <p>Prunel is open source software (MIT licence). The source code is on
         <a href="https://github.com/Kopolitoo/Prunel">GitHub</a>, where you can also report a
-        problem or suggest an idea.</p>
+        problem or suggest an idea. To write to the creator of Prunel, see
+        <a href="#contact">Contact</a>.</p>
       <p>This project is independent. It is not affiliated with, endorsed or supported by Tobii
         Dynavox. TD Control, Tobii and Dynavox are trademarks of Tobii AB.</p>
     </div>
   </footer>
+  <script src="contact.js"></script>
 </body>
 </html>

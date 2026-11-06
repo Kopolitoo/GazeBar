@@ -69,6 +69,16 @@ press F5.
 - One screen only. Windows started "as administrator" ignore Prunel's clicks.
 - Prunel never saves gaze data and never writes typed text to its log.
 
+## Contact
+
+- Questions and exchanges: [GitHub Discussions](https://github.com/Kopolitoo/Prunel/discussions)
+  (needs a free GitHub account).
+- A problem or an idea: [issues](https://github.com/Kopolitoo/Prunel/issues/new/choose).
+- Without a GitHub account: the e-mail address is in the
+  [Contact section of the website](https://prunel.kopol.xyz/en.html#contact).
+
+Prunel is made by one person with ALS, whose energy is limited: answers may take some time.
+
 ## Licence
 
 MIT: see [LICENSE.txt](LICENSE.txt). The word dictionaries are under CC BY-SA 4.0, and the

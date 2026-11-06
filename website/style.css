@@ -348,6 +348,39 @@ p {
   margin: 0;
 }
 
+/* Contact: each card ends with its button. The e-mail button is hidden until the
+   script (contact.js) is running, and then replaced by the address. */
+.contact-cards .card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contact-cards .button {
+  margin-top: auto;
+}
+
+.button[hidden] {
+  display: none;
+}
+
+#email {
+  margin-top: auto;
+}
+
+#email .button {
+  width: 100%;
+}
+
+.email-link {
+  overflow-wrap: anywhere;
+}
+
+.contact-note {
+  margin-top: 1.5rem;
+  color: var(--text-soft);
+}
+
 /* ---------- Footer ---------- */
 
 footer {
