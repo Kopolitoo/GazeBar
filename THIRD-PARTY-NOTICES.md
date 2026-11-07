@@ -27,7 +27,7 @@ that come from others, and what Prunel uses without shipping it.
   when building it; none of its words were added. Details:
   [Dictionaries/LICENSE-FrequencyWords.txt](Dictionaries/LICENSE-FrequencyWords.txt).
 
-### Application icon and logo: `Resources/Prunel.ico`, `docs/images/prunel-logo*.png`
+### Application icon and logo: `Resources/Prunel.ico`, `docs/images/prunel-logo.png`
 
 Images first generated with ChatGPT (OpenAI), then edited by the project owner with Photocraft.
 OpenAI's terms of use give the rights on generated images to the person who made them; the icon

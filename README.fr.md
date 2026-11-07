@@ -2,7 +2,7 @@
 
 *English version: [README.md](README.md).*
 
-<p align="center"><img src="docs/images/prunel-logo.fr.png" alt="Logo de Prunel : un œil avec un pointeur de souris" width="600"></p>
+<p align="center"><img src="docs/images/prunel-logo.png" alt="Logo de Prunel : un œil avec un pointeur de souris" width="600"></p>
 
 [![Build](https://github.com/Kopolitoo/Prunel/actions/workflows/build.yml/badge.svg)](https://github.com/Kopolitoo/Prunel/actions/workflows/build.yml)
 

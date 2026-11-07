@@ -27,7 +27,7 @@ qui viennent d'autres personnes, et ce que Prunel utilise sans le livrer.
   filtre pour le construire ; aucun de ses mots n'a été ajouté. Détails (en anglais) :
   [Dictionaries/LICENSE-FrequencyWords.txt](Dictionaries/LICENSE-FrequencyWords.txt).
 
-### Icône et logo de l'application : `Resources/Prunel.ico`, `docs/images/prunel-logo*.png`
+### Icône et logo de l'application : `Resources/Prunel.ico`, `docs/images/prunel-logo.png`
 
 Images d'abord créées avec ChatGPT (OpenAI), puis retouchées par l'auteur du projet avec
 Photocraft. Les conditions d'utilisation d'OpenAI donnent les droits sur les images créées à la
