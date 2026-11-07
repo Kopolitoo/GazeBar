@@ -165,6 +165,8 @@ field: the suggestion boxes become empty at once. Type a letter:
 the suggestions start from this letter alone, not from the word of the first field. Same test
 with a click said to voice recognition, and with a real mouse. Typing several words in the
 same field without clicking still works as before (next-word suggestions after a space).
+Type a few letters again, then press an arrow key (or Delete) on a real keyboard, or say it to
+Dragon: the suggestion boxes become empty too. Pressing Shift or Ctrl alone changes nothing.
 
 ## Full installation (Setup.exe, UI access)
 

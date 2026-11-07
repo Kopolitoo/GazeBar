@@ -223,7 +223,9 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   (`WH_MOUSE_LL`) tells it about every mouse button press, wherever it comes from (gaze click
   by Prunel, click said to voice recognition, real mouse). It only observes: the click goes on
   normally. The keyboard then forgets the current word and the previous word, because the text
-  cursor may now be in another field: the next letter starts a new word.
+  cursor may now be in another field: the next letter starts a new word. In the same way,
+  `KeyboardHook` reports every key that does not come from Prunel (real keyboard, Dragon:
+  arrows, Delete, dictated text…), except the modifier keys alone (`OtherKeyPressed`).
 - Gaze keyboard (step 12, `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`): "Keyboard" button of
   the menu, or "Keyboard" action of the action choice (opens / closes the keyboard; before opening it, a left
   click on P gives the focus to the aimed field and places the text cursor there; not placed by
@@ -253,7 +255,7 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   Settings: "Keyboard" tab of the settings (`settings.json` version 9).
 - Word prediction (step 13, `WordPredictor`): the three boxes at the top of the keyboard suggest
   the three most likely words that start with the current word (letters typed since the last
-  space, punctuation, Enter, Tab, arrow or mouse click), ignoring accents and case ("ete" suggests "été"). If
+  space, punctuation, Enter, Tab, arrow, mouse click or key from outside Prunel), ignoring accents and case ("ete" suggests "été"). If
   what is typed is already a known word, it is in the 1st box: looking at it just writes the
   space after it. Looking at a box writes the whole word followed by a space (no space after the
   French elided forms "l'", "qu'"…); the word keeps the starting capital. Ranking: frequency in

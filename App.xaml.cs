@@ -132,6 +132,9 @@ namespace Prunel
             _keyboard = new KeyboardHook();
             _keyboard.EscapePressed += OnEscape;
             _keyboard.KeepEscape = EscapeKeptByPrunel;
+            // A key from a real keyboard or from Dragon: the gaze keyboard's current word may
+            // no longer match the text (issue #96).
+            _keyboard.OtherKeyPressed += () => _modes.Keyboard.ForgetAfterOutsideInput();
             _keyboard.Install();
         }
 

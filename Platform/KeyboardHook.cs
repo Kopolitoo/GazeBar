@@ -14,6 +14,8 @@ namespace Prunel
     /// OnKey function on every key press, wherever the focus is.
     /// Usually we only observe: the key is passed on to the active program (CallNextHookEx).
     /// Escape therefore still closes a dialog box, for example.
+    /// The hook also reports the OTHER keys that do not come from Prunel (real keyboard,
+    /// Dragon…): see OtherKeyPressed (issue #96).
     /// EXCEPTION (user request): when Prunel itself uses Escape (see KeepEscape: scroll mode,
     /// or gaze keyboard open), the key is KEPT: the other programs do not receive it, neither
     /// the press nor the release.
@@ -46,6 +48,16 @@ namespace Prunel
         /// must not receive it. Must answer very quickly (it runs inside the hook).
         /// </summary>
         public Func<bool> KeepEscape;
+
+        /// <summary>
+        /// Raised (on the UI thread) when a key other than Escape is pressed and does NOT come
+        /// from Prunel: a real keyboard, or other software such as Dragon (arrows, Delete,
+        /// dictated text…). The text cursor may have moved or the text changed: the gaze
+        /// keyboard forgets its current word (issue #96). The modifier keys alone (Shift,
+        /// Ctrl, Alt, Windows, Caps Lock) do not count: they change neither the text nor the
+        /// cursor.
+        /// </summary>
+        public event Action OtherKeyPressed;
 
         // True between a kept Escape press and its release: the release (and the automatic
         // repeats while the key is held) are kept too.
@@ -109,6 +121,14 @@ namespace Prunel
                     bool simulated = (flagsValue & NativeMethods.LLKHF_INJECTED) != 0;
                     long extraInfo = Marshal.ReadIntPtr(lParam, NativeMethods.HookExtraInfoOffset).ToInt64();
                     bool fromPrunel = simulated && extraInfo == NativeMethods.PrunelKeyMarker;
+                    if (key != NativeMethods.VK_ESCAPE && !fromPrunel && !IsModifier(key))
+                    {
+                        Action others = OtherKeyPressed;
+                        if (others != null)
+                        {
+                            System.Windows.Application.Current.Dispatcher.BeginInvoke(others);
+                        }
+                    }
                     if (key == NativeMethods.VK_ESCAPE && !fromPrunel)
                     {
                         // Automatic repeat of a kept Escape (key held down): kept, no new event.
@@ -140,6 +160,15 @@ namespace Prunel
 
             // Always pass the key on to the next program.
             return NativeMethods.CallNextHookEx(_hook, code, wParam, lParam);
+        }
+
+        /// <summary>True for Shift, Ctrl, Alt, the Windows keys and Caps Lock (left and right versions too).</summary>
+        private static bool IsModifier(int key)
+        {
+            return (key >= 0x10 && key <= 0x12)   // Shift, Ctrl, Alt
+                || key == 0x14                    // Caps Lock
+                || key == 0x5B || key == 0x5C     // left and right Windows keys
+                || (key >= 0xA0 && key <= 0xA5);  // left and right Shift, Ctrl, Alt
         }
     }
 }

@@ -235,7 +235,9 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   vienne (clic au regard par Prunel, clic dit à la reconnaissance vocale, vraie souris). Il ne
   fait qu'observer : le clic continue normalement. Le clavier oublie alors le mot en cours et le
   mot précédent, car le curseur de texte est peut-être dans un autre champ : la lettre suivante
-  commence un nouveau mot.
+  commence un nouveau mot. De la même façon, `KeyboardHook` signale chaque touche qui ne vient
+  pas de Prunel (vrai clavier, Dragon : flèches, Suppr, texte dicté…), sauf les touches de
+  modification seules (`OtherKeyPressed`).
 - Clavier au regard (étape 12, `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`) : bouton
   « Clavier » du menu, ou action « Clavier » du choix d'action (ouvre / ferme le clavier ; avant de l'ouvrir, un clic
   gauche sur P donne le focus au champ visé et y place le curseur de texte ; pas
@@ -266,7 +268,7 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   Réglages : onglet « Clavier » des paramètres (`settings.json` version 9).
 - Prédiction de mots (étape 13, `WordPredictor`) : les trois cases du haut du clavier
   proposent les trois mots les plus probables qui commencent par le mot en cours (lettres tapées
-  depuis la dernière espace, ponctuation, Entrée, Tab, flèche ou clic de souris), sans tenir compte des accents
+  depuis la dernière espace, ponctuation, Entrée, Tab, flèche, clic de souris ou touche venue d'ailleurs que Prunel), sans tenir compte des accents
   ni des majuscules (« ete » propose « été »). Si ce qui est tapé est déjà un mot connu, il est
   en 1re case : le regarder écrit juste l'espace après lui. En regarder une écrit le mot entier suivi d'une
   espace (pas d'espace après « l' », « qu' »…) ; le mot garde la majuscule de départ. Classement :

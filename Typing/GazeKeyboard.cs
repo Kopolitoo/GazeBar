@@ -167,7 +167,7 @@ namespace Prunel
             _predictor.LoadLanguage(Texts.Language);
             Texts.Changed += () => _predictor.LoadLanguage(Texts.Language);
 
-            _clickHook.ButtonPressed += OnMouseClick;
+            _clickHook.ButtonPressed += ForgetAfterOutsideInput;
         }
 
         /// <summary>
@@ -529,12 +529,14 @@ namespace Prunel
         }
 
         /// <summary>
-        /// A mouse button was pressed somewhere (gaze click by Prunel, click said to voice
-        /// recognition, real mouse…), issue #96. The click may have put the text cursor in
-        /// another field: the current word and the previous word are forgotten, so the next
-        /// letter starts a new word, with fresh suggestions. The modifiers (Shift…) stay on.
+        /// Issue #96: something other than the gaze keyboard may have moved the text cursor or
+        /// changed the text: a mouse button was pressed (gaze click by Prunel, click said to
+        /// voice recognition, real mouse…, see MouseClickHook), or a key that does not come
+        /// from Prunel (arrows, Delete, Dragon dictation…, see KeyboardHook.OtherKeyPressed).
+        /// The current word and the previous word are forgotten, so the next letter starts a
+        /// new word, with fresh suggestions. The modifiers (Shift…) stay on.
         /// </summary>
-        private void OnMouseClick()
+        public void ForgetAfterOutsideInput()
         {
             if (!IsOpen)
             {

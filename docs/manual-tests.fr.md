@@ -176,6 +176,9 @@ cliquer dans le deuxième champ : les cases de suggestion se vident aussitôt. T
 les suggestions partent de cette seule lettre, et non du mot du premier champ. Même test avec un
 clic dit à la reconnaissance vocale, et avec une vraie souris. Écrire plusieurs mots dans le
 même champ sans cliquer marche toujours comme avant (mots suivants proposés après une espace).
+Retaper quelques lettres, puis appuyer sur une flèche (ou Suppr) d'un vrai clavier, ou la dire
+à Dragon : les cases de suggestion se vident aussi. Appuyer seulement sur Maj ou Ctrl ne change
+rien.
 
 ## Installation complète (Setup.exe, accès à l'interface)
 
