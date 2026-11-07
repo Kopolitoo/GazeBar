@@ -116,6 +116,8 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   to 8 real pixels. The "back" icon (right) returns, doing nothing, to the mode it came from: the
   action choice, or movement mode when coming from fixed gaze. The fixation counts from the moment
   the picture appears, with no ignored zone: a small gaze move, or none, is enough (issue #91).
+  Its delay is `MagnifierDelay` ("Magnifier, drag" tab, `settings.json` version 16), not
+  `FixationDelay`: `FixationDetector` takes the delay to read in its constructor.
 - Modifiers (step 6, `Modifiers`, `KeyboardInjector`): in the action choice, looking at "Ctrl",
   "Shift" or "Alt" turns it on (green border), a second look turns it off. The keys that are on
   are pressed just before the action and released just after (after the drop for a drag). They
@@ -325,7 +327,7 @@ Former name: Prunel was called GazeBar up to version 0.2.0. `FormerName.Migrate`
 folder does not exist yet (a copy if the move is refused). `WindowsStartup` removes the old
 `GazeBar` value of the Run key, and the installer (same `AppId`) moves to
 `Program Files\Prunel` and deletes `Program Files\GazeBar`.
-`FileVersion` (currently 13) says which version wrote the file: an older file is converted at
+`FileVersion` (currently 16) says which version wrote the file: an older file is converted at
 startup (see the list of versions at the top of `AppSettings.cs`). The settings window lists its
 tabs and settings in `SettingsCatalog.cs`.
 

@@ -79,8 +79,10 @@ namespace Prunel
         ///      missing from an older file, they keep their default value.
         ///  15: issue #55 — KeyboardTransparency (0 % by default). Nothing to fix: missing from
         ///      an older file, it keeps its default value.
+        ///  16: issue #91 — MagnifierDelay. Missing from an older file, it takes the value of
+        ///      FixationDelay, which the magnifier used until then: nothing changes for the user.
         /// </summary>
-        public const int CurrentVersion = 15;
+        public const int CurrentVersion = 16;
 
         /// <summary>Format number of the file, so it can evolve one day without breaking everything.</summary>
         [DataMember(Order = 0)]
@@ -234,6 +236,14 @@ namespace Prunel
         /// <summary>Magnification of the capture in magnifier mode (4 = four times bigger).</summary>
         [DataMember(Order = 51)]
         public double MagnifierZoom { get; set; }
+
+        /// <summary>
+        /// Stillness duration on the magnifier picture before the cursor is placed (and the
+        /// action choice opens, or the drag and drop runs), in seconds. Separate from
+        /// FixationDelay (issue #91): the magnifier can be quicker than movement mode.
+        /// </summary>
+        [DataMember(Order = 52)]
+        public double MagnifierDelay { get; set; }
 
         // ───────────────────────── Actions ─────────────────────────
 

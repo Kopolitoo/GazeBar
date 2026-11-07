@@ -123,6 +123,8 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   d'où l'on vient : le choix d'action, ou le mode mouvement si l'on vient du regard fixe.
   La fixation compte dès que la photo apparaît, sans zone ignorée : un petit mouvement du regard,
   ou aucun, suffit (issue #91).
+  Son délai est `MagnifierDelay` (onglet « Loupe, glisser », `settings.json` version 16), et non
+  `FixationDelay` : `FixationDetector` reçoit le délai à lire dans son constructeur.
 - Modificateurs (étape 6, `Modifiers`, `KeyboardInjector`) : dans le choix d'action, un
   regard sur « Ctrl », « Maj » ou « Alt » l'allume (bord vert), un second l'éteint. Les touches
   allumées sont enfoncées juste avant l'action et relâchées juste après (après le dépôt pour un
@@ -340,7 +342,7 @@ Ancien nom : Prunel s'appelait GazeBar jusqu'à la version 0.2.0. `FormerName.Mi
 nouveau dossier n'existe pas encore (une copie si le déplacement est refusé). `WindowsStartup`
 retire l'ancienne valeur `GazeBar` de la clé Run, et l'installateur (même `AppId`) passe à
 `Program Files\Prunel` et supprime `Program Files\GazeBar`.
-`FileVersion` (13 actuellement) indique quelle version a écrit le fichier : un fichier plus
+`FileVersion` (16 actuellement) indique quelle version a écrit le fichier : un fichier plus
 ancien est converti au démarrage (voir la liste des versions en haut de `AppSettings.cs`). La
 fenêtre des paramètres liste ses onglets et ses réglages dans `SettingsCatalog.cs`.
 

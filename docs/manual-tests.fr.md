@@ -37,7 +37,10 @@ On fixe une petite case à cocher, on regarde l'icône d'options, puis
 « Loupe » dans la couronne : la zone apparaît agrandie ×4. On fixe la case sur la photo : le
 choix d'action s'ouvre, la croix est sur la case ; « clic gauche » la coche. Pas besoin de
 détourner le regard puis d'y revenir : si le regard est déjà sur la case quand la photo apparaît,
-le choix d'action s'ouvre après le délai habituel (issue #91). Avec « Loupe avant l'action » activée (onglet « Loupe, glisser »), la loupe s'ouvre directement après l'icône
+le choix d'action s'ouvre après le délai habituel (issue #91).
+« Délai de la loupe » (onglet « Loupe, glisser ») : à 0.3 s, le choix d'action s'ouvre plus vite
+depuis la loupe, alors que le regard fixe du mode mouvement garde le « Délai de fixation ». Un
+ancien fichier de réglages démarre avec un délai de la loupe égal à son délai de fixation. Avec « Loupe avant l'action » activée (onglet « Loupe, glisser »), la loupe s'ouvre directement après l'icône
 d'options.
 
 ## 5. Modificateurs et glisser-déposer

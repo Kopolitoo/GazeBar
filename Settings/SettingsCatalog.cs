@@ -461,6 +461,8 @@ namespace Prunel
                                  p => p.MagnifierBeforeAction, (p, v) => p.MagnifierBeforeAction = v),
                 Setting.Number("setting.magnifierZoom", " ×", 0.5,
                                p => p.MagnifierZoom, (p, v) => p.MagnifierZoom = v),
+                Setting.Number("setting.magnifierDelay", " s", 0.1,
+                               p => p.MagnifierDelay, (p, v) => p.MagnifierDelay = v),
                 Setting.Number("setting.androidPauseDuration", " s", 0.1,
                                p => p.AndroidPauseDuration, (p, v) => p.AndroidPauseDuration = v),
                 Setting.Number("setting.dragDuration", " s", 0.05,

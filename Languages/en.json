@@ -170,6 +170,8 @@
   "setting.magnifierBeforeAction.help": "Go through the magnifier before the choice",
   "setting.magnifierZoom.name": "Magnifier zoom",
   "setting.magnifierZoom.help": "Enlargement of the capture",
+  "setting.magnifierDelay.name": "Magnifier delay",
+  "setting.magnifierDelay.help": "Gaze time on the picture",
   "setting.androidPauseDuration.name": "Android pause",
   "setting.androidPauseDuration.help": "Between the press and the move",
   "setting.dragDuration.name": "Drag duration",

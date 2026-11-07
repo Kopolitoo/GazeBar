@@ -54,6 +54,7 @@ namespace Prunel
 
             MagnifierBeforeAction = true;
             MagnifierZoom = 4;
+            MagnifierDelay = 0.8;
 
             AndroidPauseDuration = 1.0;
             DragDuration = 0.5;
@@ -127,6 +128,7 @@ namespace Prunel
             MenuCloseDelay = Clamp(MenuCloseDelay, 0.1, 10);
 
             MagnifierZoom = Clamp(MagnifierZoom, 1, 10);
+            MagnifierDelay = Clamp(MagnifierDelay, 0.1, 10);
 
             AndroidPauseDuration = Clamp(AndroidPauseDuration, 0, 10);
             DragDuration = Clamp(DragDuration, 0.05, 10);
@@ -291,6 +293,15 @@ namespace Prunel
             // Version 13 (DetailedLog), 14 (KeySound, ButtonSound) and 15
             // (KeyboardTransparency): nothing to fix, the settings keep their default value
             // (no, 0 %).
+
+            if (FileVersion < 16)
+            {
+                // MagnifierDelay is missing from the file: the magnifier used FixationDelay
+                // until now, so it starts with the same value (nothing changes for the user).
+                MagnifierDelay = FixationDelay;
+                App.Log("Settings: updated to version 16 (magnifier delay)");
+            }
+
             FileVersion = CurrentVersion;
             return true;
         }

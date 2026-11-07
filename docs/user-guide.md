@@ -44,6 +44,8 @@ The icons can be moved or removed: Settings, "Icons" tab, "Configure the icons".
 For small targets (a check box, a small link). The area is shown enlarged four times; stare at
 the exact point on the picture, and the action choice opens on that point. "Magnifier before
 action" ("Magnifier, drag" tab) opens the magnifier every time, before the action choice.
+"Magnifier delay" (same tab) sets how long to stare at the picture, separately from the fixation
+delay of movement mode.
 
 ## Drag and drop
 
