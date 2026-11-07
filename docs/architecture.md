@@ -42,7 +42,7 @@ The three biggest classes are "partial" classes: one class written in several fi
 | Folder | Contents |
 |---|---|
 | (root) | `App.xaml` (entry point: reads the settings, opens the overlay and the mode manager), `Prunel.csproj`, `app.manifest`, `app.uiaccess.manifest` |
-| `Gaze` | reading the gaze and processing it: `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
+| `Gaze` | reading the gaze and processing it: `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector`, `GazeStability` |
 | `Modes` | one class per mode, and `ModeManager` |
 | `Actions` | what the action choice offers: `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
 | `Typing` | the gaze keyboard and word prediction: `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
@@ -373,6 +373,9 @@ To add a language: copy `en.json` to `xx.json` and translate the values (never t
   new one starts. Never write gaze coordinates or typed text to the log.
 - `DiagnosticWindow` ("Tools" tab of the settings) shows the cursor and the gaze live;
   `CursorSampler` (1000 reads per second) only runs while this window is open.
+- `GazeStability` (folder `Gaze`), shown in the Diagnostic window, counts how steady the gaze is
+  in three bands of the screen (agitation, steps too fast for the fixation, losses, off screen).
+  It keeps only counters, never a position, and forgets everything when the window closes.
 
 ## Build check (CI)
 

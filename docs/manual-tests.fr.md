@@ -180,6 +180,16 @@ Retaper quelques lettres, puis appuyer sur une flèche (ou Suppr) d'un vrai clav
 à Dragon : les cases de suggestion se vident aussi. Appuyer seulement sur Maj ou Ctrl ne change
 rien.
 
+## 18. Stabilité du regard dans la fenêtre Diagnostic (issue #86)
+
+Ouvrir les paramètres, onglet « Outils », « Diagnostic ». Sous la miniature de l'écran, trois
+lignes « Haut », « Milieu » et « Bas » montrent des nombres qui augmentent quand on regarde
+l'écran. Fixer un point près du bord haut une vingtaine de secondes, puis au milieu, puis près
+du bord bas : le nombre de « mesures » augmente dans la bonne ligne. Fermer les yeux une
+seconde : les « pertes » augmentent dans la bande regardée. « Remettre les mesures à zéro »
+remet tout à 0. Fermer puis rouvrir la fenêtre : tout repart de 0. Aucun nouveau fichier
+n'apparaît dans `%LOCALAPPDATA%\Prunel\` et le journal ne contient aucune position du regard.
+
 ## Installation complète (Setup.exe, accès à l'interface)
 
 Prendre le zip `Prunel-setup-…` de la compilation automatique (page Actions de la pull request,

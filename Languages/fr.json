@@ -235,5 +235,12 @@
   "diagnostic.gaze": "Regard : X = {0}   Y = {1}   ({2} mesures/s)",
   "diagnostic.offScreen": "   HORS ÉCRAN",
   "diagnostic.noMovement": "Aucun mouvement détecté pour l'instant",
-  "diagnostic.lastChange": "Dernier changement il y a {0} ms"
+  "diagnostic.lastChange": "Dernier changement il y a {0} ms",
+  "diagnostic.reset": "Remettre les mesures à zéro",
+  "diagnostic.stabilityTitle": "Stabilité du regard par bande de l'écran",
+  "diagnostic.stabilityHelp": "Fixer un point une vingtaine de secondes dans chaque bande (haut, milieu, bas), puis comparer. Agitation : tremblement habituel entre deux mesures. Trop rapides : part des mesures qui cassent la fixation. Pertes : nombre de fois par minute où le regard est perdu (le cercle se fige). Rien n'est enregistré : tout s'efface à la fermeture de cette fenêtre.",
+  "diagnostic.bandTop": "Haut",
+  "diagnostic.bandMiddle": "Milieu",
+  "diagnostic.bandBottom": "Bas",
+  "diagnostic.stabilityLine": "{0} : agitation {1} px · trop rapides {2} % · pertes {3}/min · hors écran {4} % · {5} mesures"
 }

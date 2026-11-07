@@ -119,7 +119,8 @@ repeat) or a yes / no switch. Changes apply at once and are saved.
   key of the gaze keyboard. **Button sound**: a short sound for every other button (menu, action
   choice, options icon, settings). The sound plays at the Windows volume.
 - **Tools** tab: **Calibration** (starts the eyetracker calibration) and **Diagnostic** (shows
-  the gaze and the cursor live).
+  the gaze and the cursor live, and how steady the gaze is at the top, middle and bottom of the
+  screen; nothing is saved).
 
 ## For the caregiver
 

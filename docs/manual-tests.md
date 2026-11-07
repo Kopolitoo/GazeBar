@@ -168,6 +168,16 @@ same field without clicking still works as before (next-word suggestions after a
 Type a few letters again, then press an arrow key (or Delete) on a real keyboard, or say it to
 Dragon: the suggestion boxes become empty too. Pressing Shift or Ctrl alone changes nothing.
 
+## 18. Gaze steadiness in the Diagnostic window (issue #86)
+
+Open the settings, "Tools" tab, "Diagnostic". Below the screen thumbnail, three lines "Top",
+"Middle" and "Bottom" show numbers that grow while you look at the screen. Hold your gaze on a
+point near the top edge for about 20 seconds, then in the middle, then near the bottom edge:
+the "measures" count grows in the matching line. Close your eyes for one second: "losses" grows
+in the band you were looking at. "Reset the measures" puts everything back to 0. Close and
+reopen the window: everything starts from 0 again. No new file appears in
+`%LOCALAPPDATA%\Prunel\` and the log holds no gaze position.
+
 ## Full installation (Setup.exe, UI access)
 
 Use the `Prunel-setup-…` zip of the automatic build (Actions page of the pull request,

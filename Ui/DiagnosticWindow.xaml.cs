@@ -23,6 +23,11 @@ namespace Prunel
         private readonly IGazeSource _gaze;
         private readonly DispatcherTimer _timer;
 
+        // Gaze steadiness by band (issue #86): fed by its own fast timer, so that it sees
+        // (almost) every measure of the eyetracker (about 30 per second).
+        private readonly GazeStability _stability = new GazeStability();
+        private readonly DispatcherTimer _stabilityTimer;
+
         private readonly Polyline _trailLine;   // the trail of the latest positions
         private readonly Ellipse _dot;          // the dot = current cursor position
         private readonly Ellipse _gazeDot;      // the green dot = real gaze position
@@ -38,6 +43,9 @@ namespace Prunel
             // The fixed texts, in the current language.
             Title = Texts.Get("diagnostic.title");
             CloseButton.Content = Texts.Get("diagnostic.close");
+            ResetButton.Content = Texts.Get("diagnostic.reset");
+            StabilityTitleText.Text = Texts.Get("diagnostic.stabilityTitle");
+            StabilityHelpText.Text = Texts.Get("diagnostic.stabilityHelp");
 
             _sampler = new CursorSampler();
             _sampler.Start();
@@ -84,12 +92,18 @@ namespace Prunel
             _timer.Tick += OnTick;
             _timer.Start();
 
+            _stabilityTimer = new DispatcherTimer();
+            _stabilityTimer.Interval = TimeSpan.FromMilliseconds(10);
+            _stabilityTimer.Tick += OnStabilityTick;
+            _stabilityTimer.Start();
+
             Closed += OnWindowClosed;
         }
 
         private void OnWindowClosed(object sender, EventArgs e)
         {
             _timer.Stop();
+            _stabilityTimer.Stop();
             _sampler.Dispose();
             App.LogDetail("Diagnostic: closed, cursor sampler stopped");
         }
@@ -100,6 +114,36 @@ namespace Prunel
         {
             UpdateReadouts();
             UpdateMap();
+            UpdateStability();
+        }
+
+        private void OnStabilityTick(object sender, EventArgs e)
+        {
+            _stability.Update(_gaze, _screenWidth, _screenHeight);
+        }
+
+        /// <summary>Shows the steadiness counters of the three bands (numbers only).</summary>
+        private void UpdateStability()
+        {
+            StabilityTopText.Text = StabilityLine("diagnostic.bandTop", GazeStability.Top);
+            StabilityMiddleText.Text = StabilityLine("diagnostic.bandMiddle", GazeStability.Middle);
+            StabilityBottomText.Text = StabilityLine("diagnostic.bandBottom", GazeStability.Bottom);
+        }
+
+        private string StabilityLine(string bandKey, int band)
+        {
+            return Texts.Format("diagnostic.stabilityLine",
+                                Texts.Get(bandKey),
+                                _stability.Agitation(band).ToString("F0"),
+                                _stability.TooFastPercent(band).ToString("F0"),
+                                _stability.LossesPerMinute(band).ToString("F1"),
+                                _stability.OffScreenPercent(band).ToString("F0"),
+                                _stability.Measures(band));
+        }
+
+        private void OnResetClick(object sender, RoutedEventArgs e)
+        {
+            _stability.Reset();
         }
 
         private void UpdateReadouts()
