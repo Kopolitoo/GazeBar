@@ -114,8 +114,8 @@ DLL was found. How a user gets them: see the [user guide](user-guide.md#eyetrack
   movement mode), the point is brought back to real coordinates (offset divided by 4), the cursor
   is placed there and the action choice opens on that point. A 30 px gaze error is then only 7
   to 8 real pixels. The "back" icon (right) returns, doing nothing, to the mode it came from: the
-  action choice, or movement mode when coming from fixed gaze. At opening, a fixation where the
-  gaze already was is ignored until the gaze has left it.
+  action choice, or movement mode when coming from fixed gaze. The fixation counts from the moment
+  the picture appears, with no ignored zone: a small gaze move, or none, is enough (issue #91).
 - Modifiers (step 6, `Modifiers`, `KeyboardInjector`): in the action choice, looking at "Ctrl",
   "Shift" or "Alt" turns it on (green border), a second look turns it off. The keys that are on
   are pressed just before the action and released just after (after the drop for a drag). They

@@ -35,7 +35,9 @@ Le tout uniquement au regard. Échap ramène aussi au mode mouvement.
 
 On fixe une petite case à cocher, on regarde l'icône d'options, puis
 « Loupe » dans la couronne : la zone apparaît agrandie ×4. On fixe la case sur la photo : le
-choix d'action s'ouvre, la croix est sur la case ; « clic gauche » la coche. Avec « Loupe avant l'action » activée (onglet « Loupe, glisser »), la loupe s'ouvre directement après l'icône
+choix d'action s'ouvre, la croix est sur la case ; « clic gauche » la coche. Pas besoin de
+détourner le regard puis d'y revenir : si le regard est déjà sur la case quand la photo apparaît,
+le choix d'action s'ouvre après le délai habituel (issue #91). Avec « Loupe avant l'action » activée (onglet « Loupe, glisser »), la loupe s'ouvre directement après l'icône
 d'options.
 
 ## 5. Modificateurs et glisser-déposer
