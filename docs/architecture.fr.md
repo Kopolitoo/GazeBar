@@ -45,7 +45,7 @@ l'explication de la classe.
 | Dossier | Contenu |
 |---|---|
 | (racine) | `App.xaml` (point d'entrée : lit les réglages, ouvre la surcouche et le gestionnaire de modes), `Prunel.csproj`, `app.manifest`, `app.uiaccess.manifest` |
-| `Gaze` | lecture du regard et traitement : `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector` |
+| `Gaze` | lecture du regard et traitement : `IGazeSource`, `GazeSource`, `EyetrackerGazeSource`, `EyetrackerLoader`, `Calibration`, `GazeState`, `Smoother`, `FixationDetector`, `GazeStability` |
 | `Modes` | une classe par mode, et `ModeManager` |
 | `Actions` | ce que propose le choix d'action : `ActionCatalog`, `ActionChoiceLayout`, `Modifiers`, `DragGesture` |
 | `Typing` | le clavier au regard et la prédiction de mots : `GazeKeyboard`, `KeyboardKey`, `KeyboardLayout`, `WordPredictor` |
@@ -390,6 +390,9 @@ Pour ajouter une langue : copier `en.json` en `xx.json`, traduire les valeurs (j
   de texte tapé dans le journal.
 - `DiagnosticWindow` (onglet « Outils » des paramètres) montre le curseur et le regard en direct ;
   `CursorSampler` (1000 lectures par seconde) ne tourne que pendant que cette fenêtre est ouverte.
+- `GazeStability` (dossier `Gaze`), affiché dans la fenêtre Diagnostic, compte la stabilité du
+  regard dans trois bandes de l'écran (agitation, pas trop rapides pour la fixation, pertes, hors
+  écran). Il ne garde que des compteurs, jamais une position, et oublie tout à la fermeture.
 
 ## Vérification de la compilation (CI)
 

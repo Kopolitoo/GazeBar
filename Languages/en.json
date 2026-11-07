@@ -235,5 +235,12 @@
   "diagnostic.gaze": "Gaze: X = {0}   Y = {1}   ({2} samples/s)",
   "diagnostic.offScreen": "   OFF SCREEN",
   "diagnostic.noMovement": "No movement detected yet",
-  "diagnostic.lastChange": "Last change {0} ms ago"
+  "diagnostic.lastChange": "Last change {0} ms ago",
+  "diagnostic.reset": "Reset the measures",
+  "diagnostic.stabilityTitle": "Gaze steadiness by band of the screen",
+  "diagnostic.stabilityHelp": "Hold your gaze on a point for about 20 seconds in each band (top, middle, bottom), then compare. Agitation: typical jitter between two measures. Too fast: share of measures that break the fixation. Losses: times per minute the gaze is lost (the circle freezes). Nothing is saved: everything is forgotten when this window closes.",
+  "diagnostic.bandTop": "Top",
+  "diagnostic.bandMiddle": "Middle",
+  "diagnostic.bandBottom": "Bottom",
+  "diagnostic.stabilityLine": "{0}: agitation {1} px · too fast {2} % · losses {3}/min · off screen {4} % · {5} measures"
 }
