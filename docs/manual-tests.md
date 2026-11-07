@@ -35,7 +35,10 @@ Stare at a small check box, look at the options icon, then "Magnifier" in the
 crown: the area appears enlarged ×4. Stare at the box on the picture: the action choice opens,
 the cross is on the box; "Left click" checks it. There is no need to look away and come back:
 if the gaze is already on the box when the picture appears, the action choice opens after the
-usual delay (issue #91). With "Magnifier before action" on ("Magnifier, drag" tab), the magnifier opens right after the options icon.
+usual delay (issue #91).
+"Magnifier delay" ("Magnifier, drag" tab): set it to 0.3 s, the action choice opens faster
+from the magnifier, while fixed gaze in movement mode keeps the "Fixation delay". An older
+settings file starts with the magnifier delay equal to its fixation delay. With "Magnifier before action" on ("Magnifier, drag" tab), the magnifier opens right after the options icon.
 
 ## 5. Modifiers and drag and drop
 

@@ -29,6 +29,7 @@ namespace Prunel
     /// from this new measure.
     ///
     /// Time is measured in real milliseconds (FixationDelay), not in number of ticks.
+    /// The magnifier uses its own delay (MagnifierDelay): see the second constructor.
     ///
     /// Screen edges and corners: a measure just outside the screen (see
     /// GazeState.NearScreen) does not interrupt the fixation; it is brought back to the edge.
@@ -53,6 +54,22 @@ namespace Prunel
 
         // True if the last measure was set aside (only one tolerated in a row).
         private bool _setAsideMeasure;
+
+        // Reads the fixation delay, in seconds (read on each tick: a change in the settings
+        // applies at once).
+        private readonly Func<double> _delaySeconds;
+
+        /// <summary>A detector using [FixationDelay].</summary>
+        public FixationDetector()
+            : this(() => AppSettings.Current.FixationDelay)
+        {
+        }
+
+        /// <summary>A detector using another delay, in seconds (example: MagnifierDelay).</summary>
+        public FixationDetector(Func<double> delaySeconds)
+        {
+            _delaySeconds = delaySeconds;
+        }
 
         /// <summary>Fixation progress, between 0 (nothing) and 1 (fixation reached).</summary>
         public double Progress { get; private set; }
@@ -186,7 +203,7 @@ namespace Prunel
                 return;
             }
 
-            double delayMs = AppSettings.Current.FixationDelay * 1000.0;
+            double delayMs = _delaySeconds() * 1000.0;
             Progress = Math.Min(1.0, Math.Max(0.0, (nowMs - _startMs) / delayMs));
         }
 

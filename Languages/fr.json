@@ -170,6 +170,8 @@
   "setting.magnifierBeforeAction.help": "Passer par la loupe avant le choix",
   "setting.magnifierZoom.name": "Zoom de la loupe",
   "setting.magnifierZoom.help": "Agrandissement de la capture",
+  "setting.magnifierDelay.name": "Délai de la loupe",
+  "setting.magnifierDelay.help": "Temps de regard sur la photo",
   "setting.androidPauseDuration.name": "Pause android",
   "setting.androidPauseDuration.help": "Entre l'appui et le déplacement",
   "setting.dragDuration.name": "Durée du glisser",

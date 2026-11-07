@@ -48,6 +48,8 @@ icônes ».
 Pour les petites cibles (une case à cocher, un petit lien). La zone est agrandie quatre fois ;
 on fixe le point exact sur l'image, et le choix d'action s'ouvre sur ce point. « Loupe avant
 l'action » (onglet « Loupe, glisser ») ouvre la loupe à chaque fois, avant le choix d'action.
+« Délai de la loupe » (même onglet) règle le temps de fixation sur l'image, séparément du délai
+de fixation du mode mouvement.
 
 ## Glisser-déposer
 

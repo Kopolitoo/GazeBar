@@ -49,7 +49,7 @@ namespace Prunel
     ///    measures are only analyzed during the aiming). There is no "ignored zone" around the
     ///    place where the gaze was on opening (issue #91): the gaze is usually already near the
     ///    right point, so a small move, or none at all, is enough. The cursor is placed after
-    ///    the usual [FixationDelay], counted from the photo;
+    ///    [MagnifierDelay] (its own setting, "Magnifier, drag" tab), counted from the photo;
     ///  - only a fixation ON the photo counts. The gaze resting on the "back" icon or on the
     ///    black background never places the cursor.
     /// </summary>
@@ -101,8 +101,10 @@ namespace Prunel
         private readonly List<GazeButton> _buttons = new List<GazeButton>();
         private readonly ButtonAimer _aimer;
 
-        // The fixation detection, the same as in movement mode.
-        private readonly FixationDetector _fixation = new FixationDetector();
+        // The fixation detection, the same as in movement mode, but with its own delay
+        // [MagnifierDelay] ("Magnifier, drag" tab).
+        private readonly FixationDetector _fixation =
+            new FixationDetector(() => AppSettings.Current.MagnifierDelay);
 
         /// <summary>
         /// Activation zone of the "back" button, relative to the drawn button: 30 % larger.
