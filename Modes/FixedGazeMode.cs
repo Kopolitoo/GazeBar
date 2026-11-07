@@ -335,7 +335,8 @@ namespace Prunel
 
         private void PlaceCursor()
         {
-            NativeMethods.SetCursorPos((int)Math.Round(_px), (int)Math.Round(_py));
+            // Like a real mouse, so that menus show their hover (issue #97).
+            MouseInjector.PointTo(_px, _py);
         }
 
         private static double Clamp(double val, double min, double max)

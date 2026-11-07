@@ -297,7 +297,7 @@ namespace Prunel
                 return;
             }
 
-            NativeMethods.SetCursorPos((int)Math.Round(x), (int)Math.Round(y));
+            MouseInjector.PointTo(x, y);
             App.LogDetail("Magnifier: fixation on the photo, cursor placed");
 
             Manager.ChangeMode(new ActionChoiceMode(x, y));

@@ -14,8 +14,8 @@ namespace Prunel
     /// MODEL: simulates pressing and releasing the mouse buttons, and moving
     /// the cursor during a drag and drop.
     ///
-    /// Clicks happen where the cursor already is (the modes place it beforehand with
-    /// SetCursorPos).
+    /// Clicks happen where the cursor already is (the modes place it beforehand, with
+    /// PointTo or SetCursorPos).
     ///
     /// For drag and drop, the cursor is moved by MoveTo, which goes through
     /// SendInput like a real mouse: applications then receive the same "the mouse moves"
@@ -141,6 +141,32 @@ namespace Prunel
             input.u.mid.dy = (int)Math.Round(y * 65535.0 / (height - 1));
             input.u.mid.dwFlags = NativeMethods.MOUSEEVENTF_MOVE | NativeMethods.MOUSEEVENTF_ABSOLUTE;
             SendOne(input);
+        }
+
+        /// <summary>
+        /// Places the cursor at (x, y), in screen pixels, as a real mouse would (issue #97).
+        ///
+        /// SetCursorPos only changes the cursor position: for Windows it is not a mouse
+        /// movement. Some menus (for example the context menu of Windows 11) then show no
+        /// hover: their item stays dark, and their sub-menus do not open. A movement sent with
+        /// SendInput (MoveTo) is a "real" mouse movement for every application.
+        ///
+        /// MoveTo can be one pixel off (rounding), and SendInput can be refused (for example
+        /// over a window started as administrator): SetCursorPos then puts the cursor exactly
+        /// in place.
+        /// </summary>
+        public static void PointTo(double x, double y)
+        {
+            int targetX = (int)Math.Round(x);
+            int targetY = (int)Math.Round(y);
+
+            MoveTo(targetX, targetY);
+
+            NativeMethods.POINT cursor;
+            if (!NativeMethods.GetCursorPos(out cursor) || cursor.X != targetX || cursor.Y != targetY)
+            {
+                NativeMethods.SetCursorPos(targetX, targetY);
+            }
         }
 
         /// <summary>
