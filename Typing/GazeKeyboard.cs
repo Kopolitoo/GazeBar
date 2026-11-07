@@ -145,6 +145,10 @@ namespace Prunel
         private TextBlock _previewText;
         private double _previewWidthWpf;
 
+        // Watches the mouse buttons while the keyboard is open (issue #96): a click may have
+        // put the text cursor in another field, the current word then starts again.
+        private readonly MouseClickHook _clickHook = new MouseClickHook();
+
         public GazeKeyboard(OverlayWindow layer)
         {
             _layer = layer;
@@ -162,6 +166,8 @@ namespace Prunel
             _predictor = new WordPredictor();
             _predictor.LoadLanguage(Texts.Language);
             Texts.Changed += () => _predictor.LoadLanguage(Texts.Language);
+
+            _clickHook.ButtonPressed += ForgetAfterOutsideInput;
         }
 
         /// <summary>
@@ -170,6 +176,7 @@ namespace Prunel
         /// </summary>
         public void Stop()
         {
+            _clickHook.Dispose();
             _predictor.Stop();
         }
 
@@ -217,6 +224,7 @@ namespace Prunel
             _previousPage = null;
             IsOpen = true;
             ForgetState();
+            _clickHook.Install();
             App.LogDetail("Keyboard: opened");
             return true;
         }
@@ -233,6 +241,7 @@ namespace Prunel
             IsOpen = false;
             Hide();
             ForgetState();
+            _clickHook.Dispose();
             App.LogDetail("Keyboard: closed");
         }
 
@@ -517,6 +526,27 @@ namespace Prunel
                 return true;
             }
             return _close != null && _close.Contains(x, y);
+        }
+
+        /// <summary>
+        /// Issue #96: something other than the gaze keyboard may have moved the text cursor or
+        /// changed the text: a mouse button was pressed (gaze click by Prunel, click said to
+        /// voice recognition, real mouse…, see MouseClickHook), or a key that does not come
+        /// from Prunel (arrows, Delete, Dragon dictation…, see KeyboardHook.OtherKeyPressed).
+        /// The current word and the previous word are forgotten, so the next letter starts a
+        /// new word, with fresh suggestions. The modifiers (Shift…) stay on.
+        /// </summary>
+        public void ForgetAfterOutsideInput()
+        {
+            if (!IsOpen)
+            {
+                return;
+            }
+            ForgetPosition();
+            if (_visible)
+            {
+                RefreshState();
+            }
         }
 
         private void Hide()
