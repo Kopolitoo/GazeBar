@@ -296,29 +296,32 @@ p {
   max-width: 40em;
 }
 
-/* Screenshots: an empty frame waits until real pictures are added. */
+/* Screenshots: one large picture per line, so the details stay readable; each one opens full size. */
 .shots {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.2rem;
-  margin: 0;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 900px;
+  margin: 0 0 1rem;
 }
 
 .shots figure {
   margin: 0;
 }
 
-.shot-frame {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 16 / 9;
-  border: 3px dashed var(--line);
+.shot {
+  display: block;
   border-radius: var(--radius);
-  background: #fff;
-  color: var(--text-soft);
-  text-align: center;
-  padding: 1rem;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 6px 18px rgba(13, 27, 62, 0.18);
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
 }
 
 .shots figcaption {
