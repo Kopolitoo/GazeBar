@@ -45,14 +45,11 @@ namespace Prunel
     /// crown, otherwise movement mode.
     ///
     /// Two precautions:
-    ///  - when the magnifier opens, the gaze is still on the icon just activated, which may be
-    ///    above the photo. So a fixation is only recognized once the gaze has left that place
-    ///    (same principle as the "ignored zone" of movement mode after a click);
-    ///    EXCEPTION: if, on opening, the gaze is already on the
-    ///    place of the photo where P appears (the center of the screen, except near an edge),
-    ///    there is no ignored zone. This is the case when the options icon of fixed gaze was
-    ///    near the center of the screen: one is already looking at the right place, it would
-    ///    be absurd to force a gaze move to validate the position;
+    ///  - the fixation only starts counting when the photo appears (it is reset on entry and
+    ///    measures are only analyzed during the aiming). There is no "ignored zone" around the
+    ///    place where the gaze was on opening (issue #91): the gaze is usually already near the
+    ///    right point, so a small move, or none at all, is enough. The cursor is placed after
+    ///    the usual [FixationDelay], counted from the photo;
     ///  - only a fixation ON the photo counts. The gaze resting on the "back" icon or on the
     ///    black background never places the cursor.
     /// </summary>
@@ -107,19 +104,6 @@ namespace Prunel
         // The fixation detection, the same as in movement mode.
         private readonly FixationDetector _fixation = new FixationDetector();
 
-        // Ignored zone: where the gaze was when the magnifier opened (see the class comment).
-        // _ignoredZoneKnown = false as long as there has been no on-screen measure.
-        private bool _ignoredZone;
-        private bool _ignoredZoneKnown;
-        private double _zoneX;
-        private double _zoneY;
-
-        // Where point P appears on the enlarged photo (screen pixels), computed with the photo.
-        // _knownTarget = false as long as the photo is not built.
-        private bool _knownTarget;
-        private double _targetX;
-        private double _targetY;
-
         /// <summary>
         /// Activation zone of the "back" button, relative to the drawn button: 30 % larger.
         /// </summary>
@@ -166,14 +150,6 @@ namespace Prunel
             // Start from zero: new photo, no fixation in progress.
             _aimer.Reset();
             _fixation.Reset();
-
-            // The ignored zone is centered on the current gaze (if it is on the screen),
-            // otherwise on the first on-screen measure to come.
-            _ignoredZone = true;
-            _ignoredZoneKnown = gaze.OnScreen;
-            _zoneX = gaze.X;
-            _zoneY = gaze.Y;
-            _knownTarget = false;
 
             // 1. CAPTURE: hide everything Prunel draws, and wait a bit before the photo.
             Manager.Layer.HideAll();
@@ -237,23 +213,8 @@ namespace Prunel
             // b. The small gaze circle.
             MoveGazeCircle(gaze, p);
 
-            // c. The ignored zone: has the gaze left it?
-            if (gaze.OnScreen)
-            {
-                if (!_ignoredZoneKnown)
-                {
-                    _zoneX = gaze.X;
-                    _zoneY = gaze.Y;
-                    _ignoredZoneKnown = true;
-                    LiftZoneIfAlreadyOnTarget(p);
-                }
-                else if (_ignoredZone && Distance(gaze.X, gaze.Y, _zoneX, _zoneY) > p.CircleRadiusPx)
-                {
-                    _ignoredZone = false;
-                }
-            }
-
-            // d. The fixation. It only counts on the photo, and outside the ignored zone.
+            // c. The fixation. It only counts on the photo, and starts with the photo (no
+            //    ignored zone, see the class comment).
             //    No progress ring (as in movement mode): the small circle is enough.
             //
             //    Note on the radius: the specification speaks of a "radius adapted to the
@@ -262,7 +223,7 @@ namespace Prunel
             //    trembles the same way in front of an enlarged photo. It is the final conversion
             //    (division by the zoom) that brings the precision.
             _fixation.Add(gaze);
-            if (_ignoredZone || (gaze.OnScreen && !OnPhoto(gaze.X, gaze.Y)))
+            if (gaze.OnScreen && !OnPhoto(gaze.X, gaze.Y))
             {
                 _fixation.Reset();
             }
@@ -324,24 +285,6 @@ namespace Prunel
             }
         }
 
-        /// <summary>
-        /// No ignored zone if, on opening, the gaze was already on the place of the photo where P
-        /// appears (within [CircleRadius]): see the exception in the class comment. Does nothing
-        /// as long as the photo or the gaze position are not known.
-        /// </summary>
-        private void LiftZoneIfAlreadyOnTarget(AppSettings p)
-        {
-            if (!_ignoredZone || !_ignoredZoneKnown || !_knownTarget)
-            {
-                return;
-            }
-            if (Distance(_zoneX, _zoneY, _targetX, _targetY) <= p.CircleRadiusPx)
-            {
-                _ignoredZone = false;
-                App.LogDetail("Magnifier: gaze already on the target point, no need to move the gaze");
-            }
-        }
-
         /// <summary>True if this point (screen pixels) is on the enlarged photo.</summary>
         private bool OnPhoto(double x, double y)
         {
@@ -399,12 +342,6 @@ namespace Prunel
             double enlargedSide = side * _zoom;
             _left = cxScreen - enlargedSide / 2;
             _top = cyScreen - enlargedSide / 2;
-
-            // Where P appears on the enlarged photo (the reverse of the PlaceAndContinue computation).
-            _targetX = _left + (_px - _ox) * _zoom;
-            _targetY = _top + (_py - _oy) * _zoom;
-            _knownTarget = true;
-            LiftZoneIfAlreadyOnTarget(p);
 
             Image image = new Image();
             image.Source = photo;
@@ -498,13 +435,6 @@ namespace Prunel
             Canvas.SetLeft(ellipse, center.X - radius);
             Canvas.SetTop(ellipse, center.Y - radius);
             ellipse.Visibility = Visibility.Visible;
-        }
-
-        private static double Distance(double x1, double y1, double x2, double y2)
-        {
-            double dx = x1 - x2;
-            double dy = y1 - y2;
-            return Math.Sqrt(dx * dx + dy * dy);
         }
 
         private static double Clamp(double val, double min, double max)

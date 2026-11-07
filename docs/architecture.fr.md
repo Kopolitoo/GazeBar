@@ -121,8 +121,8 @@ DLL a été trouvée. Comment un utilisateur les récupère : voir le
   curseur y est placé et le choix d'action s'ouvre sur ce point. Une erreur de 30 px du regard
   ne vaut plus que 7 à 8 px réels. L'icône « retour » (à droite) revient sans rien faire au mode
   d'où l'on vient : le choix d'action, ou le mode mouvement si l'on vient du regard fixe.
-  À l'ouverture, une fixation à l'endroit où l'on regardait déjà est ignorée tant que le regard
-  n'en est pas sorti.
+  La fixation compte dès que la photo apparaît, sans zone ignorée : un petit mouvement du regard,
+  ou aucun, suffit (issue #91).
 - Modificateurs (étape 6, `Modifiers`, `KeyboardInjector`) : dans le choix d'action, un
   regard sur « Ctrl », « Maj » ou « Alt » l'allume (bord vert), un second l'éteint. Les touches
   allumées sont enfoncées juste avant l'action et relâchées juste après (après le dépôt pour un
