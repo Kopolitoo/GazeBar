@@ -236,7 +236,7 @@ namespace Prunel
                 return;
             }
 
-            NativeMethods.SetCursorPos((int)Math.Round(_smoothed.X), (int)Math.Round(_smoothed.Y));
+            MouseInjector.PointTo(_smoothed.X, _smoothed.Y);
             if (distance < 1)
             {
                 _cursorOnTheWay = false; // caught up: back to rest

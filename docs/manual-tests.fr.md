@@ -160,6 +160,14 @@ désactiver et activer « Son des boutons » : les touches sont muettes ; l'icô
 d'action, les boutons du menu et ceux des paramètres font un petit son de deux notes. Tout
 désactiver : de nouveau le silence. Relancer Prunel : les choix sont gardés.
 
+## 16. Survol des menus (issue #97)
+
+Faire un clic droit sur le bureau, puis dans l'Explorateur, pour ouvrir un menu contextuel. Fixer
+un élément du menu : quand le cercle se fige et que le curseur le rejoint, l'élément est mis en
+surbrillance, comme avec une vraie souris ; sur un élément avec une petite flèche, le sous-menu
+s'ouvre. Même test avec « Suivi souris » activé (la surbrillance suit le regard), et en mode jeu
+« direct ». Le curseur reste exactement sur le cercle (pas de décalage d'un pixel).
+
 ## Installation complète (Setup.exe, accès à l'interface)
 
 Prendre le zip `Prunel-setup-…` de la compilation automatique (page Actions de la pull request,

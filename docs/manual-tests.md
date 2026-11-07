@@ -149,6 +149,14 @@ the keys are silent; the options icon, the action choice, the menu buttons and t
 buttons make a short two-note sound. Turn both off: silence again. Restart Prunel: the choices
 are kept.
 
+## 16. Menu hover (issue #97)
+
+Right-click on the desktop, then in File Explorer, to open a context menu. Stare at an item of
+the menu: when the circle freezes and the cursor joins it, the item is highlighted, as with a real
+mouse; on an item with a small arrow, the sub-menu opens. Same test with "Mouse tracking" on
+(the highlight follows the gaze), and in game mode "direct". The cursor stays exactly where the
+circle is (no one-pixel shift).
+
 ## Full installation (Setup.exe, UI access)
 
 Use the `Prunel-setup-…` zip of the automatic build (Actions page of the pull request,
