@@ -157,6 +157,15 @@ mouse; on an item with a small arrow, the sub-menu opens. Same test with "Mouse 
 (the highlight follows the gaze), and in game mode "direct". The cursor stays exactly where the
 circle is (no one-pixel shift).
 
+## 17. New word after a click (issue #96)
+
+Open a web page with a form of several fields (or two text boxes). Open the keyboard, click in
+the first field and type a few letters, without a space. With the gaze, click in the second
+field: the suggestion boxes become empty at once. Type a letter:
+the suggestions start from this letter alone, not from the word of the first field. Same test
+with a click said to voice recognition, and with a real mouse. Typing several words in the
+same field without clicking still works as before (next-word suggestions after a space).
+
 ## Full installation (Setup.exe, UI access)
 
 Use the `Prunel-setup-…` zip of the automatic build (Actions page of the pull request,

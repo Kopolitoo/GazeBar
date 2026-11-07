@@ -168,6 +168,15 @@ surbrillance, comme avec une vraie souris ; sur un élément avec une petite fl�
 s'ouvre. Même test avec « Suivi souris » activé (la surbrillance suit le regard), et en mode jeu
 « direct ». Le curseur reste exactement sur le cercle (pas de décalage d'un pixel).
 
+## 17. Nouveau mot après un clic (issue #96)
+
+Ouvrir une page web avec un formulaire de plusieurs champs (ou deux zones de texte). Ouvrir le
+clavier, cliquer dans le premier champ et taper quelques lettres, sans espace. Avec le regard,
+cliquer dans le deuxième champ : les cases de suggestion se vident aussitôt. Taper une lettre :
+les suggestions partent de cette seule lettre, et non du mot du premier champ. Même test avec un
+clic dit à la reconnaissance vocale, et avec une vraie souris. Écrire plusieurs mots dans le
+même champ sans cliquer marche toujours comme avant (mots suivants proposés après une espace).
+
 ## Installation complète (Setup.exe, accès à l'interface)
 
 Prendre le zip `Prunel-setup-…` de la compilation automatique (page Actions de la pull request,

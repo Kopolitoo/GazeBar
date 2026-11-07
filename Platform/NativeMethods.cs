@@ -447,6 +447,22 @@ namespace Prunel
         internal const int WM_SYSKEYDOWN = 0x0104;  // same, with Alt
         internal const int WM_KEYUP = 0x0101;       // a key is released
         internal const int WM_SYSKEYUP = 0x0105;    // same, with Alt
+
+        // ───────────────────────── Mouse clicks seen by the gaze keyboard ─────────────────────────
+        //
+        // The same kind of hook for the mouse (see MouseClickHook.cs, issue #96): Prunel only
+        // OBSERVES the button presses, the clicks go on normally.
+
+        /// <summary>The function called by Windows for every mouse event (signature imposed by Windows).</summary>
+        internal delegate IntPtr LowLevelMouseProc(int code, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern IntPtr SetWindowsHookEx(int hookId, LowLevelMouseProc callback, IntPtr module, uint threadId);
+
+        internal const int WH_MOUSE_LL = 14;         // "low-level" mouse hook, for the whole system
+        internal const int WM_LBUTTONDOWN = 0x0201;  // the left button is pressed
+        internal const int WM_RBUTTONDOWN = 0x0204;  // the right button is pressed
+        internal const int WM_MBUTTONDOWN = 0x0207;  // the middle button (wheel) is pressed
         internal const int VK_ESCAPE = 0x1B;        // code of the Escape key
 
         /// <summary>
